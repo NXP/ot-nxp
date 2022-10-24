@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,27 +34,27 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-/* NVM */
-NVMSectorCountLink = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 4;
+FLASH_START                  = 0x60000000;
+FLASH_SIZE                   = 0x800000; /* 8 MBytes */
+FLASH_END                    = FLASH_START + FLASH_SIZE - 1;
+FLASH_SECTOR_SIZE            = 0x1000;  /* 4k flash sector size */
 
-_ROM_START_ = 0x60002400;
-_ROM_END_ = 0x6057FFFF;
+/*** FileSystem Configuration ***/
 
-/*** NVM Configuration End ***/
-NV_STORAGE_SECTOR_SIZE = 0x1000;  /* 4k flash sector size */
-NV_STORAGE_MAX_SECTORS = NVMSectorCountLink;
-NVM_AREA_SIZE = NV_STORAGE_SECTOR_SIZE * NV_STORAGE_MAX_SECTORS;
-STORAGE_AREA_SIZE  = NVM_AREA_SIZE;
-STORAGE_AREA_START = _ROM_END_ - STORAGE_AREA_SIZE + 1;
-NV_STORAGE_START_ADDRESS = STORAGE_AREA_START;
-NV_STORAGE_END_ADDRESS = NV_STORAGE_START_ADDRESS + NVM_AREA_SIZE - 1;
+/* Give some space to an other file system such as for BT BLE LittleFS for instance */
+NV_STORAGE_END_ADDRESS       = FLASH_END - 0x10000;
+NV_STORAGE_MAX_SECTORS       = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 16;
+NV_STORAGE_SECTOR_SIZE       = FLASH_SECTOR_SIZE;
+NV_STORAGE_SIZE              = FLASH_SECTOR_SIZE * NV_STORAGE_MAX_SECTORS;
+NV_STORAGE_START_ADDRESS     = NV_STORAGE_END_ADDRESS - NV_STORAGE_SIZE + 1;
+NV_STORAGE_START_ADDRESS_OFFSET = NV_STORAGE_START_ADDRESS - FLASH_START;
 
-m_text_end         = STORAGE_AREA_START -1;
-m_text_start       = _ROM_START_;
-m_text_size        = STORAGE_AREA_START - m_text_start;
+m_text_end                   = NV_STORAGE_START_ADDRESS -1;
+m_text_start                 = 0x60002400;
+m_text_size                  = NV_STORAGE_START_ADDRESS - m_text_start;
 
-HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x0400;
-STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0400;
+HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x0800;
+STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0800;
 VECTOR_RAM_SIZE = DEFINED(__ram_vector_table__) ? 0x00000400 : 0;
 
 /* Specify the memory areas */
@@ -64,7 +64,7 @@ MEMORY
   m_ivt                 (RX)  : ORIGIN = 0x60001000, LENGTH = 0x00001000
   m_interrupts          (RX)  : ORIGIN = 0x60002000, LENGTH = 0x00000400
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
-  NVM_region            (RW)  : ORIGIN = STORAGE_AREA_START, LENGTH = STORAGE_AREA_SIZE
+  NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
   m_data2               (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000
   m_data                (RW)  : ORIGIN = 0x20200000, LENGTH = 0x000C0000
 }
@@ -217,16 +217,12 @@ SECTIONS
     __data_start__ = .;      /* create a global symbol at data start */
     *(m_usb_dma_init_data)
     /* Explicit placement of flash and frequently executed functions in RAM */
-    *fsl_adapter_flexspi_nor_flash.c.obj
-    *mflash_drv.c.obj
-    *fsl_flexspi.c.obj
+    *fsl_adapter_flexspi_nor_flash.c.obj(.text*)
+    *mflash_drv.c.obj(.text*)
+    *fsl_flexspi.c.obj(.text*)
     *(.data)                 /* .data sections */
     *(.data*)                /* .data* sections */
     KEEP(*(.jcr*))
-    . = ALIGN(4);
-    PROVIDE(__start_NVM_TABLE = .);
-    KEEP(*(.NVM_TABLE));
-    PROVIDE(__stop_NVM_TABLE = .);
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
   } > m_data

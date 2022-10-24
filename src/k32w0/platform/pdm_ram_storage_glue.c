@@ -42,6 +42,42 @@
 #include <utils/code_utils.h>
 #include <openthread/platform/memory.h>
 
+#if PDM_SAVE_IDLE
+#include "fsl_os_abstraction.h"
+
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+#include "FreeRTOS.h"
+#include "task.h"
+
+#define sched_disable vTaskSuspendAll
+#define sched_enable xTaskResumeAll
+#define mutex_lock OSA_MutexLock
+#define mutex_unlock OSA_MutexUnlock
+#else
+#define sched_disable(...)
+#define sched_enable(...)
+#define mutex_lock(...)
+#define mutex_unlock(...)
+#endif
+
+#define MAX_QUEUE_SIZE (16)
+
+typedef struct
+{
+    void *   pvDataBuffer;
+    uint16_t u16IdValue;
+    uint16_t u16Datalength;
+} tsQueueEntry;
+
+static tsQueueEntry asQueue[MAX_QUEUE_SIZE];
+static uint8_t      u8QueueWritePtr;
+static uint8_t      u8QueueReadPtr;
+static osaMutexId_t asQueueMutex;
+
+static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
+
+#endif /* PDM_SAVE_IDLE */
+
 #if !ENABLE_STORAGE_DYNAMIC_MEMORY
 #ifndef PDM_BUFFER_SIZE
 #define PDM_BUFFER_SIZE (1024 + sizeof(ramBufferDescriptor)) /* kRamBufferInitialSize is 1024 */
@@ -153,3 +189,136 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     return ramDescr;
 }
 #endif
+
+#if PDM_SAVE_IDLE
+
+uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
+{
+    uint8_t u8IncrementedPtr;
+
+    u8IncrementedPtr = u8CurrentValue + 1;
+    if (u8IncrementedPtr == MAX_QUEUE_SIZE)
+    {
+        /* Wrap pointer back to start */
+        u8IncrementedPtr = 0;
+    }
+
+    return u8IncrementedPtr;
+}
+
+PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, void *pvDataBuffer, uint16_t u16Datalength)
+{
+    tsQueueEntry *psQueueEntry;
+    uint8_t       u8WriteNext;
+    PDM_teStatus  status = PDM_E_STATUS_OK;
+
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+    OSA_InterruptDisable();
+    if (asQueueMutex == NULL)
+    {
+        asQueueMutex = OSA_MutexCreate();
+        if (asQueueMutex == NULL)
+        {
+            status = PDM_E_STATUS_NOT_SAVED;
+        }
+    }
+    OSA_InterruptEnable();
+
+    if (status != PDM_E_STATUS_OK)
+    {
+        return status;
+    }
+#endif
+
+    mutex_lock(asQueueMutex, osaWaitForever_c);
+
+    /* Instead of updating PDM immediately we queue request until later. If
+     * queue is full, performs first write in queue synchronously, to avoid
+     * data loss. Queue is implemented as a wrap-around with read and write
+     * pointers, so adding or removing item from queue is quick
+     */
+
+    /* Look ahead in Queue to find if the same u16IdValue is already engaged */
+    uint8_t u8QueuePtr = u8QueueReadPtr;
+    bool_t  already_in = false;
+    while (u8QueuePtr != u8QueueWritePtr)
+    {
+        psQueueEntry = &asQueue[u8QueuePtr];
+        if (psQueueEntry->u16IdValue == u16IdValue)
+        {
+            /* If an entry with the given id is found, update both buffer
+             * address and length. Some buffers may be dynamically allocated
+             * and reallocated at a later time with a possibility of address
+             * change. Changing the pointer here is a safe solution as for
+             * the moment the FreeRTOS scheduler is suspended/enabled before/
+             * after FS_vIdleTask so there is no risk of other usage for this
+             * buffer.
+             */
+            psQueueEntry->pvDataBuffer  = pvDataBuffer;
+            psQueueEntry->u16Datalength = u16Datalength;
+            already_in                  = true;
+            break;
+        }
+        u8QueuePtr = u8IncrementQueuePtr(u8QueuePtr);
+    }
+    if (already_in == FALSE)
+    {
+        u8WriteNext = u8IncrementQueuePtr(u8QueueWritePtr);
+
+        if (u8WriteNext == u8QueueReadPtr)
+        {
+            /* Queue is full, so perform first queued write synchronously
+             * to make space. This should never happen with the current
+             * implementation.
+             */
+            psQueueEntry = &asQueue[u8QueueReadPtr];
+
+            status =
+                PDM_eSaveRecordData(psQueueEntry->u16IdValue, psQueueEntry->pvDataBuffer, psQueueEntry->u16Datalength);
+
+            /* Move read pointer onwards */
+            u8QueueReadPtr = u8IncrementQueuePtr(u8QueueReadPtr);
+        }
+
+        /* Write new entry to queue */
+        psQueueEntry = &asQueue[u8QueueWritePtr];
+
+        psQueueEntry->u16IdValue    = u16IdValue;
+        psQueueEntry->pvDataBuffer  = pvDataBuffer;
+        psQueueEntry->u16Datalength = u16Datalength;
+
+        /* Update write pointer */
+        u8QueueWritePtr = u8WriteNext;
+    }
+
+    mutex_unlock(asQueueMutex);
+
+    return status;
+}
+
+void FS_vIdleTask(uint8_t u8WritesAllowed)
+{
+    /* Processes queued write requests */
+    tsQueueEntry *psQueueEntry;
+
+    if (u8WritesAllowed > MAX_QUEUE_SIZE)
+        u8WritesAllowed = MAX_QUEUE_SIZE;
+
+    /* temporary workaround: suspend/enable
+     * the FreeRTOS scheduler during PDM writes.
+     */
+    sched_disable();
+    while ((u8QueueReadPtr != u8QueueWritePtr) && (u8WritesAllowed > 0))
+    {
+        psQueueEntry = &asQueue[u8QueueReadPtr];
+
+        (void)PDM_eSaveRecordData(psQueueEntry->u16IdValue, psQueueEntry->pvDataBuffer, psQueueEntry->u16Datalength);
+
+        /* Move read pointer onwards */
+        u8QueueReadPtr = u8IncrementQueuePtr(u8QueueReadPtr);
+        u8WritesAllowed--;
+    }
+    sched_enable();
+}
+
+#endif /* PDM_SAVE_IDLE */

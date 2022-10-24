@@ -36,10 +36,18 @@
 
 #include <openthread/platform/radio.h>
 
-#include "spinel_hdlc.hpp"
 #include <lib/spinel/radio_spinel.hpp>
 
+#if defined(OT_PLAT_SPINEL_OVER_SPI)
+#include "spi_interface.hpp"
+static ot::Spinel::RadioSpinel<ot::RT::SpiInterface, otInstance> sRadioSpinel;
+#elif defined(OT_PLAT_SPINEL_HCI_OVER_UART)
+#include "spinel_hci_hdlc.hpp"
+static ot::Spinel::RadioSpinel<ot::RT::HdlcSpinelHciInterface, otInstance> sRadioSpinel;
+#else
+#include "spinel_hdlc.hpp"
 static ot::Spinel::RadioSpinel<ot::RT::HdlcInterface, otInstance> sRadioSpinel;
+#endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -359,10 +367,73 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     return sRadioSpinel.GetState();
 }
 
-void otPlatRadioInit(void)
+void otPlatRadioSetMacKey(otInstance *            aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType)
+{
+    SuccessOrDie(sRadioSpinel.SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey));
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeyType);
+}
+
+void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+uint64_t otPlatRadioGetNow(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetNow();
+}
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
+
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.SetChannelMaxTransmitPower(aChannel, aMaxPower);
+}
+
+otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.SetRadioRegion(aRegionCode);
+}
+
+otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetRadioRegion(aRegionCode);
+}
+
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aChannel);
+    OT_UNUSED_VARIABLE(aStart);
+    OT_UNUSED_VARIABLE(aDuration);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+void otPlatRadioInitSpinelInterface(void)
 {
     sRadioSpinel.GetSpinelInterface().Init();
-    sRadioSpinel.Init(true, false, false);
+}
+
+void otPlatRadioInit(void)
+{
+    sRadioSpinel.Init(false, false, false);
 }
 
 void otPlatRadioDeinit(void)
@@ -373,4 +444,15 @@ void otPlatRadioDeinit(void)
 void otPlatRadioProcess(const otInstance *aInstance)
 {
     sRadioSpinel.Process(*aInstance);
+    // sRadioSpinel.GetSpinelInterface().Process(*aInstance);
+}
+
+void otPlatRadioSendFrameToSpinelInterface(uint8_t *buf, uint16_t length)
+{
+    sRadioSpinel.GetSpinelInterface().SendFrame(buf, length);
+}
+
+otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value)
+{
+    return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT8_S, value);
 }

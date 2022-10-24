@@ -44,7 +44,6 @@ readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(
     "-DOT_APP_CLI=OFF"
     "-DOT_FTD=OFF"
     "-DOT_MTD=OFF"
-    "-DOT_1_2_SUPPORT=ON"
     "-DUART_BAUD_RATE=1000000"
 )
 readonly OT_OPTIONS_RCP_ONLY_SPI=(
@@ -52,14 +51,25 @@ readonly OT_OPTIONS_RCP_ONLY_SPI=(
     "-DOT_APP_CLI=OFF"
     "-DOT_FTD=OFF"
     "-DOT_MTD=OFF"
-    "-DOT_1_2_SUPPORT=ON"
 )
 readonly OT_OPTIONS_NO_RCP=(
     "-DOT_APP_NCP=OFF"
     "-DOT_APP_RCP=OFF"
     "-DOT_RCP=OFF"
-    "-DOT_1_2_SUPPORT=ON"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
+)
+readonly OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC=(
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=ON"
+    "-DOT_APP_RCP_BLE_HCI_BB=ON"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE_DIR=${OT_SRCDIR}/src/k32w0/platform/"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE=nxp_vendor_hook.cpp"
+    "-DOT_APP_RCP_BLE_HCI_BB_SINGLE_UART=ON"
+    "-DUART_BAUD_RATE=1000000"
 )
 
 sign()
@@ -153,6 +163,26 @@ build_ot_without_rcp_image()
         exit 1
     fi
 }
+build_ot_rcp_ble_hci_bb_single_uart_fc()
+{
+    echo "Building dual mode app OT RCP + BLE HCI BB SINGLE UART FC..."
+    app_folder_name="ot_rcp_ble_hci_bb_single_uart_fc"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/ot-rcp-ble-hci-bb-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
 
 create_directory_and_build()
 {
@@ -160,6 +190,7 @@ create_directory_and_build()
         build_ot_rcp_only_uart_flow_control "$@"
         build_ot_rcp_only_spi "$@"
         build_ot_without_rcp_image "$@"
+        build_ot_rcp_ble_hci_bb_single_uart_fc "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
         build_ot_rcp_only_uart_flow_control "$@"
@@ -167,8 +198,10 @@ create_directory_and_build()
         build_ot_rcp_only_spi "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
+    elif [ "$1" == 'ot_rcp_ble_hci_bb_single_uart_fc' ]; then
+        build_ot_rcp_ble_hci_bb_single_uart_fc "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_spi, ot_without_rcp_image"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_spi, ot_without_rcp_image, ot_rcp_ble_hci_bb_single_uart_fc"
         # 128 for Invalid arguments
         exit 128
     fi

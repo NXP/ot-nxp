@@ -63,6 +63,7 @@ static TaskHandle_t sMainTask = NULL;
 
 extern void otAppCliInit(otInstance *aInstance);
 extern void otSysRunIdleTask(void);
+extern void BOARD_InitHardware(void);
 
 static void appOtInit()
 {
@@ -115,6 +116,8 @@ static void mainloop(void *aContext)
 
 void appOtStart(int argc, char *argv[])
 {
+    /* Init board hardware */
+    BOARD_InitHardware();
     xTaskCreate(mainloop, "ot", OT_MAIN_TASK_SIZE, NULL, OT_MAIN_TASK_PRIORITY, &sMainTask);
     vTaskStartScheduler();
 }
@@ -151,5 +154,17 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 void vApplicationMallocFailedHook(void)
 {
     assert(0);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return pvPortMalloc(aNum * aSize);
+}
+
+void otPlatFree(void *aPtr)
+{
+    vPortFree(aPtr);
 }
 #endif

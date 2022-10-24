@@ -409,7 +409,11 @@ otError otPlatRadioEnable(otInstance *aInstance)
     V2MMAC_RegisterIntHandler(K32WISR);
     vMMAC_ConfigureRadio();
 
-    if (sRadioInitForLp)
+    /* Exit from low power and / or already initialized.
+     * Cover the case when otPlatRadioSleep() / otPlatRadioEnable() is not used to enter / exit low power
+     * but otPlatRadioDisable() / otPlatRadioEnable() because it's done from outside the OT stack.
+     */
+    if (sRadioInitForLp || sExtAddress.u32L || sExtAddress.u32H)
     {
         sRadioInitForLp = FALSE;
 

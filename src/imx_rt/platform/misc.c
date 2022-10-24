@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,15 +28,31 @@
 
 #include "openthread/platform/misc.h"
 #include "fsl_device_registers.h"
+#include "fsl_os_abstraction.h"
+#include "ot_platform_common.h"
+
+static bool system_reset_request = false;
 
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    NVIC_SystemReset();
+    system_reset_request = true;
+}
 
-    while (1)
+void otPlatResetIdle(void)
+{
+    if (system_reset_request == true)
     {
+        /*  disable interrupts to make sure FS content is consistent before reset */
+        OSA_InterruptDisable();
+
+        otPlatSaveSettingsIdle();
+
+        NVIC_SystemReset();
+        while (1)
+        {
+        }
     }
 }
 

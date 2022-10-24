@@ -85,6 +85,11 @@ static const serial_manager_config_t s_serialManagerConfig = {
     .portConfig     = (serial_port_uart_config_t *)&uartConfig,
 };
 
+void otPlatUartSetInstance(uint8_t newInstance)
+{
+    uartConfig.instance = newInstance;
+}
+
 otError otPlatUartEnable(void)
 {
     otError error        = OT_ERROR_FAILED;

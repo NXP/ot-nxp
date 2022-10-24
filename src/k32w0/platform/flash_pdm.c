@@ -48,6 +48,10 @@
 static ramBufferDescriptor *ramDescr       = NULL;
 static osaMutexId_t         pdmMutexHandle = NULL;
 
+#if PDM_SAVE_IDLE
+static bool_t settingsInitialized = FALSE;
+#endif
+
 #define kNvmIdOTConfigData 0x4F00
 #define kRamBufferInitialSize 1024
 
@@ -78,6 +82,14 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     OT_UNUSED_VARIABLE(aSensitiveKeysLength);
     otError error = OT_ERROR_NONE;
 
+#if PDM_SAVE_IDLE
+    /* settings may have been already initialized:
+     * e.g.: for PDM_SAVE_IDLE in XCVR context
+     */
+    if (settingsInitialized)
+        return;
+#endif
+
     otEXPECT_ACTION((PDM_E_STATUS_OK == PDM_Init()), error = OT_ERROR_NO_BUFS);
 
     pdmMutexHandle = OSA_MutexCreate();
@@ -87,10 +99,21 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     otEXPECT_ACTION(ramDescr != NULL, error = OT_ERROR_NO_BUFS);
 
 exit:
-    if ((error != OT_ERROR_NONE) && pdmMutexHandle)
+    if (error != OT_ERROR_NONE)
     {
-        OSA_MutexDestroy(pdmMutexHandle);
+        if (pdmMutexHandle)
+        {
+            OSA_MutexDestroy(pdmMutexHandle);
+        }
     }
+
+#if PDM_SAVE_IDLE
+    else
+    {
+        settingsInitialized = TRUE;
+    }
+#endif
+
     return;
 }
 
@@ -117,18 +140,27 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     PDM_teStatus pdmStatus = PDM_E_STATUS_OK;
     otError      error     = OT_ERROR_NONE;
 
+#if ENABLE_STORAGE_DYNAMIC_MEMORY
+    uint16_t lengthOfAlreadyExistingValue = 0;
+#endif
+
     OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
-    ramStatus = ramStorageResize(&ramDescr, aKey, aValue, aValueLength);
-    otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
+    /* avoid resizing in case ramDescr already contains aValue whose length is >= aValueLength */
+    if ((ramStorageGet(ramDescr, aKey, 0, NULL, &lengthOfAlreadyExistingValue) == RS_ERROR_NONE) &&
+        (lengthOfAlreadyExistingValue < aValueLength))
+    {
+        ramStatus = ramStorageResize(&ramDescr, aKey, aValue, aValueLength - lengthOfAlreadyExistingValue);
+        otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
+    }
 #endif
     ramStatus = ramStorageSet(ramDescr, aKey, aValue, aValueLength);
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
 #if PDM_SAVE_IDLE
-    pdmStatus = PDM_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                              ramDescr->ramBufferLen + kRamDescHeaderSize);
+    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
+                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
 #else
     pdmStatus =
         PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
@@ -157,8 +189,8 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
 #if PDM_SAVE_IDLE
-    pdmStatus = PDM_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                              ramDescr->ramBufferLen + kRamDescHeaderSize);
+    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
+                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
 #else
     pdmStatus =
         PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
@@ -183,8 +215,8 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
 #if PDM_SAVE_IDLE
-    pdmStatus = PDM_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                              ramDescr->ramBufferLen + kRamDescHeaderSize);
+    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
+                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
 #else
     pdmStatus =
         PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
@@ -215,3 +247,20 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
     PDM_vDeleteDataRecord(kNvmIdOTConfigData);
 }
+
+#if gRadioUsePdm_d && PDM_SAVE_IDLE
+bool bRadioCB_WriteNVM(uint8_t *pu8DataBlock, uint16_t u16Len)
+{
+    return (otPlatSettingsSet(NULL, PDM_ID_RADIO_SETTINGS, pu8DataBlock, u16Len) == OT_ERROR_NONE);
+}
+
+uint16_t u16RadioCB_ReadNVM(uint8_t *pu8DataBlock, uint16_t u16MaxLen)
+{
+    uint16_t lengthPtr = 0;
+
+    /* lengthPtr will be 0 if no record is found */
+    otPlatSettingsGet(NULL, PDM_ID_RADIO_SETTINGS, 0, pu8DataBlock, &lengthPtr);
+
+    return lengthPtr;
+}
+#endif /* gRadioUsePdm_d && PDM_SAVE_IDLE */

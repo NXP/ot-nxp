@@ -35,6 +35,7 @@
 #ifndef PDM_RAM_STORAGE_GLUE_H_
 #define PDM_RAM_STORAGE_GLUE_H_
 
+#include "PDM.h"
 #include "ram_storage.h"
 
 #ifdef __cplusplus
@@ -51,6 +52,11 @@ rsError ramStorageResize(ramBufferDescriptor **pBuffer, uint16_t aKey, const uin
  * In case static memory allocation is used, initialSize is unused
  */
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize);
+
+#if PDM_SAVE_IDLE
+PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, void *pvDataBuffer, uint16_t u16Datalength);
+void         FS_vIdleTask(uint8_t u8WritesAllowed);
+#endif /* PDM_SAVE_IDLE */
 
 #ifdef __cplusplus
 }
