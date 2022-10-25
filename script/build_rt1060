@@ -92,7 +92,6 @@ main()
     #         then NXP_RT1060_SDK_ROOT points to a cloned repository
 
     if [ -z "$NXP_RT1060_SDK_ROOT" ]; then
-        NXP_RT1060_SDK_PATH="./third_party/rt1060_sdk/repo"
         export NXP_RT1060_SDK_ROOT="./repo"
         SDK_TYPE="GITHUB"
     fi
@@ -105,9 +104,9 @@ main()
 
     echo "NXP_RT1060_SDK_ROOT set to " $NXP_RT1060_SDK_ROOT
 
-    echo "SDK_TYPE is et to" $SDK_TYPE
+    echo "SDK_TYPE is set to" $SDK_TYPE
 
-    echo " OT source is set to " $OT_SRCDIR
+    echo "OT source is set to " "$OT_SRCDIR"
 
     local options=("${OT_OPTIONS[@]}")
 
