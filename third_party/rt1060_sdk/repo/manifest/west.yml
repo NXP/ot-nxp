@@ -21,6 +21,6 @@ manifest:
         - mbedtls
         - littlefs
   - name: framework
-    url: https://github.com/NXP/mcux-sdk-middleware-connectivity-framework
-    revision: 2049f3f91a3a5c5909bdf41d0faaf3fad3eef0ca
+    url: https://github.com/NXP/mcux-sdk-middleware-connectivity-framework.git
+    revision: 99d867efa1b7f8c4b90862478dd
     path: middleware/wireless/framework    

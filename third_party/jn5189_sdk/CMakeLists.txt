@@ -30,7 +30,7 @@ SET_SOURCE_FILES_PROPERTIES($ENV{NXP_JN5189_SDK_ROOT}/devices/JN5189/mcuxpresso/
 
 if (SDK_RELEASE)
 
-    add_library(nxp-jn5189-driver
+    add_library(${NXP_DRIVER_LIB}
         $ENV{NXP_JN5189_SDK_ROOT}/boards/jn5189dk6/wireless_examples/openthread/reed/bm/board.c
         $ENV{NXP_JN5189_SDK_ROOT}/boards/jn5189dk6/wireless_examples/openthread/reed/bm/hardware_init.c
         $ENV{NXP_JN5189_SDK_ROOT}/boards/jn5189dk6/wireless_examples/openthread/reed/bm/board_utility.c
@@ -62,7 +62,7 @@ if (SDK_RELEASE)
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/Common/MicroInt_arm_sdk2.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/Flash/Internal/Flash_Adapter.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
-        $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/Lists/GenericList.c 
+        $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/Lists/GenericList.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/MemManager/Source/MemManager.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/Panic/Source/Panic.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/PDM/pdm_port.c
@@ -76,7 +76,7 @@ if (SDK_RELEASE)
     )
     else()
 
-    add_library(nxp-jn5189-driver
+    add_library(${NXP_DRIVER_LIB}
         $ENV{NXP_JN5189_SDK_ROOT}/boards/k32w061dk6/utility/board_utility.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/boards/dk6/board.c
         $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/openthread/boards/dk6_k32w061/hardware_init.c
@@ -122,7 +122,7 @@ if (SDK_RELEASE)
     )
 endif()
 
-target_compile_definitions(nxp-jn5189-driver
+target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
         -DCPU_K32W061HN
@@ -140,7 +140,7 @@ target_compile_definitions(nxp-jn5189-driver
         -DgKBD_KeysCount_c=2
 )
 
-target_compile_options(nxp-jn5189-driver
+target_compile_options(${NXP_DRIVER_LIB}
     PRIVATE
         ${OT_CFLAGS}
         -Wno-unknown-pragmas
@@ -156,7 +156,7 @@ target_compile_options(nxp-jn5189-driver
 )
 
 if (SDK_RELEASE)
-    target_include_directories(nxp-jn5189-driver
+    target_include_directories(${NXP_DRIVER_LIB}
         PUBLIC
             ${PROJECT_SOURCE_DIR}/third_party/k32w061_sdk/mr5_fixes
             $ENV{NXP_JN5189_SDK_ROOT}/boards/jn5189dk6/wireless_examples/openthread/reed/bm
@@ -189,7 +189,7 @@ if (SDK_RELEASE)
             $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/framework/SecLib
     )
     else()
-    target_include_directories(nxp-jn5189-driver
+    target_include_directories(${NXP_DRIVER_LIB}
         PUBLIC
             ${PROJECT_SOURCE_DIR}/third_party/k32w061_sdk/mr5_fixes
             $ENV{NXP_JN5189_SDK_ROOT}/middleware/wireless/openthread/boards/dk6_k32w061/reed/bm
@@ -250,10 +250,10 @@ set(SDK_JN5189_LIBS
 
 if (OT_APP_CLI OR OT_APP_RCP OR OT_APP_NCP)
     #Allows to not use the OSA main function
-    target_compile_definitions(nxp-jn5189-driver
+    target_compile_definitions(${NXP_DRIVER_LIB}
         PRIVATE
             osCustomStartup=1
     )
 endif()
 
-target_link_libraries(nxp-jn5189-driver PUBLIC ${SDK_JN5189_LIBS})
+target_link_libraries(${NXP_DRIVER_LIB} PUBLIC ${SDK_JN5189_LIBS})

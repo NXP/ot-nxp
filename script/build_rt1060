@@ -33,10 +33,13 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
-    "-DCMAKE_TOOLCHAIN_FILE=src/imx_rt/rt1060/arm-none-eabi.cmake"
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_BUILD_TYPE=Debug"
+    "-DOT_NXP_EXPORT_TO_BIN=ON"
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
+    "-DOT_SERVICE=ON"
+    "-DOT_PING_SENDER=ON"
     "-DOT_EXTERNAL_HEAP=ON"
     "-DOT_EXTERNAL_MBEDTLS=nxp-rt1060-mbedtls"
     "-DOT_STACK_ENABLE_LOG=OFF"
@@ -46,14 +49,13 @@ readonly OT_OPTIONS=(
     # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
     "-DOT_APP_CLI=OFF"
     "-DOT_APP_CLI_FREERTOS=ON"
-    "-DOT_BUILD_RT=ON"
-    "-DOT_BUILD_RT1060=ON"
+    "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
+    "-DOT_NXP_PLATFORM=rt1060"
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 
 build()
 {
-    local otCliFreeRtosAxfLocation="examples/cli/rtos/ot-cli-rt1060"
     local builddir="${OT_CMAKE_BUILD_DIR:-build_rt1060}"
 
     mkdir -p "${builddir}"
@@ -67,14 +69,6 @@ build()
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
     else
         ninja
-    fi
-
-    if [ -f "${otCliFreeRtosAxfLocation}" ]; then
-        # create the corresponding bin
-        arm-none-eabi-objcopy -v -O binary ${otCliFreeRtosAxfLocation} ${otCliFreeRtosAxfLocation}.bin
-
-        #move application files to the top
-        mv ${otCliFreeRtosAxfLocation} ${otCliFreeRtosAxfLocation}.bin .
     fi
 
     cd "${OT_SRCDIR}"

@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_RT_SPINEL_HCI_HDLC_HPP_
-#define OT_RT_SPINEL_HCI_HDLC_HPP_
+#ifndef OT_NXP_SPINEL_HCI_HDLC_HPP_
+#define OT_NXP_SPINEL_HCI_HDLC_HPP_
 
 #include "spinel_hdlc.hpp"
 #include <FreeRTOS.h>
@@ -36,7 +36,7 @@
 
 namespace ot {
 
-namespace RT {
+namespace NXP {
 
 /**
  * This class defines an HDLC interface to the Radio Co-processor (RCP).
@@ -55,10 +55,10 @@ public:
         , spinelBufferFull(false)
 
     {
-        hdlcSerialManagerRxCallbackField = HdlcHciSerialManagerRxCallback;
+        hdlcRxCallbackField = HdlcRxCallback;
     }
 
-    void ProcessSerialManagerRxData(void);
+    void ProcessRxData(uint8_t *data, uint16_t len);
     void Init(void);
 
 private:
@@ -80,13 +80,11 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    static void HdlcHciSerialManagerRxCallback(void *                             callbackParam,
-                                               serial_manager_callback_message_t *message,
-                                               serial_manager_status_t            status);
+    static void HdlcRxCallback(uint8_t *data, uint16_t len, void *param);
 };
 
-} // namespace RT
+} // namespace NXP
 
 } // namespace ot
 
-#endif // OT_RT_SPINEL_HCI_HDLC_HPP_
+#endif // OT_NXP_SPINEL_HCI_HDLC_HPP_

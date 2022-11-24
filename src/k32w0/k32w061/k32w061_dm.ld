@@ -434,6 +434,8 @@ SECTIONS
        *(.bss_RAM2)
        *(.bss.$RAM2*)
        *(.bss.$RAM1*)
+       *zps_gen*
+       *pdum_gen*
        . = ALIGN (. != 0 ? 4 : 1) ; /* avoid empty segment */
        PROVIDE(__end_bss_RAM2 = .) ;
     } > RAM1

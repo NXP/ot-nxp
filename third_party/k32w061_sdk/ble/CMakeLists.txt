@@ -54,4 +54,4 @@ target_include_directories(nxp-k32w061-ble
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/ble_controller/config
 )
 
-target_link_libraries(nxp-k32w061-ble PUBLIC nxp-k32w061-driver ${SDK_BLE_LIBS})
+target_link_libraries(nxp-k32w061-ble PUBLIC ${NXP_DRIVER_LIB} ${SDK_BLE_LIBS})

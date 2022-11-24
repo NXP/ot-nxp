@@ -26,8 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILD_K32W061)
-    add_subdirectory(k32w0)
-endif()
-
-
+add_subdirectory(${OT_NXP_PLATFORM})

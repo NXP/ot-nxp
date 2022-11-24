@@ -50,7 +50,14 @@ static osaMutexId_t         pdmMutexHandle = NULL;
 
 #if PDM_SAVE_IDLE
 static bool_t settingsInitialized = FALSE;
-#endif
+#define mutex_lock OSA_MutexLock
+#define mutex_unlock OSA_MutexUnlock
+#define mutex_destroy OSA_MutexDestroy
+#else
+#define mutex_lock(...)
+#define mutex_unlock(...)
+#define mutex_destroy(...)
+#endif /* PDM_SAVE_IDLE */
 
 #define kNvmIdOTConfigData 0x4F00
 #define kRamBufferInitialSize 1024
@@ -92,22 +99,22 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
 
     otEXPECT_ACTION((PDM_E_STATUS_OK == PDM_Init()), error = OT_ERROR_NO_BUFS);
 
-    pdmMutexHandle = OSA_MutexCreate();
-    otEXPECT_ACTION((NULL != pdmMutexHandle), error = OT_ERROR_NO_BUFS);
-
     ramDescr = getRamBuffer(kNvmIdOTConfigData, kRamBufferInitialSize);
     otEXPECT_ACTION(ramDescr != NULL, error = OT_ERROR_NO_BUFS);
+    otEXPECT_ACTION(ramDescr->buffer != NULL, error = OT_ERROR_NO_BUFS);
+#if PDM_SAVE_IDLE
+    pdmMutexHandle = ramDescr->header.mutexHandle;
+#endif
 
 exit:
+#if PDM_SAVE_IDLE
     if (error != OT_ERROR_NONE)
     {
         if (pdmMutexHandle)
         {
-            OSA_MutexDestroy(pdmMutexHandle);
+            mutex_destroy(pdmMutexHandle);
         }
     }
-
-#if PDM_SAVE_IDLE
     else
     {
         settingsInitialized = TRUE;
@@ -120,6 +127,20 @@ exit:
 void otPlatSettingsDeinit(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+#if ENABLE_STORAGE_DYNAMIC_MEMORY
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
+    if (ramDescr->buffer)
+    {
+        otPlatFree(ramDescr->buffer);
+        ramDescr->buffer = NULL;
+    }
+    mutex_unlock(pdmMutexHandle);
+    mutex_destroy(pdmMutexHandle);
+
+    otPlatFree(ramDescr);
+    ramDescr = NULL;
+#endif
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
@@ -127,9 +148,9 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     OT_UNUSED_VARIABLE(aInstance);
     rsError ramStatus = RS_ERROR_NONE;
 
-    OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
     ramStatus = ramStorageGet(ramDescr, aKey, aIndex, aValue, aValueLength);
-    OSA_MutexUnlock(pdmMutexHandle);
+    mutex_unlock(pdmMutexHandle);
     return mapRamStorageStatus(ramStatus);
 }
 
@@ -144,32 +165,25 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     uint16_t lengthOfAlreadyExistingValue = 0;
 #endif
 
-    OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
     /* avoid resizing in case ramDescr already contains aValue whose length is >= aValueLength */
     if ((ramStorageGet(ramDescr, aKey, 0, NULL, &lengthOfAlreadyExistingValue) == RS_ERROR_NONE) &&
         (lengthOfAlreadyExistingValue < aValueLength))
     {
-        ramStatus = ramStorageResize(&ramDescr, aKey, aValue, aValueLength - lengthOfAlreadyExistingValue);
+        ramStatus = ramStorageResize(ramDescr, aKey, aValue, aValueLength - lengthOfAlreadyExistingValue);
         otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
     }
 #endif
     ramStatus = ramStorageSet(ramDescr, aKey, aValue, aValueLength);
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
-#if PDM_SAVE_IDLE
-    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
-#else
-    pdmStatus =
-        PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
-#endif
-
+    pdmStatus = PDM_SaveRecord((uint16_t)kNvmIdOTConfigData, ramDescr);
     otEXPECT_ACTION((PDM_E_STATUS_OK == pdmStatus), error = OT_ERROR_NO_BUFS);
 
 exit:
-    OSA_MutexUnlock(pdmMutexHandle);
+    mutex_unlock(pdmMutexHandle);
     return error;
 }
 
@@ -179,27 +193,20 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     PDM_teStatus pdmStatus = PDM_E_STATUS_OK;
     otError      error     = OT_ERROR_NONE;
 
-    OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
-    ramStatus = ramStorageResize(&ramDescr, aKey, aValue, aValueLength);
+    ramStatus = ramStorageResize(ramDescr, aKey, aValue, aValueLength);
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 #endif
     ramStatus = ramStorageAdd(ramDescr, aKey, aValue, aValueLength);
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
-#if PDM_SAVE_IDLE
-    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
-#else
-    pdmStatus =
-        PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
-#endif
-
+    pdmStatus = PDM_SaveRecord((uint16_t)kNvmIdOTConfigData, ramDescr);
     otEXPECT_ACTION((PDM_E_STATUS_OK == pdmStatus), error = OT_ERROR_NO_BUFS);
 
 exit:
-    OSA_MutexUnlock(pdmMutexHandle);
+    mutex_unlock(pdmMutexHandle);
     return error;
 }
 
@@ -210,22 +217,15 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     PDM_teStatus pdmStatus = PDM_E_STATUS_OK;
     otError      error     = OT_ERROR_NONE;
 
-    OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
     ramStatus = ramStorageDelete(ramDescr, aKey, aIndex);
     otEXPECT_ACTION((RS_ERROR_NONE == ramStatus), error = mapRamStorageStatus(ramStatus));
 
-#if PDM_SAVE_IDLE
-    pdmStatus = FS_eSaveRecordDataInIdleTask((uint16_t)kNvmIdOTConfigData, ramDescr,
-                                             ramDescr->ramBufferLen + kRamDescHeaderSize);
-#else
-    pdmStatus =
-        PDM_eSaveRecordData((uint16_t)kNvmIdOTConfigData, ramDescr, ramDescr->ramBufferLen + kRamDescHeaderSize);
-#endif
-
+    pdmStatus = PDM_SaveRecord((uint16_t)kNvmIdOTConfigData, ramDescr);
     otEXPECT_ACTION((PDM_E_STATUS_OK == pdmStatus), error = OT_ERROR_NO_BUFS);
 
 exit:
-    OSA_MutexUnlock(pdmMutexHandle);
+    mutex_unlock(pdmMutexHandle);
     return error;
 }
 
@@ -233,19 +233,11 @@ void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    OSA_MutexLock(pdmMutexHandle, osaWaitForever_c);
-    memset(ramDescr, 0, ramDescr->ramBufferLen + kRamDescHeaderSize);
-#if ENABLE_STORAGE_DYNAMIC_MEMORY
-    if (ramDescr)
-    {
-        otPlatFree(ramDescr);
-        ramDescr = NULL;
-    }
-#endif
-    OSA_MutexUnlock(pdmMutexHandle);
-    OSA_MutexDestroy(pdmMutexHandle);
-
+    mutex_lock(pdmMutexHandle, osaWaitForever_c);
+    memset(ramDescr->buffer, 0, ramDescr->header.maxLength);
+    ramDescr->header.length = 0;
     PDM_vDeleteDataRecord(kNvmIdOTConfigData);
+    mutex_unlock(pdmMutexHandle);
 }
 
 #if gRadioUsePdm_d && PDM_SAVE_IDLE

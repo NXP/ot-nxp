@@ -26,12 +26,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-rcp-ble-hci-bb-${PLATFORM}
+add_executable(ot-rcp-ble-hci-bb-${OT_NXP_PLATFORM}
     main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/ncp/ncp.c
 )
 
-target_include_directories(ot-rcp-ble-hci-bb-${PLATFORM} PRIVATE
+target_include_directories(ot-rcp-ble-hci-bb-${OT_NXP_PLATFORM} PRIVATE
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
@@ -44,7 +44,7 @@ target_compile_options(ot-config INTERFACE
 )
 
 #Add a dependeny to SDK files with app_pre_include
-target_compile_definitions(nxp-k32w061-driver
+target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
         APP_PRE_INCLUDE="${CMAKE_CURRENT_SOURCE_DIR}/app_preinclude.h"
         DUAL_MODE_APP
@@ -52,21 +52,21 @@ target_compile_definitions(nxp-k32w061-driver
 
 if (OT_APP_RCP_BLE_HCI_BB_SINGLE_UART)
     #In case of single UART support, following defines are added, in this case all hci and spinel frame would go through the ot plat UART interface
-    target_compile_definitions(nxp-k32w061-driver
+    target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
             gUartDebugConsole_d=1
             SDK_DEBUGCONSOLE=1
             gHcitSerialManagerSupport_d=0 # Disable serial manager on hci
             OT_PLAT_APP_UART_INSTANCE=0 # UART 0 with flow control would be used to transfert HCI and spinel packet
     )
-    target_link_libraries(ot-rcp-ble-hci-bb-${PLATFORM} PUBLIC
+    target_link_libraries(ot-rcp-ble-hci-bb-${OT_NXP_PLATFORM} PUBLIC
         -Wl,--wrap=otNcpHdlcReceive
         -Wl,--wrap=Hcit_SendPacket
         -Wl,--wrap=otLinkRawTransmit
     )
 else ()
     #In other cases the OT UART instance is moved on UART1 and HCI on UART0
-    target_compile_definitions(nxp-k32w061-driver
+    target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
             gHcitSerialManagerSupport_d=1
             gHcitInterfaceNumber_d=0
@@ -83,15 +83,15 @@ set_property(TARGET cr_c cr_eabihelpers cr_newlib_nohost PROPERTY LINKER_LANGUAG
 
 set(APP_LINKER_FILE ${PROJECT_SOURCE_DIR}/src/k32w0/k32w061/k32w061_dm.ld)
 
-target_link_libraries(ot-rcp-ble-hci-bb-${PLATFORM} PUBLIC
-    openthread-${PLATFORM}
+target_link_libraries(ot-rcp-ble-hci-bb-${OT_NXP_PLATFORM} PUBLIC
+    ${OT_PLATFORM_LIB}
     openthread-rcp
     ot-config
     -Llib
     -T${APP_LINKER_FILE}
     -Xlinker --defsym=gUseInternalStorageLink_d=0
-    -Xlinker --defsym=gUseNVMLink_d=1 
-    -Xlinker --defsym=__ram_vector_table__=1 
+    -Xlinker --defsym=gUseNVMLink_d=1
+    -Xlinker --defsym=__ram_vector_table__=1
     -Xlinker --defsym=__app_load_address__=0
     -Xlinker --defsym=__app_stated_size__=573440
     -Xlinker --defsym=__app_id__=0

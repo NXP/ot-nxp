@@ -92,8 +92,4 @@ set(K32W0_INCLUDES
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
-if(OT_BUILD_K32W061)
-    include(k32w061/k32w061.cmake)
-elseif(OT_BUILD_JN5189)
-    include(jn5189/jn5189.cmake)
-endif()
+include(${OT_NXP_PLATFORM}/${OT_NXP_PLATFORM}.cmake)

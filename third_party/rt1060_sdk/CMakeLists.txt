@@ -92,7 +92,7 @@ endif ()
 
 set_property(SOURCE ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S PROPERTY LANGUAGE C)
 
-add_library(nxp-rt1060-driver
+add_library(${NXP_DRIVER_LIB}
 #freertos files
     ${RTOS_PATH}/freertos/freertos_kernel/event_groups.c
     ${RTOS_PATH}/freertos/freertos_kernel/croutine.c
@@ -140,6 +140,9 @@ add_library(nxp-rt1060-driver
     ${NXP_RT1060_SDK_ROOT_ABS}/components/gpio/fsl_adapter_igpio.c
 #Framework files
     ${MIDDLEWARE_PATH}/wireless/framework/FunctionLib/FunctionLib.c
+    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/fwk_platform_ot.c
+    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/fwk_platform_hdlc.c
+    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/k32w0/fwk_platform_coex.c
 #File system
     ${MIDDLEWARE_PATH}/littlefs/lfs.c
     ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
@@ -149,13 +152,13 @@ add_library(nxp-rt1060-driver
 )
 
 
-target_include_directories(nxp-rt1060-driver 
+target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
 #freertos includes
         ${RTOS_PATH}/freertos/freertos_kernel/include
         ${RTOS_PATH}/freertos/freertos_kernel/portable/GCC/ARM_CM4F
 #CMSIS includes
-        ${NXP_RT1060_SDK_ROOT_ABS}/CMSIS/Core/Include 
+        ${NXP_RT1060_SDK_ROOT_ABS}/CMSIS/Core/Include
 #other SDK files
         ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/drivers
         ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062
@@ -191,6 +194,7 @@ target_include_directories(nxp-rt1060-driver
         ${MIDDLEWARE_PATH}/wireless/framework/FunctionLib
         ${MIDDLEWARE_PATH}/wireless/framework/Common
         ${MIDDLEWARE_PATH}/wireless/framework/platform/rt1060
+        ${MIDDLEWARE_PATH}/wireless/framework/platform/include
         ${MIDDLEWARE_PATH}/wireless/framework/FileSystem
 #File system
         ${MIDDLEWARE_PATH}/littlefs
@@ -198,7 +202,7 @@ target_include_directories(nxp-rt1060-driver
         ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash/mimxrt1062
 )
 
-target_compile_definitions(nxp-rt1060-driver
+target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
     -D__STARTUP_CLEAR_BSS
     -D__STARTUP_INITIALIZE_NONCACHEDATA
@@ -227,6 +231,11 @@ target_compile_definitions(nxp-rt1060-driver
     -DLFS_NO_DEBUG
     -DLFS_NO_ERROR
     -DLFS_NO_WARN
+    -DSPINEL_UART_INSTANCE=3
+    -DSPINEL_ENABLE_RX_RTS=1
+    -DSPINEL_ENABLE_TX_RTS=1
+    -DRESET_PIN_PORT=6
+    -DRESET_PIN_NUM=2
     #DMA support enablement
     #-DHAL_UART_DMA_ENABLE=1
     #-DSERIAL_PORT_TYPE_UART_DMA=1
@@ -239,7 +248,7 @@ target_compile_definitions(nxp-rt1060-driver
 
 if (OT_STACK_ENABLE_LOG)
 #move logs to UART2
-target_compile_definitions(nxp-rt1060-driver
+target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
     BOARD_DEBUG_UART_BASEADDR=LPUART2
     BOARD_DEBUG_UART_INSTANCE=2U
@@ -248,12 +257,12 @@ target_compile_definitions(nxp-rt1060-driver
 )
 endif ()
 
-target_link_libraries(nxp-rt1060-driver
+target_link_libraries(${NXP_DRIVER_LIB}
     PRIVATE
-        openthread-rt1060
+        ${OT_PLATFORM_LIB}
 )
 
-target_compile_options(nxp-rt1060-driver
+target_compile_options(${NXP_DRIVER_LIB}
     PRIVATE
         ${OT_CFLAGS}
         -Wno-unknown-pragmas
@@ -371,7 +380,7 @@ target_include_directories(nxp-rt1060-mbedtls
     ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls
 )
 
-target_compile_definitions(nxp-rt1060-mbedtls 
+target_compile_definitions(nxp-rt1060-mbedtls
     PUBLIC
     "MBEDTLS_CONFIG_FILE=\"rt-mbedtls-config.h\""
 )
@@ -383,7 +392,7 @@ target_compile_options(nxp-rt1060-mbedtls
 
 target_link_libraries(nxp-rt1060-mbedtls
     PUBLIC
-    nxp-rt1060-driver
+    ${NXP_DRIVER_LIB}
     ot-config
 )
 

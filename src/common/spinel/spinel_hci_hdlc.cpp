@@ -27,6 +27,7 @@
  */
 
 #include "spinel_hci_hdlc.hpp"
+#include "fsl_common.h"
 #include <openthread/tasklet.h>
 #include "common/logging.hpp"
 #include "lib/spinel/spinel.h"
@@ -90,7 +91,7 @@ extern "C" void    __wrap_hci_uart_init(void)
 
 namespace ot {
 
-namespace RT {
+namespace NXP {
 
 void HdlcSpinelHciInterface::Init(void)
 {
@@ -101,6 +102,11 @@ void HdlcSpinelHciInterface::Init(void)
         assert(mutexHandle != NULL && msgQueue != NULL);
     }
     HdlcInterface::Init();
+}
+
+void HdlcSpinelHciInterface::HandleHdlcFrame(void *aContext, otError aError)
+{
+    static_cast<HdlcSpinelHciInterface *>(aContext)->HandleHdlcFrame(aError);
 }
 
 void HdlcSpinelHciInterface::HandleHdlcFrame(otError aError)
@@ -137,45 +143,34 @@ void HdlcSpinelHciInterface::HandleHdlcFrame(otError aError)
     }
 }
 
-void HdlcSpinelHciInterface::HdlcHciSerialManagerRxCallback(void *                             callbackParam,
-                                                            serial_manager_callback_message_t *message,
-                                                            serial_manager_status_t            status)
+void HdlcSpinelHciInterface::HdlcRxCallback(uint8_t *data, uint16_t len, void *param)
 {
-    static_cast<HdlcSpinelHciInterface *>(callbackParam)->ProcessSerialManagerRxData();
+    static_cast<HdlcSpinelHciInterface *>(param)->ProcessRxData(data, len);
 }
 
-void HdlcSpinelHciInterface::ProcessSerialManagerRxData(void)
+void HdlcSpinelHciInterface::ProcessRxData(uint8_t *data, uint16_t len)
 {
-    uint8_t                 mUartRxBuffer[256];
-    uint32_t                bytesRead = 0;
-    uint8_t                 event;
-    uint32_t                remainingRxBufferSize = 0;
-    serial_manager_status_t smStatus;
+    uint8_t  event;
+    uint32_t remainingRxBufferSize = 0;
+
     xSemaphoreTake(mutexHandle, portMAX_DELAY);
 
     do
     {
         /* Check if we have enough space to store the frame in the buffer */
         remainingRxBufferSize = RxHciSpinelFrameBuffer.GetFrameMaxLength() - RxHciSpinelFrameBuffer.GetLength();
-        otLogDebgPlat("remainingRxBufferSize = %d", remainingRxBufferSize);
-        if (remainingRxBufferSize >= sizeof(mUartRxBuffer))
+        otLogDebgPlat("remainingRxBufferSize = %lu", remainingRxBufferSize);
+
+        if (remainingRxBufferSize >= len)
         {
-            OSA_InterruptDisable();
-            smStatus = SerialManager_TryRead((serial_read_handle_t)otTransceiverSerialReadHandle, mUartRxBuffer,
-                                             sizeof(mUartRxBuffer), &bytesRead);
-            OSA_InterruptEnable();
-            if (bytesRead > 0 && smStatus == kStatus_SerialManager_Success)
-            {
-                // otDumpDebgPlat("Serial", mUartRxBuffer, bytesRead);
-                mHdlcHciSpinelDecoder.Decode(mUartRxBuffer, bytesRead);
-            }
-            else
-                break;
+            // otDumpDebgPlat("Serial", data, len);
+            mHdlcHciSpinelDecoder.Decode(data, len);
+            break;
         }
         else
         {
             spinelBufferFull = true;
-            otLogDebgPlat("Spinel buffer full remainingRxLen = %d", remainingRxBufferSize);
+            otLogDebgPlat("Spinel buffer full remainingRxLen = %lu", remainingRxBufferSize);
             /* Send a signal to the openthread task to indicate to empty the spinel buffer */
             otTaskletsSignalPending(NULL);
             /* Give the mutex */
@@ -185,8 +180,7 @@ void HdlcSpinelHciInterface::ProcessSerialManagerRxData(void)
             /* take the mutex again */
             xSemaphoreTake(mutexHandle, portMAX_DELAY);
         }
-
-    } while (bytesRead != 0);
+    } while (true);
 
     xSemaphoreGive(mutexHandle);
 }
@@ -246,11 +240,6 @@ uint32_t HdlcSpinelHciInterface::TryReadAndDecode(bool fullRead)
     return totalBytesRead;
 }
 
-void HdlcSpinelHciInterface::HandleHdlcFrame(void *aContext, otError aError)
-{
-    static_cast<HdlcSpinelHciInterface *>(aContext)->HandleHdlcFrame(aError);
-}
-
-} // namespace RT
+} // namespace NXP
 
 } // namespace ot

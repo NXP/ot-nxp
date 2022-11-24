@@ -274,7 +274,8 @@ static uint8_t  sKeyId;
 static uint32_t sCslPeriod;
 #endif
 
-static bool_t sAllowDeviceToSleep = FALSE;
+/* tx/rx prevent low power mode, sleep allows it */
+static bool_t sAllowDeviceToSleep = TRUE;
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool isCoexInitialized;
@@ -402,6 +403,8 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 otError otPlatRadioEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    sAllowDeviceToSleep = TRUE; /* synced with radio state */
 
     K32WResetRxRingBuffer();
 
@@ -819,7 +822,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
         stateChanged = TRUE;
     }
 
-    rssiValSigned = i16Radio_GetRSSI(0, FALSE, NULL);
+    rssiValSigned = u8MMAC_EnergyDetect(0);
 
     if (stateChanged)
     {

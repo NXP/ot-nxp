@@ -168,3 +168,14 @@ void otPlatFree(void *aPtr)
     vPortFree(aPtr);
 }
 #endif
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+
+    va_start(ap, aFormat);
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+    va_end(ap);
+}
+#endif

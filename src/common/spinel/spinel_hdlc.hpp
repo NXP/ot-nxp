@@ -26,18 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_RT_SPINEL_HDLC_HPP_
-#define OT_RT_SPINEL_HDLC_HPP_
+#ifndef OT_NXP_SPINEL_HDLC_HPP_
+#define OT_NXP_SPINEL_HDLC_HPP_
 
-#include "fsl_adapter_gpio.h"
-#include "fsl_component_serial_manager.h"
+#include "fsl_os_abstraction.h"
+#include "fwk_platform_hdlc.h"
 #include "ot_platform_common.h"
 
+#include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
 
 namespace ot {
 
-namespace RT {
+namespace NXP {
 
 typedef uint8_t HdlcSpinelContext;
 
@@ -123,52 +124,30 @@ public:
 private:
     enum
     {
-        /* Ring buffer size should be >= to the RCP max TX buffer size value which is 2048 */
-        kMaxRingBufferSize = 2048,
-
+        /* HDLC encoder buffer must be larger than the max spinel frame size to be able to handle the HDLC overhead
+         * As a host, a TX frame will always contain only 1 spinel frame + HDLC overhead
+         * Sizing the buffer for 2 spinel frames should be large enough to handle this */
+        kEncoderBufferSize = SPINEL_FRAME_MAX_SIZE * 2,
     };
 
-    SERIAL_MANAGER_HANDLE_DEFINE(otTransceiverSerialHandle);
+    ot::Hdlc::FrameBuffer<kEncoderBufferSize> encoderBuffer;
+    ot::Hdlc::Encoder                         mHdlcEncoder;
 
-    ot::Hdlc::Decoder mHdlcDecoder;
+    OSA_MUTEX_HANDLE_DEFINE(writeMutexHandle);
 
-    ot::Hdlc::FrameBuffer<ot::Spinel::SpinelInterface::kMaxFrameSize> encoderBuffer;
-    ot::Hdlc::Encoder                                                 mHdlcEncoder;
-
-    uint32_t mResetDelay;
-
-    GPIO_HANDLE_DEFINE(otGpioResetHandle);
-
-    serial_manager_callback_t hdlcSerialManagerTxCallbackField;
-
-    uint8_t s_ringBuffer[kMaxRingBufferSize];
-    void    TriggerReset(void);
-    void    InitUart(void);
-    void    DeinitUart(void);
     otError Write(const uint8_t *aFrame, uint16_t aLength);
 
-    static void HandleHdlcFrame(void *aContext, otError aError);
-    void        HandleHdlcFrame(otError aError);
-
-    static void HdlcSerialManagerRxCallback(void *                             pData,
-                                            serial_manager_callback_message_t *message,
-                                            serial_manager_status_t            status);
-    static void HdlcSerialManagerTxCallback(void *                             pData,
-                                            serial_manager_callback_message_t *message,
-                                            serial_manager_status_t            status);
-
 protected:
-    serial_manager_callback_t hdlcSerialManagerRxCallbackField;
-    SERIAL_MANAGER_READ_HANDLE_DEFINE(otTransceiverSerialReadHandle);
+    platform_hdlc_rx_callback_t                       hdlcRxCallbackField;
     ot::Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
     ot::Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
     void *                                            mReceiveFrameContext;
     bool                                              isInitialized;
-    virtual uint32_t                                  TryReadAndDecode(bool fullRead);
+    virtual uint32_t                                  TryReadAndDecode(bool fullRead) = 0;
 };
 
-} // namespace RT
+} // namespace NXP
 
 } // namespace ot
 
-#endif // OT_RT_SPINEL_HDLC_HPP_
+#endif // OT_NXP_SPINEL_HDLC_HPP_

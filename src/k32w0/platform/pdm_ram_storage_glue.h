@@ -42,9 +42,13 @@
 extern "C" {
 #endif
 
+#if PDM_ENCRYPTION
+#define PDM_ENCRYPTION_ENABLED 1
+#endif
+
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
-/* pBuffer will be resized (if needed) in case it can't accomodate a new record */
-rsError ramStorageResize(ramBufferDescriptor **pBuffer, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+/* pBuffer->buffer will be resized (if needed) in case it can't accomodate a new record */
+rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 #endif
 
 /* Return a RAM buffer with initialSize and populated with the contents of NVM ID - if found in flash
@@ -54,8 +58,16 @@ rsError ramStorageResize(ramBufferDescriptor **pBuffer, uint16_t aKey, const uin
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize);
 
 #if PDM_SAVE_IDLE
-PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, void *pvDataBuffer, uint16_t u16Datalength);
+PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer);
 void         FS_vIdleTask(uint8_t u8WritesAllowed);
+#endif /* PDM_SAVE_IDLE */
+
+#if PDM_SAVE_IDLE
+/* Use RAM descriptor. FS_vIdleTask needs access to RAM buffer metadata */
+#define PDM_SaveRecord(id, descr) FS_eSaveRecordDataInIdleTask((uint16_t)id, descr)
+#else
+/* Use RAM descriptor buffer directly. No need for metadata on sync save. */
+#define PDM_SaveRecord(id, descr) PDM_eSaveRecordData((uint16_t)id, descr->buffer, descr->header.length)
 #endif /* PDM_SAVE_IDLE */
 
 #ifdef __cplusplus

@@ -26,6 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILD_RT1060)
-    add_subdirectory(rt1060)
-endif()
+add_subdirectory(${OT_NXP_PLATFORM})

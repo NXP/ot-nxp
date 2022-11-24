@@ -32,12 +32,12 @@ add_library(openthread-rt1060
     ../../common/entropy.c
     ../../common/flash_littlefs.c
     ../../common/logging.c
-    ../platform/misc.c
-    ../platform/radio.cpp
-    ../platform/spinel_hdlc.cpp
-    ../platform/spinel_hci_hdlc.cpp
-    ../platform/hci_wrapper_empty.c
-    ../platform/system.c
+    ../../common/spinel/misc.c
+    ../../common/spinel/radio.cpp
+    ../../common/spinel/spinel_hdlc.cpp
+    ../../common/spinel/spinel_hci_hdlc.cpp
+    ../../common/spinel/hci_wrapper_empty.c
+    ../../common/spinel/system.c
     ../../common/uart.c
     board/pin_mux.c
     board/hardware_init.c
@@ -61,9 +61,9 @@ target_link_libraries(openthread-rt1060
         openthread-spinel-rcp
         openthread-platform
     PUBLIC
-        nxp-rt1060-driver
+        ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
 )
 
 #OT needs freeRTOS config dependency
@@ -80,11 +80,6 @@ target_compile_definitions(openthread-rt1060
 target_compile_options(openthread-rt1060
     PRIVATE
         ${OT_CFLAGS}
-        -DSPINEL_UART_INSTANCE=3
-        -DSPINEL_ENABLE_RX_RTS=1
-        -DSPINEL_ENABLE_TX_RTS=1
-        -DRESET_PIN_PORT=6
-        -DRESET_PIN_NUM=2
         -DOT_PLAT_SYS_CRYPTO_INIT
         -DOT_PLAT_SYS_LOG_MANAGEMENT
         -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
@@ -102,6 +97,7 @@ target_include_directories(openthread-rt1060
         board
         freertos
         ../platform
+        ${PROJECT_SOURCE_DIR}/src/common/spinel
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src/common
         ${OT_PUBLIC_INCLUDES}

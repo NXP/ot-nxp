@@ -33,6 +33,7 @@
  */
 
 #include "fsl_os_abstraction.h"
+#include "fwk_platform_ot.h"
 #include "ot_platform_common.h"
 #include <stdlib.h>
 #include <openthread/platform/alarm-milli.h>
@@ -51,10 +52,6 @@
 #endif
 
 #define SYSTEM_BUFFER_LOG_SIZE 256
-
-#if defined(OT_CONTROLLER_INIT)
-extern void controller_init(void);
-#endif
 
 #ifdef OT_PLAT_SYS_LOG_MANAGEMENT
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0)) && ((defined LOG_ENABLE_ASYNC_MODE) && (LOG_ENABLE_ASYNC_MODE))
@@ -96,10 +93,7 @@ void otSysInit(int argc, char *argv[])
 #endif
 
     otPlatRadioInitSpinelInterface();
-
-#if defined(OT_CONTROLLER_INIT)
-    controller_init();
-#endif
+    PLATFORM_InitOt();
 
     otPlatRadioInit();
     otPlatAlarmInit();

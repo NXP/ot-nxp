@@ -40,13 +40,10 @@
 
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
-static ot::Spinel::RadioSpinel<ot::RT::SpiInterface, otInstance> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::NXP::SpiInterface, otInstance> sRadioSpinel;
 #elif defined(OT_PLAT_SPINEL_HCI_OVER_UART)
 #include "spinel_hci_hdlc.hpp"
-static ot::Spinel::RadioSpinel<ot::RT::HdlcSpinelHciInterface, otInstance> sRadioSpinel;
-#else
-#include "spinel_hdlc.hpp"
-static ot::Spinel::RadioSpinel<ot::RT::HdlcInterface, otInstance> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::NXP::HdlcSpinelHciInterface, otInstance> sRadioSpinel;
 #endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -396,7 +393,14 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return 0;
+    return sRadioSpinel.GetCslAccuracy();
+}
+
+uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sRadioSpinel.GetCslUncertainty();
 }
 
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
@@ -456,3 +460,15 @@ otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value)
 {
     return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT8_S, value);
 }
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+                                          otLinkMetrics        aLinkMetrics,
+                                          const otShortAddress aShortAddress,
+                                          const otExtAddress * aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sRadioSpinel.ConfigureEnhAckProbing(aLinkMetrics, aShortAddress, *aExtAddress);
+}
+#endif
