@@ -92,8 +92,8 @@ jobs:
         tar xjf gcc-arm.tar.bz2
         # use the minimal required cmake version
         sudo pip3 install -U scikit-build
-        sudo pip3 install -U cmake==3.10.3
-        cmake --version | grep 3.10.3
+        sudo pip3 install -U cmake==3.13
+        cmake --version | grep 3.13
         sudo pip3 install pycrypto
         sudo pip3 install pycryptodome
         wget https://cache.nxp.com/lgfiles/bsps/SDK_2_6_8_K32W061DK6.zip
