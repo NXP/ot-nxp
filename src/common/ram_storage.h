@@ -37,7 +37,8 @@ typedef enum
 {
     RS_ERROR_NONE,
     RS_ERROR_NOT_FOUND,
-    RS_ERROR_NO_BUFS
+    RS_ERROR_NO_BUFS,
+    RS_ERROR_PDM_ENC
 } rsError;
 
 /* Header for a RAM buffer descriptor.

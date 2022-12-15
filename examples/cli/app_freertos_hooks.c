@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,12 +26,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "common/logging.hpp"
+/**
+ * @file
+ * This file implements FreeRTOS hooks that can be enabled through FreeRTOSConfig.h
+ *
+ * This file is just for example, but not for production.
+ *
+ */
 
-uint16_t hci_transport_enqueue(uint8_t *packet, uint16_t packet_len, uint16_t *enqueued_len)
+/* -------------------------------------------------------------------------- */
+/*                                  Includes                                  */
+/* -------------------------------------------------------------------------- */
+
+#include "FreeRTOS.h"
+#include "assert.h"
+#include "ot_platform_common.h"
+#include "task.h"
+
+/* -------------------------------------------------------------------------- */
+/*                              Public functions                              */
+/* -------------------------------------------------------------------------- */
+
+void vApplicationIdleHook(void)
 {
-    otLogDebgPlat("Frame dropped %d", packet_len);
-    /* Empty hci transport wrapper */
-    *enqueued_len = packet_len;
-    return 0;
+    otSysRunIdleTask();
+}
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    assert(0);
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    assert(0);
 }

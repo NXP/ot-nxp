@@ -1,5 +1,7 @@
 /*
  *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,8 +32,6 @@
 #define OT_NXP_SPINEL_HCI_HDLC_HPP_
 
 #include "spinel_hdlc.hpp"
-#include <FreeRTOS.h>
-#include <semphr.h>
 #include "lib/hdlc/hdlc.hpp"
 
 namespace ot {
@@ -49,38 +49,11 @@ public:
                            void *                                            aCallbackContext,
                            ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer)
         : HdlcInterface(aCallback, aCallbackContext, aFrameBuffer)
-        , mHdlcHciSpinelDecoder(RxHciSpinelFrameBuffer, HandleHdlcFrame, this)
-        , savedFrame(nullptr)
-        , savedFrameLen(0)
-        , spinelBufferFull(false)
-
     {
-        hdlcRxCallbackField = HdlcRxCallback;
     }
 
-    void ProcessRxData(uint8_t *data, uint16_t len);
-    void Init(void);
-
 private:
-    enum
-    {
-        kMaxMultiFrameSize = 2048,
-    };
-
-    Hdlc::MultiFrameBuffer<kMaxMultiFrameSize> RxHciSpinelFrameBuffer;
-    ot::Hdlc::Decoder                          mHdlcHciSpinelDecoder;
-    uint8_t *                                  savedFrame;
-    uint16_t                                   savedFrameLen;
-    SemaphoreHandle_t                          mutexHandle;
-    QueueHandle_t                              msgQueue;
-    bool                                       spinelBufferFull;
-
-    virtual uint32_t TryReadAndDecode(bool fullRead);
-
-    static void HandleHdlcFrame(void *aContext, otError aError);
-    void        HandleHdlcFrame(otError aError);
-
-    static void HdlcRxCallback(uint8_t *data, uint16_t len, void *param);
+    void HandleUnknownHdlcContent(uint8_t *buffer, uint16_t len);
 };
 
 } // namespace NXP

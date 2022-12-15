@@ -1,5 +1,7 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,8 +30,11 @@
 
 #include "spinel_hdlc.hpp"
 #include "board.h"
-#include "fsl_os_abstraction.h"
 #include "fwk_platform_hdlc.h"
+
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "semphr.h"
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
@@ -42,15 +47,19 @@ namespace NXP {
 HdlcInterface::HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
                              void *                                            aCallbackContext,
                              ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer)
-    : encoderBuffer()
-    , mHdlcEncoder(encoderBuffer)
-    , hdlcRxCallbackField(nullptr)
+    : mEncoderBuffer()
+    , mHdlcEncoder(mEncoderBuffer)
+    , mHdlcRxCallbackField(nullptr)
     , mReceiveFrameBuffer(aFrameBuffer)
     , mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
-    , isInitialized(false)
-
+    , mHdlcSpinelDecoder(mRxSpinelFrameBuffer, HandleHdlcFrame, this)
+    , mIsInitialized(false)
+    , mSavedFrame(nullptr)
+    , mSavedFrameLen(0)
+    , mIsSpinelBufferFull(false)
 {
+    mHdlcRxCallbackField = HdlcRxCallback;
 }
 
 HdlcInterface::~HdlcInterface(void)
@@ -61,18 +70,19 @@ void HdlcInterface::Init(void)
 {
     int status;
 
-    if (!isInitialized)
+    if (!mIsInitialized)
     {
-        if (OSA_MutexCreate(writeMutexHandle) != KOSA_StatusSuccess)
-        {
-            assert(0);
-        }
+        mWriteMutexHandle = xSemaphoreCreateMutex();
+        mReadMutexHandle  = xSemaphoreCreateMutex();
+        mMsqQueue         = xQueueCreate(1, sizeof(uint8_t));
+
+        assert((mWriteMutexHandle != NULL) && (mReadMutexHandle != NULL) && (mMsqQueue != NULL));
 
         /* Initialize the HDLC interface */
-        status = PLATFORM_InitHdlcInterface(hdlcRxCallbackField, this);
+        status = PLATFORM_InitHdlcInterface(mHdlcRxCallbackField, this);
         if (status == 0)
         {
-            isInitialized = true;
+            mIsInitialized = true;
         }
         else
         {
@@ -88,7 +98,7 @@ void HdlcInterface::Deinit(void)
     status = PLATFORM_TerminateHdlcInterface();
     if (status == 0)
     {
-        isInitialized = false;
+        mIsInitialized = false;
     }
     else
     {
@@ -96,13 +106,19 @@ void HdlcInterface::Deinit(void)
     }
 }
 
+void HdlcInterface::Process(const otInstance &aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    TryReadAndDecode(false);
+}
+
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
-    assert(encoderBuffer.IsEmpty());
+    assert(mEncoderBuffer.IsEmpty());
 
     /* Protect concurrent Send operation to avoid any buffer corruption */
-    if (OSA_MutexLock(writeMutexHandle, osaWaitForever_c) != KOSA_StatusSuccess)
+    if (xSemaphoreTake(mWriteMutexHandle, portMAX_DELAY) != pdTRUE)
     {
         error = OT_ERROR_FAILED;
         goto exit;
@@ -111,11 +127,11 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     SuccessOrExit(error = mHdlcEncoder.BeginFrame());
     SuccessOrExit(error = mHdlcEncoder.Encode(aFrame, aLength));
     SuccessOrExit(error = mHdlcEncoder.EndFrame());
-    otLogDebgPlat("frame len to send = %d/%d", encoderBuffer.GetLength(), aLength);
-    SuccessOrExit(error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength()));
+    otLogDebgPlat("frame len to send = %d/%d", mEncoderBuffer.GetLength(), aLength);
+    SuccessOrExit(error = Write(mEncoderBuffer.GetFrame(), mEncoderBuffer.GetLength()));
 
 exit:
-    if (OSA_MutexUnlock(writeMutexHandle) != KOSA_StatusSuccess)
+    if (xSemaphoreGive(mWriteMutexHandle) != pdTRUE)
     {
         error = OT_ERROR_FAILED;
     }
@@ -127,10 +143,72 @@ exit:
     return error;
 }
 
-void HdlcInterface::Process(const otInstance &aInstance)
+otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    TryReadAndDecode(false);
+    uint32_t now   = otPlatAlarmMilliGetNow();
+    uint32_t start = now;
+    otError  error = OT_ERROR_RESPONSE_TIMEOUT;
+    do
+    {
+        /* Poll the frame receive flag */
+        if (TryReadAndDecode(true) != 0)
+        {
+            error = OT_ERROR_NONE;
+            break;
+        }
+        vTaskDelay(200);
+        now = otPlatAlarmMilliGetNow();
+    } while ((now - start) < aTimeoutUs / 1000);
+    return error;
+}
+
+void HdlcInterface::ProcessRxData(uint8_t *data, uint16_t len)
+{
+    uint8_t  event;
+    uint32_t remainingRxBufferSize = 0;
+
+    if (xSemaphoreTake(mReadMutexHandle, portMAX_DELAY) != pdTRUE)
+    {
+        assert(0);
+    }
+
+    do
+    {
+        /* Check if we have enough space to store the frame in the buffer */
+        remainingRxBufferSize = mRxSpinelFrameBuffer.GetFrameMaxLength() - mRxSpinelFrameBuffer.GetLength();
+        otLogDebgPlat("remainingRxBufferSize = %lu", remainingRxBufferSize);
+
+        if (remainingRxBufferSize >= len)
+        {
+            // otDumpDebgPlat("Serial", data, len);
+            mHdlcSpinelDecoder.Decode(data, len);
+            break;
+        }
+        else
+        {
+            mIsSpinelBufferFull = true;
+            otLogDebgPlat("Spinel buffer full remainingRxLen = %lu", remainingRxBufferSize);
+            /* Send a signal to the openthread task to indicate to empty the spinel buffer */
+            otTaskletsSignalPending(NULL);
+            /* Give the mutex */
+            if (xSemaphoreGive(mReadMutexHandle) != pdTRUE)
+            {
+                assert(0);
+            }
+            /* Lock the task here until the spinel buffer becomes empty */
+            xQueueReceive(mMsqQueue, &event, portMAX_DELAY);
+            /* take the mutex again */
+            if (xSemaphoreTake(mReadMutexHandle, portMAX_DELAY) != pdTRUE)
+            {
+                assert(0);
+            }
+        }
+    } while (true);
+
+    if (xSemaphoreGive(mReadMutexHandle) != pdTRUE)
+    {
+        assert(0);
+    }
 }
 
 otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
@@ -148,27 +226,129 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
     }
 
     /* Always clear the encoder */
-    encoderBuffer.Clear();
+    mEncoderBuffer.Clear();
     return otResult;
 }
 
-otError HdlcInterface::WaitForFrame(uint64_t aTimeoutUs)
+uint32_t HdlcInterface::TryReadAndDecode(bool fullRead)
 {
-    uint32_t now   = otPlatAlarmMilliGetNow();
-    uint32_t start = now;
-    otError  error = OT_ERROR_RESPONSE_TIMEOUT;
-    do
+    uint32_t totalBytesRead  = 0;
+    uint32_t i               = 0;
+    uint8_t  event           = 1;
+    uint8_t *oldFrame        = mSavedFrame;
+    uint16_t oldLen          = mSavedFrameLen;
+    otError  savedFrameFound = OT_ERROR_NONE;
+
+    if (xSemaphoreTake(mReadMutexHandle, portMAX_DELAY) != pdTRUE)
     {
-        /* Poll the frame receive flag */
-        if (TryReadAndDecode(true) != 0)
+        assert(0);
+    }
+
+    savedFrameFound = mRxSpinelFrameBuffer.GetNextSavedFrame(mSavedFrame, mSavedFrameLen);
+
+    while (savedFrameFound == OT_ERROR_NONE)
+    {
+        /* Copy the data to the ot frame buffer */
+        for (i = 0; i < mSavedFrameLen; i++)
         {
-            error = OT_ERROR_NONE;
-            break;
+            if (mReceiveFrameBuffer.WriteByte(mSavedFrame[i]) != OT_ERROR_NONE)
+            {
+                mReceiveFrameBuffer.UndoLastWrites(i);
+                /* No more space restore the mSavedFrame to the previous frame */
+                mSavedFrame    = oldFrame;
+                mSavedFrameLen = oldLen;
+                /* Signal the ot task to re-try later */
+                otTaskletsSignalPending(NULL);
+                otLogDebgPlat("No more space");
+                if (xSemaphoreGive(mReadMutexHandle) != pdTRUE)
+                {
+                    assert(0);
+                }
+                return totalBytesRead;
+            }
+            totalBytesRead++;
         }
-        OSA_TimeDelay(200);
-        now = otPlatAlarmMilliGetNow();
-    } while ((now - start) < aTimeoutUs / 1000);
-    return error;
+        otLogDebgPlat("Frame len %d consumed", mSavedFrameLen);
+        mReceiveFrameCallback(mReceiveFrameContext);
+        oldFrame        = mSavedFrame;
+        oldLen          = mSavedFrameLen;
+        savedFrameFound = mRxSpinelFrameBuffer.GetNextSavedFrame(mSavedFrame, mSavedFrameLen);
+    }
+
+    if (savedFrameFound != OT_ERROR_NONE)
+    {
+        /* No more frame saved clear the buffer */
+        mRxSpinelFrameBuffer.ClearSavedFrames();
+        /* If the spinel queue was locked */
+        if (mIsSpinelBufferFull)
+        {
+            mIsSpinelBufferFull = false;
+            /* Send an event to unlock the task */
+            if (xQueueOverwrite(mMsqQueue, (void *)&event) != pdTRUE)
+            {
+                assert(0);
+            }
+        }
+    }
+
+    if (xSemaphoreGive(mReadMutexHandle) != pdTRUE)
+    {
+        assert(0);
+    }
+    return totalBytesRead;
+}
+
+void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
+{
+    static_cast<HdlcInterface *>(aContext)->HandleHdlcFrame(aError);
+}
+
+void HdlcInterface::HandleHdlcFrame(otError aError)
+{
+    uint8_t *buf       = mRxSpinelFrameBuffer.GetFrame();
+    uint16_t bufLength = mRxSpinelFrameBuffer.GetLength();
+
+    otDumpDebgPlat("RX FRAME", buf, bufLength);
+
+    if (aError == OT_ERROR_NONE && bufLength > 0)
+    {
+        if ((buf[0] & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG)
+        {
+            otLogDebgPlat("Frame correctly received %d", bufLength);
+            /* Save the frame */
+            mRxSpinelFrameBuffer.SaveFrame();
+            /* Send a signal to the openthread task to indicate that a spinel data is pending */
+            otTaskletsSignalPending(NULL);
+        }
+        else
+        {
+            /* Give a chance to a child class to process this HDLC content
+             * The current class treats it as an error case because it's supposed to receive only Spinel frames
+             * If there's a need to share a same transport interface with another protocol, a child class must
+             * override this method */
+            HandleUnknownHdlcContent(buf, bufLength);
+            /* Not a Spinel frame, discard */
+            mRxSpinelFrameBuffer.DiscardFrame();
+        }
+    }
+    else
+    {
+        otLogCritPlat("Frame will be discarded error = 0x%x", aError);
+        mRxSpinelFrameBuffer.DiscardFrame();
+    }
+}
+
+void HdlcInterface::HdlcRxCallback(uint8_t *data, uint16_t len, void *param)
+{
+    static_cast<HdlcInterface *>(param)->ProcessRxData(data, len);
+}
+
+void HdlcInterface::HandleUnknownHdlcContent(uint8_t *buffer, uint16_t len)
+{
+    (void)buffer;
+    (void)len;
+    otLogCritPlat("Unsupported HDLC content received (not Spinel)");
+    assert(0);
 }
 
 } // namespace NXP

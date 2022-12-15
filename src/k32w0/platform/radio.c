@@ -798,7 +798,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    int8_t  rssidBm       = 127;
+    int8_t  rssidBm       = OT_RADIO_RSSI_INVALID;
     int16_t rssiValSigned = 0;
     bool_t  stateChanged  = FALSE;
 
@@ -808,7 +808,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     /* in RCP designs, the RSSI function is called while the radio is in
      * OT_RADIO_STATE_RECEIVE. Turn off the radio before reading RSSI,
      * otherwise we may end up waiting until a packet is received
-     * (in i16Radio_GetRSSI, while loop)
+     * (in i16MMAC_GetRSSI, while loop)
      */
 
     OSA_InterruptDisable();
@@ -822,7 +822,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
         stateChanged = TRUE;
     }
 
-    rssiValSigned = u8MMAC_EnergyDetect(0);
+    rssiValSigned = i16MMAC_GetRSSI();
 
     if (stateChanged)
     {
@@ -831,6 +831,8 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     }
 
     OSA_InterruptEnable();
+
+    otEXPECT((rssiValSigned != MMAC_INVALID_RSSI));
 
     rssiValSigned = i16Radio_BoundRssiValue(rssiValSigned);
 

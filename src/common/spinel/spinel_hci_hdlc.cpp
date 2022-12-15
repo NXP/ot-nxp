@@ -1,5 +1,7 @@
 /*
  *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -93,151 +95,13 @@ namespace ot {
 
 namespace NXP {
 
-void HdlcSpinelHciInterface::Init(void)
+void HdlcSpinelHciInterface::HandleUnknownHdlcContent(uint8_t *buffer, uint16_t len)
 {
-    if (!isInitialized)
-    {
-        mutexHandle = xSemaphoreCreateMutex();
-        msgQueue    = xQueueCreate(1, sizeof(uint8_t));
-        assert(mutexHandle != NULL && msgQueue != NULL);
-    }
-    HdlcInterface::Init();
-}
-
-void HdlcSpinelHciInterface::HandleHdlcFrame(void *aContext, otError aError)
-{
-    static_cast<HdlcSpinelHciInterface *>(aContext)->HandleHdlcFrame(aError);
-}
-
-void HdlcSpinelHciInterface::HandleHdlcFrame(otError aError)
-{
-    uint8_t *buf          = RxHciSpinelFrameBuffer.GetFrame();
-    uint16_t bufLength    = RxHciSpinelFrameBuffer.GetLength();
     uint16_t enqueued_len = 0;
 
-    otDumpDebgPlat("RX FRAME", buf, bufLength);
-
-    if (aError == OT_ERROR_NONE && bufLength > 0)
-    {
-        /* Is it a spinel frame ? */
-        if ((buf[0] & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG)
-        {
-            otLogDebgPlat("Frame correctly received %d", bufLength);
-            /* Save the frame */
-            RxHciSpinelFrameBuffer.SaveFrame();
-            /* Send a signal to the openthread task to indicate that a spinel data is pending */
-            otTaskletsSignalPending(NULL);
-        }
-        else
-        {
-            /* Transfert the frame to the HCI decoder */
-            hci_transport_enqueue(buf, bufLength, &enqueued_len);
-            assert(enqueued_len == bufLength);
-            RxHciSpinelFrameBuffer.DiscardFrame();
-        }
-    }
-    else
-    {
-        otLogCritPlat("Frame will be discarded error = 0x%x", aError);
-        RxHciSpinelFrameBuffer.DiscardFrame();
-    }
-}
-
-void HdlcSpinelHciInterface::HdlcRxCallback(uint8_t *data, uint16_t len, void *param)
-{
-    static_cast<HdlcSpinelHciInterface *>(param)->ProcessRxData(data, len);
-}
-
-void HdlcSpinelHciInterface::ProcessRxData(uint8_t *data, uint16_t len)
-{
-    uint8_t  event;
-    uint32_t remainingRxBufferSize = 0;
-
-    xSemaphoreTake(mutexHandle, portMAX_DELAY);
-
-    do
-    {
-        /* Check if we have enough space to store the frame in the buffer */
-        remainingRxBufferSize = RxHciSpinelFrameBuffer.GetFrameMaxLength() - RxHciSpinelFrameBuffer.GetLength();
-        otLogDebgPlat("remainingRxBufferSize = %lu", remainingRxBufferSize);
-
-        if (remainingRxBufferSize >= len)
-        {
-            // otDumpDebgPlat("Serial", data, len);
-            mHdlcHciSpinelDecoder.Decode(data, len);
-            break;
-        }
-        else
-        {
-            spinelBufferFull = true;
-            otLogDebgPlat("Spinel buffer full remainingRxLen = %lu", remainingRxBufferSize);
-            /* Send a signal to the openthread task to indicate to empty the spinel buffer */
-            otTaskletsSignalPending(NULL);
-            /* Give the mutex */
-            xSemaphoreGive(mutexHandle);
-            /* Look the task here until the spinel buffer becomes empty */
-            xQueueReceive(msgQueue, &event, portMAX_DELAY);
-            /* take the mutex again */
-            xSemaphoreTake(mutexHandle, portMAX_DELAY);
-        }
-    } while (true);
-
-    xSemaphoreGive(mutexHandle);
-}
-
-uint32_t HdlcSpinelHciInterface::TryReadAndDecode(bool fullRead)
-{
-    uint32_t totalBytesRead  = 0;
-    uint32_t i               = 0;
-    uint8_t  event           = 1;
-    uint8_t *oldFrame        = savedFrame;
-    uint16_t oldLen          = savedFrameLen;
-    otError  savedFrameFound = OT_ERROR_NONE;
-
-    xSemaphoreTake(mutexHandle, portMAX_DELAY);
-
-    savedFrameFound = RxHciSpinelFrameBuffer.GetNextSavedFrame(savedFrame, savedFrameLen);
-
-    while (savedFrameFound == OT_ERROR_NONE)
-    {
-        /* Copy the data to the ot frame buffer */
-        for (i = 0; i < savedFrameLen; i++)
-        {
-            if (mReceiveFrameBuffer.WriteByte(savedFrame[i]) != OT_ERROR_NONE)
-            {
-                mReceiveFrameBuffer.UndoLastWrites(i);
-                /* No more space restore the savedFrame to the previous frame */
-                savedFrame    = oldFrame;
-                savedFrameLen = oldLen;
-                /* Signal the ot task to re-try later */
-                otTaskletsSignalPending(NULL);
-                otLogDebgPlat("No more space");
-                xSemaphoreGive(mutexHandle);
-                return totalBytesRead;
-            }
-            totalBytesRead++;
-        }
-        otLogDebgPlat("Frame len %d consumed", savedFrameLen);
-        mReceiveFrameCallback(mReceiveFrameContext);
-        oldFrame        = savedFrame;
-        oldLen          = savedFrameLen;
-        savedFrameFound = RxHciSpinelFrameBuffer.GetNextSavedFrame(savedFrame, savedFrameLen);
-    }
-
-    if (savedFrameFound != OT_ERROR_NONE)
-    {
-        /* No more frame saved clear the buffer */
-        RxHciSpinelFrameBuffer.ClearSavedFrames();
-        /* If the spinel queue was locked */
-        if (spinelBufferFull)
-        {
-            spinelBufferFull = false;
-            /* Send an event to unlock the task */
-            xQueueOverwrite(msgQueue, (void *)&event);
-        }
-    }
-    xSemaphoreGive(mutexHandle);
-    return totalBytesRead;
+    /* Transfert the frame to the HCI decoder */
+    hci_transport_enqueue(buffer, len, &enqueued_len);
+    assert(enqueued_len == len);
 }
 
 } // namespace NXP

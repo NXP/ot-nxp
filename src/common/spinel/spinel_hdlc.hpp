@@ -1,5 +1,7 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,6 +34,10 @@
 #include "fsl_os_abstraction.h"
 #include "fwk_platform_hdlc.h"
 #include "ot_platform_common.h"
+
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "semphr.h"
 
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
@@ -80,6 +86,14 @@ public:
     void Deinit(void);
 
     /**
+     * This method performs radio driver processing.
+     *
+     * @param[in]  aInstance  The ot instance
+     *
+     */
+    void Process(const otInstance &aInstance);
+
+    /**
      * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
      * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
@@ -107,12 +121,15 @@ public:
     otError WaitForFrame(uint64_t aTimeoutUs);
 
     /**
-     * This method performs radio driver processing.
+     * This method is called by the HDLC RX Callback when a HDLC message has been received
      *
-     * @param[in]  aInstance  The ot instance
+     * It will decode and store the Spinel frames in a temporary Spinel frame buffer (mRxSpinelFrameBuffer)
+     * This buffer will be then copied to the OpenThread Spinel frame buffer, from the OpenThread task context
      *
+     * @param[in] data A pointer to buffer containing the HDLC message to decode.
+     * @param[in] len  The length (number of bytes) in the message.
      */
-    void Process(const otInstance &aInstance);
+    void ProcessRxData(uint8_t *data, uint16_t len);
 
     /**
      * This method is called when RCP is reset to recreate the connection with it.
@@ -128,22 +145,33 @@ private:
          * As a host, a TX frame will always contain only 1 spinel frame + HDLC overhead
          * Sizing the buffer for 2 spinel frames should be large enough to handle this */
         kEncoderBufferSize = SPINEL_FRAME_MAX_SIZE * 2,
+        kMaxMultiFrameSize = 2048,
     };
 
-    ot::Hdlc::FrameBuffer<kEncoderBufferSize> encoderBuffer;
-    ot::Hdlc::Encoder                         mHdlcEncoder;
-
-    OSA_MUTEX_HANDLE_DEFINE(writeMutexHandle);
-
-    otError Write(const uint8_t *aFrame, uint16_t aLength);
-
-protected:
-    platform_hdlc_rx_callback_t                       hdlcRxCallbackField;
+    ot::Hdlc::FrameBuffer<kEncoderBufferSize>         mEncoderBuffer;
+    ot::Hdlc::Encoder                                 mHdlcEncoder;
+    platform_hdlc_rx_callback_t                       mHdlcRxCallbackField;
     ot::Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
     ot::Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
     void *                                            mReceiveFrameContext;
-    bool                                              isInitialized;
-    virtual uint32_t                                  TryReadAndDecode(bool fullRead) = 0;
+    ot::Hdlc::MultiFrameBuffer<kMaxMultiFrameSize>    mRxSpinelFrameBuffer;
+    ot::Hdlc::Decoder                                 mHdlcSpinelDecoder;
+    bool                                              mIsInitialized;
+    uint8_t *                                         mSavedFrame;
+    uint16_t                                          mSavedFrameLen;
+    bool                                              mIsSpinelBufferFull;
+    SemaphoreHandle_t                                 mWriteMutexHandle;
+    SemaphoreHandle_t                                 mReadMutexHandle;
+    QueueHandle_t                                     mMsqQueue;
+
+    otError     Write(const uint8_t *aFrame, uint16_t aLength);
+    uint32_t    TryReadAndDecode(bool fullRead);
+    void        HandleHdlcFrame(otError aError);
+    static void HandleHdlcFrame(void *aContext, otError aError);
+    static void HdlcRxCallback(uint8_t *data, uint16_t len, void *param);
+
+protected:
+    virtual void HandleUnknownHdlcContent(uint8_t *buffer, uint16_t len);
 };
 
 } // namespace NXP

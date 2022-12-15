@@ -35,8 +35,6 @@ add_library(openthread-rt1060
     ../../common/spinel/misc.c
     ../../common/spinel/radio.cpp
     ../../common/spinel/spinel_hdlc.cpp
-    ../../common/spinel/spinel_hci_hdlc.cpp
-    ../../common/spinel/hci_wrapper_empty.c
     ../../common/spinel/system.c
     ../../common/uart.c
     board/pin_mux.c
@@ -81,9 +79,10 @@ target_compile_options(openthread-rt1060
     PRIVATE
         ${OT_CFLAGS}
         -DOT_PLAT_SYS_CRYPTO_INIT
+        -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
         -DOT_PLAT_SYS_LOG_MANAGEMENT
         -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
-        -DOT_PLAT_SPINEL_HCI_OVER_UART
+        -DOT_PLAT_SPINEL_OVER_HDLC
         -DOPENTHREAD_FTD=1
         -Wno-unknown-pragmas
         -Wno-sign-compare
@@ -98,8 +97,8 @@ target_include_directories(openthread-rt1060
         freertos
         ../platform
         ${PROJECT_SOURCE_DIR}/src/common/spinel
-    PRIVATE
         ${PROJECT_SOURCE_DIR}/src/common
+    PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
         ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include

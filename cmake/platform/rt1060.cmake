@@ -24,39 +24,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-set(COMMON_C_FLAGS
-    -mcpu=cortex-m7
-    -mfloat-abi=hard
-    -mthumb
-    -mfpu=fpv5-d16
-    -fno-common
-    -ffreestanding
-    -fno-builtin
-    -mapcs
-)
-set(C_FLAGS
-    ${COMMON_C_FLAGS}
-)
-set(CXX_FLAGS
-    ${COMMON_C_FLAGS}
-    -MMD
-    -MP
-)
-set(ASM_FLAGS
-    ${COMMON_C_FLAGS}
-)
-add_compile_options(
-    "$<$<COMPILE_LANGUAGE:C>:${C_FLAGS}>"
-    "$<$<COMPILE_LANGUAGE:CXX>:${CXX_FLAGS}>"
-    "$<$<COMPILE_LANGUAGE:ASM>:${ASM_FLAGS}>"
-)
+set(PLATFORM_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard -mthumb -mfpu=fpv5-d16 -fno-common -ffreestanding -fno-builtin -mapcs")
+set(PLATFORM_CXX_FLAGS "${PLATFORM_C_FLAGS} -MMD -MP")
+set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u qspiflash_config -u image_vector_table -u boot_data -u dcd_data -Wl,--sort-section=alignment -Wl,--cref")
 
-add_link_options(
-    ${COMMON_C_FLAGS}
-    "SHELL:-u qspiflash_config"
-    "SHELL:-u image_vector_table"
-    "SHELL:-u boot_data"
-    "SHELL:-u dcd_data"
-    -Wl,--sort-section=alignment
-    -Wl,--cref
-)
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${PLATFORM_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PLATFORM_CXX_FLAGS}")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${PLATFORM_C_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} ")

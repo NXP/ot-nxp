@@ -75,21 +75,21 @@ set(CMAKE_ASM_FLAGS_INIT           "${COMMON_C_FLAGS} -x assembler-with-cpp")
 set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs -Xlinker --gc-sections")
 
 # Optimize for debug operation
-set(CMAKE_C_FLAGS_DEBUG            "-g -O0")
-set(CMAKE_CXX_FLAGS_DEBUG          "-g -O0")
-set(CMAKE_ASM_FLAGS_DEBUG          "-g")
+set(CMAKE_C_FLAGS_DEBUG             "-g -O0" CACHE STRING "C compiler flags for Debug build type")
+set(CMAKE_CXX_FLAGS_DEBUG           "-g -O0" CACHE STRING "C++ compiler flags for Debug build type")
+set(CMAKE_ASM_FLAGS_DEBUG           "-g -O0" CACHE STRING "ASM compiler flags for Debug build type")
 
-# Balanced optimization between size and speed
-set(CMAKE_C_FLAGS_RELEASE          "-O2")
-set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
-set(CMAKE_ASM_FLAGS_RELEASE        "")
+# Optimization for speed
+set(CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG" CACHE STRING "C compiler flags for Release build type")
+set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "C++ compiler flags for Release build type")
+set(CMAKE_ASM_FLAGS_RELEASE        "-O3 -DNDEBUG" CACHE STRING "ASM compiler flags for Release build type")
 
 # Optimization for size
-set(CMAKE_C_FLAGS_MINSIZEREL       "-Os")
-set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os")
-set(CMAKE_ASM_FLAGS_MINSIZEREL     "")
+set(CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG" CACHE STRING "C compiler flags for MinSizeRel build type")
+set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "C++ compiler flags for MinSizeRel build type")
+set(CMAKE_ASM_FLAGS_MINSIZEREL     "-Os -DNDEBUG" CACHE STRING "ASM compiler flags for MinSizeRel build type")
 
 # Balanced optimization with debug infos
-set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-g -O2")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2")
-set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-g")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-g -O2 -DNDEBUG" CACHE STRING "C compiler flags for RelWithDebInfo build type")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -DNDEBUG" CACHE STRING "C++ compiler flags for RelWithDebInfo build type")
+set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-g -O2 -DNDEBUG" CACHE STRING "ASM compiler flags for RelWithDebInfo build type")

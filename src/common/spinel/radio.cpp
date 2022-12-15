@@ -1,5 +1,7 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +43,10 @@
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
 static ot::Spinel::RadioSpinel<ot::NXP::SpiInterface, otInstance> sRadioSpinel;
-#elif defined(OT_PLAT_SPINEL_HCI_OVER_UART)
+#elif defined(OT_PLAT_SPINEL_OVER_HDLC)
+#include "spinel_hdlc.hpp"
+static ot::Spinel::RadioSpinel<ot::NXP::HdlcInterface, otInstance> sRadioSpinel;
+#elif defined(OT_PLAT_SPINEL_HCI_OVER_HDLC)
 #include "spinel_hci_hdlc.hpp"
 static ot::Spinel::RadioSpinel<ot::NXP::HdlcSpinelHciInterface, otInstance> sRadioSpinel;
 #endif

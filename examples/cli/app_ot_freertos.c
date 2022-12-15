@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -63,7 +64,6 @@ static TaskHandle_t sMainTask = NULL;
 
 extern void otAppCliInit(otInstance *aInstance);
 extern void otSysRunIdleTask(void);
-extern void BOARD_InitHardware(void);
 
 static void appOtInit()
 {
@@ -116,8 +116,6 @@ static void mainloop(void *aContext)
 
 void appOtStart(int argc, char *argv[])
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
     xTaskCreate(mainloop, "ot", OT_MAIN_TASK_SIZE, NULL, OT_MAIN_TASK_PRIORITY, &sMainTask);
     vTaskStartScheduler();
 }
@@ -135,27 +133,6 @@ void otSysEventSignalPending(void)
     /* Context switch needed? */
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-
-#if (defined(configUSE_IDLE_HOOK) && (configUSE_IDLE_HOOK > 0))
-void vApplicationIdleHook(void)
-{
-    otSysRunIdleTask();
-}
-#endif
-
-#if (defined(configCHECK_FOR_STACK_OVERFLOW) && (configCHECK_FOR_STACK_OVERFLOW > 0))
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
-{
-    assert(0);
-}
-#endif
-
-#if (defined(configUSE_MALLOC_FAILED_HOOK) && (configUSE_MALLOC_FAILED_HOOK > 0))
-void vApplicationMallocFailedHook(void)
-{
-    assert(0);
-}
-#endif
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)

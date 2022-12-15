@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022, The OpenThread Authors.
+#  Copyright (c) 2022, NXP.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,17 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli-${OT_NXP_PLATFORM}
-    app_ot_freertos.c
-    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    ../main.c
+set(MBEDTLS_PORT_PATH ${OT_NXP_MBEDTLS_PATH}/port)
+
+file(GLOB ELS_SOURCES ${MBEDTLS_PORT_PATH}/els/*.c)
+file(GLOB PKC_SOURCES ${MBEDTLS_PORT_PATH}/pkc/*.c)
+
+list(APPEND thirdparty_src
+    ${ELS_SOURCES}
+    ${PKC_SOURCES}
 )
 
-target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    ..
-    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+list(APPEND thirdparty_inc_public
+    ${MBEDTLS_PORT_PATH}/els
+    ${MBEDTLS_PORT_PATH}/pkc
 )
-
-target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    openthread-cli-ftd
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    ${NXP_DRIVER_LIB}
-    ot-config
-    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
-)
-
-if(NXP_BOARD_LIB)
-    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-        ${NXP_BOARD_LIB}
-    )
-endif()

@@ -32,6 +32,7 @@
  *
  */
 
+#include "pdm_ram_storage_glue.h"
 #include "PDM.h"
 #include "platform-k32w.h"
 #include "ram_storage.h"
@@ -76,38 +77,90 @@ static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
 #endif
 static uint8_t sPdmBuffer[PDM_BUFFER_SIZE] __attribute__((aligned(4))) = {0};
 
+#if PDM_ENCRYPTION
 static uint8_t sPdmStagingBuffer[PDM_BUFFER_SIZE] __attribute__((aligned(4))) = {0};
 #endif
+
+#endif /* !ENABLE_STORAGE_DYNAMIC_MEMORY */
+
+extern void *otPlatRealloc(void *ptr, size_t aSize);
 
 #if PDM_ENCRYPTION
 
 static PDM_portConfig_t pdm_PortContext = {NULL, 0, NULL, 0};
 
-/* Initialize and enable PDM encryption context */
-static void initPdmEncContext(PDM_portConfig_t *pdm_PortContext,
-                              uint8_t *         stagingBuffer,
-                              uint16_t          stagingBufferSize,
-                              uint8_t *         encKey)
+#if ENABLE_STORAGE_DYNAMIC_MEMORY
+
+/* Alloc/Realloc staging buffer in PDM encryption context */
+static rsError stagingBufferResize(PDM_portConfig_t *pdm_PortContext, uint16_t newSize)
 {
-    if (!pdm_PortContext->pStaging_buf)
+    rsError  err = RS_ERROR_NONE;
+    uint8_t *ptr = NULL;
+
+    otEXPECT_ACTION((pdm_PortContext != NULL), err = RS_ERROR_PDM_ENC);
+
+    if (pdm_PortContext->staging_buf_size < newSize)
     {
-        PDM_teStatus status = PDM_E_STATUS_OK;
-
-        pdm_PortContext->pStaging_buf    = stagingBuffer;
-        pdm_PortContext->taging_buf_size = stagingBufferSize;
-        pdm_PortContext->pEncryptionKey  = encKey;
-        pdm_PortContext->config_flags    = PDM_ENCRYPTION_ENABLED;
-
-        status = PDM_SetEncryption((const PDM_portConfig_t *)pdm_PortContext);
-        assert(status == PDM_E_STATUS_OK);
+        ptr = (uint8_t *)otPlatRealloc((void *)pdm_PortContext->pStaging_buf, newSize);
+        otEXPECT_ACTION((NULL != ptr), err = RS_ERROR_NO_BUFS);
+        pdm_PortContext->pStaging_buf     = ptr;
+        pdm_PortContext->staging_buf_size = newSize;
     }
+
+exit:
+    return err;
+}
+
+#endif /* ENABLE_STORAGE_DYNAMIC_MEMORY */
+
+/* Initialize and enable PDM encryption context */
+static rsError initPdmEncContext(PDM_portConfig_t *pdm_PortContext,
+                                 uint8_t *         stagingBuffer,
+                                 uint16_t          stagingBufferSize,
+                                 uint32_t *        encKey,
+                                 uint8_t           config_flags)
+{
+    rsError      err    = RS_ERROR_NONE;
+    PDM_teStatus status = PDM_E_STATUS_OK;
+    otEXPECT_ACTION((pdm_PortContext != NULL), err = RS_ERROR_PDM_ENC);
+
+    if (config_flags == PDM_CNF_ENC_ENABLED)
+    {
+        if (stagingBuffer)
+        {
+            pdm_PortContext->pStaging_buf     = stagingBuffer;
+            pdm_PortContext->staging_buf_size = stagingBufferSize;
+        }
+        else
+        {
+            err = stagingBufferResize(pdm_PortContext, stagingBufferSize);
+            otEXPECT(err == RS_ERROR_NONE);
+        }
+    }
+    else if (config_flags == (PDM_CNF_ENC_ENABLED | PDM_CNF_ENC_TMP_BUFF))
+    {
+        pdm_PortContext->pStaging_buf     = NULL;
+        pdm_PortContext->staging_buf_size = 0;
+    }
+    else
+    {
+        err = RS_ERROR_PDM_ENC;
+        otEXPECT(false);
+    }
+
+    pdm_PortContext->pEncryptionKey = encKey;
+    pdm_PortContext->config_flags   = config_flags;
+
+    status = PDM_SetEncryption((const PDM_portConfig_t *)pdm_PortContext);
+    otEXPECT_ACTION((status == PDM_E_STATUS_OK), err = RS_ERROR_PDM_ENC);
+
+exit:
+    return err;
 }
 
 #endif /* PDM_ENCRYPTION */
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
-
-extern void *otPlatRealloc(void *ptr, size_t aSize);
 
 static void HandleError(ramBufferDescriptor **buffer)
 {
@@ -120,12 +173,9 @@ static void HandleError(ramBufferDescriptor **buffer)
 
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 {
+    rsError              err              = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr         = NULL;
     bool_t               bLoadDataFromNvm = FALSE;
-#if PDM_ENCRYPTION
-    uint8_t *stagingBuffer     = NULL;
-    uint16_t stagingBufferSize = 0;
-#endif
 
     ramDescr = (ramBufferDescriptor *)otPlatCAlloc(1, kRamDescSize);
     otEXPECT_ACTION(ramDescr != NULL, HandleError(&ramDescr));
@@ -149,13 +199,18 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     otEXPECT_ACTION(ramDescr->header.maxLength <= kRamBufferMaxAllocSize, HandleError(&ramDescr));
 
 #if PDM_ENCRYPTION
-    stagingBuffer     = (uint8_t *)otPlatCAlloc(1, ramDescr->header.maxLength);
-    stagingBufferSize = stagingBuffer ? ramDescr->header.maxLength : 0;
-
-    /* Use alocated staging buffer for encryption result.
+#if PDM_SAVE_IDLE
+    /* Don't allocate staging buffer, use in-place encryption.
      * Don't pass any encryption key, use the EFUSE key.
      */
-    initPdmEncContext(&pdm_PortContext, stagingBuffer, stagingBufferSize, NULL);
+    err = initPdmEncContext(&pdm_PortContext, NULL, 0, NULL, PDM_CNF_ENC_ENABLED | PDM_CNF_ENC_TMP_BUFF);
+#else
+    /* Allocate staging buffer.
+     * Don't pass any encryption key, use the EFUSE key.
+     */
+    err = initPdmEncContext(&pdm_PortContext, NULL, ramDescr->header.maxLength, NULL, PDM_CNF_ENC_ENABLED);
+#endif
+    otEXPECT_ACTION(err == RS_ERROR_NONE, HandleError(&ramDescr));
 #endif
 
     ramDescr->buffer = (uint8_t *)otPlatCAlloc(1, ramDescr->header.maxLength);
@@ -200,9 +255,9 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
             pBuffer->buffer           = ptr;
             pBuffer->header.maxLength = allocSize;
 
-#if PDM_ENCRYPTION
-            pdm_PortContext.pStaging_buf = (uint8_t *)otPlatRealloc((void *)(pdm_PortContext.pStaging_buf), allocSize);
-            pdm_PortContext.staging_buf_size = pdm_PortContext.pStaging_buf ? allocSize : 0;
+#if PDM_ENCRYPTION && !PDM_SAVE_IDLE
+            err = stagingBufferResize(&pdm_PortContext, allocSize);
+            otEXPECT(err == RS_ERROR_NONE);
 #endif
         }
         else
@@ -219,6 +274,7 @@ exit:
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
 {
     OT_UNUSED_VARIABLE(initialSize);
+    rsError              err       = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr  = (ramBufferDescriptor *)&sPdmBuffer;
     uint16_t             bytesRead = 0;
 
@@ -226,14 +282,15 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
     ramDescr->buffer             = (uint8_t *)&sPdmBuffer[kRamDescSize];
 #if PDM_SAVE_IDLE
     ramDescr->header.mutexHandle = OSA_MutexCreate();
-    otEXPECT(ramDescr->header.mutexHandle != NULL);
+    otEXPECT_ACTION((NULL != ramDescr->header.mutexHandle), ramDescr = NULL);
 #endif
 
 #if PDM_ENCRYPTION
     /* Use static staging buffer for encryption result.
      * Don't pass any encryption key, use the EFUSE key.
      */
-    initPdmEncContext(&pdm_PortContext, sPdmStagingBuffer, PDM_BUFFER_SIZE, NULL);
+    err = initPdmEncContext(&pdm_PortContext, sPdmStagingBuffer, PDM_BUFFER_SIZE, NULL, PDM_CNF_ENC_ENABLED);
+    otEXPECT(err == RS_ERROR_NONE);
 #endif
 
     if (PDM_bDoesDataExist(nvmId, &ramDescr->header.length))
@@ -247,6 +304,7 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize)
         }
     }
 
+exit:
     return ramDescr;
 }
 #endif

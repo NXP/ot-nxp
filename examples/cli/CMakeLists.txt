@@ -26,6 +26,29 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if (OT_APP_CLI_FREERTOS)
-    add_subdirectory(rtos)
-endif ()
+add_executable(ot-cli-${OT_NXP_PLATFORM}
+    main.c
+    app_ot_freertos.c
+    app_freertos_hooks.c
+    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+)
+
+target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    ..
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+)
+
+target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    openthread-cli-ftd
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    ${NXP_DRIVER_LIB}
+    ot-config
+    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+)
+
+if(NXP_BOARD_LIB)
+    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+        ${NXP_BOARD_LIB}
+    )
+endif()

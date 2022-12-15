@@ -179,6 +179,12 @@ otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value);
  */
 void otPlatUartSetInstance(uint8_t newInstance);
 
+/**
+ * This function is called from idle hook, likely for system idle operation such as flash operations
+ *
+ */
+void otSysRunIdleTask(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

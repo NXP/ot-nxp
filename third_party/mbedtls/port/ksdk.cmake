@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022, The OpenThread Authors.
+#  Copyright (c) 2022, NXP.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if (OT_APP_CLI_FREERTOS)
-    add_subdirectory(cli)
-endif()
+set(MBEDTLS_PORT_PATH ${OT_NXP_MBEDTLS_PATH}/port)
 
-add_subdirectory(hybrid)
+FILE(GLOB KSDK_SOURCES ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/*.c)
+
+list(APPEND thirdparty_src
+    ${KSDK_SOURCES}
+)
+
+list(APPEND thirdparty_inc_public
+    ${MBEDTLS_PORT_PATH}/ksdk
+)

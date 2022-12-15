@@ -30,7 +30,10 @@ get_filename_component(NXP_RT1060_SDK_ROOT_ABS "$ENV{NXP_RT1060_SDK_ROOT}" ABSOL
 
 set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "evkbmimxrt1060")
 
+# Required to set MIDDLEWARE_PATH so that it is visible in current scope
+# and in parent scope
 set(MIDDLEWARE_PATH ${NXP_RT1060_SDK_ROOT_ABS}/middleware)
+set(MIDDLEWARE_PATH ${MIDDLEWARE_PATH} PARENT_SCOPE)
 
 set(RTOS_PATH ${NXP_RT1060_SDK_ROOT_ABS}/rtos)
 
@@ -272,131 +275,5 @@ target_compile_options(${NXP_DRIVER_LIB}
         -Wno-empty-body
 )
 
-add_library(nxp-rt1060-mbedtls
-    ${MIDDLEWARE_PATH}/mbedtls/library/aes.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/aesni.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/arc4.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/aria.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/asn1parse.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/asn1write.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/base64.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/bignum.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/blowfish.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/camellia.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ccm.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/certs.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/cipher.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/cipher_wrap.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/chacha20.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/chachapoly.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/cmac.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/constant_time.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ctr_drbg.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/debug.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/des.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/dhm.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ecdh.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ecdsa.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ecjpake.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ecp.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ecp_curves.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/entropy.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/entropy_poll.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/error.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/gcm.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/havege.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/hkdf.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/hmac_drbg.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/md.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/md2.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/md4.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/md5.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/memory_buffer_alloc.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/net_sockets.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/nist_kw.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/oid.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/padlock.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pem.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pk.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pk_wrap.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pkcs5.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pkcs11.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pkcs12.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pkparse.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/pkwrite.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/platform.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/platform_util.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/poly1305.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_client.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_driver_wrappers.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_ecp.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_rsa.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_se.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_slot_management.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_crypto_storage.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/psa_its_file.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ripemd160.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/rsa.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/rsa_internal.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/sha1.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/sha256.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/sha512.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_cache.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_ciphersuites.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_cli.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_cookie.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_msg.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_srv.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_ticket.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_tls.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/ssl_tls13_keys.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/threading.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/timing.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/version.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/version_features.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509_create.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509_crl.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509_crt.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509_csr.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509write_crt.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/x509write_csr.c
-    ${MIDDLEWARE_PATH}/mbedtls/library/xtea.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/ksdk_mbedtls.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/des_alt.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/aes_alt.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/ecp_alt.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/ecp_curves_alt.c
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk/ecp_alt_ksdk.c
-)
-
-target_include_directories(nxp-rt1060-mbedtls
-    PRIVATE
-    ${MIDDLEWARE_PATH}/mbedtls/library
-    PUBLIC
-    ${MIDDLEWARE_PATH}/mbedtls/include
-    ${MIDDLEWARE_PATH}/mbedtls/port/ksdk
-    ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls
-)
-
-target_compile_definitions(nxp-rt1060-mbedtls
-    PUBLIC
-    "MBEDTLS_CONFIG_FILE=\"rt-mbedtls-config.h\""
-)
-
-target_compile_options(nxp-rt1060-mbedtls
-    PRIVATE
-        -Wno-unused-function
-)
-
-target_link_libraries(nxp-rt1060-mbedtls
-    PUBLIC
-    ${NXP_DRIVER_LIB}
-    ot-config
-)
-
-target_link_libraries(ot-config
-    INTERFACE
-    nxp-rt1060-mbedtls
-)
+set (OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
+set (OT_NXP_MBEDTLS_PORT ksdk PARENT_SCOPE)

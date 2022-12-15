@@ -43,7 +43,13 @@ extern "C" {
 #endif
 
 #if PDM_ENCRYPTION
-#define PDM_ENCRYPTION_ENABLED 1
+#ifndef PDM_CNF_ENC_ENABLED
+#define PDM_CNF_ENC_ENABLED 0x1 /* enable encryption */
+#endif
+
+#ifndef PDM_CNF_ENC_TMP_BUFF
+#define PDM_CNF_ENC_TMP_BUFF 0x2 /* input buffer is temporary, no need to protect it or use staging buffer */
+#endif
 #endif
 
 #if ENABLE_STORAGE_DYNAMIC_MEMORY

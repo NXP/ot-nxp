@@ -44,7 +44,7 @@
 #endif
 
 #ifdef OT_PLAT_SYS_CRYPTO_INIT
-#include "ksdk_mbedtls.h"
+#include OT_PLAT_MBEDTLS_PORT_INCLUDE
 #endif
 
 #ifdef MULTICORE_LOGGING_ENABLED
