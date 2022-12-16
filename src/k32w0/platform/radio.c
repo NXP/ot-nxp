@@ -163,11 +163,13 @@ typedef enum
     kFcfTypeMacData      = 1,
     kFcfTypeAck          = 2,
     kFcfTypeMacCommand   = 3,
+    kFcfFramePending     = 4,
     kFcfMacFrameTypeMask = 7 << 0,
 
     kFcfAckRequest        = 1 << 5,
     kFcfPanidCompression  = 1 << 6,
     kFcfSeqNbSuppresssion = 1 << 8,
+    kFcfHasIe             = 1 << 9,
     kFcfDstAddrNone       = 0 << 10,
     kFcfDstAddrShort      = 2 << 10,
     kFcfDstAddrExt        = 3 << 10,
