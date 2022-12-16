@@ -202,6 +202,13 @@ if (OT_RCP_UART_DMA)
     )
 endif()
 
+if (OT_RCP_FLOW_CONTROL OR OT_RCP_UART_DMA)
+    target_compile_definitions(nxp-k32w061-driver
+        PUBLIC
+        -DOT_RCP_TARGET=1
+    )
+endif()
+
 target_compile_options(${NXP_DRIVER_LIB}
     PRIVATE
         ${OT_CFLAGS}
