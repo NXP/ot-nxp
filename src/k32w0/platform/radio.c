@@ -121,6 +121,8 @@ extern void BOARD_GetCoexIoCfg(void **rfDeny, void **rfActive, void **rfStatus);
 #ifdef OT_RCP_TARGET
 /* How long to delay RX done in certain cases */
 #define DELAY_RX_DELTA 50000 /* usec */
+
+#define DELAY_RX_CH_REVERT 0 /* usec */
 #endif
 
 /* Structures */
@@ -239,10 +241,15 @@ static otInstance *          sInstance;    /* Saved OT Instance */
 static int8_t                sTxPwrLevel;  /* Default power is 0 dBm */
 static uint8_t               sChannel = 0; /* Default channel - must be invalid so it
                                               updates the first time it is set */
-static bool_t sIsFpEnabled = TRUE;         /* Enable address match so FP=0 for SED.
-                                              Address match is disabled only when address table is full.
-                                              See SourceMatchController::AddEntry() */
-static uint16_t  sPanId;                   /* PAN ID currently in use */
+#ifdef OT_RCP_TARGET
+static uint8_t sPrevRxChannel = 0; /* Previous channel - must be
+                                      invalid so it is updated
+                                      the first time it is set */
+#endif                             /* OT_RCP_TARGET */
+static bool_t sIsFpEnabled = TRUE; /* Enable address match so FP=0 for SED.
+                                      Address match is disabled only when address table is full.
+                                      See SourceMatchController::AddEntry() */
+static uint16_t  sPanId;           /* PAN ID currently in use */
 static uint16_t  sShortAddress;
 static tsExtAddr sExtAddress;
 static uint64_t  sCustomExtAddr = 0;
@@ -293,6 +300,8 @@ static bool isCoexInitialized;
 static bool     bDelayRx     = FALSE;
 static uint32_t delayRxStart = 0;
 
+static bool     bRevertRxChannel     = FALSE;
+static uint32_t revertRxChannelStart = 0;
 #endif /* OT_RCP_TARGET */
 
 /* Stub functions for controlling low power mode */
@@ -357,6 +366,13 @@ void K32WRadioInit(void)
 
 void K32WRadioProcess(otInstance *aInstance)
 {
+#ifdef OT_RCP_TARGET
+    if (bRevertRxChannel &&
+        bIsDelayExpired(revertRxChannelStart, DELAY_RX_CH_REVERT / US_PER_SYMBOL, u32MMAC_GetTime()))
+    {
+        otPlatRadioReceive(aInstance, sPrevRxChannel);
+    }
+#endif /* OT_RCP_TARGET */
     /* Try to send first the TX frames to the host for RCP scenario. */
     K32WProcessTxFrame(aInstance);
 
@@ -541,7 +557,14 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     while (v2MAC_is_rx_ongoing() && ((u32MMAC_GetTime() - txTime) < TX_TO))
     {
     }
-
+#ifdef OT_RCP_TARGET
+    /* disarm channel change mechanism */
+    if (bRevertRxChannel)
+    {
+        bRevertRxChannel     = FALSE;
+        revertRxChannelStart = 0;
+    }
+#endif
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
 
@@ -554,8 +577,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sAllowDeviceToSleep = FALSE;
         RADIO_LOG("App_DisallowDeviceToSleep");
     }
-
-    sChannel = aChannel;
+#ifdef OT_RCP_TARGET
+    sPrevRxChannel =
+#endif
+        sChannel = aChannel;
     vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
     K32WEnableReceive();
 
@@ -707,12 +732,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     /* wait for Rx to finish */
     txTime = u32MMAC_GetTime();
-
     while (v2MAC_is_rx_ongoing() && ((u32MMAC_GetTime() - txTime) < TX_TO))
     {
     }
     txTime = 0;
-
+#ifdef OT_RCP_TARGET
+    /* disarm channel change mechanism */
+    if (bRevertRxChannel)
+    {
+        bRevertRxChannel     = FALSE;
+        revertRxChannelStart = 0;
+    }
+#endif
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
 
@@ -759,6 +790,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* set tx channel */
     if (sChannel != aFrame->mChannel)
     {
+#if OT_RCP_TARGET
+        /* preserve current RX channel */
+        sPrevRxChannel = sChannel;
+#endif
         /* after tx ends, rx on the same channel */
         sChannel = aFrame->mChannel;
 
@@ -1068,6 +1103,14 @@ static void K32WISR(uint32_t u32IntBitmap)
 
                 /* RX interrupt fired so it's safe to consume the frame */
                 K32WPushRxRingBuffer();
+
+#ifdef OT_RCP_TARGET
+                if (bRevertRxChannel)
+                {
+                    bRevertRxChannel     = FALSE;
+                    revertRxChannelStart = 0;
+                }
+#endif /* OT_RCP_TARGET */
             }
 
             /* restart RX */
@@ -1124,6 +1167,17 @@ static void K32WISR(uint32_t u32IntBitmap)
                 delayRxStart = 0;
             }
 
+            /* If channels were just switched, then maybe I should prepare to go back */
+            if (sPrevRxChannel != sTxOtFrame.mChannel)
+            {
+                /* TODO: From George: revert condition below to make it easier to understand */
+                if ((sTxStatus != OT_ERROR_NONE) ||
+                    !(otMacFrameIsDataRequest(&sTxOtFrame) && (sAckOtFrame.mPsdu[kMacFcfLowOffset] & kFcfFramePending)))
+                {
+                    bRevertRxChannel     = TRUE;
+                    revertRxChannelStart = u32MMAC_GetTime();
+                }
+            }
 #endif /* OT_RCP_TARGET */
             BOARD_LedDongleToggle();
             sState = OT_RADIO_STATE_RECEIVE;
