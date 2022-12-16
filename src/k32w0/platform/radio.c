@@ -118,6 +118,11 @@ extern void BOARD_GetCoexIoCfg(void **rfDeny, void **rfActive, void **rfStatus);
 /* RX was disabled due to no RX bufs */
 #define OT_RADIO_STATE_RX_DISABLED ((otRadioState)(OT_RADIO_STATE_INVALID - 1))
 
+#ifdef OT_RCP_TARGET
+/* How long to delay RX done in certain cases */
+#define DELAY_RX_DELTA 50000 /* usec */
+#endif
+
 /* Structures */
 typedef struct
 {
@@ -284,6 +289,12 @@ static bool_t sAllowDeviceToSleep = TRUE;
 static bool isCoexInitialized;
 #endif
 
+#ifdef OT_RCP_TARGET
+static bool     bDelayRx     = FALSE;
+static uint32_t delayRxStart = 0;
+
+#endif /* OT_RCP_TARGET */
+
 /* Stub functions for controlling low power mode */
 WEAK void App_AllowDeviceToSleep();
 WEAK void App_DisallowDeviceToSleep();
@@ -314,6 +325,13 @@ WEAK void BOARD_LedDongleToggle()
 {
 }
 
+#ifdef OT_RCP_TARGET
+static inline bool bIsDelayExpired(uint32_t start, uint32_t delay, uint32_t curTime)
+{
+    return !(curTime - start < delay);
+}
+#endif /* OT_RCP_TARGET */
+
 void App_SetCustomEui64(uint8_t *aIeeeEui64)
 {
     memcpy((uint8_t *)&sCustomExtAddr, aIeeeEui64, sizeof(sCustomExtAddr));
@@ -339,8 +357,10 @@ void K32WRadioInit(void)
 
 void K32WRadioProcess(otInstance *aInstance)
 {
-    K32WProcessRxFrames(aInstance);
+    /* Try to send first the TX frames to the host for RCP scenario. */
     K32WProcessTxFrame(aInstance);
+
+    K32WProcessRxFrames(aInstance);
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -1095,7 +1115,16 @@ static void K32WISR(uint32_t u32IntBitmap)
             {
                 vMMAC_SetChannelAndPower(sChannel, sTxPwrLevel);
             }
+#ifdef OT_RCP_TARGET
+            if ((sTxStatus == OT_ERROR_NONE) && otMacFrameIsVersion2015(&sAckOtFrame) &&
+                otMacFrameIsSecurityEnabled(&sAckOtFrame) &&
+                ((*(uint16_t *)&sAckOtFrame.mPsdu[kMacFcfLowOffset]) & kFcfHasIe) && !bDelayRx)
+            {
+                bDelayRx     = TRUE;
+                delayRxStart = 0;
+            }
 
+#endif /* OT_RCP_TARGET */
             BOARD_LedDongleToggle();
             sState = OT_RADIO_STATE_RECEIVE;
             K32WEnableReceive();
@@ -1210,6 +1239,73 @@ static bool K32WCheckIfFpRequired(tsPhyFrame *aRxFrame)
     return isFpRequired;
 }
 
+#ifdef OT_RCP_TARGET
+static inline bool bForwardRxFrameToHost(rxRingBufferEntry *rbe)
+{
+    bool bFwdRxF = TRUE;
+    /*
+     * Signaled from TX that we've got a pending TX Done with Ack to
+     * be reported to the host
+     */
+    if (bDelayRx == TRUE)
+    {
+        /* ... but we don't have a timestamp set yet */
+        if (delayRxStart == 0)
+        {
+            /*
+             * We received a frame that is delivered out of order (due to being
+             * a notification and being processed before confirmations),
+             * we will affect the security counter, leading to the failing of
+             * the TX confirmation (coming in later).
+             *
+             * Note: this filtering is quite coarse and might have some negative effects.
+             */
+            if (otMacFrameIsVersion2015(&rbe->of) && otMacFrameIsAckRequested(&rbe->of) &&
+                otMacFrameIsSecurityEnabled(&rbe->of) && (*(uint16_t *)&rbe->of.mPsdu[kMacFcfLowOffset] & kFcfHasIe))
+            {
+                /* Delay RX for some time to allow the host to "see" the previous TX */
+                delayRxStart = u32MMAC_GetTime();
+
+                /*
+                 * u32MMAC_GetTime() can return 0 (f.i. on wrap-around). Increment it by one here
+                 * so the condition above isn't triggered wrongly.
+                 */
+                if (delayRxStart == 0)
+                {
+                    delayRxStart++;
+                }
+                bFwdRxF = FALSE;
+            }
+            else
+            {
+                /* This is a corner case where before the corresponding response to the CSL TX there's another frame
+                   coming in. We don't want to delay that, so we will deliver it. */
+            }
+        }
+        else
+        {
+            if (bIsDelayExpired(delayRxStart, DELAY_RX_DELTA / US_PER_SYMBOL, u32MMAC_GetTime()))
+            {
+                /* Cool-off has elapsed, start delivering frames upstream */
+                bDelayRx = FALSE;
+            }
+            else
+            {
+                /* return FALSE, so we'll get out of the loop, nothing to do here... */
+                /*
+                 * Beware that this equates with a head of line blocking of all
+                 * the RX frames: after the first "culprit" is received, everything else
+                 * will be delayed.
+                 */
+                bFwdRxF = FALSE;
+            }
+        }
+    }
+
+    return bFwdRxF;
+}
+#endif
+
 /**
  * Process RX frames in process context and call the upper layer call-backs
  *
@@ -1221,6 +1317,12 @@ static void K32WProcessRxFrames(otInstance *aInstance)
 
     while ((rbe = K32WGetRxRingBuffer()) != NULL)
     {
+#ifdef OT_RCP_TARGET
+        if (bForwardRxFrameToHost(rbe) == FALSE)
+        {
+            break;
+        }
+#endif /* OT_RCP_TARGET */
         otPlatRadioReceiveDone(aInstance, &rbe->of, OT_ERROR_NONE);
 
         K32WPopRxRingBuffer();
