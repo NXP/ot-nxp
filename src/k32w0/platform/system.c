@@ -132,8 +132,8 @@ void otSysDeinit(void)
 
 void otSysProcessDrivers(otInstance *aInstance)
 {
-    K32WRadioProcess(aInstance);
     K32WUartProcess();
+    K32WRadioProcess(aInstance);
     K32WAlarmProcess(aInstance);
 #ifdef OT_PLAT_SPI_SUPPORT
     K32WSpiSlaveProcess();
