@@ -42,9 +42,9 @@ $ pip3 install pycryptodome
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [K32W061 SDK 2.6.8][sdk 2.6.8]
+- Download [K32W061 SDK 2.6.9][sdk 2.6.9]
 
-[sdk 2.6.8]: https://cache.nxp.com/lgfiles/bsps/SDK_2_6_8_K32W061DK6.zip
+[sdk 2.6.9]: https://cache.nxp.com/lgfiles/bsps/SDK_2_6_9_K32W061DK6.zip
 
 ## Building the examples
 
