@@ -699,6 +699,7 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
 
     otError      error     = OT_ERROR_NONE;
     uint32_t     ieDataLen = 0;
+    uint32_t     ieParam   = 0;
     otMacAddress macAddress;
     macAddress.mType                  = OT_MAC_ADDRESS_TYPE_SHORT;
     macAddress.mAddress.mShortAddress = aShortAddress;
@@ -714,9 +715,13 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
         ieDataLen = otMacFrameGenerateEnhAckProbingIe(msg.msgData.aspAckIeData.data, NULL, ieDataLen);
     }
 
+    ieParam = (aLinkMetrics.mLqi > 0 ? IeData_Lqi_c : 0) | (aLinkMetrics.mLinkMargin > 0 ? IeData_LinkMargin_c : 0) |
+              (aLinkMetrics.mRssi > 0 ? IeData_Rssi_c : 0);
+
     /* If ieDataLen remains 0 we will delete the IE data */
-    msg.msgType                        = aspMsgTypeConfigureAckIeData_c;
-    msg.msgData.aspAckIeData.length    = ieDataLen;
+    msg.msgType                    = aspMsgTypeConfigureAckIeData_c;
+    msg.msgData.aspAckIeData.param = (ieDataLen > 0 ? IeData_MSB_VALID_DATA : 0);
+    msg.msgData.aspAckIeData.param |= ieParam;
     msg.msgData.aspAckIeData.shortAddr = aShortAddress;
     memcpy(msg.msgData.aspAckIeData.extAddr, aExtAddress, 8);
 
