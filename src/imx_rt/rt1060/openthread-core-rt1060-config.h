@@ -35,20 +35,8 @@
 #ifndef OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
 #define OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
 
-#ifdef OT_STACK_ENABLE_LOG
-#define LOG_ENABLE 1
-#define LOG_ENABLE_TIMESTAMP 1
-#include "fsl_component_log.h"
-/* Logging for ot stack */
-#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
-#define OPENTHREAD_CONFIG_LOG_LEVEL 5
-#define OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY 1
-#define OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME OT_STACK_LOG
-LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
-#define OT_STACK_LOG(aLogLevel, aRegion, fmt, ...) \
-    OT_UNUSED_VARIABLE(aLogLevel);                 \
-    OT_UNUSED_VARIABLE(aRegion);                   \
-    LOG_DBG("%s " fmt, "", ##__VA_ARGS__)
+#ifndef OT_STACK_ENABLE_LOG
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
 #endif
 
 /**
@@ -165,6 +153,7 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
 #define OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE 1
 #endif
 
+/* Thread 1.3 configuration flags */
 /**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
  *
@@ -173,6 +162,56 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  */
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+ *
+ * Define to 1 to enable DNS-SD Server support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+ *
+ * Define to 1 to enable SRP Client support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+ *
+ * Define to 1 to enable SRP Server support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_SRP_SERVER_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+ *
+ * Define to 1 to support injecting Service entries into the Thread Network Data.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
+ *
+ * Define to 1 to enable ECDSA support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_ECDSA_ENABLE 1
 #endif
 
 /**
@@ -238,40 +277,22 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
 #define OPENTHREAD_CONFIG_NCP_HDLC_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
- *
- * Define to 1 to support injecting Service entries into the Thread Network Data.
- *
- */
-#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
  *
  * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
  * `RadioSpinel` platform is used.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 512
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 8192
 
 /**
- * @def OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+ * @def TX_WAIT_US
  *
- * Enable Ping sender functionnality
- *
- */
-#ifndef OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-#define OPENTHREAD_CONFIG_PING_SENDER_ENABLE 1
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_THREAD_VERSION
- *
- * Force 1.1 version by default to be able to support K32W0 transceiver
+ * TX_WAIT_US define the time to wait a spinel response after sending a spinel TX request
+ * Increasing the default TX wait value to let more time to spinel frames to be proceeded by the host
  *
  */
-#undef OPENTHREAD_CONFIG_THREAD_VERSION
-#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
+#define TX_WAIT_US (10 * US_PER_S)
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
@@ -279,7 +300,9 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  * Mac default max frame retries value
  *
  */
+#ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
 #define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 30
+#endif
 
 /**
  * @def PACKAGE
@@ -320,5 +343,35 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  *
  */
 #define PACKAGE_URL "TODO: replace it with a link to the public GIthub repo"
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+ *
+ * Define to 1 if you want to enable radio coexistence implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+ *
+ * Define as 1 to enable Link Metrics initiator feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+ *
+ * Define as 1 to enable Link Metrics subject feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE 1
+#endif
 
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_

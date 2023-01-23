@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 extern "C" {
 #endif
 
-//#define OT_PLAT_DBG_LVL 4
+#define OT_PLAT_DBG_LVL 0
 
 #define OT_PLAT_DBG_LEVEL_NONE 0
 #define OT_PLAT_DBG_LEVEL_ERR 1
@@ -120,6 +120,13 @@ void otPlatAlarmProcess(otInstance *aInstance);
 void otPlatRadioInit(void);
 
 /**
+ * Allows to initialize the platform spinel interface
+ * Only used in HOST+RCP configurations
+ *
+ */
+void otPlatRadioInitSpinelInterface(void);
+
+/**
  * This function deinitializes the radio service used by OpenThread.
  *
  */
@@ -145,6 +152,38 @@ void otPlatRandomInit(void);
  * This function deinitializes the ramdom service used by OpenThread
  */
 void otPlatRandomDeinit(void);
+
+/**
+ * Init the logging component
+ */
+void otPlatLogInit(void);
+
+/**
+ * Save settings in flash while in Idle
+ */
+void otPlatSaveSettingsIdle(void);
+
+/**
+ * This function performs a software reset on the platform, if otPlatReset() function
+ *  was previously called.
+ */
+void otPlatResetIdle(void);
+
+/**
+ * This function allows to send spinel set prop vendor cmd.
+ */
+otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value);
+
+/**
+ * Allows to set the UART instance for the ot cli
+ */
+void otPlatUartSetInstance(uint8_t newInstance);
+
+/**
+ * This function is called from idle hook, likely for system idle operation such as flash operations
+ *
+ */
+void otSysRunIdleTask(void);
 
 #ifdef __cplusplus
 } // end of extern "C"

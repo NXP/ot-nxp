@@ -32,19 +32,28 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [IMXRT1060 SDK 2.10.1](https://mcuxpresso.nxp.com/). Creating an
-  nxp.com account is required before being able to download the SDK. Once the
-  account is created, login and follow the steps for downloading
-  SDK_2.10.1_EVK-MIMXRT1060. In the SDK Builder UI selection you should select
-  the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC
-  Toolchain**.
+- Download [NXP MCUXpresso SDK 2.12.0](https://github.com/NXPmicro/mcux-sdk/tree/MCUX_2.12.0_UPDATE)
+  and associated middleware from GitHub using the west tool.
+
+```
+bash
+$ cd third_party/rt1060_sdk/repo
+$ west init -l manifest --mf west.yml
+$ west update
+```
 
 ## Building the examples
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_RT1060_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_rt1060
+```
+
+Note : If the EVK-MIMXRT1060 board is used instead of MIMXRT1060-EVKB, make sure
+to specify it using the following build command :
+
+```bash
+$ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
 ```
 
 After a successful build, the ot-cli-rt1060 FreeRTOS version could be found in
@@ -56,26 +65,33 @@ Note: FreeRTOS is required to be able to build the IMXRT1060 platform files.
 
 Host part:
 
-- 1 EVK-MIMXRT1060
+- 1 MIMXRT1060-EVKB
 
 Transceiver part:
 
 - 1 OM15076-3 Carrier Board (DK6 board)
 - 1 K32W061 Module to be plugged on the Carrier Board
 
-## Board settings
+Note : The pin connections between the boards are slightly different according
+to which version of the board is used (MIMXRT1060-EVKB or EVK-MIMXRT1060).The
+different settings are described below.
+
+## Board settings for MIMXRT1060-EVKB
 
 The below table explains pin settings (UART settings) to connect the
-evkmimxrt1060 (host) to a k32w061 transceiver (rcp).
+evkbmimxrt1060 (host) to a k32w061 transceiver (rcp).
 
-| PIN NAME | DK6 (K32W061) | I.MXRT1060 | PIN NAME OF RT1060 | GPIO NAME OF RT1060 |
-| :------: | :-----------: | :--------: | :----------------: | :-----------------: |
-| UART_TXD |  PIO, pin 8   | J22, pin 1 |    LPUART3_RXD     |    GPIO_AD_B1_07    |
-| UART_RXD |  PIO, pin 9   | J22, pin 2 |    LPUART3_TXD     |    GPIO_AD_B1_06    |
-| UART_RTS |  PIO, pin 6   | J23, pin 3 |    LPUART3_CTS     |    GPIO_AD_B1_04    |
-| UART_CTS |  PIO, pin 7   | J23, pin 4 |    LPUART3_RTS     |    GPIO_AD_B1_05    |
+|    PIN NAME    | DK6 (K32W061) | I.MXRT1060-EVKB | I.MXRT1060-EVK | PIN NAME OF RT1060 | GPIO NAME OF RT1060 |
+| :------------: | :-----------: | :-------------: | :------------: | :----------------: | :-----------------: |
+|    UART_TXD    |  PIO, pin 8   |   J16, pin 1    |   J22, pin 1   |    LPUART3_RXD     |    GPIO_AD_B1_07    |
+|    UART_RXD    |  PIO, pin 9   |   J16, pin 2    |   J22, pin 2   |    LPUART3_TXD     |    GPIO_AD_B1_06    |
+|    UART_RTS    |  PIO, pin 6   |   J33, pin 3    |   J23, pin 3   |    LPUART3_CTS     |    GPIO_AD_B1_04    |
+|    UART_CTS    |  PIO, pin 7   |   J33, pin 4    |   J23, pin 4   |    LPUART3_RTS     |    GPIO_AD_B1_05    |
+|      GND       |   J3, pin 1   |   J32, pin 7    |   J25, pin 7   |         XX         |         XX          |
+|     RESET      |     RSTN      |   J17, pin 2    |   J24, pin 2   |   GPIO_AD_B0_02    |    GPIO_AD_B0_02    |
+| DIO5/ISP Entry |  PIO, pin 5   |   J33, pin 1    |   J23, pin 1   |   GPIO_AD_B1_10    |    GPIO_AD_B1_10    |
 
-The below picture shows pins connections.
+The below picture shows pins connections for the EVK-MIMXRT1060.
 
 ![rt1060_k32w061_pin_settings](../../../doc/img/imxrt1060/rt1060_k32w061_pin_settings.jpg)
 
@@ -91,7 +107,7 @@ Connect to the DK6 board by plugging a mini-USB cable to the connector marked
 with _FTDI USB_. Also, make sure that jumpers jp4/JP7 are situated in the middle
 position (_JN UART0 - FTDI_).
 
-DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] SDK_EVK-MIMXRT1060
+DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] SDK_MIMXRT1060-EVKB
 previously downloaded at path
 `<sdk_path>/middleware/wireless/ethermind/port/pal/mcux/bluetooth/controller/k32w061/JN-SW-4407-DK6-Flash-Programmer`.
 This is a Windows application that can be installed using the .exe file. Once
@@ -156,7 +172,7 @@ existing debug configaturation.
 - Create a debug configuration for the hello word projet
 
 1. Click on "Import SDK example(s)..." on the bottom left window of MCUXpresso.
-2. Select the "evkmimxrt1060" SDK, click on "Next"
+2. Select the "evkbmimxrt1060" SDK, click on "Next"
 3. Expand "demo_apps", select the "hello_word" example, click on next and then
    finish.
 4. Build the imported "Hello word" application by right clicking on the project
@@ -202,3 +218,8 @@ For a list of all available commands, visit [OpenThread CLI Reference
 README.md][cli].
 
 [cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+
+## Known limitations
+
+Non-volatile storage is disabled. Therefore all thread network information would
+be lost if a reset happen.

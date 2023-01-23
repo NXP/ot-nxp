@@ -20,6 +20,5 @@ void BOARD_InitHardware(void)
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
     BOARD_InitDebugConsole();
-    SCB_DisableDCache();
 }
 /*${function:end}*/

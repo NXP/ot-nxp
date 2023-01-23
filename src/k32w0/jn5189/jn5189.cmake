@@ -28,7 +28,7 @@
 
 target_compile_definitions(ot-config INTERFACE
     "MBEDTLS_USER_CONFIG_FILE=\"jn5189-mbedtls-config.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"" 
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
@@ -46,9 +46,9 @@ set_target_properties(openthread-jn5189
 
 target_link_libraries(openthread-jn5189
     PUBLIC
-        -Wl,--start-group nxp-jn5189-driver mbedtls -Wl,--end-group
+        -Wl,--start-group ${NXP_DRIVER_LIB} mbedtls -Wl,--end-group
         -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ot-config
 )

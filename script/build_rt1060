@@ -33,11 +33,14 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
-    "-DCMAKE_TOOLCHAIN_FILE=src/imx_rt/rt1060/arm-none-eabi.cmake"
-    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DOT_NXP_EXPORT_TO_BIN=ON"
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
-    "-DOT_THREAD_VERSION=1.1"
+    "-DOT_SERVICE=ON"
+    "-DOT_PING_SENDER=ON"
+    "-DOT_EXTERNAL_HEAP=ON"
     "-DOT_EXTERNAL_MBEDTLS=nxp-rt1060-mbedtls"
     "-DOT_STACK_ENABLE_LOG=OFF"
     "-DOT_APP_NCP=OFF"
@@ -46,8 +49,8 @@ readonly OT_OPTIONS=(
     # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
     "-DOT_APP_CLI=OFF"
     "-DOT_APP_CLI_FREERTOS=ON"
-    "-DOT_BUILD_RT=ON"
-    "-DOT_BUILD_RT1060=ON"
+    "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
+    "-DOT_NXP_PLATFORM=rt1060"
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 
@@ -83,25 +86,27 @@ main()
     #         then NXP_RT1060_SDK_ROOT points to a cloned repository
 
     if [ -z "$NXP_RT1060_SDK_ROOT" ]; then
-        NXP_RT1060_SDK_ROOT="../../../"
+        export NXP_RT1060_SDK_ROOT="./repo"
+        SDK_TYPE="GITHUB"
     fi
 
     if [ -f $NXP_RT1060_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_RELEASE=ON
+        SDK_TYPE="PACKAGE"
     elif [ -f $NXP_RT1060_SDK_ROOT/.gitmodules ]; then
-        SDK_RELEASE=OFF
-    else
-        echo "Could not found a valid SDK package!"
-        return
+        SDK_TYPE="INTERNAL_GIT"
     fi
 
     echo "NXP_RT1060_SDK_ROOT set to " $NXP_RT1060_SDK_ROOT
+
+    echo "SDK_TYPE is et to" $SDK_TYPE
+
+    echo " OT source is set to " "$OT_SRCDIR"
 
     local options=("${OT_OPTIONS[@]}")
 
     options+=("$@")
 
-    options+=("-DSDK_RELEASE=$SDK_RELEASE")
+    options+=("-DSDK_TYPE=$SDK_TYPE")
 
     build "${options[@]}"
 }

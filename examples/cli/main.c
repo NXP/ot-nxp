@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,10 +35,32 @@
  *
  */
 
+/* -------------------------------------------------------------------------- */
+/*                                  Includes                                  */
+/* -------------------------------------------------------------------------- */
+
+#include "FreeRTOS.h"
 #include "app_ot.h"
+#include "task.h"
+
+/* -------------------------------------------------------------------------- */
+/*                              Public prototypes                             */
+/* -------------------------------------------------------------------------- */
+
+extern void BOARD_InitHardware(void);
+
+/* -------------------------------------------------------------------------- */
+/*                              Public functions                              */
+/* -------------------------------------------------------------------------- */
 
 int main(int argc, char *argv[])
 {
+    /* Init board hardware */
+    BOARD_InitHardware();
+
     appOtStart(argc, argv);
+
+    vTaskStartScheduler();
+
     return 0;
 }

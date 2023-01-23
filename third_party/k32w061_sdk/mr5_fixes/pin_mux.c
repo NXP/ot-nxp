@@ -349,13 +349,13 @@ void BOARD_InitSPI1Pins(void)
                           /* Mask bits to zero which are setting */
                           (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
 
-
+ 
 
                          /* Select digital function assigned to this pin.
                           * : PORT015 (pin 18) is configured as SPI1_SCK. */
                          | IOCON_PIO_FUNC(PIO0_15_FUNC_ALT1)
 
-
+ 
 
                          /* Select Analog/Digital Mode.
                           * 0 Analog mode.
@@ -372,19 +372,19 @@ void BOARD_InitSPI1Pins(void)
                           * : Digital mode, digital input is enabled. */
                          | IOCON_PIO_DIGIMODE(PIO0_15_DIGIMODE_DIGITAL));
 
-
+ 
 
     IOCON->PIO[0][16] = ((IOCON->PIO[0][16] &
                           /* Mask bits to zero which are setting */
                           (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
 
-
+ 
 
                          /* Select digital function assigned to this pin.
                           * : PORT016 (pin 19) is configured as SPI1_SSELN0. */
                          | IOCON_PIO_FUNC(PIO0_16_FUNC_ALT1)
 
-
+ 
 
                          /* Select Analog/Digital Mode.
                           * 0 Analog mode.
@@ -401,19 +401,19 @@ void BOARD_InitSPI1Pins(void)
                           * : Digital mode, digital input is enabled. */
                          | IOCON_PIO_DIGIMODE(PIO0_16_DIGIMODE_DIGITAL));
 
-
+ 
 
     IOCON->PIO[0][17] = ((IOCON->PIO[0][17] &
                           /* Mask bits to zero which are setting */
                           (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
 
-
+ 
 
                          /* Select digital function assigned to this pin.
                           * : PORT017 (pin 21) is configured as SPI1_MOSI. */
                          | IOCON_PIO_FUNC(PIO0_17_FUNC_ALT1)
 
-
+ 
 
                          /* Select Analog/Digital Mode.
                           * 0 Analog mode.
@@ -430,19 +430,19 @@ void BOARD_InitSPI1Pins(void)
                           * : Digital mode, digital input is enabled. */
                          | IOCON_PIO_DIGIMODE(PIO0_17_DIGIMODE_DIGITAL));
 
-
+ 
 
     IOCON->PIO[0][18] = ((IOCON->PIO[0][18] &
                           /* Mask bits to zero which are setting */
                           (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
 
-
+ 
 
                          /* Select digital function assigned to this pin.
                           * : PORT018 (pin 22) is configured as SPI1_MISO. */
                          | IOCON_PIO_FUNC(PIO0_18_FUNC_ALT1)
 
-
+ 
 
                          /* Select Analog/Digital Mode.
                           * 0 Analog mode.

@@ -50,31 +50,33 @@ list(APPEND OT_PUBLIC_INCLUDES
         "${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include/"
 )
 
-if (OT_1_2_SUPPORT)
-    list(APPEND K32W0_COMM_SOURCES
-        platform/radio.c
-    )
+list(APPEND K32W0_COMM_SOURCES
+    platform/radio.c
+)
 
-    if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
-        # disable CSL receiver for now
-        list(APPEND OT_PLATFORM_DEFINES
-            OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
-        )
-    endif()
-else()
-    list(APPEND K32W0_COMM_SOURCES
-        platform/radio_v1.c
+if (OT_ZB_SUPPORT OR OT_BLE_SUPPORT)
+    set_property(
+        SOURCE platform/radio.c
+        PROPERTY COMPILE_DEFINITIONS
+        MAC_PROTO_TAG=1
     )
-
-    # disable all OT 1.2 specifics
     list(APPEND OT_PLATFORM_DEFINES
-            OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=0
-            OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=0
-            OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
-            OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE=0
-            OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_TIMING_ENABLE=0
-            OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=0
+        OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=0
+        OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=0
     )
+endif()
+
+if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
+    # disable CSL receiver for now
+    list(APPEND OT_PLATFORM_DEFINES
+        OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
+    )
+endif()
+
+if (OT_BUILD_COEX)
+    list(APPEND OT_PLATFORM_DEFINES
+        OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1
+)
 endif()
 
 if (OT_NCP_SPI)
@@ -86,13 +88,15 @@ if (OT_NCP_SPI)
     )
 endif()
 
+if (NO_THREAD_1_3_FLAGS)
+    list(APPEND OT_PLATFORM_DEFINES
+        "NO_THREAD_1_3_FLAGS"
+    )
+endif()
+
 set(K32W0_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
-if(OT_BUILD_K32W061)
-    include(k32w061/k32w061.cmake)
-elseif(OT_BUILD_JN5189)
-    include(jn5189/jn5189.cmake)
-endif()
+include(${OT_NXP_PLATFORM}/${OT_NXP_PLATFORM}.cmake)

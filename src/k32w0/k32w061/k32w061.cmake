@@ -30,7 +30,7 @@ set(UART_BAUD_RATE "115200" CACHE STRING "Uart baud rate")
 
 target_compile_definitions(ot-config INTERFACE
     "MBEDTLS_USER_CONFIG_FILE=\"k32w061-mbedtls-config.h\""
-    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"" 
+    "MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\""
 )
 
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
@@ -48,9 +48,9 @@ set_target_properties(openthread-k32w061
 
 target_link_libraries(openthread-k32w061
     PUBLIC
-        -Wl,--start-group nxp-k32w061-driver mbedtls -Wl,--end-group
+        -Wl,--start-group ${NXP_DRIVER_LIB} mbedtls -Wl,--end-group
         -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ot-config
 )

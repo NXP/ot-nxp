@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ jobs:
         cd /tmp
         git clone https://github.com/NXPmicro/mcux-sdk.git
         cp -r mcux-sdk/devices/MIMXRT1062/gcc sdk_rt1060/sdks/devices/MIMXRT1062/
-         
+
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH

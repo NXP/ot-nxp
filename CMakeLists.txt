@@ -29,6 +29,10 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(ot-nxp VERSION 0.2.0)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
 include("${PROJECT_SOURCE_DIR}/openthread/etc/cmake/functions.cmake")
 
 set(OT_PACKAGE_VERSION "" CACHE STRING "OpenThread Package Version")
@@ -38,49 +42,27 @@ if(OT_PACKAGE_VERSION STREQUAL "")
 endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
-set(CHIP "" CACHE STRING "Chip famille name")
+message(STATUS "NXP Platform Family: ${OT_NXP_PLATFORM_FAMILY}")
+message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
-if (OT_BUILD_RT)
-    if (OT_BUILD_RT1060)
-        set(PLAT_LIB "openthread-rt1060")
-        set(CONFIG_FILE "\"openthread-core-rt1060-config.h\"")
-        set(CORE_CONFIG_FILE "\"openthread-core-rt1060-config.h\"")
-        set(CORE_CONFIG_CHECK "\"openthread-core-rt1060-config-check.h\"")
-        set(PLATFORM rt1060)
-        set(CHIP imx_rt)
-    endif()
-elseif (OT_BUILD_K32W0)
-    if (OT_BUILD_K32W061)
-        set(PLAT_LIB "openthread-k32w061")
-        set(CONFIG_FILE "\"openthread-core-k32w061-config.h\"")
-        set(CORE_CONFIG_FILE "\"openthread-core-k32w061-config.h\"")
-        set(CORE_CONFIG_CHECK "\"openthread-core-k32w061-config-check.h\"")
-        set(PLATFORM k32w061)
-        set(CHIP k32w0)
-    elseif (OT_BUILD_JN5189)
-        set(PLAT_LIB "openthread-jn5189")
-        set(CONFIG_FILE "\"openthread-core-jn5189-config.h\"")
-        set(CORE_CONFIG_FILE "\"openthread-core-jn5189-config.h\"")
-        set(CORE_CONFIG_CHECK "\"openthread-core-jn5189-config-check.h\"")
-        set(PLATFORM jn5189)
-        set(CHIP k32w0)
-    endif()
+if(EXISTS ${PROJECT_SOURCE_DIR}/cmake/platform/${OT_NXP_PLATFORM}.cmake)
+    include(${PROJECT_SOURCE_DIR}/cmake/platform/${OT_NXP_PLATFORM}.cmake)
 endif()
 
-set(OT_PLATFORM_LIB ${PLAT_LIB})
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(RUNTIME_OUTPUT_CMAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
+set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
 
 #Set default log level if not set
 if (OT_STACK_ENABLE_LOG)
     if (NOT OT_LOG_LEVEL)
-        set(OT_LOG_LEVEL DEBG)
+        set(OT_LOG_LEVEL INFO)
     endif()
-    if (NOT OT_LOG_LEVEL)
+    if (NOT OT_LOG_OUTPUT)
         set(OT_LOG_OUTPUT APP)
     endif()
+else()
+    set(OT_LOG_LEVEL NONE)
+    set(OT_LOG_OUTPUT NONE)
 endif()
 
 add_subdirectory(openthread)
@@ -89,11 +71,15 @@ add_subdirectory(openthread)
 if (OT_STACK_ENABLE_LOG)
     target_link_libraries(ot-config
         INTERFACE
-        nxp-${PLATFORM}-driver)
+        ${NXP_DRIVER_LIB})
     target_compile_definitions(ot-config
         INTERFACE
         -DOT_STACK_ENABLE_LOG)
 endif ()
+
+set(CONFIG_FILE "\"openthread-core-${OT_NXP_PLATFORM}-config.h\"")
+set(CORE_CONFIG_FILE ${CONFIG_FILE})
+set(CORE_CONFIG_CHECK "\"openthread-core-${OT_NXP_PLATFORM}-config-check.h\"")
 
 target_compile_definitions(ot-config INTERFACE
     OPENTHREAD_CONFIG_FILE=${CONFIG_FILE}
@@ -101,15 +87,80 @@ target_compile_definitions(ot-config INTERFACE
     OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=${CORE_CONFIG_CHECK}
 )
 
-if(CHIP)
+if(OT_NXP_DISABLE_TCP)
+    # Initially used to workaround duplicated symbols in lwip and tcplp stacks
+    # In the context of the coex_app_cli, the wifi stack uses lwip while ot uses tcplp
+    # Those stacks have some functions name in common (but incompatible)
+    # For now, we add the possibility to disable OT TCP feature to avoid using tcplp
+    # TODO: can we interface OT over lwip like done in Matter to avoid such problem ?
+    target_compile_definitions(ot-config
+        INTERFACE
+            -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+    )
+endif()
+
+if(OT_NXP_PLATFORM_FAMILY)
     target_include_directories(ot-config INTERFACE
-        ${PROJECT_SOURCE_DIR}/src/${CHIP}/${PLATFORM}
+        ${PROJECT_SOURCE_DIR}/src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
     )
 else()
     target_include_directories(ot-config INTERFACE
-        ${PROJECT_SOURCE_DIR}/src/${PLATFORM}
+        ${PROJECT_SOURCE_DIR}/src/${OT_NXP_PLATFORM}
         )
+endif()
+
+# Give the possibility to the user to define his own path to board files
+if(OT_NXP_BOARD_PATH)
+    message(STATUS  "Using user defined board folder:\n"
+        "${OT_NXP_BOARD_PATH}"
+    )
+    if(NOT NXP_BOARD_LIB)
+        message(WARNING  "The name of the board lib is not specified. It may not be linked properly by ot-nxp targets\n"
+            "You can add the link dependency in your projet:\n"
+            "target_link_libraries(<ot-nxp-target> <your board target>)\n"
+            "Or you can define the name of your board library:\n"
+            "-DNXP_BOARD_LIB=<name of the board lib>\n"
+            "or set it in your project before including ot-nxp:\n"
+            "set(NXP_BOARD_LIB <name of the board lib>)"
+        )
+    endif()
+    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS))
+        # When using custom board file, the user must specify path to FreeRTOSConfig.h
+        message(FATAL_ERROR  "Path to FreeRTOSConfig.h file not specified. Please specify it using following option:\n"
+            "-DOT_NXP_FREERTOS_CONFIG_PATH=<path to FreeRTOSConfig.h folder>"
+            "or set it in your project"
+        )
+    endif()
+    add_subdirectory(${OT_NXP_BOARD_PATH} ${PROJECT_BINARY_DIR}/board)
+elseif(OT_NXP_BOARD) # TODO: move to "else" when all boards are supported
+    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS))
+        set(OT_NXP_FREERTOS_CONFIG_PATH ${PROJECT_SOURCE_DIR}/boards/${OT_NXP_BOARD}/freertos)
+    endif()
+    set(NXP_BOARD_LIB nxp-${OT_NXP_BOARD}-board)
+    add_subdirectory(boards)
+else()
+    # TODO: enable following message when all boards are supported
+    # if(NOT OT_NXP_BOARD)
+    #     message(FATAL_ERROR  "Board is not defined. Please specify to board to build:\n"
+    #         "-DOT_NXP_BOARD=<board name>"
+    #     )
+    # endif()
 endif()
 
 add_subdirectory(third_party)
 add_subdirectory(src)
+add_subdirectory(examples)
+
+include(${PROJECT_SOURCE_DIR}/cmake/utils.cmake)
+
+if(OT_NXP_POST_BUILD_COMMAND)
+    run_post_build_command()
+endif()
+
+if(OT_NXP_EXPORT_TO_BIN)
+    export_all_targets_to_bin()
+endif()
+
+if(OT_NXP_EXPORT_TO_SREC)
+    export_all_targets_to_srec()
+endif()

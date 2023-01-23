@@ -68,7 +68,8 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 #include "MWS.h"
-#include "MacDynamic.h"
+#include "MacSched.h"
+#include "dbg.h"
 #endif
 extern void BOARD_LedDongleToggle(void);
 extern void OSA_InterruptEnable(void);
@@ -274,7 +275,8 @@ static uint8_t  sKeyId;
 static uint32_t sCslPeriod;
 #endif
 
-static bool_t sAllowDeviceToSleep = FALSE;
+/* tx/rx prevent low power mode, sleep allows it */
+static bool_t sAllowDeviceToSleep = TRUE;
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 static bool isCoexInitialized;
@@ -403,13 +405,19 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
+    sAllowDeviceToSleep = TRUE; /* synced with radio state */
+
     K32WResetRxRingBuffer();
 
     V2MMAC_Enable();
     V2MMAC_RegisterIntHandler(K32WISR);
     vMMAC_ConfigureRadio();
 
-    if (sRadioInitForLp)
+    /* Exit from low power and / or already initialized.
+     * Cover the case when otPlatRadioSleep() / otPlatRadioEnable() is not used to enter / exit low power
+     * but otPlatRadioDisable() / otPlatRadioEnable() because it's done from outside the OT stack.
+     */
+    if (sRadioInitForLp || sExtAddress.u32L || sExtAddress.u32H)
     {
         sRadioInitForLp = FALSE;
 
@@ -791,7 +799,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    int8_t  rssidBm       = 127;
+    int8_t  rssidBm       = OT_RADIO_RSSI_INVALID;
     int16_t rssiValSigned = 0;
     bool_t  stateChanged  = FALSE;
 
@@ -801,7 +809,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     /* in RCP designs, the RSSI function is called while the radio is in
      * OT_RADIO_STATE_RECEIVE. Turn off the radio before reading RSSI,
      * otherwise we may end up waiting until a packet is received
-     * (in i16Radio_GetRSSI, while loop)
+     * (in i16MMAC_GetRSSI, while loop)
      */
 
     OSA_InterruptDisable();
@@ -815,7 +823,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
         stateChanged = TRUE;
     }
 
-    rssiValSigned = i16Radio_GetRSSI(0, FALSE, NULL);
+    rssiValSigned = i16MMAC_GetRSSI();
 
     if (stateChanged)
     {
@@ -824,6 +832,8 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
     }
 
     OSA_InterruptEnable();
+
+    otEXPECT((rssiValSigned != MMAC_INVALID_RSSI));
 
     rssiValSigned = i16Radio_BoundRssiValue(rssiValSigned);
 
@@ -945,17 +955,50 @@ exit:
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    uint8_t edThreshold;
+
+    if (aThreshold == NULL)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        /* MMAC CCA API returns ED, need to convert to dBm
+         * RSSI in K32W0 is 10 bit wide (8.2 format) with 0.25dBm steps.
+         * Need to shift to right by 2 to get the whole part.
+         */
+        edThreshold = u8MMAC_ReadCcaThreshold();
+        *aThreshold = (int8_t)(i16Radio_GetRSSIfromED(edThreshold) >> 2);
+    }
+
+    return error;
 }
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aThreshold);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    uint8_t edThreshold;
+
+    /* K32W0 RSSI between -100 and 10 dBm */
+    if ((aThreshold < -100) || (aThreshold > 10))
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+    else
+    {
+        /* MMAC CCA API requires ED, need to convert from dBm
+         * RSSI in K32W0 is 10 bit wide (8.2) with 0.25dBm steps.
+         * Need to left shift aThreshold by 2.
+         */
+        edThreshold = u8Radio_GetEDfromRSSI(((int16_t)aThreshold) << 2);
+        vMMAC_WriteCcaThreshold(edThreshold);
+    }
+
+    return error;
 }
 
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
@@ -1532,10 +1575,52 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance)
 
 otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCoexMetrics)
 {
-    otError error = OT_ERROR_NONE;
+    otError            error = OT_ERROR_NONE;
+    struct sched_stats sched_stats;
+#if defined(gMWS_EnableCoexistenceStats_d) && (gMWS_EnableCoexistenceStats_d == 1)
+    mwsCoexStats_t coexStats;
+#endif
+    int ret = 0;
+
     OT_UNUSED_VARIABLE(aInstance);
 
     assert(aCoexMetrics != NULL);
+
+    memset(aCoexMetrics, 0, sizeof(otRadioCoexMetrics));
+#if defined(gMWS_EnableCoexistenceStats_d) && (gMWS_EnableCoexistenceStats_d == 1)
+    /*
+     * Retrieve the coex statistics. Since we don't have support for other types
+     * of statistics, the 15.4 specific ones, as well as the ones specific for
+     * scheduling will be printed here.
+     */
+    MWS_GetCoexStats(&coexStats);
+
+    aCoexMetrics->mNumTxRequest          = coexStats.numTxRequests;
+    aCoexMetrics->mNumTxGrantWait        = coexStats.numTxGrantWait;
+    aCoexMetrics->mNumTxGrantWaitTimeout = coexStats.numTxGrantWaitTimeout;
+
+    aCoexMetrics->mNumRxRequest        = coexStats.numRxRequests;
+    aCoexMetrics->mNumRxGrantImmediate = coexStats.numRxGrantImmediate;
+
+    aCoexMetrics->mNumRxGrantWait        = coexStats.numRxGrantWait;
+    aCoexMetrics->mNumRxGrantWaitTimeout = coexStats.numRxGrantWaitTimeout;
+#endif
+    /* print remaining statistics */
+    /* Get scheduler stats and dump them here */
+    ret = sched_get_stats(&sched_stats);
+    assert(ret == 0);
+
+    PRINTF("\n\n802.15.4 scheduler metrics\n");
+    PRINTF("--------------------------------------------------------\n");
+    PRINTF("\t802.15.4 TX request DENY:  %d\n", sched_stats.tx_req_deny);
+    PRINTF("\t802.15.4 TX request GRANT: %d\n", sched_stats.tx_req_grant);
+    PRINTF("\t802.15.4 RX request DENY:  %d\n", sched_stats.rx_req_deny);
+    PRINTF("\t802.15.4 RX request GRANT: %d\n", sched_stats.rx_req_grant);
+    PRINTF("\t802.15.4 releases:         %d\n", sched_stats.rel);
+    PRINTF("\t802.15.4 abort:            %d\n", sched_stats.abort);
+    PRINTF("\t802.15.4 to BLE switch:    %d\n", sched_stats.l542ble);
+    PRINTF("\tBLE to 802.15.4 switch:    %d\n", sched_stats.ble2l54);
+    PRINTF("--------------------------------------------------------\n\n");
 
     return error;
 }
