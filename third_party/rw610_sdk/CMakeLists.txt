@@ -29,6 +29,7 @@
 set_property(SOURCE $ENV{NXP_RW610_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S PROPERTY LANGUAGE C)
 
 set(MIDDLEWARE_PATH $ENV{NXP_RW610_SDK_ROOT}/middleware PARENT_SCOPE)
+set(LWIP_PATH $ENV{NXP_RW610_SDK_ROOT}/middleware/lwip PARENT_SCOPE)
 
 if (SDK_RELEASE)
     message("SDK_RELEASE driver path chosen")

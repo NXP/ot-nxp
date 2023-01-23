@@ -28,10 +28,10 @@
 
 if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "RPMSG")
     set(PLATFORM_FILES
-        ../../common/spinel/radio.cpp
-        ../../common/spinel/spinel_hdlc.cpp
-        ../../common/spinel/system.c
-        ../../common/spinel/misc.c
+        ${PROJECT_SOURCE_DIR}/src/common/spinel/radio.cpp
+        ${PROJECT_SOURCE_DIR}/src/common/spinel/spinel_hdlc.cpp
+        ${PROJECT_SOURCE_DIR}/src/common/spinel/system.c
+        ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     )
     set(OT_SPINEL_LIBS
         openthread-hdlc
@@ -51,13 +51,26 @@ else()
     )
 endif()
 
+if(OT_NXP_LWIP)
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+    )
+    set(OT_LWIP_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/lwip
+    )
+    set(OT_LWIP_LIBS
+        nxp-lwip
+        openthread-ftd
+    )
+endif()
+
 add_library(${OT_PLATFORM_LIB}
     ${PLATFORM_FILES}
-    ../../common/alarm_freertos.c
+    ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
     platform/alarm.c
-    ../../common/uart.c
-    ../../common/flash_littlefs.c
-    ../../common/logging.c
+    ${PROJECT_SOURCE_DIR}/src/common/uart.c
+    ${PROJECT_SOURCE_DIR}/src/common/flash_littlefs.c
+    ${PROJECT_SOURCE_DIR}/src/common/logging.c
     #../../common/entropy.c
     platform/entropy.c
     platform/diag.c
@@ -83,6 +96,7 @@ target_link_libraries(${OT_PLATFORM_LIB}
         ${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB}
     PUBLIC
+        ${OT_LWIP_LIBS}
         -T${PROJECT_SOURCE_DIR}/src/rw/rw610/rw610.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
@@ -125,6 +139,7 @@ target_compile_options(${OT_PLATFORM_LIB}
 target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_SPINEL_INCLUDES}
+        ${OT_LWIP_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/common
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
