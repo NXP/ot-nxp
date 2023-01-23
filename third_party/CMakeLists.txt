@@ -32,3 +32,7 @@ if(OT_EXTERNAL_MBEDTLS)
     # Build mbedtls library from the SDK
     add_subdirectory(mbedtls)
 endif()
+
+if(OT_NXP_LWIP)
+    add_subdirectory(lwip)
+endif()

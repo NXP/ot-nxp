@@ -56,7 +56,21 @@ else()
     set(OT_LOG_OUTPUT NONE)
 endif()
 
+if(OT_NXP_LWIP)
+    # Workaround to avoid API conflict between LWIP and OT's TCPLP libs
+    # They have some API's with the same name but different implementation, so no compatible
+    # In case OT_NXP_LWIP is enabled, we have to exclude TCPLP from the build
+    set(OT_EXCLUDE_TCPLP_LIB ON)
+endif()
+
 add_subdirectory(openthread)
+
+if(OT_NXP_LWIP)
+    # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
+    target_compile_definitions(ot-config INTERFACE
+        -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+    )
+endif()
 
 # If OT logging is enabled add a dependency to SDK log components
 if (OT_STACK_ENABLE_LOG)
