@@ -22,6 +22,5 @@ void BOARD_InitHardware(void)
 #ifndef MULTICORE_LOGGING_ENABLED
     BOARD_InitDebugConsole();
 #endif
-    SCB_DisableDCache();
 }
 /*${function:end}*/

@@ -24,7 +24,7 @@
  *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- */
+*/
 
 /**
  * @file
@@ -34,10 +34,10 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-FLASH_START                  = 0x30000000;
-FLASH_SIZE                   = 0x1000000; /* 16 MBytes */
-FLASH_END                    = FLASH_START + FLASH_SIZE - 1;
-FLASH_SECTOR_SIZE            = 0x1000;  /* 4k flash sector size */
+FLASH_START       = 0x30000000;
+FLASH_SIZE        = 0x1000000; /* 16 MBytes */
+FLASH_END         = FLASH_START + FLASH_SIZE - 1;
+FLASH_SECTOR_SIZE = 0x1000;  /* 4k flash sector size */
 
 /*** FileSystem Configuration ***/
 
@@ -53,6 +53,10 @@ m_text_end                   = NV_STORAGE_START_ADDRESS -1;
 m_text_start                 = 0x30002400;
 m_text_size                  = NV_STORAGE_START_ADDRESS - m_text_start;
 
+OCRAM1_START                 = 0x20240000;
+OCRAM2_START                 = 0x202C0000;
+__NCACHE_REGION_START        = OCRAM2_START;
+__NCACHE_REGION_SIZE         = 0x2000;
 HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x800;
 STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x800;
 RPMSG_SHMEM_SIZE = DEFINED(__use_shmem__) ? 0x2000 : 0;
@@ -67,18 +71,15 @@ MEMORY
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
   m_qacode              (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
-  m_data2                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00040000
-  m_data               (RW)  : ORIGIN = 0x202C0000 + RPMSG_SHMEM_SIZE, LENGTH = 0x00080000 - RPMSG_SHMEM_SIZE
-  rpmsg_sh_mem          (RW)  : ORIGIN = 0x202C0000, LENGTH = RPMSG_SHMEM_SIZE
+  m_data                (RW)  : ORIGIN = OCRAM1_START, LENGTH = 0x000C0000
+  rpmsg_sh_mem          (RW)  : ORIGIN = 0x20300000, LENGTH = RPMSG_SHMEM_SIZE
+  m_data_noncache       (RW)  : ORIGIN = __NCACHE_REGION_START, LENGTH = __NCACHE_REGION_SIZE
   m_core1_image         (RX)  : ORIGIN = 0x30FC0000, LENGTH = 0x00040000
 }
 
 /* Define output sections */
 SECTIONS
 {
-  __NCACHE_REGION_START = ORIGIN(rpmsg_sh_mem);
-  __NCACHE_REGION_SIZE  = LENGTH(rpmsg_sh_mem);
-
   .flash_config :
   {
     . = ALIGN(4);
@@ -106,15 +107,6 @@ SECTIONS
      *(.core1_code*)
      . = ALIGN(4) ;
   } > m_core1_image
-
-  /* NOINIT section for rpmsg_sh_mem */
-  .noinit_rpmsg_sh_mem (NOLOAD) : ALIGN(4)
-  {
-     __RPMSG_SH_MEM_START__ = .;
-     *(.noinit.$rpmsg_sh_mem*)
-     . = ALIGN(4) ;
-     __RPMSG_SH_MEM_END__ = .;
-  } > rpmsg_sh_mem
 
   /* The startup code goes first into internal RAM */
   .interrupts :
@@ -253,7 +245,7 @@ SECTIONS
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
   } > m_data
-
+  
   __ram_function_flash_start = __DATA_ROM + (__data_end__ - __data_start__); /* Symbol is used by startup for TCM data initialization */
 
   .ram_function : AT(__ram_function_flash_start)
@@ -265,23 +257,8 @@ SECTIONS
     __ram_function_end__ = .;
   } > m_qacode
 
-  __NDATA_ROM = __ram_function_flash_start + (__ram_function_end__ - __ram_function_start__);
-  .ncache.init : AT(__NDATA_ROM)
-  {
-    __noncachedata_start__ = .;   /* create a global symbol at ncache data start */
-    *(NonCacheable.init)
-    . = ALIGN(4);
-    __noncachedata_init_end__ = .;   /* create a global symbol at initialized ncache data end */
-  } > m_data
-  . = __noncachedata_init_end__;
-  .ncache :
-  {
-    *(NonCacheable)
-    . = ALIGN(4);
-    __noncachedata_end__ = .;     /* define a global symbol at ncache data end */
-  } > m_data
+  __DATA_END = __ram_function_flash_start + (__ram_function_end__ - __ram_function_start__);
 
-  __DATA_END = __NDATA_ROM + (__noncachedata_init_end__ - __noncachedata_start__);
   text_end = ORIGIN(m_text) + LENGTH(m_text);
   ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
@@ -310,17 +287,41 @@ SECTIONS
     . += HEAP_SIZE;
     __HeapLimit = .;
     __heap_limit = .; /* Add for _sbrk */
-  } > m_data2
+  } > m_data
 
   .stack :
   {
     . = ALIGN(8);
     __StackLimit = .;
-      . += STACK_SIZE;
+    . += STACK_SIZE;
     __StackTop = .;
-  } > m_data2
+  } > m_data
 
   PROVIDE(__stack = __StackTop);
+
+  /* NOINIT section for rpmsg_sh_mem */
+  .noinit_rpmsg_sh_mem (NOLOAD) : ALIGN(4)
+  {
+     __RPMSG_SH_MEM_START__ = .;
+     *(.noinit.$rpmsg_sh_mem*)
+     . = ALIGN(4) ;
+     __RPMSG_SH_MEM_END__ = .;
+  } > rpmsg_sh_mem
+
+  .ncache.init : AT(ORIGIN(m_data_noncache))
+  {
+    __noncachedata_start__ = .;   /* create a global symbol at ncache data start */
+    *(NonCacheable.init)
+    . = ALIGN(4);
+    __noncachedata_init_end__ = .;   /* create a global symbol at initialized ncache data end */
+  } > m_data_noncache
+  . = __noncachedata_init_end__;
+  .ncache :
+  {
+    *(NonCacheable)
+    . = ALIGN(4);
+    __noncachedata_end__ = .;     /* define a global symbol at ncache data end */
+  } > m_data_noncache
 
   /* Remove this section to keep the nvm section on writting the device */
   .NVM :
