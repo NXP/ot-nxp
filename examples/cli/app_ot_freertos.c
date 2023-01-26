@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2022-2023, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "addons_cli.h"
+
 #ifndef OT_MAIN_TASK_PRIORITY
 #define OT_MAIN_TASK_PRIORITY 3
 #endif
@@ -94,12 +96,15 @@ static void appOtInit()
 #endif
     /* Init the CLI */
     otAppCliInit(sInstance);
+    /* Init CLI addons */
+    otAppCliAddonsInit(sInstance);
 }
 
 static void mainloop(void *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
     appOtInit();
+
     otSysProcessDrivers(sInstance);
     while (!otSysPseudoResetWasRequested())
     {

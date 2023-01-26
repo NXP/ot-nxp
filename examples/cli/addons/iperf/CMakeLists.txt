@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022-2023, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,16 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_NXP_BUILD_APP_AS_LIB)
-    add_library(ot-cli-${OT_NXP_PLATFORM}
-        app_ot_freertos.c
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-else()
-    add_executable(ot-cli-${OT_NXP_PLATFORM}
-        main.c
-        app_ot_freertos.c
-        app_freertos_hooks.c
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-endif()
+cmake_policy(SET CMP0079 NEW)
+
+target_sources(ot-cli-${OT_NXP_PLATFORM} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/iperf_cli.c
+)
 
 target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    ..
-    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    openthread-cli-ftd
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    ${NXP_DRIVER_LIB}
-    ot-config
-    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+target_compile_definitions(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    -DOT_APP_CLI_IPERF_ADDON
 )
-
-if(NXP_BOARD_LIB)
-    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-        ${NXP_BOARD_LIB}
-    )
-endif()
-
-add_subdirectory(addons)
