@@ -33,15 +33,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-include("${PROJECT_SOURCE_DIR}/openthread/etc/cmake/functions.cmake")
-
-set(OT_PACKAGE_VERSION "" CACHE STRING "OpenThread Package Version")
-if(OT_PACKAGE_VERSION STREQUAL "")
-    ot_git_version(OT_PACKAGE_VERSION)
-    message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
-endif()
-message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
-
 message(STATUS "NXP Platform Family: ${OT_NXP_PLATFORM_FAMILY}")
 message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
