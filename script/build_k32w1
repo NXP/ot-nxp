@@ -89,12 +89,6 @@ main()
         return
     fi
 
-    if [ "$1" == 'a0_support' ]; then
-        A0_SUPPORT=ON
-    else
-        A0_SUPPORT=OFF
-    fi
-
     echo "NXP_K32W1_SDK_ROOT set to " $NXP_K32W1_SDK_ROOT
 
     local options=("${OT_OPTIONS[@]}")
@@ -102,7 +96,6 @@ main()
     options+=("$@")
 
     options+=(" -DSDK_RELEASE=$SDK_RELEASE"
-        " -DA0_SUPPORT=$A0_SUPPORT"
     )
 
     build "${options[@]}"

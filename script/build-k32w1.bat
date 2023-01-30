@@ -22,13 +22,6 @@ if exist %NXP_K32W1_SDK_ROOT%\SW-Content-Register.txt (
 	goto :end
 )
 
-if "%1" == "a0_support" (
-	set A0_SUPPORT=ON
-) else (
-	set A0_SUPPORT=OFF
-)
-
-
 echo NXP_K32W1_SDK_ROOT set to %NXP_K32W1_SDK_ROOT%
 echo SDK_RELASE set to %SDK_RELEASE%
 
@@ -39,7 +32,6 @@ set OT_OPTIONS=-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake^
  -DOT_PLATFORM=external^
  -DOT_SLAAC=ON^
  -DSDK_RELEASE=%SDK_RELEASE%^
- -DA0_SUPPORT=%A0_SUPPORT%^
  -DOT_NXP_PLATFORM=k32w1^
  -DOT_NXP_PLATFORM_FAMILY=k32w1^
  -DOT_APP_LOWPOWER=ON

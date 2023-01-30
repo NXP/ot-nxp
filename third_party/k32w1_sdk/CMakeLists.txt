@@ -49,16 +49,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "DBG_IO_ENABLE"
 )
 
-if (A0_SUPPORT)
-    list(APPEND OT_PLATFORM_DEFINES
-        "KW45_A0_SUPPORT=1"
-    )
-else()
-    list(APPEND OT_PLATFORM_DEFINES
-        "KW45_A0_SUPPORT=0"
-    )
-endif()
-
 if (USE_NBU)
     set_property(SOURCE ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/startup_K32W1480.S PROPERTY LANGUAGE C)
 else()
