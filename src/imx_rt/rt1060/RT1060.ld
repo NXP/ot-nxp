@@ -65,15 +65,17 @@ MEMORY
   m_interrupts          (RX)  : ORIGIN = 0x60002000, LENGTH = 0x00000400
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
-  m_data2               (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000
-  m_data                (RW)  : ORIGIN = 0x20200000, LENGTH = 0x000C0000
+  m_qacode              (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00020000 /* ITCM 128 KB */
+  m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
+  m_ncache              (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00008000 /* OCRAM2 32 KB */
+  m_data2               (RW)  : ORIGIN = 0x20208000, LENGTH = 0x000B8000 /* OCRAM2 480 KB + OCRAM-FlexRAM 256 KB */
 }
 
 /* Define output sections */
 SECTIONS
 {
-  __NCACHE_REGION_START = ORIGIN(m_data2);
-  __NCACHE_REGION_SIZE  = 0;
+  __NCACHE_REGION_START = ORIGIN(m_ncache);
+  __NCACHE_REGION_SIZE  = LENGTH(m_ncache);
 
   .flash_config :
   {
@@ -110,10 +112,26 @@ SECTIONS
     . = ALIGN(4);
     *(EXCLUDE_FILE(
         /* Exclude flash and frequently executed functions from XIP */
-        *fsl_adapter_flexspi_nor_flash.c.obj
-        *mflash_drv.c.obj
-        *fsl_flexspi.c.obj
-    ) .text)                 /* .text sections (code) */
+        *fsl_adapter_flexspi_nor_flash.c.o*
+        *mflash_drv.c.o*
+        *fsl_flexspi.c.o*
+        *queue.c.o*
+        *tcp_out.c.o*
+        *mlan_11n_rxreorder.c.o*
+        *lib_a-memcpy-stub.o*
+        *tcp_in.c.o*
+        *inet_chksum.c.o*
+        *timers.c.o*
+        *fsl_usdhc.c.o*
+        *port.c.o*
+        *wifi-sdio.c.o*
+        *fsl_sdio.c.o*
+        *pbuf.c.o*
+        *tasks.c.o*
+        *lib_a-memset.o*
+        *fsl_cache.c.o*
+        *wifi.c.o*
+      ) .text*)              /* .text* sections (code) */
     *(.rodata .rodata.* .constdata .constdata.*)
     *(.glue_7)               /* glue arm to thumb code */
     *(.glue_7t)              /* glue thumb to arm code */
@@ -205,7 +223,7 @@ SECTIONS
     . += VECTOR_RAM_SIZE;
     . = ALIGN(4);
     __interrupts_ram_end__ = .; /* Define a global symbol at data end */
-  } > m_data
+  } > m_data2
 
   __VECTOR_RAM = DEFINED(__ram_vector_table__) ? __VECTOR_RAM__ : ORIGIN(m_interrupts);
   __RAM_VECTOR_TABLE_SIZE_BYTES = DEFINED(__ram_vector_table__) ? (__interrupts_ram_end__ - __interrupts_ram_start__) : 0x0;
@@ -216,34 +234,63 @@ SECTIONS
     __DATA_RAM = .;
     __data_start__ = .;      /* create a global symbol at data start */
     *(m_usb_dma_init_data)
-    /* Explicit placement of flash and frequently executed functions in RAM */
-    *fsl_adapter_flexspi_nor_flash.c.obj(.text*)
-    *mflash_drv.c.obj(.text*)
-    *fsl_flexspi.c.obj(.text*)
     *(.data)                 /* .data sections */
     *(.data*)                /* .data* sections */
     KEEP(*(.jcr*))
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
-  } > m_data
-  __NDATA_ROM = __DATA_ROM + (__data_end__ - __data_start__);
+  } > m_data2
+
+  __ram_function_flash_start = __DATA_ROM + (__data_end__ - __data_start__); /* Symbol is used by startup for TCM data initialization */
+
+  .ram_function : AT(__ram_function_flash_start)
+  {
+    . = ALIGN(32);
+    __ram_function_start__ = .;
+    *(CodeQuickAccess)
+    /* Explicit placement of flash and frequently executed functions in RAM */
+    *fsl_adapter_flexspi_nor_flash.c.o*(.text*)
+    *mflash_drv.c.o*(.text*)
+    *fsl_flexspi.c.o*(.text*)
+    *queue.c.o*(.text*)
+    *tcp_out.c.o*(.text*)
+    *mlan_11n_rxreorder.c.o*(.text*)
+    *lib_a-memcpy-stub.o(.text*)
+    *tcp_in.c.o*(.text*)
+    *inet_chksum.c.o*(.text*)
+    *timers.c.o*(.text*)
+    *fsl_usdhc.c.o*(.text*)
+    *port.c.o*(.text*)
+    *wifi-sdio.c.o*(.text*)
+    *fsl_sdio.c.o*(.text*)
+    *pbuf.c.o*(.text*)
+    *tasks.c.o*(.text*)
+    *lib_a-memset.o*(.text*)
+    *fsl_cache.c.o*(.text*)
+    *wifi.c.o*(.text*)
+    . = ALIGN(128);
+    __ram_function_end__ = .;
+  } > m_qacode
+
+  __NDATA_ROM = __ram_function_flash_start + (__ram_function_end__ - __ram_function_start__);
   .ncache.init : AT(__NDATA_ROM)
   {
     __noncachedata_start__ = .;   /* create a global symbol at ncache data start */
     *(NonCacheable.init)
     . = ALIGN(4);
     __noncachedata_init_end__ = .;   /* create a global symbol at initialized ncache data end */
-  } > m_data
+  } > m_ncache
   . = __noncachedata_init_end__;
   .ncache :
   {
     *(NonCacheable)
     . = ALIGN(4);
     __noncachedata_end__ = .;     /* define a global symbol at ncache data end */
-  } > m_data
+  } > m_ncache
 
   __DATA_END = __NDATA_ROM + (__noncachedata_init_end__ - __noncachedata_start__);
   text_end = ORIGIN(m_text) + LENGTH(m_text);
+  flash_usage = __DATA_END - FLASH_START;
   ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
@@ -260,9 +307,9 @@ SECTIONS
     . = ALIGN(4);
     __bss_end__ = .;
     __END_BSS = .;
-  } > m_data
+  } > m_data2
 
-  .heap :
+  .heap (NOLOAD) :
   {
     . = ALIGN(8);
     __end__ = .;
@@ -271,7 +318,7 @@ SECTIONS
     . += HEAP_SIZE;
     __HeapLimit = .;
     __heap_limit = .; /* Add for _sbrk */
-  } > m_data2
+  } > m_data
 
   .stack :
   {
@@ -279,7 +326,7 @@ SECTIONS
     __StackLimit = .;
       . += STACK_SIZE;
     __StackTop = .;
-  } > m_data2
+  } > m_data
 
   PROVIDE(__stack = __StackTop);
 

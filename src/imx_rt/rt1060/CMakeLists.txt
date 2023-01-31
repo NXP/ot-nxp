@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-rt1060
+add_library(${OT_PLATFORM_LIB}
     ../../common/alarm_freertos.c
     ../../common/diag.c
 #    ../../common/entropy.c
@@ -37,27 +37,27 @@ add_library(openthread-rt1060
     ../../common/spinel/spinel_hdlc.cpp
     ../../common/spinel/system.c
     ../../common/uart.c
-    board/pin_mux.c
-    board/hardware_init.c
-    board/peripherals.c
-    board/clock_config.c
-    board/board.c
 )
 
 
 set_target_properties(
-    openthread-rt1060
+    ${OT_PLATFORM_LIB}
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-rt1060
+target_link_libraries(${OT_PLATFORM_LIB}
     PRIVATE
         ot-config
         openthread-hdlc
         openthread-spinel-rcp
         openthread-platform
+        connfwk-config
+        connfwk-FunctionLib
+        connfwk-FileSystem
+        connfwk-platform-${OT_NXP_PLATFORM}
+        connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
@@ -67,15 +67,15 @@ target_link_libraries(openthread-rt1060
 #OT needs freeRTOS config dependency
 target_link_libraries(ot-config
     INTERFACE
-    openthread-rt1060
+    ${OT_PLATFORM_LIB}
 )
 
-target_compile_definitions(openthread-rt1060
+target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-rt1060
+target_compile_options(${OT_PLATFORM_LIB}
     PRIVATE
         ${OT_CFLAGS}
         -DOT_PLAT_SYS_CRYPTO_INIT
@@ -92,10 +92,8 @@ target_compile_options(openthread-rt1060
         -Wno-empty-body
 )
 
-target_include_directories(openthread-rt1060
+target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
-        board
-        freertos
         ../platform
         ${PROJECT_SOURCE_DIR}/src/common/spinel
         ${PROJECT_SOURCE_DIR}/src/common

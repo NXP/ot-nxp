@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021-2022, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 get_filename_component(NXP_RT1060_SDK_ROOT_ABS "$ENV{NXP_RT1060_SDK_ROOT}" ABSOLUTE)
 
-set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "evkbmimxrt1060")
+set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "Default evk board used")
 
 # Required to set MIDDLEWARE_PATH so that it is visible in current scope
 # and in parent scope
@@ -55,6 +55,7 @@ if (${SDK_TYPE} STREQUAL "GITHUB")
     set(DRIVER_DEVICE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/drivers)
     set(UTILITIES_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/utilities)
     set(UTILITIES_DEVICE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities)
+    set(ASSERT_FILES_PATH ${UTILITIES_FILES_PATH}/assert)
     set(DEBUG_CONSOLE_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console_lite)
     set(STR_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/xip)
@@ -73,6 +74,7 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH})
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/debug_console)
+    set(ASSERT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/assert)
     set(STR_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/xip)
 else ()
@@ -89,6 +91,7 @@ else ()
     set(DRIVER_EDMA_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/edma)
     set(DRIVER_DMAMUX_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/dmamux)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/utilities/debug_console)
+    set(ASSERT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/utilities/assert)
     set(STR_FILES_PATH ${DEBUG_CONSOLE_FILES_PATH}/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1052/xip)
 endif ()
@@ -125,6 +128,7 @@ add_library(${NXP_DRIVER_LIB}
     ${DRIVER_DMAMUX_FILES_PATH}/fsl_dmamux.c
     ${DEBUG_CONSOLE_FILES_PATH}/fsl_debug_console.c
     ${STR_FILES_PATH}/fsl_str.c
+    ${ASSERT_FILES_PATH}/fsl_assert.c
 # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
     ${NXP_RT1060_SDK_ROOT_ABS}/boards/${EVK_RT1060_BOARD}/xip/${EVK_RT1060_BOARD}_flexspi_nor_config.c
@@ -141,17 +145,11 @@ add_library(${NXP_DRIVER_LIB}
     ${NXP_RT1060_SDK_ROOT_ABS}/components/rng/fsl_adapter_trng.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/internal_flash/fsl_adapter_flexspi_nor_flash.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/gpio/fsl_adapter_igpio.c
-#Framework files
-    ${MIDDLEWARE_PATH}/wireless/framework/FunctionLib/FunctionLib.c
-    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/fwk_platform_ot.c
-    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/fwk_platform_hdlc.c
-    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt/k32w0/fwk_platform_coex.c
+    ${NXP_RT1060_SDK_ROOT_ABS}/components/crc/fsl_adapter_software_crc.c
 #File system
     ${MIDDLEWARE_PATH}/littlefs/lfs.c
     ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash/mimxrt1062/mflash_drv.c
-    ${MIDDLEWARE_PATH}/wireless/framework/platform/rt1060/fwk_platform_flash.c
-    ${MIDDLEWARE_PATH}/wireless/framework/FileSystem/fwk_filesystem.c
 )
 
 
@@ -193,12 +191,7 @@ target_include_directories(${NXP_DRIVER_LIB}
         ${NXP_RT1060_SDK_ROOT_ABS}/components/rng
         ${NXP_RT1060_SDK_ROOT_ABS}/components/internal_flash
         ${NXP_RT1060_SDK_ROOT_ABS}/components/gpio
-#Framework files
-        ${MIDDLEWARE_PATH}/wireless/framework/FunctionLib
-        ${MIDDLEWARE_PATH}/wireless/framework/Common
-        ${MIDDLEWARE_PATH}/wireless/framework/platform/rt1060
-        ${MIDDLEWARE_PATH}/wireless/framework/platform/include
-        ${MIDDLEWARE_PATH}/wireless/framework/FileSystem
+        ${NXP_RT1060_SDK_ROOT_ABS}/components/crc
 #File system
         ${MIDDLEWARE_PATH}/littlefs
         ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash
@@ -209,6 +202,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
     -D__STARTUP_CLEAR_BSS
     -D__STARTUP_INITIALIZE_NONCACHEDATA
+    -D__STARTUP_INITIALIZE_RAMFUNCTION
     #-DSERIAL_MANAGER_NON_BLOCKING_MODE=1
     -DSERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY=1
     -DSDK_OS_FREE_RTOS
@@ -229,40 +223,56 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DCONFIG_ARM=1
     -DSERIAL_MANAGER_RING_BUFFER_FLOWCONTROL=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
-    -DFWK_FILESYSTEM_LOCAL_BUF_SIZE=1024
-    -DLFS_THREADSAFE=1
-    -DLFS_NO_DEBUG
-    -DLFS_NO_ERROR
-    -DLFS_NO_WARN
-    -DSPINEL_UART_INSTANCE=3
-    -DSPINEL_ENABLE_RX_RTS=1
-    -DSPINEL_ENABLE_TX_RTS=1
-    -DRESET_PIN_PORT=6
-    -DRESET_PIN_NUM=2
-    #DMA support enablement
-    #-DHAL_UART_DMA_ENABLE=1
-    #-DSERIAL_PORT_TYPE_UART_DMA=1
-    #Async logging feature
-    #-DLOG_ENABLE_ASYNC_MODE=1
-    #-DLOG_MAX_ARGUMENT_COUNT=17
-    #-DLOG_MAX_BUFF_LOG_COUNT=250
-    #-DLOG_ENABLE_OVERWRITE=1
+    #LittleFS configs
+    LFS_CONFIG=fwk_lfs_config.h
+    LFS_THREADSAFE=1
 )
 
-if (OT_STACK_ENABLE_LOG)
-#move logs to UART2
-target_compile_definitions(${NXP_DRIVER_LIB}
-    PUBLIC
-    BOARD_DEBUG_UART_BASEADDR=LPUART2
-    BOARD_DEBUG_UART_INSTANCE=2U
-    BOARD_UART_IRQ=LPUART2_IRQn
-    BOARD_UART_IRQ_HANDLER=LPUART2_IRQHandler
+# Use Connectivity Framework CMake build system to build required modules
+set(CONNFWK_PLATFORM ${OT_NXP_PLATFORM})
+set(CONNFWK_PLATFORM_FAMILY ${OT_NXP_PLATFORM_FAMILY})
+set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    #Define here the default transceiver path can be overwritten by cmake -D option
+    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
+    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
+endif()
+# Enable FunctionLib and FileSystem modules
+set(CONNFWK_FLIB ON)
+set(CONNFWK_FILESYSTEM ON)
+# Add the Framework as a subdirectory
+add_subdirectory(${MIDDLEWARE_PATH}/wireless/framework ${PROJECT_BINARY_DIR}/framework)
+# Forward SDK and OT include paths, compile definitions, etc... to the framework
+target_link_libraries(connfwk-config
+    INTERFACE
+        ${NXP_DRIVER_LIB}
+        ${NXP_BOARD_LIB}
 )
-endif ()
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+        -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
+        -DLPUART_RING_BUFFER_SIZE=768 # required for OTW to be able to handle RX frame received on the UART
+    )
+    target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
+        PRIVATE
+        #HDLC configuration
+        -DSPINEL_UART_INSTANCE=3
+        -DSPINEL_ENABLE_RX_RTS=1
+        -DSPINEL_ENABLE_TX_RTS=1
+        #OTW configurations
+        -DPLATFORM_OTW_RESET_PIN_PORT=6
+        -DPLATFORM_OTW_RESET_PIN_NUM=2
+        -DPLATFORM_OTW_DIO5_PIN_PORT=6
+        -DPLATFORM_OTW_DIO5_PIN_NUM=26
+    )
+endif()
 
 target_link_libraries(${NXP_DRIVER_LIB}
-    PRIVATE
-        ${OT_PLATFORM_LIB}
+    PUBLIC
+    ${NXP_BOARD_LIB}
+    #Dependency to little_fs config files
+    connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
 )
 
 target_compile_options(${NXP_DRIVER_LIB}

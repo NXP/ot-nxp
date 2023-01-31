@@ -10,7 +10,6 @@
  * Included files
  **********************************************************************************************************************/
 #include "fsl_common.h"
-#include "fwk_platform_flash.h"
 #include "lfs.h"
 
 #if defined(__cplusplus)

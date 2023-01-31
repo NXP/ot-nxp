@@ -18,6 +18,9 @@ void BOARD_InitHardware(void)
 {
     BOARD_ConfigMPU();
     BOARD_InitBootPins();
+#ifdef BOARD_OTW_K32W0_PIN_INIT
+    BOARD_InitOTWPins();
+#endif
     BOARD_InitBootClocks();
     BOARD_InitDebugConsole();
 }

@@ -1,4 +1,4 @@
-# OpenThread on NXP RT1060 (host) + K32W061 (rcp) example (Experimental support)
+# OpenThread on NXP RT1060 (host) + K32W061 (rcp) example
 
 This directory contains example platform drivers for the [NXP RT1060][rt1060]
 platform.
@@ -59,7 +59,10 @@ $ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
 After a successful build, the ot-cli-rt1060 FreeRTOS version could be found in
 `build_rt1060` and include FTD (Full Thread Device).
 
-Note: FreeRTOS is required to be able to build the IMXRT1060 platform files.
+Notes:
+
+- The K32W0 RCP firmware should be built before building the RT1060 image.
+- FreeRTOS is required to be able to build the IMXRT1060 platform files.
 
 ## Hardware requirements
 
@@ -95,42 +98,23 @@ The below picture shows pins connections for the EVK-MIMXRT1060.
 
 ![rt1060_k32w061_pin_settings](../../../doc/img/imxrt1060/rt1060_k32w061_pin_settings.jpg)
 
-Note: it is recommended to first
-[flash the K32W061 OT-RCP transceiver image](#Flashing-the-K32W061-OT-RCP-transceiver-image)
-before connecting the DK6 to the IMXRT1060.
-
 ## Flash Binaries
 
-### Flashing the K32W061 OT-RCP transceiver image
+### K32W061 OT-RCP transceiver image
 
-Connect to the DK6 board by plugging a mini-USB cable to the connector marked
-with _FTDI USB_. Also, make sure that jumpers jp4/JP7 are situated in the middle
-position (_JN UART0 - FTDI_).
+An ot-rcp image has to be built. For that, it is recommended to follow the [K32W061
+Readme][k32w061-readme].
 
-DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] SDK_MIMXRT1060-EVKB
-previously downloaded at path
-`<sdk_path>/middleware/wireless/ethermind/port/pal/mcux/bluetooth/controller/k32w061/JN-SW-4407-DK6-Flash-Programmer`.
-This is a Windows application that can be installed using the .exe file. Once
-the application is installed, the COM port for K32W061 must be identified:
+To avoid to have to rebuild all K32W061 application, it is recommended to build only the ot_rcp version using the below command:
 
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe  --list
-Available connections:
-COM29
+```bash
+$ ./script/build_k32w061 ot_rcp_only_uart_flow_control
 ```
 
-The ot-rcp image has to be built. For that, follow the [K32W061
-Readme][k32w061-readme]. The new K32W061 ot-rcp binary will be located in
-`ot-nxp/build_k32w061/rcp_only_uart_flow_control/openthread/examples/apps/ncp/ot-rcp.bin`.
-
-Once the COM port is identified, the required binary can be flashed:
+After a successful build, application binaries will be generated in
+`ot-nxp/build_k32w061/rcp_only_uart_flow_control/bin` and would contain the file called "rcp_name.bin.h" that would be used by the RT1060 to download the K32W061 RCP firmware. In fact, the Over The Wire (OTW) protocol (over UART) would be used to download the k32w0 transceiver image from the RT1060 to the its internal flash.
 
 [k32w061-readme]: ../../k32w0/k32w061/README.md
-
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe -s COM29 -p "<ot_rcp_path>\ot-rcp.bin"
-```
-
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
 ### Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
@@ -188,8 +172,8 @@ existing debug configaturation.
    "Debug Configurations".
 2. Right click on the "Hello Word" debug configuration and click on "Duplicate".
 3. Rename the Duplicated debug configuration "ot-cli".
-4. In the "C/C++ Application", click on "Browse" and select the ot-cli-rt1060
-   app (should be located in "ot-nxp/build_rt1060/ot-cli-rt1060"). Then click on
+4. In the "C/C++ Application", click on "Browse" and select the ot-cli-rt1060.elf
+   app (should be located in "ot-nxp/build_rt1060/bin/ot-cli-rt1060.elf"). Then click on
    Apply and Save.
 5. Click on "Organize Favorites".
    ![MCU_Sett](../../../doc/img/imxrt1060/organize_favorites.png)
@@ -218,8 +202,3 @@ For a list of all available commands, visit [OpenThread CLI Reference
 README.md][cli].
 
 [cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
-
-## Known limitations
-
-Non-volatile storage is disabled. Therefore all thread network information would
-be lost if a reset happen.
