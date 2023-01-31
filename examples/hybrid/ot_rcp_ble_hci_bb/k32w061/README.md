@@ -32,7 +32,7 @@ The following command can be used to build only a specific target:
 $ ./script/build_k32w061 <target_name>
 ```
 
-After a successful build, the application binary will be generated in `build_k32w061/<target_name>/ot-rcp-ble-hci-bb-k32w061`.
+After a successful build, application binaries will be generated in `build_k32w061/<target_name>/bin` and would contain the file called "rcp_name.bin.h".
 
 ## Flash Binaries
 
