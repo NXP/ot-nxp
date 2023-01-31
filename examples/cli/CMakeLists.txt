@@ -29,6 +29,7 @@
 if(OT_NXP_BUILD_APP_AS_LIB)
     add_library(ot-cli-${OT_NXP_PLATFORM}
         app_ot_freertos.c
+        libc_hook.cpp
         ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
     )
 else()
@@ -36,6 +37,7 @@ else()
         main.c
         app_ot_freertos.c
         app_freertos_hooks.c
+        libc_hook.cpp
         ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
     )
 endif()
@@ -52,6 +54,16 @@ target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
     ${NXP_DRIVER_LIB}
     ot-config
     -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+    #Wrapping libc malloc functions and defining the libc heap size to 0
+    -Wl,--defsym=__heap_size__=0
+    -Wl,--wrap=_malloc_r
+    -Wl,--wrap=_realloc_r
+    -Wl,--wrap=_free_r
+    -Wl,--wrap=_calloc_r
+    -Wl,--wrap=malloc
+    -Wl,--wrap=free
+    -Wl,--wrap=realloc
+    -Wl,--wrap=calloc
 )
 
 if(NXP_BOARD_LIB)
