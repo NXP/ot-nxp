@@ -132,12 +132,12 @@ build()
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
-        build k32w0_uart_flow_control "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}"
-        build k32w0_spi "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}"
         build iwx12_spi "$2" "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
+        echo "Warning: No longer maintain"
         build k32w0_uart_flow_control "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}"
     elif [ "$1" == 'k32w0_spi' ]; then
+        echo "Warning: No longer maintain"
         build k32w0_spi "$2" "${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
         build iwx12_spi "$2" "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}"

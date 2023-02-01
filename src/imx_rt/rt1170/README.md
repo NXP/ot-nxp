@@ -1,4 +1,4 @@
-# OpenThread on NXP RT1170 (host) + (K32W061 or IWX12) as a RCP Example (Experimental support)
+# OpenThread on NXP RT1170 (host) + IWX12 as a RCP Example
 
 This directory contains example platform drivers for the [NXP RT1170][rt1170] platform.
 
@@ -27,14 +27,14 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [IMXRT1170 SDK 2.12.1_firecrest_EAR4.6](https://mcuxpresso.nxp.com/).
+- Download [IMXRT1170 SDK 2.13.0_firecrest_EAR4.6](https://mcuxpresso.nxp.com/).
   For internal SDK delivery, the SDK can be downloaded using the [KEX STAGE](https://kex-stage.nxp.com/en/welcome)
   Creating an nxp.com account is required before being able to download the
   SDK. Once the account is created, login and follow the steps for downloading
-  SDK_2.12.1_EVK-MIMXRT1170. In the SDK Builder UI selection you should select
+  SDK_2.13.0_EVK-MIMXRT1170. In the SDK Builder UI selection you should select
   the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain**.
   SDK could also be retrieved with cloning [Internal SDK repository](https://bitbucket.sw.nxp.com/projects/MCUCORE/repos/mcu-sdk-2.0/browse)
-  and setting branch develop/2.12.1_firecrest_v16 .
+  and setting branch develop/2.13.0_firecrest_v16 .
 
 ## Building examples
 
@@ -48,8 +48,6 @@ After a successful build, the ot-cli-rt1170 FreeRTOS version could be found in `
 
 Note: FreeRTOS is required to be able to build the IMXRT1170 platform files. By default, if no argument is given when running the script `build_rt1170`, a freertos ot cli will be created to suport the following configurations:
 
-- RT1170 + K32W0 with spinel over UART (binaries located in `build_rt1170/k32w0_uart_flow_control`)
-- RT1170 + K32W0 with spinel over SPI (binaries located in `build_rt1170/k32w0_spi`)
 - RT1170 + IWX12 with spinel over SPI (binaries located in `build_rt1170/iwx12_spi`)
 
 ## Hardware requirements
@@ -58,13 +56,7 @@ Host part:
 
 - 1 EVK-MIMXRT1170
 
-Transceiver part (choice 1):
-
-- 1 OM15076-3 Carrier Board (DK6 board)
-- 1 K32W061 Module to be plugged on the Carrier Board
-
-OR
-Transceiver part (choice 2):
+Transceiver part:
 
 - 1 WIFI IWX12 BOARD RD USD
 
@@ -73,33 +65,6 @@ Transceiver part (choice 2):
 To support SPI on the EVK-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406,R408.
 
 ## Board settings
-
-### RT1170 + K32W061 (Spinel over UART)
-
-The below table explains pin settings (UART settings) to connect the evkmimxrt1170 (host) to a k32w061 transceiver (rcp).
-
-| PIN NAME OF K32W061 | DK6 (K32W061) | I.MXRT1170  | PIN NAME OF RT1170 | GPIO NAME OF RT1170 |
-| :-----------------: | :-----------: | :---------: | :----------------: | :-----------------: |
-|      UART_TXD       |     PIO 8     | J25, pin 13 |    LPUART7_RXD     |     GPIO_AD_01      |
-|      UART_RXD       |     PIO 9     | J25, pin 15 |    LPUART7_TXD     |     GPIO_AD_00      |
-|      UART_RTS       |     PIO 6     | J25, pin 11 |    LPUART7_CTS     |     GPIO_AD_02      |
-|      UART_CTS       |     PIO 7     | J25, pin 9  |    LPUART7_RTS     |     GPIO_AD_03      |
-|         GND         |   J3, pin 1   | J10, pin 14 |         XX         |         XX          |
-|        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
-
-### RT1170 + K32W061 (Spinel over SPI)
-
-The below table explains pin settings (SPI settings) to connect the evkmimxrt1170 (host) to a k32w061 transceiver (rcp).
-
-| PIN NAME OF K32W061 | DK6 (K32W061) | I.MXRT1170  | PIN NAME OF RT1170 | GPIO NAME OF RT1170 |
-| :-----------------: | :-----------: | :---------: | :----------------: | :-----------------: |
-|         SIN         |    PIO 17     | J10, pin 8  |    LPSPI1_SOUT     |     GPIO_AD_30      |
-|        SOUT         |    PIO 18     | J10, pin 10 |     LPSPI1_SIN     |     GPIO_AD_31      |
-|        PCS0         |    PIO 16     | J10, pin 6  |    LPSPI1_PCS0     |     GPIO_AD_29      |
-|         SCK         |    PIO 15     | J10, pin 12 |     LPSPI1_SCK     |     GPIO_AD_28      |
-|         GND         |   J3, pin 1   | J10, pin 14 |         XX         |         XX          |
-|        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
-|       SPI_INT       |    PIO 19     | J26, pin 4  |     GPIO_AD_11     |     GPIO_AD_11      |
 
 ### RT1170 + IWX12 (Spinel over SPI)
 
@@ -131,35 +96,35 @@ Power for IWX12 board:
 For IWX12 running on QFN_IPA board an external antenna should be plugged on ANT3 J4.
 The IWX12 board should be plugged to the RT1170 via SDIO.
 
+### RT1170 + K32W061 (Spinel over UART) - Warning: No longer maintain
+
+The below table explains pin settings (UART settings) to connect the evkmimxrt1170 (host) to a k32w061 transceiver (rcp).
+
+| PIN NAME OF K32W061 | DK6 (K32W061) | I.MXRT1170  | PIN NAME OF RT1170 | GPIO NAME OF RT1170 |
+| :-----------------: | :-----------: | :---------: | :----------------: | :-----------------: |
+|      UART_TXD       |     PIO 8     | J25, pin 13 |    LPUART7_RXD     |     GPIO_AD_01      |
+|      UART_RXD       |     PIO 9     | J25, pin 15 |    LPUART7_TXD     |     GPIO_AD_00      |
+|      UART_RTS       |     PIO 6     | J25, pin 11 |    LPUART7_CTS     |     GPIO_AD_02      |
+|      UART_CTS       |     PIO 7     | J25, pin 9  |    LPUART7_RTS     |     GPIO_AD_03      |
+|         GND         |   J3, pin 1   | J10, pin 14 |         XX         |         XX          |
+|        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
+
+### RT1170 + K32W061 (Spinel over SPI) - Warning: No longer maintain
+
+The below table explains pin settings (SPI settings) to connect the evkmimxrt1170 (host) to a k32w061 transceiver (rcp).
+
+| PIN NAME OF K32W061 | DK6 (K32W061) | I.MXRT1170  | PIN NAME OF RT1170 | GPIO NAME OF RT1170 |
+| :-----------------: | :-----------: | :---------: | :----------------: | :-----------------: |
+|         SIN         |    PIO 17     | J10, pin 8  |    LPSPI1_SOUT     |     GPIO_AD_30      |
+|        SOUT         |    PIO 18     | J10, pin 10 |     LPSPI1_SIN     |     GPIO_AD_31      |
+|        PCS0         |    PIO 16     | J10, pin 6  |    LPSPI1_PCS0     |     GPIO_AD_29      |
+|         SCK         |    PIO 15     | J10, pin 12 |     LPSPI1_SCK     |     GPIO_AD_28      |
+|         GND         |   J3, pin 1   | J10, pin 14 |         XX         |         XX          |
+|        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
+|       SPI_INT       |    PIO 19     | J26, pin 4  |     GPIO_AD_11     |     GPIO_AD_11      |
+
+
 ## Flash Binaries
-
-### Flashing the K32W061 OT-RCP transceiver image
-
-Connect to the DK6 board by plugging a mini-USB cable to the connector marked with _FTDI USB_. Also, make sure that jumpers jp4/JP7 are situated in the middle position (_JN UART0 - FTDI_).
-
-DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] SDK_EVK-MIMXRT1170 previously downloaded at path `<sdk_path>/middleware/wireless/ethermind/port/pal/mcux/bluetooth/controller/k32w061/JN-SW-4407-DK6-Flash-Programmer`. This is a Windows application that can be installed using the .exe file. Once the application is installed, the COM port for K32W061 must be identified:
-
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe  --list
-Available connections:
-COM29
-```
-
-The ot-rcp image has to be built. For that, follow the [K32W061 Readme][k32w061-readme].
-New K32W061 ot-rcp binaries will be located in :
-
-- RCP with Spinel over UART: `ot-nxp/build_k32w061/rcp_only_uart_flow_control/openthread/examples/apps/ncp/ot-rcp.bin`.
-- RCP with Spinel over SPI: `ot-nxp/build_k32w061/rcp_only_spi/openthread/examples/apps/ncp/ot-rcp.bin`
-
-Once the COM port is identified, the required binary can be flashed:
-
-[k32w061-readme]: ../../k32w0/k32w061/README.md
-
-```
-C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe -s COM29 -p "<ot_rcp_path>\ot-rcp.bin"
-```
-
-[sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
 ### Flashing the IWX12 transceiver firmware
 
