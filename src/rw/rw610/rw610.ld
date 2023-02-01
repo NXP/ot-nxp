@@ -98,30 +98,27 @@ SECTIONS
   .text :
   {
     . = ALIGN(4);
-    *(EXCLUDE_FILE(
+    EXCLUDE_FILE(
         /* Exclude flash and frequently executed functions from XIP */
         *fsl_adapter_flexspi_nor_flash.c.obj
         *mflash_drv.c.obj
         *fsl_flexspi.c.obj
-    ).text)                 /* .text sections (code) */
-    *(EXCLUDE_FILE(
-        /* Exclude flash and frequently executed functions from XIP */
-        *fsl_adapter_flexspi_nor_flash.c.obj
-        *mflash_drv.c.obj
-        *fsl_flexspi.c.obj
-    ).text*)                 /* .text* sections (code) */
-    *(EXCLUDE_FILE(
-        /* Exclude flash and frequently executed functions from XIP */
-        *fsl_adapter_flexspi_nor_flash.c.obj
-        *mflash_drv.c.obj
-        *fsl_flexspi.c.obj
-    ).rodata)                /* .rodata sections (constants, strings, etc.) */
-    *(EXCLUDE_FILE(
-        /* Exclude flash and frequently executed functions from XIP */
-        *fsl_adapter_flexspi_nor_flash.c.obj
-        *mflash_drv.c.obj
-        *fsl_flexspi.c.obj
-    ).rodata*)               /* .rodata* sections (constants, strings, etc.) */
+        *port.c.obj
+        *portasm.c.obj
+        *queue.c.obj
+        *timers.c.obj
+        *tasks.c.obj
+        *inet_chksum.c.obj
+        *ip6.c.obj
+        *pbuf.c.obj
+        *sys_arch.c.obj
+        *tcp_out.c.obj
+        *tcp_in.c.obj
+        *fsl_adapter_rfimu.c.obj
+        *fsl_cache.c.obj
+        *fsl_os_abstraction_free_rtos.c.obj
+    )
+    *(.text* .rodata*)
     *(.glue_7)               /* glue arm to thumb code */
     *(.glue_7t)              /* glue thumb to arm code */
     *(.eh_frame)
@@ -223,9 +220,23 @@ SECTIONS
     *(CodeQuickAccess)       /* CodeQuickAccess sections */
     *(DataQuickAccess)       /* DataQuickAccess sections */
     /* Explicit placement of flash and frequently executed functions in RAM */
-    *fsl_adapter_flexspi_nor_flash.c.obj(.text .text* .rodata .rodata*)
-    *mflash_drv.c.obj(.text* .text* .rodata .rodata*)
-    *fsl_flexspi.c.obj(.text .text* .rodata .rodata*)
+    *fsl_adapter_flexspi_nor_flash.c.obj(.text* .rodata*)
+    *mflash_drv.c.obj(.text* .rodata*)
+    *fsl_flexspi.c.obj(.text* .rodata*)
+    *port.c.obj(.text* .rodata*)
+    *portasm.c.obj(.text* .rodata*)
+    *queue.c.obj(.text* .rodata*)
+    *timers.c.obj(.text* .rodata*)
+    *tasks.c.obj(.text* .rodata*)
+    *inet_chksum.c.obj(.text* .rodata*)
+    *ip6.c.obj(.text* .rodata*)
+    *pbuf.c.obj(.text* .rodata*)
+    *sys_arch.c.obj(.text* .rodata*)
+    *tcp_out.c.obj(.text* .rodata*)
+    *tcp_in.c.obj(.text* .rodata*)
+    *fsl_adapter_rfimu.c.obj(.text* .rodata*)
+    *fsl_cache.c.obj(.text* .rodata*)
+    *fsl_os_abstraction_free_rtos.c.obj(.text* .rodata*)
     *(.data)                 /* .data sections */
     *(.data*)                /* .data* sections */
     KEEP(*(.jcr*))
