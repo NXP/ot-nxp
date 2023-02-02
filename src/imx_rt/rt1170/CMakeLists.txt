@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021-2022, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-
-if (IWX12_TRANSCEIVER)
-    set(TRANSEIVER_C_FILE
-            board/sdmmc_config.c
-    )
-endif ()
-
-if (MULTICORE_LOGGING)
-    set(MULTICORE_LOGGING_C_FILE
-            multicore/multicore.c
-    )
-    set (MULTICORE_PATH
-            multicore
-            multicore/m4_log_dump_uart2_image
-    )
-else ()
-    set(MULTICORE_LOGGING_C_FILE )
-endif ()
-
-if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
-    #UART support
-    set(SPINEL_FLAGS
-        -DOT_PLAT_SPINEL_OVER_HDLC
-    )
-    set(SPINEL_FILES
-        ../../common/spinel/spinel_hdlc.cpp
-    )
-else ()
-    #Assuming SPI support
-    set(SPINEL_FLAGS
-        -DOT_PLAT_SPINEL_OVER_SPI
-    )
-    set(SPINEL_FILES
-    ../../common/spinel/spi_interface.cpp
-    )
-endif ()
-
-
-add_library(openthread-rt1170
+list(APPEND OT_PLAT_SOURCES
     ../../common/alarm_freertos.c
     ../../common/diag.c
     ../../common/flash_littlefs.c
@@ -74,55 +36,89 @@ add_library(openthread-rt1170
     ${SPINEL_FILES}
     ../../common/spinel/system.c
     ../../common/uart.c
-    board/pin_mux.c
-    board/hardware_init.c
-    board/peripherals.c
-    board/clock_config.c
-    board/board.c
-    ${TRANSEIVER_C_FILE}
-    ${MULTICORE_LOGGING_C_FILE}
+)
+
+list(APPEND OT_PLAT_INCLUDES
+    ../platform
+    ${PROJECT_SOURCE_DIR}/src/common
+    ${PROJECT_SOURCE_DIR}/src/common/spinel
+)
+
+list(APPEND OT_PLAT_FLAGS
+    -DOT_PLAT_SYS_CRYPTO_INIT
+    -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
+    -DOT_PLAT_SYS_LOG_MANAGEMENT
+    -DOT_PLAT_SYS_RANDOM_DISABLE
+    -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE
+    -DOPENTHREAD_FTD=1
+)
+
+if (MULTICORE_LOGGING)
+    list(APPEND OT_PLAT_SOURCES
+            multicore/multicore.c
+    )
+    list(APPEND OT_PLAT_INCLUDES
+            multicore
+            multicore/m4_log_dump_uart2_image
+    )
+endif ()
+
+if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
+    #UART support
+    list(APPEND OT_PLAT_FLAGS
+        -DOT_PLAT_SPINEL_OVER_HDLC
+    )
+    list(APPEND OT_PLAT_SOURCES
+        ../../common/spinel/spinel_hdlc.cpp
+    )
+else ()
+    #Assuming SPI support
+    list(APPEND OT_PLAT_FLAGS
+        -DOT_PLAT_SPINEL_OVER_SPI
+    )
+    list(APPEND OT_PLAT_SOURCES
+        ../../common/spinel/spi_interface.cpp
+    )
+endif ()
+
+
+add_library(${OT_PLATFORM_LIB}
+    ${OT_PLAT_SOURCES}
 )
 
 set_target_properties(
-    openthread-rt1170
+    ${OT_PLATFORM_LIB}
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-rt1170
+target_link_libraries(${OT_PLATFORM_LIB}
     PRIVATE
         ot-config
         openthread-hdlc
         openthread-spinel-rcp
         openthread-platform
+        connfwk-config
+        connfwk-FunctionLib
+        connfwk-FileSystem
+        connfwk-platform-${OT_NXP_PLATFORM}
+        connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1170/RT1170_cm7.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
 )
 
-#OT needs freeRTOS config dependency
-target_link_libraries(ot-config
-    INTERFACE
-    openthread-rt1170
-)
-
-target_compile_definitions(openthread-rt1170
-    PUBLIC
+target_compile_definitions(${OT_PLATFORM_LIB}
+    PRIVATE
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-rt1170
+target_compile_options(${OT_PLATFORM_LIB}
     PRIVATE
         ${OT_CFLAGS}
-        ${SPINEL_FLAGS}
-        -DOT_PLAT_SYS_CRYPTO_INIT
-        -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
-        -DOT_PLAT_SYS_LOG_MANAGEMENT
-        -DOT_PLAT_SYS_RANDOM_DISABLE
-        -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE
-        -DOPENTHREAD_FTD=1
+        ${OT_PLAT_FLAGS}
         -Wno-unknown-pragmas
         -Wno-sign-compare
         -Wno-unused-function
@@ -131,31 +127,19 @@ target_compile_options(openthread-rt1170
 )
 
 if (MULTICORE_LOGGING)
-    target_compile_options(openthread-rt1170
+    target_compile_options(${OT_PLATFORM_LIB}
         PRIVATE
         -DMULTICORE_LOGGING_ENABLED
     )
-    target_link_libraries(openthread-rt1170
+    target_link_libraries(${OT_PLATFORM_LIB}
         PUBLIC
         -Xlinker --defsym=__use_shmem__=1
     )
 endif ()
 
-if (IWX12_TRANSCEIVER)
-    target_compile_options(openthread-rt1170
-        PUBLIC
-        -DSDIO_ENABLED
-    )
-endif ()
-
-target_include_directories(openthread-rt1170
+target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
-        board
-        freertos
-        ${MULTICORE_PATH}
-        ../platform
-        ${PROJECT_SOURCE_DIR}/src/common
-        ${PROJECT_SOURCE_DIR}/src/common/spinel
+        ${OT_PLAT_INCLUDES}
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms

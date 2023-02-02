@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021-2022, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@ if (SDK_RELEASE)
     set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH})
     set(DEBUG_CONSOLE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/debug_console)
+    set(ASSERT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1062/utilities/assert)
     set(STR_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/utilities/incbin)
@@ -70,74 +71,60 @@ else ()
     set(DRIVER_CAAM_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/caam)
     set(DRIVER_MU_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/drivers/mu)
     set(DEBUG_CONSOLE_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/debug_console)
+    set(ASSERT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/assert)
     set(STR_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH $ENV{NXP_RT1170_SDK_ROOT}/platform/utilities/misc_utilities)
 endif ()
 
-if (IWX12_TRANSCEIVER)
-    set(TRANSEIVER_FIRMWARE_PATH
-            ${DRIVER_USDHC_FILES_PATH}
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
-            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template
-    )
-    set(TRANSEIVER_FIRMWARE_C_FILE
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/firmware_dnld.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/mlan_sdio.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
-            ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
-            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt/iw612/fwk_platform_coex.c
-    )
-else ()
-    set(TRANSEIVER_FIRMWARE_PATH )
-    set(TRANSEIVER_FIRMWARE_C_FILE 
-            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt/k32w0/fwk_platform_coex.c
-       )
-endif ()
+list(APPEND SDK_INCLUDES
+    #freertos includes
+    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/include
+    $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F
+#CMSIS includes
+    $ENV{NXP_RT1170_SDK_ROOT}/CMSIS/Core/Include
+#other SDK files
+    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176
+    ${DRIVER_DEVICE_FILES_PATH}
+    ${DRIVER_DEVICE_FILES_PATH}/cm7
+    ${DRIVER_COMMON_FILES_PATH}
+    ${DRIVER_LPUART_FILES_PATH}
+    ${DRIVER_LPSPI_FILES_PATH}
+    ${DRIVER_IGPIO_FILES_PATH}
+    ${DRIVER_PIT_FILES_PATH}
+    ${DRIVER_GPT_FILES_PATH}
+    ${DRIVER_FLEXSPI_FILES_PATH}
+    ${DRIVER_EDMA_FILES_PATH}
+    ${DRIVER_CACHE_FILES_PATH}
+    ${DRIVER_CAAM_FILES_PATH}
+    ${DRIVER_MU_FILES_PATH}
+    ${DRIVER_DMAMUX_FILES_PATH}
+    ${DEBUG_CONSOLE_FILES_PATH}
+    ${STR_FILES_PATH}
+# XIP
+    $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip
+    $ENV{NXP_RT1170_SDK_ROOT}/boards/evkmimxrt1170/xip
+#SDK components
+    $ENV{NXP_RT1170_SDK_ROOT}/components/uart
+    $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager
+    $ENV{NXP_RT1170_SDK_ROOT}/components/lists
+    $ENV{NXP_RT1170_SDK_ROOT}/components/osa
+    $ENV{NXP_RT1170_SDK_ROOT}/components/common_task
+    $ENV{NXP_RT1170_SDK_ROOT}/components/log
+    $ENV{NXP_RT1170_SDK_ROOT}/components/timer_manager
+    $ENV{NXP_RT1170_SDK_ROOT}/components/timer
+    $ENV{NXP_RT1170_SDK_ROOT}/components/internal_flash
+    $ENV{NXP_RT1170_SDK_ROOT}/components/spi
+    $ENV{NXP_RT1170_SDK_ROOT}/components/gpio
+    $ENV{NXP_RT1170_SDK_ROOT}/components/time_stamp
+#File system
+    $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs
+    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash
+    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170
+)
 
-if (MULTICORE_LOGGING)
-    set(MULTICORE_PATH
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/freertos
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/imxrt1170
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src
-    )
-    set(MULTICORE_C_FILE
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_mu_internal.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
-        ${INCBIN_FILES_PATH}/fsl_incbin.S
-    )
-else ()
-    set(MULTICORE_PATH )
-    set(MULTICORE_C_FILE )
-endif ()
-
-add_library(${NXP_DRIVER_LIB}
-#freertos files
+list(APPEND SDK_SOURCES
+    #freertos files
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/event_groups.c
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/croutine.c
     $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/list.c
@@ -172,6 +159,7 @@ add_library(${NXP_DRIVER_LIB}
     ${DRIVER_MU_FILES_PATH}/fsl_mu.c
     ${DEBUG_CONSOLE_FILES_PATH}/fsl_debug_console.c
     ${STR_FILES_PATH}/fsl_str.c
+    ${ASSERT_FILES_PATH}/fsl_assert.c
 # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
     $ENV{NXP_RT1170_SDK_ROOT}/boards/evkmimxrt1170/xip/evkmimxrt1170_flexspi_nor_config.c
@@ -179,7 +167,6 @@ add_library(${NXP_DRIVER_LIB}
     $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/spi/fsl_adapter_lpspi.c
-    #$ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_spi.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/uart/fsl_adapter_lpuart.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/lists/fsl_component_generic_list.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
@@ -189,92 +176,13 @@ add_library(${NXP_DRIVER_LIB}
     $ENV{NXP_RT1170_SDK_ROOT}/components/timer/fsl_adapter_pit.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/internal_flash/fsl_adapter_flexspi_nor_flash.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
-#Framework files
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt/fwk_platform_ot.c
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt/fwk_platform_hdlc.c
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt1170/fwk_platform_flash.c
-    $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/FileSystem/fwk_filesystem.c
 #File system
     $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs/lfs.c
     $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs/lfs_util.c
     $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170/mflash_drv.c
-#Transceiver files
-    ${TRANSEIVER_FIRMWARE_C_FILE}
-#Core m4 for logging
-    ${MULTICORE_C_FILE}
 )
 
-#freertos
-target_include_directories(${NXP_DRIVER_LIB}
-    PUBLIC
-#freertos includes
-        $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/include
-        $ENV{NXP_RT1170_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F
-#CMSIS includes
-        $ENV{NXP_RT1170_SDK_ROOT}/CMSIS/Core/Include
-#other SDK files
-        $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176
-        ${DRIVER_DEVICE_FILES_PATH}
-        ${DRIVER_DEVICE_FILES_PATH}/cm7
-        ${DRIVER_COMMON_FILES_PATH}
-        ${DRIVER_LPUART_FILES_PATH}
-        ${DRIVER_LPSPI_FILES_PATH}
-        ${DRIVER_IGPIO_FILES_PATH}
-        ${DRIVER_PIT_FILES_PATH}
-        ${DRIVER_GPT_FILES_PATH}
-        ${DRIVER_FLEXSPI_FILES_PATH}
-        ${DRIVER_EDMA_FILES_PATH}
-        ${DRIVER_CACHE_FILES_PATH}
-        ${DRIVER_CAAM_FILES_PATH}
-        ${DRIVER_MU_FILES_PATH}
-        ${DRIVER_DMAMUX_FILES_PATH}
-        ${DEBUG_CONSOLE_FILES_PATH}
-        ${STR_FILES_PATH}
-# XIP
-        $ENV{NXP_RT1170_SDK_ROOT}/devices/MIMXRT1176/xip
-        $ENV{NXP_RT1170_SDK_ROOT}/boards/evkmimxrt1170/xip
-#SDK components
-        $ENV{NXP_RT1170_SDK_ROOT}/components/uart
-        $ENV{NXP_RT1170_SDK_ROOT}/components/serial_manager
-        $ENV{NXP_RT1170_SDK_ROOT}/components/lists
-        $ENV{NXP_RT1170_SDK_ROOT}/components/osa
-        $ENV{NXP_RT1170_SDK_ROOT}/components/common_task
-        $ENV{NXP_RT1170_SDK_ROOT}/components/log
-        $ENV{NXP_RT1170_SDK_ROOT}/components/timer_manager
-        $ENV{NXP_RT1170_SDK_ROOT}/components/timer
-        $ENV{NXP_RT1170_SDK_ROOT}/components/internal_flash
-        $ENV{NXP_RT1170_SDK_ROOT}/components/spi
-        $ENV{NXP_RT1170_SDK_ROOT}/components/gpio
-        $ENV{NXP_RT1170_SDK_ROOT}/components/time_stamp
-#Framework files
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/FunctionLib
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/Common
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/include
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/platform/rt1170
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/wireless/framework/FileSystem
-#File system
-        $ENV{NXP_RT1170_SDK_ROOT}/middleware/littlefs
-        $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash
-        $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170
-#Transceiver image
-        ${TRANSEIVER_FIRMWARE_PATH}
-#multicore files
-        ${MULTICORE_PATH}
-)
-
-if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
-    #UART support
-    set(SPINEL_FLAGS
-        -DSPINEL_UART_INSTANCE=7
-        -DSPINEL_ENABLE_RX_RTS=1
-        -DSPINEL_ENABLE_TX_RTS=1
-        -DSPINEL_UART_CLOCK_RATE=CLOCK_GetRootClockFreq\(kCLOCK_Root_Lpuart7\)
-    )
-endif ()
-
-target_compile_definitions(${NXP_DRIVER_LIB}
-    PUBLIC
+list(APPEND SDK_COMPILE_DEFINITIONS
     -D__STARTUP_CLEAR_BSS
     -D__STARTUP_INITIALIZE_NONCACHEDATA
     #-DSERIAL_MANAGER_NON_BLOCKING_MODE=1
@@ -295,43 +203,49 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DHAL_UART_ADAPTER_FIFO=1
     -DSDK_DEBUGCONSOLE_UART=1
     -DDEBUG_CONSOLE_RX_ENABLE=0
-    -DDEBUG_CONSOLE_UART_INDEX=2 #UART2 is used for debug on J9 PIN 4
     -DSERIAL_PORT_TYPE_UART=1
-    #-DSERIAL_PORT_TYPE_SPI_MASTER=1
-    #-DSERIAL_PORT_TYPE_SPI=1
     -DCONFIG_ARM=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
-    #DMA support enablement
-    #-DHAL_UART_DMA_ENABLE=1
-    #-DSERIAL_PORT_TYPE_UART_DMA=1
-    #NVM flags
-    -DgNvStorageIncluded_d=1
-    -DgNvTableKeptInRam_d=1
-    -DNVM_NO_COMPONNET=1
-    -DLFS_THREADSAFE=1
-    -DLFS_NO_DEBUG
-    -DLFS_NO_ERROR
-    -DLFS_NO_WARN
-    #Async logging feature
-    #-DLOG_ENABLE_ASYNC_MODE=1
-    #-DLOG_MAX_ARGUMENT_COUNT=17
-    #-DLOG_MAX_BUFF_LOG_COUNT=250
-    #-DLOG_ENABLE_OVERWRITE=1
+    #LittleFS configs
+    LFS_CONFIG=fwk_lfs_config.h
+    LFS_THREADSAFE=1
     #Flash size should be increased for RT1170
     -DFLASH_ADAPTER_SIZE=0x4000
     #Security flags
     -DCRYPTO_USE_DRIVER_CAAM
     -DCACHE_MODE_WRITE_THROUGH=1
-    #Controllers pins flags
-    -DRESET_PIN_PORT=3
-    -DRESET_PIN_NUM=9
-    ${SPINEL_FLAGS}
     -DUSE_SDK_2_13
 )
 
-if (IWX12_TRANSCEIVER)
-    target_compile_definitions(${NXP_DRIVER_LIB}
-        PUBLIC
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+    list(APPEND SDK_INCLUDES
+            ${DRIVER_USDHC_FILES_PATH}
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wifidriver
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
+            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template
+    )
+    list(APPEND SDK_SOURCES
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/firmware_dnld.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/mlan_sdio.c
+            $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
+            ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
+            $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
+    )
+    list(APPEND SDK_COMPILE_DEFINITIONS
         -DIW61x
         -DSDMMCHOST_OPERATION_VOLTAGE_3V3
         -DCONFIG_MAX_AP_ENTRIES=10
@@ -339,11 +253,101 @@ if (IWX12_TRANSCEIVER)
         -DCONFIG_UAP_AMPDU_RX=1
         -DCONFIG_WIFI_MAX_PRIO=configMAX_PRIORITIES-1
     )
+elseif ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    list(APPEND SDK_COMPILE_DEFINITIONS
+        -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
+        -DLPUART_RING_BUFFER_SIZE=768 # required for OTW to be able to handle RX frame received on the UART
+    )
 endif ()
 
+if (MULTICORE_LOGGING)
+    list(APPEND SDK_INCLUDES
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/freertos
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/imxrt1170
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src
+    )
+    list(APPEND SDK_SOURCES
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_mu_internal.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
+        $ENV{NXP_RT1170_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
+        ${INCBIN_FILES_PATH}/fsl_incbin.S
+    )
+endif ()
+
+add_library(${NXP_DRIVER_LIB}
+    ${SDK_SOURCES}
+)
+
+target_include_directories(${NXP_DRIVER_LIB}
+    PUBLIC
+    ${SDK_INCLUDES}
+)
+
+target_compile_definitions(${NXP_DRIVER_LIB}
+    PUBLIC
+    ${SDK_COMPILE_DEFINITIONS}
+)
+
+# Use Connectivity Framework CMake build system to build required modules
+set(CONNFWK_PLATFORM ${OT_NXP_PLATFORM})
+set(CONNFWK_PLATFORM_FAMILY ${OT_NXP_PLATFORM_FAMILY})
+set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    #Define here the default transceiver path can be overwritten by cmake -D option
+    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
+    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
+endif()
+# Enable FunctionLib and FileSystem modules
+set(CONNFWK_FLIB ON)
+set(CONNFWK_FILESYSTEM ON)
+# Add the Framework as a subdirectory
+add_subdirectory(${MIDDLEWARE_PATH}/wireless/framework ${PROJECT_BINARY_DIR}/framework)
+# Forward SDK and OT include paths, compile definitions, etc... to the framework
+target_link_libraries(connfwk-config
+    INTERFACE
+        ${NXP_DRIVER_LIB}
+        ${NXP_BOARD_LIB}
+)
+if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
+        target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
+            INTERFACE
+            #HDLC configuration
+            -DSPINEL_UART_INSTANCE=7
+            -DSPINEL_ENABLE_RX_RTS=1
+            -DSPINEL_ENABLE_TX_RTS=1
+            -DSPINEL_UART_CLOCK_RATE=CLOCK_GetRootClockFreq\(kCLOCK_Root_Lpuart7\)
+        )
+    endif ()
+    target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
+        INTERFACE
+        #OTW configurations
+        -DPLATFORM_OTW_RESET_PIN_PORT=3
+        -DPLATFORM_OTW_RESET_PIN_NUM=9
+        -DPLATFORM_OTW_DIO5_PIN_PORT=6 #TODO identify DIO pin on RT1170
+        -DPLATFORM_OTW_DIO5_PIN_NUM=26 #TODO identify DIO pin on RT1170
+    )
+elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
+    target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
+        INTERFACE
+        -DPLATFORM_RESET_PIN_PORT=3
+        -DPLATFORM_RESET_PIN_NUM=9
+    )
+endif()
+
 target_link_libraries(${NXP_DRIVER_LIB}
-    PRIVATE
-        ${OT_PLATFORM_LIB}
+    PUBLIC
+    ${NXP_BOARD_LIB}
+    #Dependency to little_fs config files
+    connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
 )
 
 target_compile_options(${NXP_DRIVER_LIB}

@@ -123,7 +123,6 @@ The below table explains pin settings (SPI settings) to connect the evkmimxrt117
 |        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
 |       SPI_INT       |    PIO 19     | J26, pin 4  |     GPIO_AD_11     |     GPIO_AD_11      |
 
-
 ## Flash Binaries
 
 ### Flashing the IWX12 transceiver firmware

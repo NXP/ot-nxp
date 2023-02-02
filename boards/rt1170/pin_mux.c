@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 NXP
+ * Copyright 2020-2023 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -47,12 +47,6 @@ void BOARD_InitBootPins(void)
          | IOMUXC_GPR_GPR42_GPIO_MUX3_GPIO_SEL_LOW(
                0x00U) /* GPIO3 and CM7_GPIO3 share same IO MUX function, GPIO_MUX3 selects one GPIO function: 0x00U */
         );
-
-#ifdef OT_PLAT_SPINEL_OVER_SPI
-    BOARD_InitArduinoSPIPins();
-#else
-    BOARD_InitArduinoUARTPins();
-#endif
 }
 
 /*

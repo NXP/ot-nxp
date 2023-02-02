@@ -260,6 +260,7 @@ SECTIONS
   __DATA_END = __ram_function_flash_start + (__ram_function_end__ - __ram_function_start__);
 
   text_end = ORIGIN(m_text) + LENGTH(m_text);
+  flash_usage = __DATA_END - FLASH_START;
   ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
@@ -278,7 +279,7 @@ SECTIONS
     __END_BSS = .;
   } > m_data
 
-  .heap :
+  .heap (NOLOAD) :
   {
     . = ALIGN(8);
     __end__ = .;
