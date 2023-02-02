@@ -56,6 +56,49 @@ Flasing the `srec` files is done using jlink.exe. Connect to the board use the l
 
 To Flash the `srec` using MCULink just drag and drop the file onto the MCULink drive in File Explorer.
 
+## Debugging
+
+One option for debugging would be to use MCUXpresso IDE.
+
+- Drag-and-drop the zip file containing the NXP SDK in the "Installed SDKs" tab:
+
+![Installed SDKs](../../../doc/img/k32w1/installed_sdks.jpg)
+
+- Import any demo application from the installed SDK:
+
+```
+Import SDK example(s).. -> choose a demo app (demo_apps -> hello_world) -> Finish
+```
+
+![Import demo](../../../doc/img/k32w1/import_demo.jpg)
+
+- Flash the previously imported demo application on the board:
+
+```
+Right click on the application (from Project Explorer) -> Debug as -> JLink/CMSIS-DAP
+```
+
+After this step, a debug configuration specific for the K32W1 board was created. This debug configuration will
+be used later on for debugging the application resulted after ot-nxp compilation.
+
+- Import OpenThread repo in MCUXpresso IDE as Makefile Project. Use _none_ as
+  _Toolchain for Indexer Settings_:
+
+```
+File -> Import -> C/C++ -> Existing Code as Makefile Project
+```
+
+![New Project](../../../doc/img/k32w1/new_project.jpg)
+
+- Replace the path of the existing demo application with the path of the K32W1 application:
+
+```
+Run -> Debug Configurations... -> C/C++ Application
+```
+
+![Debug K32W1](../../../doc/img/k32w1/debug_k32w1.jpg)
+
+
 ## Running the example
 
 1. Prepare two boards with the flashed `CLI Example` (as shown above).
