@@ -454,21 +454,3 @@ target_link_libraries(${NXP_DRIVER_LIB}
     PRIVATE
         ${NXP_BOARD_LIB} # board.h needed by mflash driver TODO: check if the dependency can be removed in this driver
 )
-
-if (NOT "${SPINEL_INTERFACE_TYPE}" STREQUAL "RPMSG")
-    add_library(ieee_802_15_4_rw610
-        $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/RW610N/RW610_RPMSG/Phy.c
-        $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/RW610N/RW610_RPMSG/ASP.c
-    )
-    target_include_directories(ieee_802_15_4_rw610
-        PUBLIC
-            $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/interface
-            $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/RW610N/RW610_RPMSG
-            $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/
-    )
-    target_link_libraries(ieee_802_15_4_rw610
-        PRIVATE
-            connfwk-config # Needed by 15.4 Phy to get path to EmbeddedTypes.h
-            ${NXP_DRIVER_LIB}
-    )
-endif()

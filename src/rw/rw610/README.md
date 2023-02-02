@@ -65,14 +65,6 @@ $ export NXP_RW610_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_rw610
 ```
 
-If you want to build the same examples but with the radio interface over spinel, run the following command:
-
-```bash
-$ cd <path-to-ot-nxp>
-$ export NXP_RW610_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rw610 -DSPINEL_INTERFACE_TYPE=RPMSG
-```
-
 ### Windows
 
 ```bash

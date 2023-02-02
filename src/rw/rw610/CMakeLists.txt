@@ -26,31 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if ("${SPINEL_INTERFACE_TYPE}" STREQUAL "RPMSG")
-    set(PLATFORM_FILES
-        ${PROJECT_SOURCE_DIR}/src/common/spinel/radio.cpp
-        ${PROJECT_SOURCE_DIR}/src/common/spinel/spinel_hdlc.cpp
-        ${PROJECT_SOURCE_DIR}/src/common/spinel/system.c
-        ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
-    )
-    set(OT_SPINEL_LIBS
-        openthread-hdlc
-        openthread-spinel-rcp
-    )
-    set(OT_SPINEL_CFLAGS
-        -DOT_PLAT_SPINEL_OVER_HDLC
-    )
-    set(OT_SPINEL_INCLUDES
-        ${PROJECT_SOURCE_DIR}/src/common/spinel
-    )
-else()
-    set(PLATFORM_FILES
-        platform/radio.c
-        platform/misc.c
-        platform/system.c
-    )
-endif()
-
 if(OT_NXP_LWIP)
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
@@ -66,12 +41,15 @@ endif()
 
 add_library(${OT_PLATFORM_LIB}
     ${PLATFORM_FILES}
+    ${PROJECT_SOURCE_DIR}/src/common/spinel/radio.cpp
+    ${PROJECT_SOURCE_DIR}/src/common/spinel/spinel_hdlc.cpp
+    ${PROJECT_SOURCE_DIR}/src/common/spinel/system.c
+    ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
-    platform/alarm.c
     ${PROJECT_SOURCE_DIR}/src/common/uart.c
     ${PROJECT_SOURCE_DIR}/src/common/flash_littlefs.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
-    #../../common/entropy.c
+    platform/alarm.c
     platform/entropy.c
     platform/diag.c
 )
@@ -88,8 +66,9 @@ target_link_libraries(${OT_PLATFORM_LIB}
         ot-config
         openthread-platform
         openthread-platform-utils-static
-        ${OT_SPINEL_LIBS}
         connfwk-config
+        openthread-hdlc
+        openthread-spinel-rcp
         connfwk-FunctionLib
         connfwk-FileSystem
         connfwk-platform-rdrw610
@@ -105,13 +84,6 @@ target_link_libraries(${OT_PLATFORM_LIB}
 # Rebuild executables if the linker script is changed
 set_target_properties(ot-config PROPERTIES INTERFACE_LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rw610.ld)
 
-if (NOT "${SPINEL_INTERFACE_TYPE}" STREQUAL "RPMSG")
-    target_link_libraries(${OT_PLATFORM_LIB}
-        PRIVATE
-            ieee_802_15_4_rw610
-    )
-endif()
-
 if(NOT DEFINED OT_PLAT_UART_INSTANCE)
     set(OT_PLAT_UART_INSTANCE 3)
 endif()
@@ -119,7 +91,7 @@ endif()
 target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
-        ${OT_SPINEL_CFLAGS}
+        -DOT_PLAT_SPINEL_OVER_HDLC
         -DOT_PLAT_UART_INSTANCE=${OT_PLAT_UART_INSTANCE}
         -DOT_PLAT_UART_TYPE=BOARD_DEBUG_UART_TYPE
         -DOT_PLAT_SYS_CRYPTO_INIT
@@ -138,9 +110,9 @@ target_compile_options(${OT_PLATFORM_LIB}
 
 target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
-        ${OT_SPINEL_INCLUDES}
         ${OT_LWIP_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/common
+        ${PROJECT_SOURCE_DIR}/src/common/spinel
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms

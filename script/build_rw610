@@ -55,7 +55,6 @@ readonly OT_OPTIONS=(
     "-DOT_RCP=OFF"
     "-DOT_APP_CLI=OFF"
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
-    "-DSPINEL_INTERFACE_TYPE=RPMSG"
 )
 
 build()
