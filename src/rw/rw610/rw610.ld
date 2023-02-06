@@ -275,7 +275,7 @@ SECTIONS
 
   PROVIDE(__stack = __StackTop);
 
-  .heap :
+  .heap (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE(end = .);
