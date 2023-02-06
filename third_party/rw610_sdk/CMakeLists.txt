@@ -77,8 +77,7 @@ set(RW610_SDK_SOURCES
     $ENV{NXP_RW610_SDK_ROOT}/rtos/freertos/freertos-kernel/stream_buffer.c
     $ENV{NXP_RW610_SDK_ROOT}/rtos/freertos/freertos-kernel/tasks.c
     $ENV{NXP_RW610_SDK_ROOT}/rtos/freertos/freertos-kernel/timers.c
-    #$ENV{NXP_RW610_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/MemMang/heap_4.c
-    $ENV{NXP_RW610_SDK_ROOT}/middleware/wireless/framework/Common/rtos/freertos/heap_mem_manager.c
+    $ENV{NXP_RW610_SDK_ROOT}/rtos/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
     $ENV{NXP_RW610_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S
     $ENV{NXP_RW610_SDK_ROOT}/devices/RW612/system_RW612.c
@@ -100,8 +99,6 @@ set(RW610_SDK_SOURCES
     ${STR_FILES_PATH}/fsl_str.c
 #SDK components
     $ENV{NXP_RW610_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
-    $ENV{NXP_RW610_SDK_ROOT}/components/mem_manager/fsl_component_mem_manager_light.c
-    $ENV{NXP_RW610_SDK_ROOT}/components/messaging/fsl_component_messaging.c
     $ENV{NXP_RW610_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
     $ENV{NXP_RW610_SDK_ROOT}/components/lists/fsl_component_generic_list.c
     $ENV{NXP_RW610_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
@@ -310,8 +307,6 @@ set(RW610_SDK_INCLUDES
 #SDK components
         $ENV{NXP_RW610_SDK_ROOT}/components/uart
         $ENV{NXP_RW610_SDK_ROOT}/components/serial_manager
-        $ENV{NXP_RW610_SDK_ROOT}/components/mem_manager
-        $ENV{NXP_RW610_SDK_ROOT}/components/messaging
         $ENV{NXP_RW610_SDK_ROOT}/components/lists
         $ENV{NXP_RW610_SDK_ROOT}/components/osa
         $ENV{NXP_RW610_SDK_ROOT}/components/rpmsg
@@ -405,7 +400,6 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DSERIAL_MANAGER_TASK_PRIORITY=3
     -DTM_ENABLE_TIME_STAMP=1
     -DIMU_TASK_STACK_SIZE=1024
-    -DMinimalHeapSize_c=122880
     -DgNvStorageIncluded_d=1
     -DAPP_FLEXSPI_AMBA_BASE=0x08000000
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=0
