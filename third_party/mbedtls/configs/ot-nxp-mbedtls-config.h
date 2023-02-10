@@ -45,9 +45,8 @@
 #undef MBEDTLS_PLATFORM_STD_CALLOC
 #undef MBEDTLS_PLATFORM_STD_FREE
 
-#ifdef USE_SDK_2_13
+/* Always undef this flag on SDK 2.13 as the new version of freeRTOS heap defines the function pvPortCalloc */
 #undef MBEDTLS_FREESCALE_FREERTOS_CALLOC_ALT
-#endif
 
 /* Openthread mbetdls config include */
 #include "mbedtls-config.h"
