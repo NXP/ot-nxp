@@ -214,7 +214,6 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     #Security flags
     -DCRYPTO_USE_DRIVER_CAAM
     -DCACHE_MODE_WRITE_THROUGH=1
-    -DUSE_SDK_2_13
 )
 
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
@@ -256,7 +255,6 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
 elseif ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
-        -DLPUART_RING_BUFFER_SIZE=768 # required for OTW to be able to handle RX frame received on the UART
     )
 endif ()
 
