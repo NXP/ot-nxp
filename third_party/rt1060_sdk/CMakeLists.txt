@@ -100,15 +100,15 @@ set_property(SOURCE ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/gcc/startup_MI
 
 add_library(${NXP_DRIVER_LIB}
 #freertos files
-    ${RTOS_PATH}/freertos/freertos_kernel/event_groups.c
-    ${RTOS_PATH}/freertos/freertos_kernel/croutine.c
-    ${RTOS_PATH}/freertos/freertos_kernel/list.c
-    ${RTOS_PATH}/freertos/freertos_kernel/portable/GCC/ARM_CM4F/port.c
-    ${RTOS_PATH}/freertos/freertos_kernel/queue.c
-    ${RTOS_PATH}/freertos/freertos_kernel/stream_buffer.c
-    ${RTOS_PATH}/freertos/freertos_kernel/tasks.c
-    ${RTOS_PATH}/freertos/freertos_kernel/timers.c
-    ${RTOS_PATH}/freertos/freertos_kernel/portable/MemMang/heap_4.c
+    ${RTOS_PATH}/freertos/freertos-kernel/event_groups.c
+    ${RTOS_PATH}/freertos/freertos-kernel/croutine.c
+    ${RTOS_PATH}/freertos/freertos-kernel/list.c
+    ${RTOS_PATH}/freertos/freertos-kernel/portable/GCC/ARM_CM4F/port.c
+    ${RTOS_PATH}/freertos/freertos-kernel/queue.c
+    ${RTOS_PATH}/freertos/freertos-kernel/stream_buffer.c
+    ${RTOS_PATH}/freertos/freertos-kernel/tasks.c
+    ${RTOS_PATH}/freertos/freertos-kernel/timers.c
+    ${RTOS_PATH}/freertos/freertos-kernel/portable/MemMang/heap_4.c
 #startup files
     ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S
     #${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/mcuxpresso/startup_mimxrt1062.c
@@ -156,8 +156,8 @@ add_library(${NXP_DRIVER_LIB}
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
 #freertos includes
-        ${RTOS_PATH}/freertos/freertos_kernel/include
-        ${RTOS_PATH}/freertos/freertos_kernel/portable/GCC/ARM_CM4F
+        ${RTOS_PATH}/freertos/freertos-kernel/include
+        ${RTOS_PATH}/freertos/freertos-kernel/portable/GCC/ARM_CM4F
 #CMSIS includes
         ${NXP_RT1060_SDK_ROOT_ABS}/CMSIS/Core/Include
 #other SDK files
@@ -252,7 +252,6 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
-        -DLPUART_RING_BUFFER_SIZE=768 # required for OTW to be able to handle RX frame received on the UART
     )
     target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY}
         PRIVATE

@@ -32,7 +32,7 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [NXP MCUXpresso SDK 2.12.0](https://github.com/NXPmicro/mcux-sdk/tree/MCUX_2.12.0_UPDATE)
+- Download the NXP MCUXpresso git SDK 2.13.0
   and associated middleware from GitHub using the west tool.
 
 ```
@@ -40,6 +40,14 @@ bash
 $ cd third_party/rt1060_sdk/repo
 $ west init -l manifest --mf west.yml
 $ west update
+```
+
+In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
+
+```
+bash
+$ cd third_party/rt1060_sdk/repo
+$ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
 ## Building the examples

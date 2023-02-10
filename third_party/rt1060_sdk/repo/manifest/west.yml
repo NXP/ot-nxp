@@ -11,13 +11,12 @@ manifest:
     remote: nxpmicro
   projects:
   - name: mcux-sdk
-    revision: fca7db8476bd9c3dbf6805494b440f359aa2be37
+    revision: df3766a7a8289510a6e30ac2f6d1760131a38e8f
     path: core
     import:
       name-allowlist:
         - FreeRTOS-Kernel
-        - mcux-sdk-middleware-sdmmc
-        - fatfs
+        - CMSIS_5
         - mbedtls
         - littlefs
   - name: framework
