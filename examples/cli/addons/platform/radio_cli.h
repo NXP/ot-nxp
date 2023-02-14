@@ -26,60 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef RADIO_CLI_H_
+#define RADIO_CLI_H_
+
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 
-#include <common/code_utils.hpp>
-#include <openthread/cli.h>
-#include <openthread/instance.h>
-
-#ifdef OT_APP_CLI_IPERF_ADDON
-#include "iperf_cli.h"
-#include "ot_lwip.h"
-#endif
-
-#include "radio_cli.h"
+#include <openthread/error.h>
 
 /* -------------------------------------------------------------------------- */
-/*                               Private memory                               */
+/*                              Public prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static const otCliCommand addonsCommands[] = {
-#ifdef OT_APP_CLI_IPERF_ADDON
-    {"iperf", ProcessIperf},
-#endif
-    {"radio_nxp", ProcessRadio},
-};
+/*!
+ * @brief Handler called from ot-cli when radio_nxp command is used
+ *
+ * @param[in] aContext pointer to a context, not used
+ * @param[in] aArgsLength
+ * @param[in] aArgs
+ * @return otError
+ */
+otError ProcessRadio(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
-/* -------------------------------------------------------------------------- */
-/*                             Private prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-static void otAppCliStateChangeCallback(otChangedFlags flags, void *context);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-void otAppCliAddonsInit(otInstance *aInstance)
-{
-#ifdef OT_APP_CLI_IPERF_ADDON
-    otAppCliIperfCliInit(aInstance);
-#endif
-
-    otSetStateChangedCallback(aInstance, otAppCliStateChangeCallback, NULL);
-
-    otCliSetUserCommands(addonsCommands, OT_ARRAY_LENGTH(addonsCommands), NULL);
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              Private functions                             */
-/* -------------------------------------------------------------------------- */
-
-static void otAppCliStateChangeCallback(otChangedFlags flags, void *context)
-{
-#ifdef OT_APP_CLI_IPERF_ADDON
-    otPlatLwipUpdateState(flags, context);
-#endif
-}
+#endif /* RADIO_CLI_H_ */

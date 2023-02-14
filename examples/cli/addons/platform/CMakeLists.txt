@@ -26,17 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 target_sources(ot-cli-${OT_NXP_PLATFORM} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/addons_cli.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/radio_cli.c
 )
 
 target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-if(OT_APP_CLI_FREERTOS_IPERF)
-    add_subdirectory(iperf)
-endif()
-
-add_subdirectory(platform)
-
