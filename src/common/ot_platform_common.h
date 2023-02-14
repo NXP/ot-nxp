@@ -170,14 +170,39 @@ void otPlatSaveSettingsIdle(void);
 void otPlatResetIdle(void);
 
 /**
- * This function allows to send spinel set prop vendor cmd.
+ * This function allows to send spinel set prop vendor cmd with uint8_t value to be set.
  */
 otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint16_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint16Cmd(uint32_t aKey, uint16_t value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint32_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint32Cmd(uint32_t aKey, uint32_t value);
+
+/**
+ * This function allows to send spinel set prop vendor cmd with uint64_t value to be set.
+ */
+otError otPlatRadioSendSetPropVendorUint64Cmd(uint32_t aKey, uint64_t value);
 
 /**
  * Allows to set the UART instance for the ot cli
  */
 void otPlatUartSetInstance(uint8_t newInstance);
+
+/**
+ * This function sends Vendor specific Manufactring commands to configure transceiver
+ *
+ */
+otError otPlatRadioMfgCommand(otInstance *  aInstance,
+                              uint32_t      aKey,
+                              uint8_t *     payload,
+                              const uint8_t payloadLenIn,
+                              uint8_t *     payloadLenOut);
 
 /**
  * This function is called from idle hook, likely for system idle operation such as flash operations

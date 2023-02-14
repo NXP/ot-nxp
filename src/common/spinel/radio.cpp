@@ -435,6 +435,24 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
+#define MAX_ARGS_BUFFER_SIZE 16
+
+otError otPlatRadioMfgCommand(otInstance *  aInstance,
+                              uint32_t      aKey,
+                              uint8_t *     payload,
+                              const uint8_t payloadLenIn,
+                              uint8_t *     payloadLenOut)
+{
+    uint8_t        buffer[MAX_ARGS_BUFFER_SIZE]; // temporary buffer used to be passed as arg of GetWithParam
+    spinel_ssize_t packed;
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_DATA_S, payload, payloadLenIn);
+    return sRadioSpinel.GetWithParam((spinel_prop_key_t)aKey, buffer, static_cast<spinel_size_t>(packed),
+                                     SPINEL_DATATYPE_DATA_S, payload, &payloadLenOut);
+}
+
 void otPlatRadioInitSpinelInterface(void)
 {
     sRadioSpinel.GetSpinelInterface().Init();
@@ -464,6 +482,21 @@ void otPlatRadioSendFrameToSpinelInterface(uint8_t *buf, uint16_t length)
 otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value)
 {
     return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT8_S, value);
+}
+
+otError otPlatRadioSendSetPropVendorUint16Cmd(uint32_t aKey, uint16_t value)
+{
+    return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT16_S, value);
+}
+
+otError otPlatRadioSendSetPropVendorUint32Cmd(uint32_t aKey, uint32_t value)
+{
+    return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT32_S, value);
+}
+
+otError otPlatRadioSendSetPropVendorUint64Cmd(uint32_t aKey, uint64_t value)
+{
+    return sRadioSpinel.Set((spinel_prop_key_t)aKey, SPINEL_DATATYPE_UINT64_S, value);
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
