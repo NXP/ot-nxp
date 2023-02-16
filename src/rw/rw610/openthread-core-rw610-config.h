@@ -178,6 +178,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 64
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
  *
  * Define to 1 to enable the DHCP CLIENT service.
