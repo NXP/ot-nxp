@@ -326,10 +326,17 @@ if (NOT BOARD_OVERRIDE)
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/boards/dk6
     )
 else()
-    target_include_directories(${NXP_DRIVER_LIB}
-        PUBLIC
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/boards/${BOARD_OVERRIDE}
-    )
+    if (SDK_RELEASE)
+        target_include_directories(${NXP_DRIVER_LIB}
+            PUBLIC
+            $ENV{NXP_K32W0_SDK_ROOT}/boards/k32w061dk6/wireless_examples/openthread/${BOARD_OVERRIDE}
+        )
+    else()
+        target_include_directories(${NXP_DRIVER_LIB}
+            PUBLIC
+            $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/boards/${BOARD_OVERRIDE}
+        )
+    endif()
 
     string(TOUPPER ${BOARD_OVERRIDE} EXTRA_BOARD_DEFINE)
     target_compile_options(${NXP_DRIVER_LIB}
