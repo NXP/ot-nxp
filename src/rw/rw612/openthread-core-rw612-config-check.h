@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_RW610_CONFIG_CHECK_H_
-#define OPENTHREAD_CORE_RW610_CONFIG_CHECK_H_
+#ifndef OPENTHREAD_CORE_RW612_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_RW612_CONFIG_CHECK_H_
 
 /* TODO */
 
-#endif /* OPENTHREAD_CORE_RW610_CONFIG_CHECK_H_ */
+#endif /* OPENTHREAD_CORE_RW612_CONFIG_CHECK_H_ */

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2022-2023, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RW610_MBEDTLS_CONFIG_H
-#define RW610_MBEDTLS_CONFIG_H
+#ifndef RW612_MBEDTLS_CONFIG_H
+#define RW612_MBEDTLS_CONFIG_H
 
-/* FreeRTOS is always supported for RW610 platform so enable threading */
+/* FreeRTOS is always supported for RW612 platform so enable threading */
 #define MBEDTLS_MCUX_FREERTOS_THREADING_ALT
 #define MBEDTLS_THREADING_C
 #define MBEDTLS_THREADING_ALT
@@ -54,4 +54,4 @@
 /* Undef this flag to make sure to use hardware entropy */
 #undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 
-#endif // RW610_MBEDTLS_CONFIG_H
+#endif // RW612_MBEDTLS_CONFIG_H

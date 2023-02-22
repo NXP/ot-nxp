@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file includes RW610 compile-time configuration constants
+ *   This file includes RW612 compile-time configuration constants
  *   for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_RW610_CONFIG_H_
-#define OPENTHREAD_CORE_RW610_CONFIG_H_
+#ifndef OPENTHREAD_CORE_RW612_CONFIG_H_
+#define OPENTHREAD_CORE_RW612_CONFIG_H_
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
@@ -41,7 +41,7 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "RW610"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "RW612"
 
 /* *
  * @def OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
@@ -55,7 +55,7 @@
  * @def OPENTHREAD_SETTINGS_RAM
  *
  * Define to 1 to store settings in RAM instead of flash.
- * TODO: Use Flash implementation when flash will be supported on RW610.
+ * TODO: Use Flash implementation when flash will be supported on RW612.
  *
  */
 #define OPENTHREAD_SETTINGS_RAM 1
@@ -464,4 +464,4 @@
  */
 #define PACKAGE_URL "TODO: replace it with a link to the public GIthub repo"
 
-#endif // OPENTHREAD_CORE_RW610_CONFIG_H_
+#endif // OPENTHREAD_CORE_RW612_CONFIG_H_

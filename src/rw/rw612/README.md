@@ -1,6 +1,6 @@
-# OpenThread on NXP RW610 Example
+# OpenThread on NXP RW612 Example
 
-This directory contains example platform drivers for the [NXP RW610] based on [RD-RW610-BGA] hardware platform, including all variants of devices.
+This directory contains example platform drivers for the [NXP RW612] based on [RD-RW612-BGA] hardware platform, including all variants of devices.
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
 ## Prerequisites
@@ -47,11 +47,11 @@ Make sure that the paths of all these tools are set into the `Path` system varia
 
 ## Downloading the SDK
 
-Before downloading the SDK you have to create an account at nxp.com. Once the account is created, login and follow the steps for downloading the SDK_2_11_0_RDRW610.
-To get the SDK go to the public [repo](https://mcuxpresso.nxp.com/) and select the RW/RDRW610 (RW610) board
+Before downloading the SDK you have to create an account at nxp.com. Once the account is created, login and follow the steps for downloading the SDK_2.13.0_RD-RW612-BGA.
+To get the SDK go to the public [repo](https://mcuxpresso.nxp.com/) and select the RD-RW612-BGA (RW612) board
 
-Click on "Build MCUXpresso SDK v2.11.0" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
-Once the SDK_2_11_0_RDRW610.zip archive is downloaded unzip it and access the contents.
+Click on "Build MCUXpresso SDK v2.13.0" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
+Once the SDK_2.13.0_RD-RW612-BGA.zip archive is downloaded unzip it and access the contents.
 
 ![Board Selection](../../../doc/img/sdk-build.jpg)
 
@@ -61,22 +61,22 @@ Once the SDK_2_11_0_RDRW610.zip archive is downloaded unzip it and access the co
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_RW610_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rw610
+$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ ./script/build_rw612
 ```
 
 ### Windows
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ set NXP_RW610_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ script\build-rw610.bat
+$ set NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ script\build-rw612.bat
 ```
 
-After a successful build, the `elf` and `binary` files are found in `build_rw610/bin`:
+After a successful build, the `elf` and `binary` files are found in `build_rw612/bin`:
 
-- ot-cli-rw610 (the elf image)
-- ot-cli-rw610.bin (the binary)
+- ot-cli-rw612 (the elf image)
+- ot-cli-rw612.bin (the binary)
 
 ## Flash Binaries
 
@@ -89,7 +89,7 @@ $ JLink
 
 You will be presented with a menu like:
 
-![JLink Prompt](../../../doc/img/rw610/jlink-prompt.jpg)
+![JLink Prompt](../../../doc/img/rw612/jlink-prompt.jpg)
 
 Run the following commands:
 
@@ -107,7 +107,7 @@ Speed> # <enter>
 
 If successfull you will see the following screen:
 
-![JLink Connection](../../../doc/img/rw610/jlink-connection.jpg)
+![JLink Connection](../../../doc/img/rw612/jlink-connection.jpg)
 
 At this point flush the image with the following command
 

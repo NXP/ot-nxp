@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -76,13 +76,13 @@ target_link_libraries(${OT_PLATFORM_LIB}
         ${NXP_BOARD_LIB}
     PUBLIC
         ${OT_LWIP_LIBS}
-        -T${PROJECT_SOURCE_DIR}/src/rw/rw610/rw610.ld
+        -T${PROJECT_SOURCE_DIR}/src/rw/rw612/rw612.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
 )
 
 # Rebuild executables if the linker script is changed
-set_target_properties(ot-config PROPERTIES INTERFACE_LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rw610.ld)
+set_target_properties(ot-config PROPERTIES INTERFACE_LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rw612.ld)
 
 if(NOT DEFINED OT_PLAT_UART_INSTANCE)
     set(OT_PLAT_UART_INSTANCE 3)
