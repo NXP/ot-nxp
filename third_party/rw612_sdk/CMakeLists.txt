@@ -466,8 +466,8 @@ target_compile_options(${NXP_DRIVER_LIB}
 )
 
 # Use Connectivity Framework CMake build system to build required modules
-# Select RW610 platform
-set(CONNFWK_PLATFORM rdrw610)
+# Select RW61x platform
+set(CONNFWK_PLATFORM rw61x)
 # Enable FunctionLib and FileSystem modules
 set(CONNFWK_FLIB ON)
 set(CONNFWK_FILESYSTEM ON)

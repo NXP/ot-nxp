@@ -71,7 +71,7 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-spinel-rcp
         connfwk-FunctionLib
         connfwk-FileSystem
-        connfwk-platform-rdrw610
+        connfwk-platform-rw61x
         ${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB}
     PUBLIC
