@@ -236,6 +236,7 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     #Define here the default transceiver path can be overwritten by cmake -D option
     set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
     set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
+    set(CONNFWK_OTW ON)
 endif()
 # Enable FunctionLib and FileSystem modules
 set(CONNFWK_FLIB ON)
