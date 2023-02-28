@@ -31,7 +31,7 @@ list(APPEND BOARD_SOURCES
     pin_mux.c
     clock_config.c
     hardware_init.c
-    peripherals.c       
+    peripherals.c
 )
 
 list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC)
@@ -39,7 +39,7 @@ list(APPEND BOARD_COMPILE_DEFINITIONS_PRIVATE)
 
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND BOARD_SOURCES
-        sdmmc_config.c    
+        sdmmc_config.c
     )
     list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
         -DSDIO_ENABLED
@@ -47,12 +47,6 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
 elseif ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND BOARD_COMPILE_DEFINITIONS_PRIVATE
         -DBOARD_OTW_K32W0_PIN_INIT
-    )
-endif()
-
-if (OT_STACK_ENABLE_LOG)
-    list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
-        -DDEBUG_CONSOLE_UART_INDEX=2 #UART2 is used for debug on J9 PIN 4
     )
 endif()
 
@@ -72,6 +66,10 @@ elseif ("${SPINEL_INTERFACE_TYPE}" STREQUAL "SPI")
     )
 endif ()
 
+if(NOT DEFINED BOARD_APP_UART_INSTANCE)
+    set(BOARD_APP_UART_INSTANCE 1)
+endif()
+
 add_library(${NXP_BOARD_LIB}
     ${BOARD_SOURCES}
 )
@@ -84,7 +82,8 @@ target_include_directories(${NXP_BOARD_LIB}
 
 target_compile_definitions(${NXP_BOARD_LIB}
     PUBLIC
-    ${BOARD_COMPILE_DEFINITIONS_PUBLIC}
+        -DBOARD_APP_UART_INSTANCE=${BOARD_APP_UART_INSTANCE}
+        ${BOARD_COMPILE_DEFINITIONS_PUBLIC}
 )
 
 target_compile_definitions(${NXP_BOARD_LIB}

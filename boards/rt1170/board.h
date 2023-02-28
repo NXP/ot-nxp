@@ -18,36 +18,55 @@
  ******************************************************************************/
 /*! @brief The board name */
 #define BOARD_NAME "MIMXRT1170-EVK"
-#ifndef DEBUG_CONSOLE_UART_INDEX
-#define DEBUG_CONSOLE_UART_INDEX 1
+
+/* BOARD_APP_UART_INSTANCE can be used to define a serial interface used by the application
+ * As an example, this is used by the OpenThread CLI interface
+ * BOARD_DEBUG_UART_XXX macros will be adjusted automatically so the Debug Console doesn't conflict with the
+ * application serial interface */
+#ifndef BOARD_APP_UART_INSTANCE
+#define BOARD_APP_UART_INSTANCE 1U
 #endif
 
-/* The UART to use for debug messages. */
-#define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
-#define BOARD_DEBUG_UART_CLK_FREQ 24000000
-
-#if DEBUG_CONSOLE_UART_INDEX == 1
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART1
-#define BOARD_DEBUG_UART_INSTANCE 1U
-#define BOARD_UART_IRQ LPUART1_IRQn
-#define BOARD_UART_IRQ_HANDLER LPUART1_IRQHandler
-#elif DEBUG_CONSOLE_UART_INDEX == 2
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART2
-#define BOARD_DEBUG_UART_INSTANCE 2U
-#define BOARD_UART_IRQ LPUART2_IRQn
-#define BOARD_UART_IRQ_HANDLER LPUART2_IRQHandler
-#elif DEBUG_CONSOLE_UART_INDEX == 12
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART12
-#define BOARD_DEBUG_UART_INSTANCE 12U
-#define BOARD_UART_IRQ LPUART12_IRQn
-#define BOARD_UART_IRQ_HANDLER LPUART12_IRQHandler
-#else
-#error "Unsupported UART"
-#endif
+#ifndef BOARD_APP_UART_BAUDRATE
+#define BOARD_APP_UART_BAUDRATE 115200
+#endif /* BOARD_APP_UART_BAUDRATE */
 
 #ifndef BOARD_DEBUG_UART_BAUDRATE
-#define BOARD_DEBUG_UART_BAUDRATE (115200U)
+#define BOARD_DEBUG_UART_BAUDRATE 115200
 #endif /* BOARD_DEBUG_UART_BAUDRATE */
+
+#define BOARD_APP_UART_TYPE   kSerialPort_Uart
+#define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
+
+#if (BOARD_APP_UART_INSTANCE == 1)
+
+#define BOARD_APP_UART_BASEADDR (uint32_t) LPUART1
+#define BOARD_APP_UART_CLK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart1)
+#define BOARD_APP_UART_IRQ_HANDLER LPUART1_IRQHandler
+#define BOARD_APP_UART_IRQ LPUART1_IRQn
+
+#define BOARD_DEBUG_UART_INSTANCE 2U
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART2
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart2)
+#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART2_IRQHandler
+#define BOARD_DEBUG_UART_IRQ LPUART2_IRQn
+
+#elif (BOARD_APP_UART_INSTANCE == 2)
+
+#define BOARD_APP_UART_BASEADDR (uint32_t) LPUART2
+#define BOARD_APP_UART_CLK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart2)
+#define BOARD_APP_UART_IRQ_HANDLER LPUART2_IRQHandler
+#define BOARD_APP_UART_IRQ LPUART2_IRQn
+
+#define BOARD_DEBUG_UART_INSTANCE 1U
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART1
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart1)
+#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART1_IRQHandler
+#define BOARD_DEBUG_UART_IRQ LPUART1_IRQn
+
+#else
+#error "BOARD_APP_UART_INSTANCE unsupported instance"
+#endif /* BOARD_APP_UART_INSTANCE */
 
 /* Definitions for eRPC MU transport layer */
 #if defined(FSL_FEATURE_MU_SIDE_A)
