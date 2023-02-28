@@ -28,9 +28,13 @@ void BOARD_InitBootPins(void)
  *
  * END ****************************************************************************************************************/
 void BOARD_InitPins(void)
-{ /*!< Function assigned for the core: Cortex-M33[cm33] */
-    MCI_IO_MUX->FC3 = MCI_IO_MUX_FC3_SEL_FC3_USART_DATA_MASK;
-    AON_SOC_CIU->MCI_IOMUX_EN0 |= 0x05000000U;
+{
+    IO_MUX_SetPinMux(IO_MUX_FC3_USART_DATA);
+
+#ifdef OT_STACK_ENABLE_LOG
+    /* USART0 is used to print OT logs */
+    IO_MUX_SetPinMux(IO_MUX_FC0_USART_DATA);
+#endif
 
     /* Enable GPIO2 - for debugging */
     MCI_IO_MUX->GPIO_GRP0 |= 0x00000004U;

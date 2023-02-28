@@ -61,12 +61,11 @@ void BOARD_InitHardware(void)
 {
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
-    // BOARD_InitDebugConsole();
+    BOARD_InitAppConsole();
 
-    CLOCK_EnableClock(kCLOCK_Flexspi);
-    RESET_ClearPeripheralReset(kFLEXSPI_RST_SHIFT_RSTn);
-    /* Use aux0_pll_clk / 2 */
-    BOARD_SetFlexspiClock(FLEXSPI, 2U, 2U);
+#ifdef OT_STACK_ENABLE_LOG
+    BOARD_InitDebugConsole();
+#endif
 
     CLOCK_AttachClk(kSFRO_to_CTIMER0);
 

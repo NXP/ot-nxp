@@ -43,12 +43,17 @@ target_include_directories(${NXP_BOARD_LIB}
 
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
+        ot-config
         ${NXP_DRIVER_LIB}
 )
 
+if(NOT DEFINED BOARD_APP_UART_INSTANCE)
+    set(BOARD_APP_UART_INSTANCE 3)
+endif()
+
 target_compile_definitions(${NXP_BOARD_LIB}
     PUBLIC
-        -DBOARD_DEBUG_UART_BAUDRATE=115200
+        -DBOARD_APP_UART_INSTANCE=${BOARD_APP_UART_INSTANCE}
         -DBOOT_HEADER_ENABLE=1
 )
 

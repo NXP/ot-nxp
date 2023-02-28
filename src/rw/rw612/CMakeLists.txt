@@ -84,16 +84,10 @@ target_link_libraries(${OT_PLATFORM_LIB}
 # Rebuild executables if the linker script is changed
 set_target_properties(ot-config PROPERTIES INTERFACE_LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rw612.ld)
 
-if(NOT DEFINED OT_PLAT_UART_INSTANCE)
-    set(OT_PLAT_UART_INSTANCE 3)
-endif()
-
 target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
         -DOT_PLAT_SPINEL_OVER_HDLC
-        -DOT_PLAT_UART_INSTANCE=${OT_PLAT_UART_INSTANCE}
-        -DOT_PLAT_UART_TYPE=BOARD_DEBUG_UART_TYPE
         -DOT_PLAT_SYS_CRYPTO_INIT
         -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"els_pkc_mbedtls.h\"
         -DLOG_BUFFER_ENABLED

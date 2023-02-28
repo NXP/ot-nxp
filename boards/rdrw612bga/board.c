@@ -32,14 +32,18 @@
 /* Initialize debug console. */
 void BOARD_InitDebugConsole(void)
 {
-    uint32_t uartClkSrcFreq = 0;
-
-    /* attach FRG0 clock to FLEXCOMM3 (debug console) */
+    /* attach FRGx clock to FLEXCOMMx */
     CLOCK_SetFRGClock(BOARD_DEBUG_UART_FRG_CLK);
     CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
 
-    uartClkSrcFreq = BOARD_DEBUG_UART_CLK_FREQ;
-    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
+    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, BOARD_DEBUG_UART_CLK_FREQ);
+}
+
+void BOARD_InitAppConsole(void)
+{
+    /* attach FRGx clock to FLEXCOMMx */
+    CLOCK_SetFRGClock(BOARD_APP_UART_FRG_CLK);
+    CLOCK_AttachClk(BOARD_APP_UART_CLK_ATTACH);
 }
 
 static status_t flexspi_hyper_ram_read_id(FLEXSPI_Type *base, uint16_t *buffer)

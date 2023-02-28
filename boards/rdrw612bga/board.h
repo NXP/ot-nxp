@@ -23,8 +23,65 @@
     ((((uint32_t)BOARD_InitDebugConsole >= 0x08000000U) && ((uint32_t)BOARD_InitDebugConsole < 0x10000000U)) || \
      (((uint32_t)BOARD_InitDebugConsole >= 0x18000000U) && ((uint32_t)BOARD_InitDebugConsole < 0x20000000U)))
 
-/*! @brief The UART to use for debug messages. */
+/* BOARD_APP_UART_INSTANCE can be used to define a serial interface used by the application
+ * As an example, this is used by the OpenThread CLI interface
+ * BOARD_DEBUG_UART_XXX macros will be adjusted automatically so the Debug Console doesn't conflict with the
+ * application serial interface */
+#ifndef BOARD_APP_UART_INSTANCE
+#define BOARD_APP_UART_INSTANCE 3
+#endif
+
+#ifndef BOARD_APP_UART_BAUDRATE
+#define BOARD_APP_UART_BAUDRATE 115200
+#endif /* BOARD_APP_UART_BAUDRATE */
+
+#ifndef BOARD_DEBUG_UART_BAUDRATE
+#define BOARD_DEBUG_UART_BAUDRATE 115200
+#endif /* BOARD_DEBUG_UART_BAUDRATE */
+
+#define BOARD_APP_UART_TYPE   kSerialPort_Uart
 #define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
+
+#if (BOARD_APP_UART_INSTANCE == 3)
+
+#define BOARD_APP_UART_BASEADDR (uint32_t) FLEXCOMM3
+#define BOARD_APP_UART USART3
+#define BOARD_APP_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(3)
+#define BOARD_APP_UART_FRG_CLK \
+    (&(const clock_frg_clk_config_t){3, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG3 mux as frg_pll */
+#define BOARD_APP_UART_CLK_ATTACH kFRG_to_FLEXCOMM3
+#define BOARD_APP_UART_RST kFC3_RST_SHIFT_RSTn
+#define BOARD_APP_UART_CLKSRC kCLOCK_Flexcomm3
+#define BOARD_APP_UART_IRQ_HANDLER FLEXCOMM3_IRQHandler
+#define BOARD_APP_UART_IRQ FLEXCOMM3_IRQn
+
+/* Debug console on instance 0 */
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) FLEXCOMM0
+#define BOARD_DEBUG_UART_INSTANCE 0U
+#define BOARD_DEBUG_UART USART0
+#define BOARD_DEBUG_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(0)
+#define BOARD_DEBUG_UART_FRG_CLK \
+    (&(const clock_frg_clk_config_t){0, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG0 mux as frg_pll */
+#define BOARD_DEBUG_UART_CLK_ATTACH kFRG_to_FLEXCOMM0
+#define BOARD_DEBUG_UART_RST kFC0_RST_SHIFT_RSTn
+#define BOARD_DEBUG_UART_CLKSRC kCLOCK_Flexcomm0
+#define BOARD_DEBUG_UART_IRQ_HANDLER FLEXCOMM0_IRQHandler
+#define BOARD_DEBUG_UART_IRQ FLEXCOMM0_IRQn
+
+#elif(BOARD_APP_UART_INSTANCE == 0)
+
+#define BOARD_APP_UART_BASEADDR (uint32_t) FLEXCOMM0
+#define BOARD_APP_UART USART0
+#define BOARD_APP_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(0)
+#define BOARD_APP_UART_FRG_CLK \
+    (&(const clock_frg_clk_config_t){0, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG0 mux as frg_pll */
+#define BOARD_APP_UART_CLK_ATTACH kFRG_to_FLEXCOMM0
+#define BOARD_APP_UART_RST kFC0_RST_SHIFT_RSTn
+#define BOARD_APP_UART_CLKSRC kCLOCK_Flexcomm0
+#define BOARD_APP_UART_IRQ_HANDLER FLEXCOMM0_IRQHandler
+#define BOARD_APP_UART_IRQ FLEXCOMM0_IRQn
+
+/* Debug console on instance 3 */
 #define BOARD_DEBUG_UART_BASEADDR (uint32_t) FLEXCOMM3
 #define BOARD_DEBUG_UART_INSTANCE 3U
 #define BOARD_DEBUG_UART USART3
@@ -34,12 +91,12 @@
 #define BOARD_DEBUG_UART_CLK_ATTACH kFRG_to_FLEXCOMM3
 #define BOARD_DEBUG_UART_RST kFC3_RST_SHIFT_RSTn
 #define BOARD_DEBUG_UART_CLKSRC kCLOCK_Flexcomm3
-#define BOARD_UART_IRQ_HANDLER FLEXCOMM3_IRQHandler
-#define BOARD_UART_IRQ FLEXCOMM3_IRQn
+#define BOARD_DEBUG_UART_IRQ_HANDLER FLEXCOMM3_IRQHandler
+#define BOARD_DEBUG_UART_IRQ FLEXCOMM3_IRQn
 
-#ifndef BOARD_DEBUG_UART_BAUDRATE
-#define BOARD_DEBUG_UART_BAUDRATE 115200
-#endif /* BOARD_DEBUG_UART_BAUDRATE */
+#else
+#error "BOARD_APP_UART_INSTANCE unsupported instance"
+#endif /* BOARD_APP_UART_INSTANCE */
 
 #define BOARD_FLEXSPI_PSRAM FLEXSPI
 #ifndef BOARD_ENABLE_PSRAM_CACHE
@@ -134,6 +191,7 @@ extern "C" {
  ******************************************************************************/
 
 void     BOARD_InitDebugConsole(void);
+void     BOARD_InitAppConsole(void);
 status_t BOARD_InitPsRam(void);
 void     BOARD_InitSleepPinConfig(void);
 void     BOARD_FlexspiClockSafeConfig(void);
