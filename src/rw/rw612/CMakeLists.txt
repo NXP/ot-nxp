@@ -96,6 +96,7 @@ target_compile_definitions(${OT_PLATFORM_LIB}
         -DOT_PLAT_UART_TYPE=BOARD_DEBUG_UART_TYPE
         -DOT_PLAT_SYS_CRYPTO_INIT
         -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"els_pkc_mbedtls.h\"
+        -DLOG_BUFFER_ENABLED
 )
 
 target_compile_options(${OT_PLATFORM_LIB}
