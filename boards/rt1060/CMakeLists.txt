@@ -42,19 +42,18 @@ target_include_directories(${NXP_BOARD_LIB}
 
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
+        ot-config
         ${NXP_DRIVER_LIB}
 )
 
-if (OT_STACK_ENABLE_LOG)
-#move logs to UART2
+if(NOT DEFINED BOARD_APP_UART_INSTANCE)
+    set(BOARD_APP_UART_INSTANCE 1)
+endif()
+
 target_compile_definitions(${NXP_BOARD_LIB}
     PUBLIC
-    BOARD_DEBUG_UART_BASEADDR=LPUART2
-    BOARD_DEBUG_UART_INSTANCE=2U
-    BOARD_UART_IRQ=LPUART2_IRQn
-    BOARD_UART_IRQ_HANDLER=LPUART2_IRQHandler
+        -DBOARD_APP_UART_INSTANCE=${BOARD_APP_UART_INSTANCE}
 )
-endif ()
 
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
 target_compile_definitions(${NXP_BOARD_LIB}
