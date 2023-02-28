@@ -50,22 +50,6 @@
 /*                               Private macros                               */
 /* -------------------------------------------------------------------------- */
 
-#ifndef OT_PLAT_UART_INSTANCE
-#define OT_PLAT_UART_INSTANCE 1
-#endif
-#ifndef OT_PLAT_UART_CLK_FREQ
-#if defined(RW612_SERIES) || defined(RW610_SERIES)
-#define OT_PLAT_UART_CLK_FREQ(instance) CLOCK_GetFlexCommClkFreq(instance)
-#else
-#define OT_PLAT_UART_CLK_FREQ(instance) BOARD_BT_UART_CLK_FREQ
-#endif
-#endif
-#ifndef OT_PLAT_UART_BAUDRATE
-#define OT_PLAT_UART_BAUDRATE 115200
-#endif
-#ifndef OT_PLAT_UART_TYPE
-#define OT_PLAT_UART_TYPE (kSerialPort_Uart)
-#endif
 #ifndef OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE
 #define OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE (128U)
 #endif
@@ -74,18 +58,6 @@
 #endif
 #ifndef OT_PLAT_UART_FLUSH_DELAY_MS
 #define OT_PLAT_UART_FLUSH_DELAY_MS 2U
-#endif
-
-#if defined(RW612_SERIES) || defined(RW610_SERIES)
-#if (OT_PLAT_UART_INSTANCE == 0)
-#define BOARD_APP_UART_FRG_CLK \
-    (&(const clock_frg_clk_config_t){0, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG0 mux as frg_pll */
-#define BOARD_APP_UART_CLK_ATTACH kFRG_to_FLEXCOMM0
-#elif (OT_PLAT_UART_INSTANCE == 3)
-#define BOARD_APP_UART_FRG_CLK \
-    (&(const clock_frg_clk_config_t){3, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG3 mux as frg_pll */
-#define BOARD_APP_UART_CLK_ATTACH kFRG_to_FLEXCOMM3
-#endif /* OT_PLAT_UART_INSTANCE */
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -107,8 +79,8 @@ static volatile int txDone            = 0;
 static volatile int txCount           = 0;
 
 uint8_t                          rxBuffer[OT_PLAT_UART_RECEIVE_BUFFER_SIZE];
-static serial_port_uart_config_t uartConfig = {.instance     = OT_PLAT_UART_INSTANCE,
-                                               .baudRate     = OT_PLAT_UART_BAUDRATE,
+static serial_port_uart_config_t uartConfig = {.instance     = BOARD_APP_UART_INSTANCE,
+                                               .baudRate     = BOARD_APP_UART_BAUDRATE,
                                                .parityMode   = kSerialManager_UartParityDisabled,
                                                .stopBitCount = kSerialManager_UartOneStopBit,
                                                .enableRx     = 1,
@@ -118,7 +90,7 @@ static serial_port_uart_config_t uartConfig = {.instance     = OT_PLAT_UART_INST
 
 static uint8_t                       s_ringBuffer[OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE];
 static const serial_manager_config_t s_serialManagerConfig = {
-    .type           = OT_PLAT_UART_TYPE,
+    .type           = BOARD_APP_UART_TYPE,
     .ringBuffer     = &s_ringBuffer[0],
     .ringBufferSize = OT_PLAT_UART_SERIAL_MANAGER_RING_BUFFER_SIZE,
     .blockType      = kSerialManager_NonBlocking,
@@ -138,13 +110,7 @@ otError otPlatUartEnable(void)
 {
     otError error = OT_ERROR_FAILED;
 
-#if defined(RW612_SERIES) || defined(RW610_SERIES)
-    /* attach FRGx clock to FLEXCOMMx */
-    CLOCK_SetFRGClock(BOARD_APP_UART_FRG_CLK);
-    CLOCK_AttachClk(BOARD_APP_UART_CLK_ATTACH);
-#endif
-
-    uartConfig.clockRate = OT_PLAT_UART_CLK_FREQ(OT_PLAT_UART_INSTANCE);
+    uartConfig.clockRate = BOARD_APP_UART_CLK_FREQ;
     do
     {
         if (SerialManager_Init((serial_handle_t)otCliSerialHandle, &s_serialManagerConfig) !=
