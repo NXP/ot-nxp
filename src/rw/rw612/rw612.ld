@@ -63,6 +63,9 @@ MEMORY
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   m_nvm_region          (RX)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = m_nvm_storage_size
   m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00130000
+  m_sqram_cpu13_mbox    (RW)  : ORIGIN = 0x41380000, LENGTH = 0x00000488
+  m_sqram_cpu13_txq     (RW)  : ORIGIN = 0x41380488, LENGTH = 0x00001000
+  m_sqram_cpu31_txq     (RW)  : ORIGIN = 0x41380488, LENGTH = 0x00001000
   m_sqram_cpu23_mbox    (RW)  : ORIGIN = 0x443C0000, LENGTH = 0x00000488
   m_sqram_cpu23_txq     (RW)  : ORIGIN = 0x443C0488, LENGTH = 0x00001080
   m_sqram_cpu32_txq     (RW)  : ORIGIN = 0x443C1508, LENGTH = 0x00001080
@@ -298,6 +301,23 @@ SECTIONS
     KEEP (*(.smu_cpu32_txq))
     . = ALIGN(4);
   } > m_sqram_cpu32_txq
+
+  .smu_cpu13_mbox (NOLOAD) :
+  {
+    . = ALIGN(4);
+    SQRAM_CPU13_MBOX = .;
+    *(.smu_cpu13_mbox)
+    KEEP (*(.smu_cpu13_mbox))
+    . = ALIGN(4);
+  } > m_sqram_cpu13_mbox
+
+  .smu_cpu31_txq (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.smu_cpu31_txq)
+    KEEP (*(.smu_cpu31_txq))
+    . = ALIGN(4);
+  } > m_sqram_cpu31_txq
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

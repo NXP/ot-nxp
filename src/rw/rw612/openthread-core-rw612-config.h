@@ -153,6 +153,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+ *
+ * Define to 1 to enable UDP forward support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable the Border Router service.

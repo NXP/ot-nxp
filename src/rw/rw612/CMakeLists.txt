@@ -39,6 +39,16 @@ if(OT_NXP_LWIP)
     )
 endif()
 
+if(OT_APP_BR_FREERTOS)
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+    )
+
+    set(OT_BR_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/br
+    )
+endif()
+
 add_library(${OT_PLATFORM_LIB}
     ${PLATFORM_FILES}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/radio.cpp
@@ -106,6 +116,7 @@ target_compile_options(${OT_PLATFORM_LIB}
 target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_LWIP_INCLUDES}
+        ${OT_BR_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/common
         ${PROJECT_SOURCE_DIR}/src/common/spinel
     PRIVATE

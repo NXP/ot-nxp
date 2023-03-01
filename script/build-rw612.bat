@@ -1,25 +1,25 @@
 @echo off
 
 if "%NXP_RW612_SDK_ROOT%" == "" (
-	echo Variable NXP_RW612_SDK_ROOT is not set.
-	echo Please set it to the location of the SDK and then re-build.
-	goto :end
+    echo Variable NXP_RW612_SDK_ROOT is not set.
+    echo Please set it to the location of the SDK and then re-build.
+    goto :end
 )
 
 if not exist %NXP_RW612_SDK_ROOT% (
-	echo '%NXP_RW612_SDK_ROOT%' is not a valid path.
-	echo 'Please set NXP_RW612_SDK_ROOT to a valid path pointing to the SDK'
-	goto :end
+    echo '%NXP_RW612_SDK_ROOT%' is not a valid path.
+    echo 'Please set NXP_RW612_SDK_ROOT to a valid path pointing to the SDK'
+    goto :end
 )
 
 
 if exist %NXP_RW612_SDK_ROOT%\SW-Content-Register.txt (
-	set SDK_RELEASE=ON
+    set SDK_RELEASE=ON
 ) else if exist %NXP_RW612_SDK_ROOT%\.gitmodules (
-	set SDK_RELEASE=OFF
+    set SDK_RELEASE=OFF
 ) else (
-	echo Could not find a valid SDK at %NXP_RW612_SDK_ROOT%
-	goto :end
+    echo Could not find a valid SDK at %NXP_RW612_SDK_ROOT%
+    goto :end
 )
 
 echo NXP_RW612_SDK_ROOT set to %NXP_RW612_SDK_ROOT%
@@ -46,6 +46,9 @@ set OT_OPTIONS=-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake^
  -DOT_APP_RCP=OFF^
  -DOT_RCP=OFF^
  -DOT_APP_CLI=OFF^
+ -DOT_APP_BR_FREERTOS=ON^
+ -DOT_NXP_LWIP_ETH=OFF^
+ -DOT_NXP_LWIP_WIFI=ON^
  -DOT_COMPILE_WARNING_ASS_ERROR=ON^
  -DSDK_RELEASE=%SDK_RELEASE%
 echo OT_OPTIONS %OT_OPTIONS%
@@ -53,7 +56,7 @@ echo OT_OPTIONS %OT_OPTIONS%
 set OT_SRCDIR=%CD%
 
 if exist build_rw612 (
-	rmdir build_rw612 \s
+    rmdir build_rw612 \s
 )
 
 mkdir build_rw612

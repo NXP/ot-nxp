@@ -32,6 +32,8 @@ add_library(${NXP_BOARD_LIB}
     clock_config.c
     hardware_init.c
     peripherals.c
+    sdmmc_config.c
+    wifi_bt_config.c
 )
 
 target_include_directories(${NXP_BOARD_LIB}
@@ -61,6 +63,11 @@ target_compile_definitions(${NXP_BOARD_LIB}
     BOARD_OTW_K32W0_PIN_INIT
 )
 endif()
+
+target_compile_definitions(${NXP_BOARD_LIB}
+    PRIVATE
+    SDIO_ENABLED
+)
 
 target_compile_options(${NXP_BOARD_LIB}
     PRIVATE

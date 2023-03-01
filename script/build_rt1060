@@ -49,6 +49,9 @@ readonly OT_OPTIONS=(
     # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
     "-DOT_APP_CLI=OFF"
     "-DOT_APP_CLI_FREERTOS=ON"
+    "-DOT_APP_BR_FREERTOS=OFF"
+    "-DOT_NXP_LWIP_ETH=OFF"
+    "-DOT_NXP_LWIP_WIFI=OFF"
     "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
     "-DOT_NXP_PLATFORM=rt1060"
     "-DOT_NXP_BOARD=rt1060"

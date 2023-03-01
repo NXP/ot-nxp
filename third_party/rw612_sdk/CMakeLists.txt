@@ -30,6 +30,9 @@ set_property(SOURCE $ENV{NXP_RW612_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S P
 
 set(MIDDLEWARE_PATH $ENV{NXP_RW612_SDK_ROOT}/middleware PARENT_SCOPE)
 set(LWIP_PATH $ENV{NXP_RW612_SDK_ROOT}/middleware/lwip PARENT_SCOPE)
+set(WIFI_PATH $ENV{NXP_RW612_SDK_ROOT}/middleware/wifi_nxp CACHE PATH "wifi path")
+set(WIFI_BT_MODULE_PATH $ENV{NXP_RW612_SDK_ROOT}/components/wifi_bt_module  CACHE PATH "wifi_bt_module path")
+set(EDGEFAST_WIFI_PATH $ENV{NXP_RW612_SDK_ROOT}/middleware/edgefast_wifi CACHE PATH "edgefast_wifi path")
 
 if (SDK_RELEASE)
     message("SDK_RELEASE driver path chosen")
@@ -124,12 +127,12 @@ set(RW612_SDK_SOURCES
 if (SDK_RELEASE)
     list(APPEND RW612_SDK_SOURCES
         $ENV{NXP_RW612_SDK_ROOT}/devices/RW612/utilities/format/fsl_format.c
-	$ENV{NXP_RW612_SDK_ROOT}/devices/RW612/drivers/fsl_common_arm.c
+        $ENV{NXP_RW612_SDK_ROOT}/devices/RW612/drivers/fsl_common_arm.c
 )
 else()
     list(APPEND RW612_SDK_SOURCES
         $ENV{NXP_RW612_SDK_ROOT}/platform/utilities/misc_utilities/fsl_format.c
-	$ENV{NXP_RW612_SDK_ROOT}/platform/drivers/common/fsl_common_arm.c
+        $ENV{NXP_RW612_SDK_ROOT}/platform/drivers/common/fsl_common_arm.c
 )
 endif()
 
@@ -422,7 +425,7 @@ endif()
 #freertos
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
-	${RW612_SDK_INCLUDES}
+    ${RW612_SDK_INCLUDES}
     ${OT_NXP_FREERTOS_CONFIG_PATH}
 )
 

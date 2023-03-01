@@ -16,6 +16,7 @@ manifest:
     import:
       name-allowlist:
         - FreeRTOS-Kernel
+        - mcux-sdk-middleware-sdmmc
         - CMSIS_5
         - mbedtls
         - littlefs

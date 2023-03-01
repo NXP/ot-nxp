@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if (OT_APP_CLI_FREERTOS)
-    add_subdirectory(cli)
-endif()
-
-add_subdirectory(hybrid)
-add_subdirectory(LowPower)
-
-if(OT_APP_BR_FREERTOS)
-    add_subdirectory(br)
-endif()
+list (APPEND WIFI_COMMON_SOURCES
+    ${WIFI_PATH}/wifidriver/mlan_action.c
+    ${WIFI_PATH}/wifidriver/wifi-imu.c
+    ${WIFI_PATH}/dhcpd/dhcp-server-main.c
+    ${WIFI_PATH}/dhcpd/dhcp-server.c
+    ${WIFI_PATH}/dhcpd/dns-server.c
+)
+set (WIFI_COMMON_SOURCES ${WIFI_COMMON_SOURCES} PARENT_SCOPE)

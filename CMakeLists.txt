@@ -56,14 +56,22 @@ else()
     set(OT_LOG_OUTPUT NONE)
 endif()
 
+add_subdirectory(openthread)
+
+if(OT_APP_BR_FREERTOS)
+    set(OT_NXP_LWIP ON)
+
+    target_compile_definitions(ot-config INTERFACE
+        -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
+    )
+endif()
+
 if(OT_NXP_LWIP)
     # Workaround to avoid API conflict between LWIP and OT's TCPLP libs
     # They have some API's with the same name but different implementation, so no compatible
     # In case OT_NXP_LWIP is enabled, we have to exclude TCPLP from the build
     set(OT_EXCLUDE_TCPLP_LIB ON)
 endif()
-
-add_subdirectory(openthread)
 
 if(OT_NXP_LWIP)
     # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
@@ -138,7 +146,7 @@ if(OT_NXP_BOARD_PATH)
     endif()
     add_subdirectory(${OT_NXP_BOARD_PATH} ${PROJECT_BINARY_DIR}/board)
 elseif(OT_NXP_BOARD) # TODO: move to "else" when all boards are supported
-    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS))
+    if((NOT OT_NXP_FREERTOS_CONFIG_PATH) AND (OT_APP_CLI_FREERTOS OR OT_APP_BR_FREERTOS))
         set(OT_NXP_FREERTOS_CONFIG_PATH ${PROJECT_SOURCE_DIR}/boards/${OT_NXP_BOARD}/freertos)
     endif()
     set(NXP_BOARD_LIB nxp-${OT_NXP_BOARD}-board)
@@ -155,6 +163,7 @@ endif()
 add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(examples)
+
 
 include(${PROJECT_SOURCE_DIR}/cmake/utils.cmake)
 

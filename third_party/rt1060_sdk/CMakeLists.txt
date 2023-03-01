@@ -37,6 +37,11 @@ set(MIDDLEWARE_PATH ${MIDDLEWARE_PATH} PARENT_SCOPE)
 
 set(RTOS_PATH ${NXP_RT1060_SDK_ROOT_ABS}/rtos)
 
+set(LWIP_PATH ${NXP_RT1060_SDK_ROOT_ABS}/middleware/lwip CACHE PATH "lwip path")
+set(WIFI_PATH ${NXP_RT1060_SDK_ROOT_ABS}/middleware/wifi_nxp CACHE PATH "wifi path")
+set(WIFI_BT_MODULE_PATH ${NXP_RT1060_SDK_ROOT_ABS}/components/wifi_bt_module  CACHE PATH "wifi_bt_module path")
+set(EDGEFAST_WIFI_PATH ${NXP_RT1060_SDK_ROOT_ABS}/middleware/edgefast_wifi CACHE PATH "edgefast_wifi path")
+
 message(STATUS " absolut path  ${NXP_RT1060_SDK_ROOT_ABS}")
 if (${SDK_TYPE} STREQUAL "GITHUB")
     message("SDK_GITHUB driver path chosen")
@@ -52,6 +57,8 @@ if (${SDK_TYPE} STREQUAL "GITHUB")
     set(DRIVER_DCP_FILES_PATH ${DRIVER_FILES_PATH}/dcp)
     set(DRIVER_FSL_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cache/armv7-m7)
     set(DRIVER_COMMON_FILES_PATH ${DRIVER_FILES_PATH}/common)
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH}/enet)
+    set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH}/usdhc)
     set(DRIVER_DEVICE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/drivers)
     set(UTILITIES_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/utilities)
     set(UTILITIES_DEVICE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities)
@@ -73,6 +80,8 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_DEVICE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH})
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/debug_console)
     set(ASSERT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/assert)
     set(STR_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/utilities/str)
@@ -90,9 +99,11 @@ else ()
     set(DRIVER_DEVICE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1062/drivers)
     set(DRIVER_EDMA_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/edma)
     set(DRIVER_DMAMUX_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/dmamux)
+    set(DRIVER_ENET_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/enet)
+    set(DRIVER_USDHC_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/drivers/usdhc)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/utilities/debug_console)
     set(ASSERT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/utilities/assert)
-    set(STR_FILES_PATH ${DEBUG_CONSOLE_FILES_PATH}/str)
+    set(STR_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1052/xip)
 endif ()
 
@@ -129,6 +140,8 @@ add_library(${NXP_DRIVER_LIB}
     ${DEBUG_CONSOLE_FILES_PATH}/fsl_debug_console.c
     ${STR_FILES_PATH}/fsl_str.c
     ${ASSERT_FILES_PATH}/fsl_assert.c
+    ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
+    ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
 # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
     ${NXP_RT1060_SDK_ROOT_ABS}/boards/${EVK_RT1060_BOARD}/xip/${EVK_RT1060_BOARD}_flexspi_nor_config.c
@@ -146,12 +159,19 @@ add_library(${NXP_DRIVER_LIB}
     ${NXP_RT1060_SDK_ROOT_ABS}/components/internal_flash/fsl_adapter_flexspi_nor_flash.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/gpio/fsl_adapter_igpio.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/crc/fsl_adapter_software_crc.c
+    ${NXP_RT1060_SDK_ROOT_ABS}/components/phy/device/phyksz8081/fsl_phyksz8081.c
+    ${NXP_RT1060_SDK_ROOT_ABS}/components/silicon_id/fsl_silicon_id.c
+    ${NXP_RT1060_SDK_ROOT_ABS}/components/silicon_id/socs/rt10xx/fsl_silicon_id_soc.c
 #File system
     ${MIDDLEWARE_PATH}/littlefs/lfs.c
     ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
     ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash/mimxrt1062/mflash_drv.c
+#sdmmc
+    ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
+    ${MIDDLEWARE_PATH}/sdmmc/common/fsl_sdmmc_common.c
+    ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
+    ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
 )
-
 
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
@@ -176,6 +196,8 @@ target_include_directories(${NXP_DRIVER_LIB}
         ${DEBUG_CONSOLE_FILES_PATH}
         ${UTILITIES_FILES_PATH}/debug_console/debug_console
         ${STR_FILES_PATH}
+        ${DRIVER_ENET_FILES_PATH}
+        ${DRIVER_USDHC_FILES_PATH}
 # XIP
         ${NXP_RT1060_SDK_ROOT_ABS}/devices/MIMXRT1052/xip
         ${NXP_RT1060_SDK_ROOT_ABS}/boards/${EVK_RT1060_BOARD}/xip
@@ -192,10 +214,19 @@ target_include_directories(${NXP_DRIVER_LIB}
         ${NXP_RT1060_SDK_ROOT_ABS}/components/internal_flash
         ${NXP_RT1060_SDK_ROOT_ABS}/components/gpio
         ${NXP_RT1060_SDK_ROOT_ABS}/components/crc
+        ${NXP_RT1060_SDK_ROOT_ABS}/components/phy/
+        ${NXP_RT1060_SDK_ROOT_ABS}/components/phy/device/phyksz8081
+        ${NXP_RT1060_SDK_ROOT_ABS}/components/silicon_id
+        ${NXP_RT1060_SDK_ROOT_ABS}/components/silicon_id/socs
 #File system
         ${MIDDLEWARE_PATH}/littlefs
         ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash
         ${NXP_RT1060_SDK_ROOT_ABS}/components/flash/mflash/mimxrt1062
+#sdmmc
+        ${MIDDLEWARE_PATH}/sdmmc/sdio/
+        ${MIDDLEWARE_PATH}/sdmmc/common/
+        ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
+        ${MIDDLEWARE_PATH}/sdmmc/osa
 )
 
 target_compile_definitions(${NXP_DRIVER_LIB}
@@ -226,6 +257,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     #LittleFS configs
     LFS_CONFIG=fwk_lfs_config.h
     LFS_THREADSAFE=1
+    -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
 )
 
 # Use Connectivity Framework CMake build system to build required modules

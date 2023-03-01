@@ -36,3 +36,7 @@ endif()
 if(OT_NXP_LWIP)
     add_subdirectory(lwip)
 endif()
+
+if(OT_NXP_LWIP_WIFI)
+    add_subdirectory(wifi)
+endif()

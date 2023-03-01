@@ -76,7 +76,7 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configMAX_PRIORITIES (10)
 #define configMINIMAL_STACK_SIZE ((uint16_t)255)
 #define configAPPLICATION_ALLOCATED_HEAP 1
-#define configTOTAL_HEAP_SIZE ((size_t)(120 * 1024))
+#define configTOTAL_HEAP_SIZE ((size_t)(124 * 1024))
 #define configSUPPORT_STATIC_ALLOCATION 0
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
 #define configFRTOS_MEMORY_SCHEME 4
@@ -95,7 +95,7 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configOVERRIDE_DEFAULT_TICK_CONFIGURATION 0
 #define configRECORD_STACK_HIGH_ADDRESS 1
 /* Define to 0 to be able to get task information in MCUXpresso */
-#define configENABLE_BACKWARD_COMPATIBILITY 0
+#define configENABLE_BACKWARD_COMPATIBILITY 1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 0

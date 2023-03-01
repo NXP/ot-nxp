@@ -26,6 +26,29 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(OT_NXP_LWIP)
+    set(LWIP_SRC_FILE
+        ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+    )
+    set(OT_LWIP_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/lwip
+    )
+    set(OT_LWIP_LIBS
+        nxp-lwip
+        openthread-ftd
+    )
+endif()
+
+if(OT_APP_BR_FREERTOS)
+    set(INFRA_IF_SRC_FILE
+        ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+    )
+
+    set(OT_BR_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/br
+    )
+endif()
+
 add_library(${OT_PLATFORM_LIB}
     ../../common/alarm_freertos.c
     ../../common/diag.c
@@ -37,6 +60,8 @@ add_library(${OT_PLATFORM_LIB}
     ../../common/spinel/spinel_hdlc.cpp
     ../../common/spinel/system.c
     ../../common/uart.c
+    ${LWIP_SRC_FILE}
+    ${INFRA_IF_SRC_FILE}
 )
 
 
@@ -59,6 +84,7 @@ target_link_libraries(${OT_PLATFORM_LIB}
         connfwk-platform-${OT_NXP_PLATFORM}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
+        ${OT_LWIP_LIBS}
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
@@ -97,6 +123,8 @@ target_include_directories(${OT_PLATFORM_LIB}
         ../platform
         ${PROJECT_SOURCE_DIR}/src/common/spinel
         ${PROJECT_SOURCE_DIR}/src/common
+        ${OT_LWIP_INCLUDES}
+        ${OT_BR_INCLUDES}
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
