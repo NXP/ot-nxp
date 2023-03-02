@@ -43,7 +43,7 @@ if (SDK_RELEASE)
         ${PROJECT_SOURCE_DIR}/third_party/k32w061_sdk/mr5_fixes/serial_port_swo.c
         $ENV{NXP_K32W0_SDK_ROOT}/components/serial_manager/serial_manager.c
         $ENV{NXP_K32W0_SDK_ROOT}/components/serial_manager/serial_port_uart.c
-        $ENV{NXP_K32W0_SDK_ROOT}/components/lists/generic_list.c
+        $ENV{NXP_K32W0_SDK_ROOT}/components/lists/fsl_component_generic_list.c
         $ENV{NXP_K32W0_SDK_ROOT}/components/uart/usart_adapter.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/gcc/startup_K32W061.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/system_K32W061.c
