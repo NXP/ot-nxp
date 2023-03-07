@@ -189,12 +189,24 @@ build_ot_rcp_only_uart_flow_control()
 {
     echo "Building OT RCP image UART with flow control..."
     app_folder_name="rcp_only_uart_flow_control"
-    local options=("${app_folder_name}")
-    options+=("${OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL[@]}")
+    local options=("${OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL[@]}")
     options+=("${OT_OPTIONS[@]}")
     options+=("$@")
     options+=(" -DSDK_RELEASE=$SDK_RELEASE")
-    build "${options[@]}"
+    build "${app_folder_name}" "${options[@]}"
+
+    #Sign the image
+    signGenerateHashAndCfile "${BUILD_DIR}/${app_folder_name}/bin"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+
+    echo "Building OT RCP image UART with flow control and PTA..."
+    app_folder_name="rcp_only_uart_flow_control_pta"
+    options+=("-DOT_BUILD_COEX=ON")
+    options+=("-DOT_COMPILE_WARNING_AS_ERROR=OFF")
+    build "${app_folder_name}" "${options[@]}"
 
     #Sign the image
     signGenerateHashAndCfile "${BUILD_DIR}/${app_folder_name}/bin"
@@ -248,13 +260,25 @@ build_ot_rcp_ble_hci_bb_single_uart_fc()
 {
     echo "Building dual mode app OT RCP + BLE HCI BB SINGLE UART FC..."
     app_folder_name="ot_rcp_ble_hci_bb_single_uart_fc"
-    local options=("${app_folder_name}")
-    options+=("${OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC[@]}")
+    local options=("${OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC[@]}")
     options+=("${OT_OPTIONS[@]}")
     options+=("$@")
     options+=(" -DSDK_RELEASE=$SDK_RELEASE")
-    build "${options[@]}"
+    build "${app_folder_name}" "${options[@]}"
 
+    signGenerateHashAndCfile "${BUILD_DIR}/${app_folder_name}/bin"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+    
+    echo "Building dual mode app OT RCP + BLE HCI BB SINGLE UART FC and PTA ..."
+    app_folder_name="ot_rcp_ble_hci_bb_single_uart_fc_pta"
+    options+=("-DOT_BUILD_COEX=ON")
+#    options+=("-DOT_COMPILE_WARNING_AS_ERROR=OFF")
+    build "${app_folder_name}" "${options[@]}"
+
+    #Sign the image
     signGenerateHashAndCfile "${BUILD_DIR}/${app_folder_name}/bin"
 
     if [ $? -eq 1 ]; then
@@ -415,12 +439,24 @@ build_ot_rcp_only_uart_dma()
 {
     echo "Building OT RCP image with UART DMA..."
     app_folder_name="rcp_only_uart_dma"
-    local options=("${app_folder_name}")
-    options+=("${OT_OPTIONS_RCP_ONLY_UART_DMA[@]}")
+    local options=("${OT_OPTIONS_RCP_ONLY_UART_DMA[@]}")
     options+=("${OT_OPTIONS[@]}")
     options+=("$@")
     options+=(" -DSDK_RELEASE=$SDK_RELEASE")
-    build "${options[@]}"
+    build "${app_folder_name}" "${options[@]}"
+
+    #Sign the image
+    sign "${BUILD_DIR}/${app_folder_name}/bin"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+
+    echo "Building OT RCP image with UART DMA and PTA..."
+    app_folder_name="rcp_only_uart_dma_pta"
+    options+=("-DOT_BUILD_COEX=ON")
+    options+=("-DOT_COMPILE_WARNING_AS_ERROR=OFF")
+    build "${app_folder_name}" "${options[@]}"
 
     #Sign the image
     sign "${BUILD_DIR}/${app_folder_name}/bin"
