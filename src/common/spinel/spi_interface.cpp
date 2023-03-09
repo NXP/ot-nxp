@@ -371,14 +371,12 @@ otError SpiInterface::PushPullSpi(void)
 
                 mReceiveFrameCallback(mReceiveFrameContext);
             }
-            else
-            {
-                // in case no specific data expected, length of Rx data is set to default small packet size
-                // if Rx data is bigger, frame is not handled and should be pulled again with appropriate expected data
-                // length in this case, Spi Rx data counter should not be decreased as no additional interrupt will be
-                // triggered
-                decreaseSpiRxDataCounter = false;
-            }
+            // else
+            // {
+            // in case no specific data expected, length of expected Rx data is set to default small packet size
+            // if Rx data is bigger, frame is not handled and should be pulled again with appropriate expected data
+            // length. Next PushPull will be operated with appropriate expected Rx data length
+            // }
         }
 
         // A RX frame has been correclty received, now decrease the RX data counter
