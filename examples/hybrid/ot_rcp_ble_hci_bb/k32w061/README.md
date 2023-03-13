@@ -32,9 +32,13 @@ The following command can be used to build only a specific target:
 $ ./script/build_k32w061 <target_name>
 ```
 
-After a successful build, application binaries will be generated in `build_k32w061/<target_name>/bin` and would contain the file called "rcp_name.bin.h".
+After a successful build, application binaries will be generated in `build_k32w061/<target_name>/bin` and would contain the file called "ot-rcp-ble-hci-bb-k32w061.elf.bin.h".
+
+For each target build, another build will be automatically triggered to generate the same version with PTA support. As an example when the target `ot_rcp_ble_hci_bb_single_uart_fc` will be used 2 folders called `ot_rcp_ble_hci_bb_single_uart_fc` and `ot_rcp_ble_hci_bb_single_uart_fc_pta` will be created.
 
 ## Flash Binaries
+
+Note: this section should not be followed if the RCP binary is going to be used with an host device supporting the `The Over The Wire (OTW) protocol (over UART)`.
 
 To flash the binary, follow the same procedure as described in the "Flash Binaries" section in [README.md][k32w061_readme_flash_binaries].
 
