@@ -374,4 +374,24 @@
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DUA_ENABLE
+ *
+ * Define as 1 to support Thread 1.2 Domain Unicast Address feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DUA_ENABLE
+#define OPENTHREAD_CONFIG_DUA_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLR_ENABLE
+ *
+ * Define as 1 to support Thread 1.2 Multicast Listener Registration feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLR_ENABLE
+#define OPENTHREAD_CONFIG_MLR_ENABLE 1
+#endif
+
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
