@@ -50,6 +50,7 @@ list(APPEND OT_PUBLIC_INCLUDES
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/cmc"
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/tpm"
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lptmr"
+        "$ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ccm32k"
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/misc_utilities"
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console"
         "$ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console/str"

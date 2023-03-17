@@ -151,6 +151,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_ltc.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lptmr.c
+        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_ccm32k.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_snt.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_spc.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_cmc.c
@@ -168,6 +169,7 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ltc/fsl_ltc.c
         $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lptmr/fsl_lptmr.c
+        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ccm32k/fsl_ccm32k.c
         $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/assert/fsl_assert.c
         $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console/fsl_debug_console.c
         $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/str/fsl_str.c
