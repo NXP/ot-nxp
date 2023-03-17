@@ -47,7 +47,7 @@ m_flash_config_end                  = m_flash_config_start + m_flash_config_size
 m_fsl_prodInfo_size                 = m_sector_size;
 m_fsl_prodInfo_start                = m_flash_end - m_fsl_prodInfo_size + 1;
 m_fsl_prodInfo_end                  = m_flash_end;
-FREESCALE_PROD_DATA_BASE_ADDR       = m_fsl_prodInfo_start;
+PROD_DATA_BASE_ADDR       = m_fsl_prodInfo_start;
 
 m_ot_settings_page_size             = m_sector_size;
 m_ot_settings_page_count            = DEFINED(gUseOtSettingsStorage_d) ? 2 : 0;
@@ -270,7 +270,7 @@ SECTIONS
   .fsl_prod_info :
   {
     . = ALIGN(m_sector_size);
-    *(.FREESCALE_PROD_DATA*)
+    *(.PROD_DATA*)
   } > m_fsl_prod_info
 
   .fEraseNVM :
