@@ -128,15 +128,23 @@ void appOtStart(int argc, char *argv[])
 void otTaskletsSignalPending(otInstance *aInstance)
 {
     (void)aInstance;
-    xTaskNotifyGive(sMainTask);
+
+    if (sMainTask != NULL)
+    {
+        xTaskNotifyGive(sMainTask);
+    }
 }
 
 void otSysEventSignalPending(void)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    vTaskNotifyGiveFromISR(sMainTask, &xHigherPriorityTaskWoken);
-    /* Context switch needed? */
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+    if (sMainTask != NULL)
+    {
+        vTaskNotifyGiveFromISR(sMainTask, &xHigherPriorityTaskWoken);
+        /* Context switch needed? */
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
