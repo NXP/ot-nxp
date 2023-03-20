@@ -33,18 +33,16 @@ HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x0A00;
 STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0A00;
 
 m_flash_start                       = 0x08000000;
-m_flash_size                        = 0x00200000;
+m_flash_size                        = 0x04000000;
 m_flash_end                         = m_flash_start + m_flash_size - 1;
-m_flash_size                        = 0x00200000;
 m_sector_size                       = 0x1000;
-m_vector_table_size                 = 0x280;
 
-m_flash_config_start                = 0x08000400;
-m_flash_config_size                 = 0xC00;
-m_flash_config_end                  = m_flash_config_start + m_flash_config_size - 1;
-
-m_interrupts_start                  = m_flash_config_end + 1;
-m_interrupts_end                    = m_interrupts_start + m_vector_table_size - 1;
+wifi_fw_size                        = 0xA0000;
+ble_fw_size                         = 0x50000;
+z154_fw_size                        = 0x50000;
+fw_storage_start                    = 0x08400000;
+fw_storage_size                     = (wifi_fw_size + ble_fw_size + z154_fw_size) * 2;
+fw_storage_end                      = fw_storage_start + fw_storage_size -1;
 
 NV_STORAGE_MAX_SECTORS              = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 16;
 NV_STORAGE_SECTOR_SIZE              = m_sector_size;
@@ -53,15 +51,15 @@ m_nvm_storage_size                  = NV_STORAGE_MAX_SECTORS * NV_STORAGE_SECTOR
 NV_STORAGE_START_ADDRESS            = NV_STORAGE_END_ADDRESS - m_nvm_storage_size + 1;
 NV_STORAGE_START_ADDRESS_OFFSET     = NV_STORAGE_START_ADDRESS - m_flash_start;
 
-m_text_start                        = m_interrupts_end + 1;
-m_text_end                          = NV_STORAGE_START_ADDRESS - 1;
-m_text_size                         = m_text_end - m_text_start;
+m_text_start                        = 0x08001280;
+m_text_end                          = fw_storage_start - 1;
+m_text_size                         = m_text_end - m_text_start + 1;
 
 /* Specify the memory areas */
 MEMORY
 {
-  m_flash_config        (RX)  : ORIGIN = m_flash_config_start, LENGTH = m_flash_config_size
-  m_interrupts          (RX)  : ORIGIN = m_interrupts_start, LENGTH = m_vector_table_size
+  m_flash_config        (RX)  : ORIGIN = 0x08000400, LENGTH = 0x00000C00
+  m_interrupts          (RX)  : ORIGIN = 0x08001000, LENGTH = 0x00000280
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   m_nvm_region          (RX)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = m_nvm_storage_size
   m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00130000
@@ -69,9 +67,6 @@ MEMORY
   m_sqram_cpu23_txq     (RW)  : ORIGIN = 0x443C0488, LENGTH = 0x00001080
   m_sqram_cpu32_txq     (RW)  : ORIGIN = 0x443C1508, LENGTH = 0x00001080
 }
-
-TARGET(binary)
-OUTPUT_FORMAT(default)
 
 /* Define output sections */
 SECTIONS
@@ -91,7 +86,8 @@ SECTIONS
     __VECTOR_TABLE = .;
     __Vectors = .;
     KEEP(*(.isr_vector))     /* Startup code */
-    . = ALIGN(4);
+    FILL(0x00)
+    . = 0x280;
   } > m_interrupts
 
   /* The program code and other data goes into internal ram */
