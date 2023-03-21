@@ -311,7 +311,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpSpiInit(otInstance *aInstance)
 {
-    NcpSpi *  ncpSpi   = nullptr;
+    NcpSpi   *ncpSpi   = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpSpi = new (&sNcpRaw) NcpSpi(instance);
@@ -336,7 +336,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRawHdlc, sizeof(NcpHdlc), uint64_t);
 
 extern "C" void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback)
 {
-    NcpHdlc * ncpHdlc  = nullptr;
+    NcpHdlc  *ncpHdlc  = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpHdlc = new (&sNcpRawHdlc) NcpHdlc(instance, aSendCallback);

@@ -30,8 +30,8 @@ SDK_ALIGN(static uint8_t s_sdmmcCacheLineAlignBuffer[BOARD_SDMMC_DATA_BUFFER_ALI
 #if defined(SDIO_ENABLED) || defined(SD_ENABLED)
 static sd_detect_card_t s_cd;
 static sd_io_voltage_t  s_ioVoltage = {
-    .type = BOARD_SDMMC_SD_IO_VOLTAGE_CONTROL_TYPE,
-    .func = NULL,
+     .type = BOARD_SDMMC_SD_IO_VOLTAGE_CONTROL_TYPE,
+     .func = NULL,
 };
 #endif
 static sdmmchost_t s_host;
@@ -128,10 +128,10 @@ void BOARD_SDCardDetectInit(sd_cd_t cd, void *userData)
     {
         uint32_t              gpioPinValue = 0;
         hal_gpio_pin_config_t sw_config    = {
-            .direction = kHAL_GpioDirectionIn,
-            .level     = 0U,
-            .port      = BOARD_SDMMC_SD_CD_GPIO_INSTANCE,
-            .pin       = BOARD_SDMMC_SD_CD_GPIO_PIN,
+               .direction = kHAL_GpioDirectionIn,
+               .level     = 0U,
+               .port      = BOARD_SDMMC_SD_CD_GPIO_INSTANCE,
+               .pin       = BOARD_SDMMC_SD_CD_GPIO_PIN,
         };
         HAL_GpioInit((hal_gpio_handle_t)sdmmcSdCdGpioHandle, &sw_config);
         HAL_GpioInstallCallback((hal_gpio_handle_t)sdmmcSdCdGpioHandle, SdmmcSdCdGpioCallback, &s_cd);

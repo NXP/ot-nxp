@@ -135,10 +135,10 @@ instance:
 /* LittleFS context */
 extern struct lfs_mflash_ctx LittleFS_ctx;
 const struct lfs_config      LittleFS_config = {.context = (void *)&LittleFS_ctx,
-                                           .read    = lfs_mflash_read,
-                                           .prog    = lfs_mflash_prog,
-                                           .erase   = lfs_mflash_erase,
-                                           .sync    = lfs_mflash_sync,
+                                                .read    = lfs_mflash_read,
+                                                .prog    = lfs_mflash_prog,
+                                                .erase   = lfs_mflash_erase,
+                                                .sync    = lfs_mflash_sync,
 #ifdef LFS_THREADSAFE
                                            .lock   = lfs_mutex_lock,
                                            .unlock = lfs_mutex_unlock,

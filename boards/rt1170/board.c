@@ -62,7 +62,7 @@ status_t BOARD_LPI2C_Send(LPI2C_Type *base,
                           uint8_t     deviceAddress,
                           uint32_t    subAddress,
                           uint8_t     subAddressSize,
-                          uint8_t *   txBuff,
+                          uint8_t    *txBuff,
                           uint8_t     txBuffSize)
 {
     lpi2c_master_transfer_t xfer;
@@ -82,7 +82,7 @@ status_t BOARD_LPI2C_Receive(LPI2C_Type *base,
                              uint8_t     deviceAddress,
                              uint32_t    subAddress,
                              uint8_t     subAddressSize,
-                             uint8_t *   rxBuff,
+                             uint8_t    *rxBuff,
                              uint8_t     rxBuffSize)
 {
     lpi2c_master_transfer_t xfer;
@@ -102,7 +102,7 @@ status_t BOARD_LPI2C_SendSCCB(LPI2C_Type *base,
                               uint8_t     deviceAddress,
                               uint32_t    subAddress,
                               uint8_t     subAddressSize,
-                              uint8_t *   txBuff,
+                              uint8_t    *txBuff,
                               uint8_t     txBuffSize)
 {
     lpi2c_master_transfer_t xfer;
@@ -122,7 +122,7 @@ status_t BOARD_LPI2C_ReceiveSCCB(LPI2C_Type *base,
                                  uint8_t     deviceAddress,
                                  uint32_t    subAddress,
                                  uint8_t     subAddressSize,
-                                 uint8_t *   rxBuff,
+                                 uint8_t    *rxBuff,
                                  uint8_t     rxBuffSize)
 {
     status_t                status;
@@ -295,8 +295,8 @@ void BOARD_ConfigMPU(void)
     extern uint32_t Image$$RW_m_ncache_unused$$ZI$$Limit[];
     uint32_t        nonCacheStart = (uint32_t)Image$$RW_m_ncache$$Base;
     uint32_t        size          = ((uint32_t)Image$$RW_m_ncache_unused$$Base == nonCacheStart)
-                        ? 0
-                        : ((uint32_t)Image$$RW_m_ncache_unused$$ZI$$Limit - nonCacheStart);
+                                        ? 0
+                                        : ((uint32_t)Image$$RW_m_ncache_unused$$ZI$$Limit - nonCacheStart);
 #elif defined(__MCUXPRESSO)
 #if defined(__USE_SHMEM)
     extern uint32_t __base_rpmsg_sh_mem;
