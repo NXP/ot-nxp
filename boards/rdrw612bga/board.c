@@ -36,7 +36,8 @@ void BOARD_InitDebugConsole(void)
     CLOCK_SetFRGClock(BOARD_DEBUG_UART_FRG_CLK);
     CLOCK_AttachClk(BOARD_DEBUG_UART_CLK_ATTACH);
 
-    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, BOARD_DEBUG_UART_CLK_FREQ);
+    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE,
+                    BOARD_DEBUG_UART_CLK_FREQ);
 }
 
 void BOARD_InitAppConsole(void)
@@ -145,7 +146,7 @@ status_t BOARD_InitPsRam(void)
         /* Read Register */
         [8]  = FLEXSPI_LUT_SEQ(kFLEXSPI_Command_DDR, kFLEXSPI_4PAD, 0xCC, kFLEXSPI_Command_DDR, kFLEXSPI_4PAD, 0x00),
         [9]  = FLEXSPI_LUT_SEQ(kFLEXSPI_Command_RADDR_DDR, kFLEXSPI_4PAD, 16, kFLEXSPI_Command_CADDR_DDR, kFLEXSPI_4PAD,
-                              16),
+                               16),
         [10] = FLEXSPI_LUT_SEQ(kFLEXSPI_Command_DUMMY_DDR, kFLEXSPI_4PAD, 12, kFLEXSPI_Command_READ_DDR, kFLEXSPI_4PAD,
                                0x01),
 

@@ -86,7 +86,7 @@ static uint16_t              sPanId;
 static uint8_t               sChannel = DEFAULT_CHANNEL;
 static int8_t                sMaxED;
 static int8_t                sAutoTxPwrLevel = 0;
-static macToPlmeMessage_t *  pMacToPlmeMsg   = NULL;
+static macToPlmeMessage_t   *pMacToPlmeMsg   = NULL;
 static macToPdDataMessage_t *pMacToPdDataMsg = NULL;
 
 /* ISR Signaling Flags */
