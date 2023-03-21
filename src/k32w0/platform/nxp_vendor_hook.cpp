@@ -67,7 +67,7 @@ class NcpNxpVendorUart : public NcpHdlc
     static int SendHdlcHook(const uint8_t *aBuf, uint16_t aBufLength);
 
 public:
-    static void otLinkRawTransmitNXP(otInstance *  aInstance,
+    static void otLinkRawTransmitNXP(otInstance   *aInstance,
                                      otRadioFrame *aFrame,
                                      otRadioFrame *aAckFrame,
                                      otError       aError);
@@ -166,7 +166,7 @@ NcpNxpVendorUart::NcpNxpVendorUart(ot::Instance *aInstance)
 {
 }
 
-void NcpNxpVendorUart::otLinkRawTransmitNXP(otInstance *  aInstance,
+void NcpNxpVendorUart::otLinkRawTransmitNXP(otInstance   *aInstance,
                                             otRadioFrame *aFrame,
                                             otRadioFrame *aAckFrame,
                                             otError       aError)
@@ -403,7 +403,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpVendorRaw, sizeof(ot::Ncp::NcpNxpVendorUart), u
 extern "C" void otAppNcpInit(otInstance *aInstance)
 {
     ot::Ncp::NcpNxpVendorUart *ncpVendor = nullptr;
-    ot::Instance *             instance  = static_cast<ot::Instance *>(aInstance);
+    ot::Instance              *instance  = static_cast<ot::Instance *>(aInstance);
 
     IgnoreError(otPlatUartEnable());
 

@@ -271,11 +271,11 @@ build_ot_rcp_ble_hci_bb_single_uart_fc()
     if [ $? -eq 1 ]; then
         exit 1
     fi
-    
+
     echo "Building dual mode app OT RCP + BLE HCI BB SINGLE UART FC and PTA ..."
     app_folder_name="ot_rcp_ble_hci_bb_single_uart_fc_pta"
     options+=("-DOT_BUILD_COEX=ON")
-#    options+=("-DOT_COMPILE_WARNING_AS_ERROR=OFF")
+    #    options+=("-DOT_COMPILE_WARNING_AS_ERROR=OFF")
     build "${app_folder_name}" "${options[@]}"
 
     #Sign the image

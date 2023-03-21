@@ -79,7 +79,7 @@ const uint8_t sizeOfFroCalibrationTable = otARRAY_LENGTH(mFroCalibFuncTable);
 #endif /* ((defined(gClkUseFro32K) && (gClkUseFro32K == 1)) || (defined(gPWR_CpuClk_48MHz) && \
           (gPWR_CpuClk_48MHz == 1))) && (cPWR_FullPowerDownMode == 0) */
 
-otInstance *          sInstance;
+otInstance           *sInstance;
 OT_TOOL_WEAK uint32_t gInterruptDisableCount = 0;
 
 void hardware_init(void);

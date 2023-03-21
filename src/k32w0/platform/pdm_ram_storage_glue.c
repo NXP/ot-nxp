@@ -115,9 +115,9 @@ exit:
 
 /* Initialize and enable PDM encryption context */
 static rsError initPdmEncContext(PDM_portConfig_t *pdm_PortContext,
-                                 uint8_t *         stagingBuffer,
+                                 uint8_t          *stagingBuffer,
                                  uint16_t          stagingBufferSize,
-                                 uint32_t *        encKey,
+                                 uint32_t         *encKey,
                                  uint8_t           config_flags)
 {
     rsError      err    = RS_ERROR_NONE;
@@ -236,7 +236,7 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
     rsError        err            = RS_ERROR_NONE;
     uint16_t       allocSize      = pBuffer->header.maxLength;
     const uint16_t newBlockLength = sizeof(struct settingsBlock) + aValueLength;
-    uint8_t *      ptr            = NULL;
+    uint8_t       *ptr            = NULL;
 
     otEXPECT_ACTION((NULL != pBuffer), err = RS_ERROR_NO_BUFS);
 
@@ -390,7 +390,7 @@ void FS_vIdleTask(uint8_t u8WritesAllowed)
 {
     tsQueueEntry         currentEntry;
     ramBufferDescriptor *ramBuffer       = NULL;
-    uint8_t *            buffer          = NULL;
+    uint8_t             *buffer          = NULL;
     uint16_t             bufferSize      = 0;
     uint16_t             bufferAllocSize = 0;
     bool_t               doPdmSave       = FALSE;
