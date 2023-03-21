@@ -659,10 +659,10 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
                                           otLinkMetrics        aLinkMetrics,
                                           const otShortAddress aShortAddress,
-                                          const otExtAddress * aExtAddress)
+                                          const otExtAddress  *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -701,7 +701,7 @@ exit:
 }
 #endif
 
-void otPlatRadioSetMacKey(otInstance *            aInstance,
+void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
@@ -789,7 +789,7 @@ exit:
     return status;
 }
 
-otError otPlatRadioEnableCsl(otInstance *        aInstance,
+otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              uint32_t            aCslPeriod,
                              otShortAddress      aShortAddr,
                              const otExtAddress *aExtAddr)
@@ -924,7 +924,7 @@ static uint32_t rf_adjust_tstamp_from_ot(uint64_t time)
 phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 {
     pdDataToMacMessage_t *pDataMsg = (pdDataToMacMessage_t *)pMsg;
-    extendedRadioFrame *  pRxFrame = NULL;
+    extendedRadioFrame   *pRxFrame = NULL;
 
     assert(pMsg != NULL);
 

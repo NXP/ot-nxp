@@ -108,8 +108,8 @@ exit:
 }
 
 otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                              const otPlatCryptoSha256Hash *  aHash,
-                              otPlatCryptoEcdsaSignature *    aSignature)
+                              const otPlatCryptoSha256Hash   *aHash,
+                              otPlatCryptoEcdsaSignature     *aSignature)
 {
     otError               error = kErrorNone;
     sss_sscp_asymmetric_t asyc;
@@ -153,7 +153,7 @@ exit:
 }
 
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
-                                const otPlatCryptoSha256Hash *    aHash,
+                                const otPlatCryptoSha256Hash     *aHash,
                                 const otPlatCryptoEcdsaSignature *aSignature)
 {
     otError error         = kErrorNone;

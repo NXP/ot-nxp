@@ -98,7 +98,6 @@ Run -> Debug Configurations... -> C/C++ Application
 
 ![Debug K32W1](../../../doc/img/k32w1/debug_k32w1.jpg)
 
-
 ## Running the example
 
 1. Prepare two boards with the flashed `CLI Example` (as shown above).
