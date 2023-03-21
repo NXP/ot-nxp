@@ -46,8 +46,8 @@ class HdlcSpinelHciInterface : public HdlcInterface
 {
 public:
     HdlcSpinelHciInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                           void *                                            aCallbackContext,
-                           ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                           void                                             *aCallbackContext,
+                           ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer)
         : HdlcInterface(aCallback, aCallbackContext, aFrameBuffer)
     {
     }

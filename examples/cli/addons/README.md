@@ -21,6 +21,7 @@ To build ot-cli with iperf addon, following CMake flags are required:
 `OT_NXP_LWIP_IPERF`: Adds lwiperf port to NXP's lwIP library
 
 Example of a typical command:
+
 ```bash
 ./script/build_<platform> -DOT_APP_CLI_FREERTOS_IPERF=ON -DOT_NXP_LWIP=ON -DOT_NXP_LWIP_IPERF=ON
 ```

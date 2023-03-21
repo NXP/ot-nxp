@@ -320,8 +320,8 @@ uECC_word_t uECC_vli_isZero(const uECC_word_t *vli)
                  "MOVS    %[ret],#0                     \n\t"
                  "ADCS    %[ret],r0                     \n\t"
                  ".syntax divided                       \n\t"
-                 : [ ret ] "=r"(ret), [ r1 ] "=r"(r1), [ r2 ] "=r"(r2), [ r3 ] "=r"(r3)
-                 : [ vli ] "[ret]"(vli)
+                 : [ret] "=r"(ret), [r1] "=r"(r1), [r2] "=r"(r2), [r3] "=r"(r3)
+                 : [vli] "[ret]"(vli)
                  : "cc", "memory");
 #else
     register uECC_word_t r1 asm("r1");
@@ -345,8 +345,8 @@ uECC_word_t uECC_vli_isZero(const uECC_word_t *vli)
                  "MOVS    %[ret],#0                        \n\t"
                  "ADCS    %[ret],r0                        \n\t"
 #endif
-                 : [ ret ] "=r"(ret), [ r1 ] "=r"(r1), [ r2 ] "=r"(r2), [ r3 ] "=r"(r3), [ ip ] "=r"(ip)
-                 : [ vli ] "[ret]"(vli)
+                 : [ret] "=r"(ret), [r1] "=r"(r1), [r2] "=r"(r2), [r3] "=r"(r3), [ip] "=r"(ip)
+                 : [vli] "[ret]"(vli)
                  : "cc", "memory");
 #endif
     return ret;
@@ -489,10 +489,7 @@ __asm uECC_word_t uECC_vli_sub(uECC_word_t *result, const uECC_word_t *left, con
             RSBS r0,
         r0,
 # 0 // r0 := borrow
-        POP
-    {
-        r4 - r6, pc
-    }
+        POP{r4 - r6, pc}
 #else
     PUSH{r4 - r8, lr} FRAME PUSH{r4 - r8, lr} LDMIA r1 !, {r3 - r6} LDMIA r2 !, {r7, r8, r12, lr} SUBS r3, r7 SBCS r4,
         r8 SBCS r5, r12 SBCS r6, lr STMIA r0 !, {r3 - r6} LDMIA r1 !, {r3 - r6} LDMIA r2 !, {r7, r8, r12, lr} SBCS r3,
@@ -513,7 +510,7 @@ uECC_word_t uECC_vli_sub(uECC_word_t *result, const uECC_word_t *left, const uEC
 #if NUM_ECC_WORDS != 8
 #error adjust ARM assembly to handle NUM_ECC_WORDS != 8
 #endif
-    register uECC_word_t *      r0 asm("r0") = result;
+    register uECC_word_t       *r0 asm("r0") = result;
     register const uECC_word_t *r1 asm("r1") = left;
     register const uECC_word_t *r2 asm("r2") = right;
     asm volatile(
@@ -602,10 +599,7 @@ static __asm uECC_word_t uECC_vli_add(uECC_word_t *result, const uECC_word_t *le
 # 0 // does not affect C flag
         ADCS r0,
         r0 // r0 := 0 + 0 + C = carry
-            POP
-    {
-        r4 - r6, pc
-    }
+            POP{r4 - r6, pc}
 #else
     PUSH{r4 - r8, lr} FRAME PUSH{r4 - r8, lr} LDMIA r1 !, {r3 - r6} LDMIA r2 !, {r7, r8, r12, lr} ADDS r3, r7 ADCS r4,
         r8 ADCS r5, r12 ADCS r6, lr STMIA r0 !, {r3 - r6} LDMIA r1 !, {r3 - r6} LDMIA r2 !, {r7, r8, r12, lr} ADCS r3,
@@ -622,7 +616,7 @@ static __asm uECC_word_t uECC_vli_add(uECC_word_t *result, const uECC_word_t *le
 #elif defined MBEDTLS_OPTIMIZE_TINYCRYPT_ASM && defined __GNUC__ && defined __arm__
 static uECC_word_t uECC_vli_add(uECC_word_t *result, const uECC_word_t *left, const uECC_word_t *right)
 {
-    register uECC_word_t *      r0 asm("r0") = result;
+    register uECC_word_t       *r0 asm("r0") = result;
     register const uECC_word_t *r1 asm("r1") = left;
     register const uECC_word_t *r2 asm("r2") = right;
 
@@ -963,10 +957,10 @@ void ecc_wait_state_reset(ecc_wait_state_t *ws)
  * Compared to the original uECC_vli_mult(), loose the num_words argument as we
  * know it's always 8. This saves a bit of code size and execution speed.
  */
-static void uECC_vli_mult_rnd(uECC_word_t *      result,
+static void uECC_vli_mult_rnd(uECC_word_t       *result,
                               const uECC_word_t *left,
                               const uECC_word_t *right,
-                              ecc_wait_state_t * s)
+                              ecc_wait_state_t  *s)
 {
     uECC_word_t   r[3] = {0, 0, 0};
     wordcount_t   i, k;
@@ -1093,7 +1087,7 @@ void uECC_vli_mmod(uECC_word_t *result, uECC_word_t *product, const uECC_word_t 
 {
     uECC_word_t       mod_multiple[2 * NUM_ECC_WORDS];
     uECC_word_t       tmp[2 * NUM_ECC_WORDS];
-    uECC_word_t *     v[2] = {tmp, product};
+    uECC_word_t      *v[2] = {tmp, product};
     uECC_word_t       index;
     const wordcount_t num_words = NUM_ECC_WORDS;
 
@@ -1151,10 +1145,10 @@ void uECC_vli_modMult(uECC_word_t *result, const uECC_word_t *left, const uECC_w
     uECC_vli_mmod(result, product, mod);
 }
 
-static void uECC_vli_modMult_rnd(uECC_word_t *      result,
+static void uECC_vli_modMult_rnd(uECC_word_t       *result,
                                  const uECC_word_t *left,
                                  const uECC_word_t *right,
-                                 ecc_wait_state_t * s)
+                                 ecc_wait_state_t  *s)
 {
     uECC_word_t product[2 * NUM_ECC_WORDS];
     uECC_vli_mult_rnd(product, left, right, s);
@@ -1428,10 +1422,10 @@ void apply_z(uECC_word_t *X1, uECC_word_t *Y1, const uECC_word_t *const Z)
 }
 
 /* P = (x1, y1) => 2P, (x2, y2) => P' */
-static void XYcZ_initial_double(uECC_word_t *            X1,
-                                uECC_word_t *            Y1,
-                                uECC_word_t *            X2,
-                                uECC_word_t *            Y2,
+static void XYcZ_initial_double(uECC_word_t             *X1,
+                                uECC_word_t             *Y1,
+                                uECC_word_t             *X2,
+                                uECC_word_t             *Y2,
                                 const uECC_word_t *const initial_Z)
 {
     uECC_word_t z[NUM_ECC_WORDS];
@@ -1520,7 +1514,7 @@ static void XYcZ_addC_rnd(uECC_word_t *X1, uECC_word_t *Y1, uECC_word_t *X2, uEC
     uECC_vli_set(X1, t7);
 }
 
-static void EccPoint_mult(uECC_word_t *      result,
+static void EccPoint_mult(uECC_word_t       *result,
                           const uECC_word_t *point,
                           const uECC_word_t *scalar,
                           const uECC_word_t *initial_Z)

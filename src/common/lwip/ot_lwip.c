@@ -51,7 +51,7 @@
 /* -------------------------------------------------------------------------- */
 
 static struct netif sThreadNetIf;
-static otInstance * sInstance = NULL;
+static otInstance  *sInstance = NULL;
 static bool         sAddrAssigned[LWIP_IPV6_NUM_ADDRESSES];
 
 /* -------------------------------------------------------------------------- */
@@ -264,7 +264,7 @@ exit:
 
 otMessage *otPlatLwipConvertToOtMsg(struct pbuf *lwipIpPkt)
 {
-    otMessage *             otIpPkt     = NULL;
+    otMessage              *otIpPkt     = NULL;
     const otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
     uint16_t                remainingLen;
     bool                    bFreeOtPkt = false;

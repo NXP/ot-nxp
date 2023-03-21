@@ -369,7 +369,7 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     return sRadioSpinel.GetState();
 }
 
-void otPlatRadioSetMacKey(otInstance *            aInstance,
+void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
@@ -437,11 +437,11 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 
 #define MAX_ARGS_BUFFER_SIZE 16
 
-otError otPlatRadioMfgCommand(otInstance *  aInstance,
+otError otPlatRadioMfgCommand(otInstance   *aInstance,
                               uint32_t      aKey,
-                              uint8_t *     payload,
+                              uint8_t      *payload,
                               const uint8_t payloadLenIn,
-                              uint8_t *     payloadLenOut)
+                              uint8_t      *payloadLenOut)
 {
     uint8_t        buffer[MAX_ARGS_BUFFER_SIZE]; // temporary buffer used to be passed as arg of GetWithParam
     spinel_ssize_t packed;
@@ -500,10 +500,10 @@ otError otPlatRadioSendSetPropVendorUint64Cmd(uint32_t aKey, uint64_t value)
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
                                           otLinkMetrics        aLinkMetrics,
                                           const otShortAddress aShortAddress,
-                                          const otExtAddress * aExtAddress)
+                                          const otExtAddress  *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 

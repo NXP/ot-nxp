@@ -61,8 +61,8 @@ public:
      *
      */
     SpiInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                 void *                                        aCallbackContext,
-                 Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                 void                                         *aCallbackContext,
+                 Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -148,8 +148,8 @@ private:
     };
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                        mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    void                                         *mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
 
     uint8_t  mSpiAlignAllowance;
     uint32_t mResetDelay;

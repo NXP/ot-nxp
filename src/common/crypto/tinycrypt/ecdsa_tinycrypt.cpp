@@ -87,8 +87,8 @@ exit:
 }
 
 otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                              const otPlatCryptoSha256Hash *  aHash,
-                              otPlatCryptoEcdsaSignature *    aSignature)
+                              const otPlatCryptoSha256Hash   *aHash,
+                              otPlatCryptoEcdsaSignature     *aSignature)
 {
     otError      error = kErrorNone;
     uecc_keypair keypair;
@@ -105,7 +105,7 @@ exit:
 }
 
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
-                                const otPlatCryptoSha256Hash *    aHash,
+                                const otPlatCryptoSha256Hash     *aHash,
                                 const otPlatCryptoEcdsaSignature *aSignature)
 {
     otError error = kErrorNone;

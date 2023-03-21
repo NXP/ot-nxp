@@ -113,7 +113,7 @@ void *tinycrypt_platform_memset(void *ptr, int value, size_t num)
 {
     size_t          i, start_offset = 0;
     volatile size_t flow_counter = 0;
-    volatile char * b            = ptr;
+    volatile char  *b            = ptr;
     char            rnd_data;
     if (num > 0)
     {

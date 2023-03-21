@@ -85,8 +85,8 @@ static void bits2int(uECC_word_t *native, const uint8_t *bits, unsigned bits_siz
 int uECC_sign_with_k(const uint8_t *private_key,
                      const uint8_t *message_hash,
                      unsigned       hash_size,
-                     uECC_word_t *  k,
-                     uint8_t *      signature)
+                     uECC_word_t   *k,
+                     uint8_t       *signature)
 {
     uECC_word_t tmp[NUM_ECC_WORDS];
     uECC_word_t s[NUM_ECC_WORDS];
@@ -154,7 +154,7 @@ int uECC_sign(const uint8_t *private_key, const uint8_t *message_hash, unsigned 
     volatile const uint8_t *private_key_dup  = private_key;
     volatile const uint8_t *message_hash_dup = message_hash;
     volatile unsigned       hash_size_dup    = hash_size;
-    volatile uint8_t *      signature_dup    = signature;
+    volatile uint8_t       *signature_dup    = signature;
 
     for (tries = 0; tries < uECC_RNG_MAX_TRIES; ++tries)
     {
@@ -206,8 +206,8 @@ int uECC_verify(const uint8_t *public_key, const uint8_t *message_hash, unsigned
     uECC_word_t          tx[NUM_ECC_WORDS];
     uECC_word_t          ty[NUM_ECC_WORDS];
     uECC_word_t          tz[NUM_ECC_WORDS];
-    const uECC_word_t *  points[4];
-    const uECC_word_t *  point;
+    const uECC_word_t   *points[4];
+    const uECC_word_t   *point;
     bitcount_t           num_bits;
     bitcount_t           i;
     bitcount_t           flow_control;

@@ -59,9 +59,9 @@ Thus it is validated in __wrap_realloc function that the allocated size
 of the old_ptr is smaller than the allocated size of new_ptr */
 size_t xPortMallocUsableSize(void *pv)
 {
-    uint8_t *    puc = (uint8_t *)pv;
+    uint8_t     *puc = (uint8_t *)pv;
     BlockLink_t *pxLink;
-    void *       voidp;
+    void        *voidp;
     size_t       sz = 0;
 
     if (pv != NULL)

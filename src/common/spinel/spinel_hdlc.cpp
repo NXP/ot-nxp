@@ -46,8 +46,8 @@ namespace ot {
 namespace NXP {
 
 HdlcInterface::HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                             void *                                            aCallbackContext,
-                             ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                             void                                             *aCallbackContext,
+                             ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer)
     : mEncoderBuffer()
     , mHdlcEncoder(mEncoderBuffer)
     , mHdlcRxCallbackField(nullptr)

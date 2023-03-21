@@ -116,8 +116,8 @@ int uECC_sign(const uint8_t *p_private_key, const uint8_t *p_message_hash, unsig
 int uECC_sign_with_k(const uint8_t *private_key,
                      const uint8_t *message_hash,
                      unsigned int   hash_size,
-                     uECC_word_t *  k,
-                     uint8_t *      signature);
+                     uECC_word_t   *k,
+                     uint8_t       *signature);
 #endif
 
 /**

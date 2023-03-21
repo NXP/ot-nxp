@@ -64,8 +64,8 @@ public:
      *
      */
     HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void *                                            aCallbackContext,
-                  ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                  void                                             *aCallbackContext,
+                  ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -152,13 +152,13 @@ private:
     ot::Hdlc::FrameBuffer<kEncoderBufferSize>         mEncoderBuffer;
     ot::Hdlc::Encoder                                 mHdlcEncoder;
     platform_hdlc_rx_callback_t                       mHdlcRxCallbackField;
-    ot::Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
+    ot::Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
     ot::Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                            mReceiveFrameContext;
+    void                                             *mReceiveFrameContext;
     ot::Hdlc::MultiFrameBuffer<kMaxMultiFrameSize>    mRxSpinelFrameBuffer;
     ot::Hdlc::Decoder                                 mHdlcSpinelDecoder;
     bool                                              mIsInitialized;
-    uint8_t *                                         mSavedFrame;
+    uint8_t                                          *mSavedFrame;
     uint16_t                                          mSavedFrameLen;
     bool                                              mIsSpinelBufferFull;
     SemaphoreHandle_t                                 mWriteMutexHandle;

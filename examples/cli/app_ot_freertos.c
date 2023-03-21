@@ -62,7 +62,7 @@
 uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #endif
 
-static otInstance * sInstance = NULL;
+static otInstance  *sInstance = NULL;
 static TaskHandle_t sMainTask = NULL;
 
 extern void otAppCliInit(otInstance *aInstance);
@@ -143,7 +143,7 @@ void otSysEventSignalPending(void)
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     size_t total_size = aNum * aSize;
-    void * ptr        = pvPortMalloc(total_size);
+    void  *ptr        = pvPortMalloc(total_size);
     if (ptr)
     {
         memset(ptr, 0, total_size);

@@ -194,7 +194,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 {
     OT_UNUSED_VARIABLE(aInstance);
     otError      error           = OT_ERROR_NOT_FOUND;
-    uint8_t *    pBufferIterator = otSettingsBuffer.buffer;
+    uint8_t     *pBufferIterator = otSettingsBuffer.buffer;
     structTLV_t *pTlvIterator    = NULL;
     int          nbKeyFound      = 0;
 
@@ -234,7 +234,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 {
     OT_UNUSED_VARIABLE(aInstance);
     otError      error           = OT_ERROR_NO_BUFS;
-    uint8_t *    pBufferIterator = otSettingsBuffer.buffer;
+    uint8_t     *pBufferIterator = otSettingsBuffer.buffer;
     structTLV_t *pTlvIterator    = NULL;
     bool         tagFound        = false;
     bool         moveRequired    = false;
@@ -298,9 +298,9 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 {
     OT_UNUSED_VARIABLE(aInstance);
     otError      error           = OT_ERROR_NO_BUFS;
-    uint8_t *    pBufferIterator = otSettingsBuffer.buffer;
+    uint8_t     *pBufferIterator = otSettingsBuffer.buffer;
     structTLV_t *pTlvIterator    = NULL;
-    uint8_t *    ptagFoundOffset = NULL;
+    uint8_t     *ptagFoundOffset = NULL;
     bool         moveRequired    = false;
     uint32_t     bytesToRemove   = 0;
 
@@ -374,11 +374,11 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 {
     OT_UNUSED_VARIABLE(aInstance);
     otError      error                = OT_ERROR_NOT_FOUND;
-    uint8_t *    pBufferIterator      = otSettingsBuffer.buffer;
+    uint8_t     *pBufferIterator      = otSettingsBuffer.buffer;
     structTLV_t *pTlvIterator         = NULL;
     int          nbKeyFound           = 0;
-    uint8_t *    pOffsetStartToRemove = NULL;
-    uint8_t *    pOffsetEndToRemove   = NULL;
+    uint8_t     *pOffsetStartToRemove = NULL;
+    uint8_t     *pOffsetEndToRemove   = NULL;
 
     (void)OSA_MutexLock((osa_mutex_handle_t)mFlashLittleFSMutexId, osaWaitForever_c);
 

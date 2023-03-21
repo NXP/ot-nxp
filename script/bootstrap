@@ -29,7 +29,6 @@
 
 set -euxo pipefail
 
-
 install_packages_opkg()
 {
     echo 'opkg not supported currently' && false
@@ -42,8 +41,7 @@ install_packages_rpm()
 
 install_packages_apt()
 {
-    if [[ "${CMAKE_CURRENT_VERSION}" < "${CMAKE_MINIMAL_VERSION}" ]]
-    then
+    if [[ ${CMAKE_CURRENT_VERSION} < ${CMAKE_MINIMAL_VERSION} ]]; then
         sudo apt-get remove -y cmake
         wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_MINIMAL_VERSION}/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
         chmod +x cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
@@ -56,8 +54,7 @@ install_packages_apt()
 
 install_packages_brew()
 {
-    if [[ "${CMAKE_CURRENT_VERSION}" < "${CMAKE_MINIMAL_VERSION}" ]]
-    then
+    if [[ ${CMAKE_CURRENT_VERSION} < ${CMAKE_MINIMAL_VERSION} ]]; then
         brew uninstall cmake
         wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_MINIMAL_VERSION}/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
         chmod +x cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
@@ -74,7 +71,7 @@ install_packages()
     # requirements. The goal here is to be able to upgrade the CMake version accordingly
     # Current version minimal (3.21.0) is needed for the connectivity framework
     CMAKE_MINIMAL_VERSION="3.21.0"
-    CMAKE_CURRENT_VERSION=$(cmake --version | sed -E  -n 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
+    CMAKE_CURRENT_VERSION=$(cmake --version | sed -E -n 's/.*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
     ARCH=$(arch)
 
     PM=source

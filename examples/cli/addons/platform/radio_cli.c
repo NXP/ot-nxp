@@ -88,10 +88,10 @@ static otError ProcessIRCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessSetTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessMfgGetInt8(void *aContext, uint8_t cmdId, uint8_t aArgsLength);
-static otError ProcessMfgSetInt8(void *  aContext,
+static otError ProcessMfgSetInt8(void   *aContext,
                                  uint8_t cmdId,
                                  uint8_t aArgsLength,
-                                 char *  aArgs[],
+                                 char   *aArgs[],
                                  int8_t  min,
                                  int8_t  max);
 static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aArgs[]);
@@ -191,7 +191,7 @@ static otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[
     if (aArgsLength == 1)
     {
         otExtAddress addr;
-        char *       hex = *aArgs;
+        char        *hex = *aArgs;
 
         otLogInfoPlat("+ seteui64 %s (len %ld)", *aArgs, (uint32_t)strlen(*aArgs));
 
@@ -290,10 +290,10 @@ static otError ProcessMfgGetInt8(void *aContext, uint8_t cmdId, uint8_t aArgsLen
     return error;
 }
 
-static otError ProcessMfgSetInt8(void *  aContext,
+static otError ProcessMfgSetInt8(void   *aContext,
                                  uint8_t cmdId,
                                  uint8_t aArgsLength,
-                                 char *  aArgs[],
+                                 char   *aArgs[],
                                  int8_t  min,
                                  int8_t  max)
 {

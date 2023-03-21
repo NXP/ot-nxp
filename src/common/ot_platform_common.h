@@ -198,11 +198,11 @@ void otPlatUartSetInstance(uint8_t newInstance);
  * This function sends Vendor specific Manufactring commands to configure transceiver
  *
  */
-otError otPlatRadioMfgCommand(otInstance *  aInstance,
+otError otPlatRadioMfgCommand(otInstance   *aInstance,
                               uint32_t      aKey,
-                              uint8_t *     payload,
+                              uint8_t      *payload,
                               const uint8_t payloadLenIn,
-                              uint8_t *     payloadLenOut);
+                              uint8_t      *payloadLenOut);
 
 /**
  * This function is called from idle hook, likely for system idle operation such as flash operations

@@ -73,7 +73,7 @@ struct iperf_test_context
     bool                     server_mode;
     bool                     tcp;
     enum lwiperf_client_type client_type;
-    void *                   iperf_session;
+    void                    *iperf_session;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -119,11 +119,11 @@ static void iperf_test_start(void *arg);
  * \param[in] ms_duration
  * \param[in] bandwidth_kbitpsec
  */
-static void lwiperf_report(void *                   arg,
+static void lwiperf_report(void                    *arg,
                            enum lwiperf_report_type report_type,
-                           const ip_addr_t *        local_addr,
+                           const ip_addr_t         *local_addr,
                            uint16_t                 local_port,
-                           const ip_addr_t *        remote_addr,
+                           const ip_addr_t         *remote_addr,
                            uint16_t                 remote_port,
                            uint64_t                 bytes_transferred,
                            uint32_t                 ms_duration,
@@ -548,8 +548,8 @@ static void iperf_test_abort(void *arg)
 static void iperf_test_start(void *arg)
 {
     struct iperf_test_context *ctx       = (struct iperf_test_context *)arg;
-    struct netif *             netiftmp  = NULL;
-    struct netif *             netifbind = NULL;
+    struct netif              *netiftmp  = NULL;
+    struct netif              *netifbind = NULL;
 
     if (ctx->iperf_session != NULL)
     {
@@ -633,11 +633,11 @@ static void iperf_test_start(void *arg)
     }
 }
 
-static void lwiperf_report(void *                   arg,
+static void lwiperf_report(void                    *arg,
                            enum lwiperf_report_type report_type,
-                           const ip_addr_t *        local_addr,
+                           const ip_addr_t         *local_addr,
                            uint16_t                 local_port,
-                           const ip_addr_t *        remote_addr,
+                           const ip_addr_t         *remote_addr,
                            uint16_t                 remote_port,
                            uint64_t                 bytes_transferred,
                            uint32_t                 ms_duration,
