@@ -35,7 +35,7 @@
 #define BOARD_DEBUG_UART_BAUDRATE 115200
 #endif /* BOARD_DEBUG_UART_BAUDRATE */
 
-#define BOARD_APP_UART_TYPE   kSerialPort_Uart
+#define BOARD_APP_UART_TYPE kSerialPort_Uart
 #define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
 
 #if (BOARD_APP_UART_INSTANCE == 1)
@@ -178,25 +178,25 @@ status_t BOARD_LPI2C_Send(LPI2C_Type *base,
                           uint8_t     deviceAddress,
                           uint32_t    subAddress,
                           uint8_t     subaddressSize,
-                          uint8_t *   txBuff,
+                          uint8_t    *txBuff,
                           uint8_t     txBuffSize);
 status_t BOARD_LPI2C_Receive(LPI2C_Type *base,
                              uint8_t     deviceAddress,
                              uint32_t    subAddress,
                              uint8_t     subaddressSize,
-                             uint8_t *   rxBuff,
+                             uint8_t    *rxBuff,
                              uint8_t     rxBuffSize);
 status_t BOARD_LPI2C_SendSCCB(LPI2C_Type *base,
                               uint8_t     deviceAddress,
                               uint32_t    subAddress,
                               uint8_t     subaddressSize,
-                              uint8_t *   txBuff,
+                              uint8_t    *txBuff,
                               uint8_t     txBuffSize);
 status_t BOARD_LPI2C_ReceiveSCCB(LPI2C_Type *base,
                                  uint8_t     deviceAddress,
                                  uint32_t    subAddress,
                                  uint8_t     subaddressSize,
-                                 uint8_t *   rxBuff,
+                                 uint8_t    *rxBuff,
                                  uint8_t     rxBuffSize);
 void     BOARD_Accel_I2C_Init(void);
 status_t BOARD_Accel_I2C_Send(uint8_t deviceAddress, uint32_t subAddress, uint8_t subaddressSize, uint32_t txBuff);
