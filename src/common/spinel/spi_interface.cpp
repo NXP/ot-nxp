@@ -184,6 +184,7 @@ otError SpiInterface::PushPullSpi(void)
     Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);
     uint16_t      skipAlignAllowanceLength;
     bool          decreaseSpiRxDataCounter = false;
+    bool          needRetry                = false;
 
     /* Do we need to do a SPI push pull */
     if (pendingSpiRxDataCounter == 0 && !mSpiTxIsReady)
@@ -371,12 +372,13 @@ otError SpiInterface::PushPullSpi(void)
 
                 mReceiveFrameCallback(mReceiveFrameContext);
             }
-            // else
-            // {
-            // in case no specific data expected, length of expected Rx data is set to default small packet size
-            // if Rx data is bigger, frame is not handled and should be pulled again with appropriate expected data
-            // length. Next PushPull will be operated with appropriate expected Rx data length
-            // }
+            else
+            {
+                needRetry = true;
+                // in case no specific data expected, length of expected Rx data is set to default small packet size
+                // if Rx data is bigger, frame is not handled and should be pulled again with appropriate expected data
+                // length. Next PushPull will be operated with appropriate expected Rx data length
+            }
         }
 
         // A RX frame has been correclty received, now decrease the RX data counter
@@ -400,13 +402,17 @@ otError SpiInterface::PushPullSpi(void)
             mSpiTxPayloadSize  = 0;
             mSpiTxRefusedCount = 0;
             memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
-            error = OT_ERROR_NONE;
+            if (needRetry == false)
+            {
+                error = OT_ERROR_NONE;
+            }
         }
         else
         {
             // The slave wasn't ready for what we had to send them. Incrementing this counter will turn on rate
             // limiting so that we don't waste a ton of CPU bombarding them with useless SPI transfers.
             mSpiTxRefusedCount++;
+            error = OT_ERROR_FAILED;
         }
     }
 
@@ -428,6 +434,9 @@ exit:
      */
     if (error != OT_ERROR_NONE || pendingSpiRxDataCounter > 0)
     {
+        // Add delay ( about 50us) before engaging next exchange, to be sure that transceiver is ready
+        SDK_DelayAtLeastUs(50U, CLOCK_GetFreq(kCLOCK_CpuClk));
+
         otLogDebgPlat("error = %d, pendingSpiRxDataCounter=%d", error, pendingSpiRxDataCounter);
         otTaskletsSignalPending(NULL);
     }
