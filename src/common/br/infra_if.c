@@ -37,18 +37,17 @@
 /* -------------------------------------------------------------------------- */
 
 #include "infra_if.h"
-#include "ot_platform_common.h"
-#include <openthread/platform/infra_if.h>
-#include <openthread/cli.h>
-#include "common/code_utils.hpp"
 #include "assert.h"
+#include "ot_platform_common.h"
+#include <openthread/cli.h>
 #include <openthread/ip6.h>
-#include "lwip/sockets.h"
-#include "lwip/inet.h"
-#include "lwip/icmp6.h"
+#include <openthread/platform/infra_if.h>
+#include "common/code_utils.hpp"
 #include "lwip/api.h"
-#include "lwip/raw.h"
 #include "lwip/icmp6.h"
+#include "lwip/inet.h"
+#include "lwip/raw.h"
+#include "lwip/sockets.h"
 #include "lwip/tcpip.h"
 
 /* -------------------------------------------------------------------------- */
@@ -59,8 +58,8 @@
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static int sInfraIfIcmp6Socket = -1;
-static uint8_t sInfraIfIndex;
+static int         sInfraIfIcmp6Socket = -1;
+static uint8_t     sInfraIfIndex;
 static otInstance *sInstance = NULL;
 
 struct netif *sNetifPtr;
@@ -69,7 +68,7 @@ struct netif *sNetifPtr;
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static int CreateIcmp6Socket();
+static int     CreateIcmp6Socket();
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
 
 /* -------------------------------------------------------------------------- */
@@ -78,74 +77,73 @@ static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *
 
 void InfraIfInit(otInstance *aInstance, struct netif *netif)
 {
-  struct ifreq ifr = {0};
+    struct ifreq ifr = {0};
 
-  if(netif == NULL)
-  {
-    otCliOutputFormat("\r\nBorder Routing feature is disabled: infra interface is missing");
-    return;
-  }
-
-  sInstance = aInstance;
-  sNetifPtr = netif;
-
-  sInfraIfIndex = netif_get_index(sNetifPtr);
-  
-  sInfraIfIcmp6Socket = CreateIcmp6Socket();
-  if(sInfraIfIcmp6Socket != -1)
-  {
-    netif_index_to_name(sInfraIfIndex, (char*)&ifr.ifr_name);
-    if(setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0)
+    if (netif == NULL)
     {
-      otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the interface");
-      return;
+        otCliOutputFormat("\r\nBorder Routing feature is disabled: infra interface is missing");
+        return;
     }
-  }
 
-  LOCK_TCPIP_CORE();
+    sInstance = aInstance;
+    sNetifPtr = netif;
 
-  struct raw_pcb* icmp6_raw_pcb = raw_new_ip_type(IPADDR_TYPE_V6, IP6_NEXTH_ICMP6);
-  raw_bind_netif(icmp6_raw_pcb, netif);
+    sInfraIfIndex = netif_get_index(sNetifPtr);
 
-  raw_recv(icmp6_raw_pcb, ReceiveIcmp6Message, NULL);
+    sInfraIfIcmp6Socket = CreateIcmp6Socket();
+    if (sInfraIfIcmp6Socket != -1)
+    {
+        netif_index_to_name(sInfraIfIndex, (char *)&ifr.ifr_name);
+        if (setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0)
+        {
+            otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the interface");
+            return;
+        }
+    }
 
-  UNLOCK_TCPIP_CORE();
+    LOCK_TCPIP_CORE();
 
+    struct raw_pcb *icmp6_raw_pcb = raw_new_ip_type(IPADDR_TYPE_V6, IP6_NEXTH_ICMP6);
+    raw_bind_netif(icmp6_raw_pcb, netif);
+
+    raw_recv(icmp6_raw_pcb, ReceiveIcmp6Message, NULL);
+
+    UNLOCK_TCPIP_CORE();
 }
 
 void InfraIfDeInit()
 {
-  if(sInfraIfIcmp6Socket != -1)
-  {
-    close(sInfraIfIcmp6Socket);
-    sInfraIfIcmp6Socket = -1;
-  }
+    if (sInfraIfIcmp6Socket != -1)
+    {
+        close(sInfraIfIcmp6Socket);
+        sInfraIfIcmp6Socket = -1;
+    }
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t             aInfraIfIndex,
-                                  const otIp6Address *aDestAddress,
-                                  const uint8_t *     aBuffer,
-                                  uint16_t            aBufferLength)
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t      *aBuffer,
+                                 uint16_t            aBufferLength)
 {
-  struct sockaddr_in6 dst = {0};
-  err_t sendErr;
+    struct sockaddr_in6 dst = {0};
+    err_t               sendErr;
 
-  dst.sin6_family = AF_INET6;
-  memcpy(&dst.sin6_addr.un.u32_addr, aDestAddress->mFields.m32, sizeof(dst.sin6_addr.un.u32_addr));
+    dst.sin6_family = AF_INET6;
+    memcpy(&dst.sin6_addr.un.u32_addr, aDestAddress->mFields.m32, sizeof(dst.sin6_addr.un.u32_addr));
 
-  dst.sin6_scope_id = sInfraIfIndex;
+    dst.sin6_scope_id = sInfraIfIndex;
 
-  sendErr = sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr*)&dst, sizeof(dst));
+    sendErr = sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr *)&dst, sizeof(dst));
 
-  return (sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED);
+    return (sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED);
 }
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
-    ip_addr_t searchedAddress = IPADDR6_INIT(0,0,0,0);
+    ip_addr_t searchedAddress = IPADDR6_INIT(0, 0, 0, 0);
     memcpy(ip_2_ip6(&searchedAddress), &aAddress->mFields.m32, sizeof(aAddress->mFields.m32));
 
-    return (netif_get_ip6_addr_match(sNetifPtr, (const ip6_addr_t*)&searchedAddress) > 0 ? true : false);
+    return (netif_get_ip6_addr_match(sNetifPtr, (const ip6_addr_t *)&searchedAddress) > 0 ? true : false);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -154,51 +152,51 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
 
 static int CreateIcmp6Socket()
 {
-  static struct sockaddr_in6 src = {0};
-  int sockdesc = -1;
+    static struct sockaddr_in6 src      = {0};
+    int                        sockdesc = -1;
 
-  if((sockdesc = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6)) < 0)
-  {
-    otCliOutputFormat("\r\nFailed to get socket descriptor");
-    return -1;
-  }
+    if ((sockdesc = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6)) < 0)
+    {
+        otCliOutputFormat("\r\nFailed to get socket descriptor");
+        return -1;
+    }
 
-  src.sin6_family = AF_INET6;
-  
-  inet_pton(AF_INET6, ip6addr_ntoa(netif_ip6_addr(sNetifPtr, 0)), &src.sin6_addr);
+    src.sin6_family = AF_INET6;
 
-  if(bind(sockdesc, (struct sockaddr*)&src, sizeof(src)) != 0)
-  {
-    otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the source address");
-    return -1;
-  }
-  return sockdesc;
+    inet_pton(AF_INET6, ip6addr_ntoa(netif_ip6_addr(sNetifPtr, 0)), &src.sin6_addr);
+
+    if (bind(sockdesc, (struct sockaddr *)&src, sizeof(src)) != 0)
+    {
+        otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the source address");
+        return -1;
+    }
+    return sockdesc;
 }
 
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr)
 {
-  (void)arg;
-  (void)pcb;
+    (void)arg;
+    (void)pcb;
 
-  size_t icmpv6_type_pos = 40;
-  otIp6Address  aPeerAddr;
+    size_t       icmpv6_type_pos = 40;
+    otIp6Address aPeerAddr;
 
-  uint8_t icmpv6_type = *(uint8_t*)(p->payload + icmpv6_type_pos);
+    uint8_t icmpv6_type = *(uint8_t *)(p->payload + icmpv6_type_pos);
 
-  switch(icmpv6_type)
-  {
+    switch (icmpv6_type)
+    {
     case ICMP6_TYPE_RS: /* Router solicitation */
     case ICMP6_TYPE_RA: /* Router advertisement */
     case ICMP6_TYPE_NA: /* Neighbor advertisement */
 
-      memcpy(aPeerAddr.mFields.m8, ip_2_ip6(addr), sizeof(ip6_addr_t));
-      otPlatInfraIfRecvIcmp6Nd(sInstance, sInfraIfIndex, &aPeerAddr, (const uint8_t *)((uint8_t*)p->payload + icmpv6_type_pos),
-                               p->len);
-    break;
+        memcpy(aPeerAddr.mFields.m8, ip_2_ip6(addr), sizeof(ip6_addr_t));
+        otPlatInfraIfRecvIcmp6Nd(sInstance, sInfraIfIndex, &aPeerAddr,
+                                 (const uint8_t *)((uint8_t *)p->payload + icmpv6_type_pos), p->len);
+        break;
 
     default:
-    break;
-  }
+        break;
+    }
 
-  return 0; // packet eaten = 0 => packet was not consumed by application
+    return 0; // packet eaten = 0 => packet was not consumed by application
 }

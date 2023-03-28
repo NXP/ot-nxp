@@ -42,40 +42,40 @@
 
 #include <assert.h>
 
-#include "lwip/tcpip.h"
-#include "lwip/nd6.h"
 #include "lwip/mld6.h"
+#include "lwip/nd6.h"
 #include "lwip/prot/dns.h"
 #include "lwip/prot/iana.h"
+#include "lwip/tcpip.h"
 #include "lwip/udp.h"
 
-#include "pin_mux.h"
 #include "board.h"
+#include "pin_mux.h"
 
 #include "infra_if.h"
 
 #ifdef OT_APP_BR_ETH_EN
 #include "ethernetif.h"
+#include "fsl_enet.h"
+#include "fsl_iomuxc.h"
 #include "fsl_phy.h"
 #include "fsl_phyksz8081.h"
-#include "fsl_iomuxc.h"
-#include "fsl_enet.h"
 #include "fsl_silicon_id.h"
 #endif
 
-#include <openthread/srp_server.h>
-#include <openthread/border_router.h>
-#include <openthread/border_routing.h>
-#include <openthread/thread.h>
-#include <openthread/cli.h>
-#include <openthread/udp.h>
-#include <openthread/tasklet.h>
 #include "openthread-system.h"
 #include <openthread-core-config.h>
+#include <openthread/border_router.h>
+#include <openthread/border_routing.h>
+#include <openthread/cli.h>
+#include <openthread/srp_server.h>
+#include <openthread/tasklet.h>
+#include <openthread/thread.h>
+#include <openthread/udp.h>
 
+#include "ot_lwip.h"
 #include "wpl.h"
 #include "common/code_utils.hpp"
-#include "ot_lwip.h"
 
 /* -------------------------------------------------------------------------- */
 /*                                 Definitions                                */
@@ -94,7 +94,7 @@
 #endif
 
 #ifndef OT_WIFI_CFG_TASK_SIZE
-#define OT_WIFI_CFG_TASK_SIZE ((configSTACK_DEPTH_TYPE)(4*1024) / sizeof(portSTACK_TYPE))
+#define OT_WIFI_CFG_TASK_SIZE ((configSTACK_DEPTH_TYPE)(4 * 1024) / sizeof(portSTACK_TYPE))
 #endif
 
 #if configAPPLICATION_ALLOCATED_HEAP
@@ -106,10 +106,10 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #endif
 
 /* Ethernet configuration. */
-#define EXAMPLE_PHY_ADDRESS  BOARD_ENET0_PHY_ADDRESS
-#define EXAMPLE_PHY_OPS      &phyksz8081_ops
+#define EXAMPLE_PHY_ADDRESS BOARD_ENET0_PHY_ADDRESS
+#define EXAMPLE_PHY_OPS &phyksz8081_ops
 #define EXAMPLE_PHY_RESOURCE &g_phy_resource
-#define EXAMPLE_CLOCK_FREQ   CLOCK_GetFreq(kCLOCK_IpgClk)
+#define EXAMPLE_CLOCK_FREQ CLOCK_GetFreq(kCLOCK_IpgClk)
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -117,9 +117,9 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 static TaskHandle_t sMainTask = NULL;
 
 #ifdef OT_APP_BR_ETH_EN
-static phy_handle_t phyHandle;
+static phy_handle_t           phyHandle;
 static phy_ksz8081_resource_t g_phy_resource;
-static struct netif sExtNetif;
+static struct netif           sExtNetif;
 #endif
 
 static struct netif *sExtNetifPtr;
@@ -128,7 +128,7 @@ static struct netif *sExtNetifPtr;
 static const ip_addr_t mdnsV6group = DNS_MQUERY_IPV6_GROUP_INIT;
 static struct udp_pcb *mdns_pcb;
 
-static otInstance * sInstance = NULL;
+static otInstance *sInstance = NULL;
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -137,8 +137,8 @@ static otInstance * sInstance = NULL;
 #ifdef OT_APP_BR_ETH_EN
 static status_t MDIO_Write(uint8_t phyAddr, uint8_t regAddr, uint16_t data);
 static status_t MDIO_Read(uint8_t phyAddr, uint8_t regAddr, uint16_t *pData);
-static void appConfigEnetHw();
-static void appConfigEnetIf();
+static void     appConfigEnetHw();
+static void     appConfigEnetIf();
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
@@ -148,7 +148,11 @@ static void appConfigWifiHw();
 #endif
 
 static void appMdnsRcvHook(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
-static void appMdnsTxHook(otMessage *aMessage, uint16_t aPeerPort, otIp6Address *aPeerAddr, uint16_t aSockPort, void * aContext);
+static void appMdnsTxHook(otMessage    *aMessage,
+                          uint16_t      aPeerPort,
+                          otIp6Address *aPeerAddr,
+                          uint16_t      aSockPort,
+                          void         *aContext);
 static void appMdnsProxyInit();
 static void appStartBrService();
 static void appOtInit();
@@ -163,7 +167,6 @@ static void mainloop(void *aContext);
 
 extern void otAppCliInit(otInstance *aInstance);
 extern void otSysRunIdleTask(void);
-
 
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
@@ -199,13 +202,13 @@ static void appConfigEnetHw()
 {
     /* Enet pins */
     BOARD_InitEnetPins();
-    
+
     gpio_pin_config_t gpio_config = {kGPIO_DigitalOutput, 0, kGPIO_NoIntmode};
-    
+
     /* Enet clock */
     const clock_enet_pll_config_t config = {.enableClkOutput = true, .enableClkOutput25M = false, .loopDivider = 1};
     CLOCK_InitEnetPll(&config);
-    
+
     IOMUXC_EnableMode(IOMUXC_GPR, kIOMUXC_GPR_ENET1TxClkOutputDir, true);
 
     GPIO_PinInit(GPIO1, 9, &gpio_config);
@@ -215,22 +218,23 @@ static void appConfigEnetHw()
     GPIO_WritePinOutput(GPIO1, 9, 0);
     SDK_DelayAtLeastUs(10000, CLOCK_GetFreq(kCLOCK_CpuClk));
     GPIO_WritePinOutput(GPIO1, 9, 1);
-    
+
     /* MDIO Init */
     (void)CLOCK_EnableClock(s_enetClock[ENET_GetInstance(ENET)]);
     ENET_SetSMI(ENET, EXAMPLE_CLOCK_FREQ, false);
-    
+
     g_phy_resource.read  = MDIO_Read;
     g_phy_resource.write = MDIO_Write;
 }
 
 static void appConfigEnetIf()
 {
-    ethernetif_config_t enet_config = {.phyHandle   = &phyHandle,
-                                       .phyAddr     = EXAMPLE_PHY_ADDRESS,
-                                       .phyOps      = EXAMPLE_PHY_OPS,
-                                       .phyResource = EXAMPLE_PHY_RESOURCE,
-                                       .srcClockHz  = EXAMPLE_CLOCK_FREQ,
+    ethernetif_config_t enet_config = {
+        .phyHandle   = &phyHandle,
+        .phyAddr     = EXAMPLE_PHY_ADDRESS,
+        .phyOps      = EXAMPLE_PHY_OPS,
+        .phyResource = EXAMPLE_PHY_RESOURCE,
+        .srcClockHz  = EXAMPLE_CLOCK_FREQ,
     };
 
     sExtNetifPtr = &sExtNetif;
@@ -253,16 +257,15 @@ static void wifiLinkCB(bool up)
     otCliOutputFormat("Wi-fi link is now %s\r\n", up ? "up" : "down");
 }
 
-static void appConfigwifiIfTask(void * args)
+static void appConfigwifiIfTask(void *args)
 {
     OT_UNUSED_VARIABLE(args);
     wpl_ret_t ret;
 
     ret = WPL_Join("my_net");
-    if(ret != WPLRET_SUCCESS)
+    if (ret != WPLRET_SUCCESS)
     {
-        otCliOutputFormat("WPL_Join() to '%s' / '%s' failed with code %d\r\n",
-                          WIFI_SSID, WIFI_PASSWORD, ret);
+        otCliOutputFormat("WPL_Join() to '%s' / '%s' failed with code %d\r\n", WIFI_SSID, WIFI_PASSWORD, ret);
         VerifyOrExit(ret != WPLRET_SUCCESS);
     }
 
@@ -283,7 +286,7 @@ exit:
 
 void tcpip_init_wifi()
 {
-    //dummy function part of the wifi port hack...
+    // dummy function part of the wifi port hack...
 }
 
 static void appConfigWifiIf()
@@ -291,37 +294,33 @@ static void appConfigWifiIf()
     wpl_ret_t ret;
 
     ret = WPL_Init();
-    if(ret != WPLRET_SUCCESS)
+    if (ret != WPLRET_SUCCESS)
     {
         otCliOutputFormat("WPL_Init() failed with code %d\r\n", ret);
         VerifyOrExit(ret != WPLRET_SUCCESS);
     }
 
     ret = WPL_Start(&wifiLinkCB);
-    if(ret != WPLRET_SUCCESS)
+    if (ret != WPLRET_SUCCESS)
     {
         otCliOutputFormat("WPL_Start() failed with code %d\r\n", ret);
         VerifyOrExit(ret != WPLRET_SUCCESS);
     }
 
     ret = WPL_AddNetwork(WIFI_SSID, WIFI_PASSWORD, "my_net");
-    if(ret != WPLRET_SUCCESS)
+    if (ret != WPLRET_SUCCESS)
     {
         otCliOutputFormat("WPL_AddNetwork() failed with code %d\r\n", ret);
         VerifyOrExit(ret != WPLRET_SUCCESS);
     }
 
-    if(
-        xTaskCreate(&appConfigwifiIfTask,
-                    "wifi-cfg", OT_WIFI_CFG_TASK_SIZE,
-                    NULL, OT_WIFI_CFG_TASK_PRIORITY,
-                    NULL) != pdPASS
-        )
+    if (xTaskCreate(&appConfigwifiIfTask, "wifi-cfg", OT_WIFI_CFG_TASK_SIZE, NULL, OT_WIFI_CFG_TASK_PRIORITY, NULL) !=
+        pdPASS)
     {
         otCliOutputFormat("appConfigwifiIfTask creation failed with code %d\r\n", ret);
     }
 
-    sExtNetifPtr =  netif_get_by_index(netif_name_to_index("ml1"));
+    sExtNetifPtr = netif_get_by_index(netif_name_to_index("ml1"));
 
 exit:
     return;
@@ -329,11 +328,11 @@ exit:
 
 static void appConfigWifiHw()
 {
-    #if !defined(RW610)
+#if !defined(RW610)
     /* Configure SDHC slot pins used for Wi-Fi */
     BOARD_InitUSDHCPins();
     BOARD_InitMurataModulePins();
-    #endif
+#endif
 }
 #endif
 
@@ -341,10 +340,10 @@ static void appMdnsRcvHook(void *arg, struct udp_pcb *pcb, struct pbuf *p, const
 {
     /* Inject the packet in the OT queue */
 
-    const otMessageSettings msgSettings = { false, OT_MESSAGE_PRIORITY_NORMAL };
-    otMessage * otUdpPkt = otIp6NewMessageFromBuffer(sInstance, p->payload, p->len, &msgSettings);
+    const otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
+    otMessage              *otUdpPkt    = otIp6NewMessageFromBuffer(sInstance, p->payload, p->len, &msgSettings);
 
-    otIp6Address  aPeerAddr;
+    otIp6Address aPeerAddr;
     memcpy(aPeerAddr.mFields.m8, ip_2_ip6(addr), sizeof(ip6_addr_t));
 
     if (otUdpPkt != NULL)
@@ -357,12 +356,16 @@ static void appMdnsRcvHook(void *arg, struct udp_pcb *pcb, struct pbuf *p, const
     pbuf_free(p);
 }
 
-static void appMdnsTxHook(otMessage *aMessage, uint16_t aPeerPort, otIp6Address *aPeerAddr, uint16_t aSockPort, void * aContext)
+static void appMdnsTxHook(otMessage    *aMessage,
+                          uint16_t      aPeerPort,
+                          otIp6Address *aPeerAddr,
+                          uint16_t      aSockPort,
+                          void         *aContext)
 {
-    ip_addr_t lwipAddr = IPADDR6_INIT(0,0,0,0);
+    ip_addr_t lwipAddr = IPADDR6_INIT(0, 0, 0, 0);
     memcpy(ip_2_ip6(&lwipAddr), aPeerAddr->mFields.m8, sizeof(ip6_addr_t));
 
-    //The LWIP address needs to be intilialized correctly with a zone
+    // The LWIP address needs to be intilialized correctly with a zone
     if (ip_addr_ismulticast(&lwipAddr))
     {
         ip6_addr_assign_zone(ip_2_ip6(&lwipAddr), IP6_MULTICAST, sExtNetifPtr);
@@ -385,7 +388,7 @@ static void appMdnsProxyInit()
 {
     mld6_joingroup_netif(sExtNetifPtr, ip_2_ip6(&mdnsV6group));
 
-//    LWIP_MEMPOOL_INIT(MDNS_PKTS);
+    //    LWIP_MEMPOOL_INIT(MDNS_PKTS);
     mdns_pcb = udp_new_ip_type(IPADDR_TYPE_ANY);
 
     udp_bind(mdns_pcb, IP_ANY_TYPE, LWIP_IANA_PORT_MDNS);
@@ -397,8 +400,8 @@ static void appMdnsProxyInit()
 static void appStartBrService()
 {
     const uint8_t staticIpidx = 1;
-    otIp6Prefix onLinkPrefix;
-    ip_addr_t lwipAddr = IPADDR6_INIT(0,0,0,0);
+    otIp6Prefix   onLinkPrefix;
+    ip_addr_t     lwipAddr = IPADDR6_INIT(0, 0, 0, 0);
 
     otBorderRoutingInit(sInstance, netif_get_index(sExtNetifPtr), true);
 
@@ -406,16 +409,16 @@ static void appStartBrService()
 
     otSrpServerSetEnabled(sInstance, true);
 
-    InfraIfInit(sInstance, sExtNetifPtr);     
+    InfraIfInit(sInstance, sExtNetifPtr);
 
-   while (OT_ERROR_INVALID_STATE == otBorderRoutingGetOnLinkPrefix(sInstance, &onLinkPrefix))
-   {
-    ;
-   }
+    while (OT_ERROR_INVALID_STATE == otBorderRoutingGetOnLinkPrefix(sInstance, &onLinkPrefix))
+    {
+        ;
+    }
 
     memcpy(ip_2_ip6(&lwipAddr), &onLinkPrefix.mPrefix.mFields.m8, sizeof(onLinkPrefix.mPrefix));
-    add_static_ipv6(sExtNetifPtr, staticIpidx, ip6addr_ntoa((const ip6_addr_t*)&lwipAddr));
-    
+    add_static_ipv6(sExtNetifPtr, staticIpidx, ip6addr_ntoa((const ip6_addr_t *)&lwipAddr));
+
     /* Subscribe to mdns-sd multicast address FF02::FB */
     appMdnsProxyInit();
 }
@@ -546,7 +549,7 @@ void vApplicationMallocFailedHook(void)
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     size_t total_size = aNum * aSize;
-    void * ptr        = pvPortMalloc(total_size);
+    void  *ptr        = pvPortMalloc(total_size);
     if (ptr)
     {
         memset(ptr, 0, total_size);

@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __OT_INFRA_IF_H__
 #define __OT_INFRA_IF_H__
 
@@ -38,4 +37,3 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif);
 void InfraIfDeInit();
 
 #endif /* __OT_INFRA_IF_H__ */
-
