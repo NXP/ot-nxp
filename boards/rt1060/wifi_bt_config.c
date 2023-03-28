@@ -6,8 +6,8 @@
  */
 
 #include "wifi_bt_config.h"
-#include "pin_mux.h"
 #include "fsl_gpio.h"
+#include "pin_mux.h"
 
 /*******************************************************************************
  * Definitions

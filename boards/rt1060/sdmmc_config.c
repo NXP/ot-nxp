@@ -29,9 +29,9 @@ SDK_ALIGN(static uint8_t s_sdmmcCacheLineAlignBuffer[BOARD_SDMMC_DATA_BUFFER_ALI
 #endif
 #if defined(SDIO_ENABLED) || defined(SD_ENABLED)
 static sd_detect_card_t s_cd;
-static sd_io_voltage_t s_ioVoltage = {
-    .type = BOARD_SDMMC_SD_IO_VOLTAGE_CONTROL_TYPE,
-    .func = NULL,
+static sd_io_voltage_t  s_ioVoltage = {
+     .type = BOARD_SDMMC_SD_IO_VOLTAGE_CONTROL_TYPE,
+     .func = NULL,
 };
 #endif
 static sdmmchost_t s_host;
@@ -57,7 +57,6 @@ uint32_t BOARD_USDHC1ClockConfiguration(void)
 
     return 396000000U / 2U;
 }
-
 
 #if defined(SDIO_ENABLED) || defined(SD_ENABLED)
 bool BOARD_SDCardGetDetectStatus(void)
