@@ -111,6 +111,12 @@ otError otPlatUartEnable(void)
     otError error = OT_ERROR_FAILED;
 
     uartConfig.clockRate = BOARD_APP_UART_CLK_FREQ;
+
+    /*
+     * Make sure to disable interrupts while initializating the serial manager interface
+     * Some issues could happen if a UART IRQ is firing during serial manager initialization
+     */
+    OSA_InterruptDisable();
     do
     {
         if (SerialManager_Init((serial_handle_t)otCliSerialHandle, &s_serialManagerConfig) !=
@@ -132,6 +138,7 @@ otError otPlatUartEnable(void)
         otPlatUartEnabled = true;
         error             = OT_ERROR_NONE;
     } while (0);
+    OSA_InterruptEnable();
     return error;
 }
 
