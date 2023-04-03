@@ -270,7 +270,6 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PrivateCrt.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PrivateCrt_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PrivatePlain.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PrivatePlain_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PssEncode.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PssVerify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Public.c
