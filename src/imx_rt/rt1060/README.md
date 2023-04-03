@@ -1,4 +1,4 @@
-# OpenThread on NXP RT1060 (host) + K32W061 (rcp) example
+# OpenThread on NXP RT1060 (host) + transceiver (rcp) example
 
 This directory contains example platform drivers for the [NXP RT1060][rt1060]
 platform.
@@ -8,6 +8,12 @@ to support OpenThread. As a result, the example platform drivers do not
 necessarily highlight the platform's full capabilities.
 
 [rt1060]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1060-crossover-mcu-with-arm-cortex-m7-core:i.MX-RT1060
+
+## Configuration(s) supported
+
+Here are listed configurations that allow to support Openthread on RT1060:
+
+- RT1060 + K32W0
 
 ## Prerequisites
 
@@ -32,7 +38,7 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download the NXP MCUXpresso git SDK 2.13.0
+- Download the NXP MCUXpresso git SDK
   and associated middleware from GitHub using the west tool.
 
 ```
@@ -42,7 +48,7 @@ $ west init -l manifest --mf west.yml
 $ west update
 ```
 
-In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
+In case there are local modifications to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
 ```
 bash
@@ -50,29 +56,7 @@ $ cd third_party/rt1060_sdk/repo
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
-## Building the examples
-
-```bash
-$ cd <path-to-ot-nxp>
-$ ./script/build_rt1060
-```
-
-Note : If the EVK-MIMXRT1060 board is used instead of MIMXRT1060-EVKB, make sure
-to specify it using the following build command :
-
-```bash
-$ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
-```
-
-After a successful build, the ot-cli-rt1060 FreeRTOS version could be found in
-`build_rt1060` and include FTD (Full Thread Device).
-
-Notes:
-
-- The K32W0 RCP firmware should be built before building the RT1060 image.
-- FreeRTOS is required to be able to build the IMXRT1060 platform files.
-
-## Hardware requirements
+## Hardware requirements RT1060 + K32W0
 
 Host part:
 
@@ -87,7 +71,7 @@ Note : The pin connections between the boards are slightly different according
 to which version of the board is used (MIMXRT1060-EVKB or EVK-MIMXRT1060).The
 different settings are described below.
 
-## Board settings for MIMXRT1060-EVKB
+### Board settings (Spinel over UART)
 
 The below table explains pin settings (UART settings) to connect the
 evkbmimxrt1060 (host) to a k32w061 transceiver (rcp).
@@ -106,11 +90,10 @@ The below picture shows pins connections for the EVK-MIMXRT1060.
 
 ![rt1060_k32w061_pin_settings](../../../doc/img/imxrt1060/rt1060_k32w061_pin_settings.jpg)
 
-## Flash Binaries
+### Genrating a K32W0 OT-RCP transceiver image
 
-### K32W061 OT-RCP transceiver image
-
-An ot-rcp image has to be built. For that, it is recommended to follow the [K32W061
+To target a RT1060 + K32W0 configuration, before building any Openthread host applications, it is required to generate a K32W0 RCP image.
+To know how to build an Openthread K32W0 application it is recommended to follow the [K32W061
 Readme][k32w061-readme].
 
 To avoid to have to rebuild all K32W061 application, it is recommended to build only the ot_rcp version using the below command:
@@ -120,12 +103,37 @@ $ ./script/build_k32w061 ot_rcp_only_uart_flow_control
 ```
 
 After a successful build, application binaries will be generated in
-`ot-nxp/build_k32w061/rcp_only_uart_flow_control/bin` and would contain the file called "rcp_name.bin.h" that would be used by the RT1060 to download the K32W061 RCP firmware. In fact, the Over The Wire (OTW) protocol (over UART) would be used to download the k32w0 transceiver image from the RT1060 to the its internal flash.
+`ot-nxp/build_k32w061/rcp_only_uart_flow_control/bin` and would contain the file called "rcp_name.bin.h" that would be used by the RT1060 to download the K32W061 RCP firmware. In fact the RT1060 host application is in charge of storing the K32W0 firmware in its flash to be able to use the `The Over The Wire (OTW) protocol (over UART)` to download (at host startup) the k32w0 transceiver image from the host to the K32W0 internal flash. For more information on the k32w0 OTW protocol, user can consult the doxygen header of the file located in `<ot_nxp>/third_party/rt1060_sdk/repo/middleware/wireless/framework/OTW/k32w0_transceiver/fwk_otw.c`.
 
 [k32w061-readme]: ../../k32w0/k32w061/README.md
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
-### Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
+### Building the freeRTOS ot-cli example
+
+To target the RT1060 + K32W0 configuration, before building any Openthread host applications make sure to have correctly generated a K32W0 RCP binary.
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060
+```
+
+Note : The option `-DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h` could be added to indicate the path of the k32w0 transceiver to use. If not set, the binary file located in "<ot_nxp>/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" will be used.
+
+```bash
+$ ./script/build_rt1060 -DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h
+```
+
+Note : If the EVK-MIMXRT1060 board is used instead of MIMXRT1060-EVKB, make sure
+to specify it using the following build command :
+
+```bash
+$ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
+```
+
+After a successful build, the ot-cli-rt1060.elf FreeRTOS version could be found in
+`build_rt1060/bin` and include support of the FTD (Full Thread Device) role.
+
+## Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using
 [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
@@ -181,7 +189,7 @@ existing debug configaturation.
 2. Right click on the "Hello Word" debug configuration and click on "Duplicate".
 3. Rename the Duplicated debug configuration "ot-cli".
 4. In the "C/C++ Application", click on "Browse" and select the ot-cli-rt1060.elf
-   app (should be located in "ot-nxp/build_rt1060/bin/ot-cli-rt1060.elf"). Then click on
+   app for the application targeted. Then click on
    Apply and Save.
 5. Click on "Organize Favorites".
    ![MCU_Sett](../../../doc/img/imxrt1060/organize_favorites.png)
