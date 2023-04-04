@@ -65,6 +65,14 @@ $ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_rw612
 ```
 
+To build for a specific device revision such as A0:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ ./script/build_rw612 -DOT_NXP_DEVICE_REVISION=A0
+```
+
 ### Windows
 
 ```bash

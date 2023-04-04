@@ -456,6 +456,13 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
 )
 
+if(OT_NXP_DEVICE_REVISION MATCHES "A0")
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+        -DRW610_A1=0
+    )
+endif()
+
 target_compile_options(${NXP_DRIVER_LIB}
     PRIVATE
         ${OT_CFLAGS}
