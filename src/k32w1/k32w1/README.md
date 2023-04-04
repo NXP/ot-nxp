@@ -38,7 +38,7 @@ $ export NXP_K32W1_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_K32W1
 ```
 
-After a successful build, the `elf` and `srec` files are found in `build_k32w1/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications. 
+After a successful build, the `elf` and `srec` files are found in `build_k32w1/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications.
 NCP variants and also an RCP image is generated.
 
 ### Extracting the binaries from the elf files
@@ -55,7 +55,7 @@ $ arm-none-eabi-objcopy -O srec ot-cli-ftd ot-cli-ftd.srec
 
 Two images must be written to the board: one for the host (CM33) and one for the NBU (CM3).
 
-The image needed on the host side is the one generated in `build_k32w1/bin` while the one needed on the NBU side can be found in the downloaded NXP-SDK package at path -	`middleware\wireless\ieee-802.15.4\bin\k32w1\k32w1_nbu_ble_15_4_dyn_a1.sb3`.
+The image needed on the host side is the one generated in `build_k32w1/bin` while the one needed on the NBU side can be found in the downloaded NXP-SDK package at path - `middleware\wireless\ieee-802.15.4\bin\k32w1\k32w1_nbu_ble_15_4_dyn_a1.sb3`.
 
 ### Flashing the NBU image
 
@@ -67,10 +67,9 @@ C:\nxp\blhost_2.6.7> blhost.exe -p COM50 -- receive-sb-file .\k32w1_nbu_ble_15_4
 
 Please note that COM50 should be replaced with the COM port that corresponds to the K32W1 device.
 
-
 ### Flashing the host image
 
-Host image is the one found under `build_k32w1/bin`. It should be written after each build process. 
+Host image is the one found under `build_k32w1/bin`. It should be written after each build process.
 
 If debugging is needed then jump directly to the [Debugging](#debugging) section. Otherwise, if only flashing is needed then [JLink 7.84b](https://www.segger.com/downloads/jlink/) can be used:
 
