@@ -84,16 +84,16 @@ void otSysInit(int argc, char *argv[])
 
     otPlatLogInit();
 
-#ifdef OT_PLAT_SYS_CRYPTO_INIT
-    CRYPTO_InitHardware();
-#endif
-
 #ifdef MULTICORE_LOGGING_ENABLED
     multicore_init();
 #endif
 
     otPlatRadioInitSpinelInterface();
     PLATFORM_InitOt();
+
+#ifdef OT_PLAT_SYS_CRYPTO_INIT
+    CRYPTO_InitHardware();
+#endif
 
     otPlatRadioInit();
     otPlatAlarmInit();
