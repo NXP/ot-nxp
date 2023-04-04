@@ -274,6 +274,8 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PssVerify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Public.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Public_FUP.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_RemoveBlinding.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_RemoveBlinding_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Sign.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPQDistance.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPQDistance_FUP.c
