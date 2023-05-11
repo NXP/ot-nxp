@@ -156,7 +156,7 @@ create_directory_and_build()
         build_ot_rcp_libs_only_uart_flow_control "$2"
         build_ot_rcp_libs_only_spi "$2"
     elif [ "$1" == 'ot_rcp_libs_only_uart_flow_control' ]; then
-        build_ot_rcp_libs_only_uart_flow_control $2
+        build_ot_rcp_libs_only_uart_flow_control "$2"
     elif [ "$1" == 'ot_rcp_libs_only_spi' ]; then
         build_ot_rcp_libs_only_spi "$2"
     elif [ "$1" == 'ot_rcp_libs_with_mfg' ]; then

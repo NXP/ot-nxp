@@ -150,14 +150,14 @@ sign()
 
 signGenerateHashAndCfile()
 {
-    for FILENAME in $1/*.elf; do
-        python3 "$NXP_K32W0_SDK_ROOT"/tools/imagetool/dk6_image_tool.py -k $FILENAME
-        arm-none-eabi-objcopy -O binary $FILENAME $FILENAME.bin
-        xxd -i $FILENAME.bin >$FILENAME.bin.h
-        sed -i "s/unsigned/const unsigned/g" $FILENAME.bin.h
+    for FILENAME in "$1"/*.elf; do
+        python3 "$NXP_K32W0_SDK_ROOT"/tools/imagetool/dk6_image_tool.py -k "$FILENAME"
+        arm-none-eabi-objcopy -O binary "$FILENAME" "$FILENAME".bin
+        xxd -i "$FILENAME".bin >"$FILENAME".bin.h
+        sed -i "s/unsigned/const unsigned/g" "$FILENAME".bin.h
         variableName=$(echo "$FILENAME.bin" | sed -e "s/\//\_/g" | sed -e "s/\-/\_/g" | sed -e "s/\./\_/g")
-        echo ${variableName}
-        sed -i "s/${variableName}/ot_rcp/g" $FILENAME.bin.h
+        echo "${variableName}"
+        sed -i "s/${variableName}/ot_rcp/g" "$FILENAME".bin.h
     done
 }
 

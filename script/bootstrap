@@ -43,12 +43,12 @@ install_packages_apt()
 {
     if [[ ${CMAKE_CURRENT_VERSION} < ${CMAKE_MINIMAL_VERSION} ]]; then
         sudo apt-get remove -y cmake
-        wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_MINIMAL_VERSION}/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
-        chmod +x cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
-        sudo sh cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh --prefix=/usr/share --include-subdir
-        sudo ln -sf /usr/share/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}/bin/* /usr/bin/
+        wget https://github.com/Kitware/CMake/releases/download/v"${CMAKE_MINIMAL_VERSION}"/cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
+        chmod +x cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
+        sudo sh cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh --prefix=/usr/share --include-subdir
+        sudo ln -sf /usr/share/cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}"/bin/* /usr/bin/
         cmake --version
-        rm cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
+        rm cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
     fi
 }
 
@@ -56,12 +56,12 @@ install_packages_brew()
 {
     if [[ ${CMAKE_CURRENT_VERSION} < ${CMAKE_MINIMAL_VERSION} ]]; then
         brew uninstall cmake
-        wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_MINIMAL_VERSION}/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
-        chmod +x cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
-        sudo sh cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh --prefix=/usr/share --include-subdir
-        sudo ln -sf /usr/share/cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}/bin/* /usr/bin/
+        wget https://github.com/Kitware/CMake/releases/download/v"${CMAKE_MINIMAL_VERSION}"/cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
+        chmod +x cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
+        sudo sh cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh --prefix=/usr/share --include-subdir
+        sudo ln -sf /usr/share/cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}"/bin/* /usr/bin/
         cmake --version
-        rm cmake-${CMAKE_MINIMAL_VERSION}-linux-${ARCH}.sh
+        rm cmake-"${CMAKE_MINIMAL_VERSION}"-linux-"${ARCH}".sh
     fi
 }
 
