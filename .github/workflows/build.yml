@@ -83,10 +83,6 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo pip3 install -U west
-        cd third_party/rt1060_sdk/repo
-        west init -l manifest --mf west.yml
-        west update
         cd /tmp
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lib32z1 ninja-build python3-setuptools
@@ -100,23 +96,15 @@ jobs:
         sudo pip3 install pycryptodome
         wget https://cache.nxp.com/lgfiles/bsps/SDK_2_6_11_K32W061DK6.zip
         unzip SDK_2_6_11_K32W061DK6.zip -d SDK_2_6_11_K32W061DK6
+        unzip SDK_2_6_11_K32W061DK6.zip -d SDK_2_6_11_JN5189
         rm -rf SDK_2_6_11_K32W061DK6.zip
         mv -f SDK_2_6_11_K32W061DK6 sdk_k32w061
-        cd /tmp
-        mkdir -p sdk_jn5189
-        cd sdk_jn5189
-        wget https://mcuxpresso.nxp.com/eclipse/sdk/2.6.4/plugins/com.nxp.mcuxpresso.sdk.sdk_2.x_jn5189dk6_2.6.4.201911251446.jar
-        unzip com.nxp.mcuxpresso.sdk.sdk_2.x_jn5189dk6_2.6.4.201911251446.jar
-        rm -rf com.nxp.mcuxpresso.sdk.sdk_2.x_jn5189dk6_2.6.4.201911251446.jar
-        cd sdks
-        unzip 02acef84909cb653e56c7d331710a9d8.zip
-        rm -rf 02acef84909cb653e56c7d331710a9d8.zip
-         
+        mv -f SDK_2_6_11_JN5189 sdk_jn5189         
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         export NXP_K32W0_SDK_ROOT=/tmp/sdk_k32w061/
-        export NXP_JN5189_SDK_ROOT=/tmp/sdk_jn5189/sdks/
+        export NXP_JN5189_SDK_ROOT=/tmp/sdk_jn5189/
         chmod +x $NXP_K32W0_SDK_ROOT/tools/imagetool/sign_images.sh
         chmod +x $NXP_JN5189_SDK_ROOT/tools/imagetool/sign_images.sh
         script/test
