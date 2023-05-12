@@ -65,9 +65,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - gcc_ver: 5
-            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/5_4-2016q3/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
-            gcc_extract_dir: gcc-arm-none-eabi-5_4-2016q3
           - gcc_ver: 6
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-6-2017-q2-update
@@ -77,6 +74,9 @@ jobs:
           - gcc_ver: 9
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
+          - gcc_ver: 10
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-10-2020-q4-major
     steps:
     - uses: actions/checkout@v2
       with:
@@ -90,13 +90,14 @@ jobs:
         cd /tmp
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lib32z1 ninja-build python3-setuptools
+        sudo apt-get install dos2unix
         wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
         # use the minimal required cmake version
         sudo pip3 install -U scikit-build
-        sudo pip3 install -U cmake==3.13
-        cmake --version | grep 3.13
-        sudo pip3 install pycrypto
+        sudo pip3 install -U cmake==3.21
+        sudo pip3 install lxml
+        cmake --version | grep 3.21
         sudo pip3 install pycryptodome
         wget https://cache.nxp.com/lgfiles/bsps/SDK_2_6_11_K32W061DK6.zip
         unzip SDK_2_6_11_K32W061DK6.zip -d SDK_2_6_11_K32W061DK6
@@ -118,5 +119,9 @@ jobs:
         export NXP_K32W0_SDK_ROOT=/tmp/sdk_k32w061/
         export NXP_JN5189_SDK_ROOT=/tmp/sdk_jn5189/sdks/
         chmod +x $NXP_K32W0_SDK_ROOT/tools/imagetool/sign_images.sh
+        chmod +x $NXP_K32W0_SDK_ROOT/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
+        dos2unix $NXP_K32W0_SDK_ROOT/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
+        chmod +x $NXP_K32W0_SDK_ROOT/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
+        dos2unix $NXP_K32W0_SDK_ROOT/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
         chmod +x $NXP_JN5189_SDK_ROOT/tools/imagetool/sign_images.sh
         script/test
