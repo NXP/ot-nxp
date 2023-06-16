@@ -394,4 +394,15 @@
 #define OPENTHREAD_CONFIG_MLR_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+ *
+ * Define to 1 to enable MAC filter support.
+ *
+ */
+
+#ifndef OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#define OPENTHREAD_CONFIG_MAC_FILTER_ENABLE 1
+#endif
+
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
