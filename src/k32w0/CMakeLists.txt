@@ -94,6 +94,12 @@ if (NO_THREAD_1_3_FLAGS)
     )
 endif()
 
+if (OT_ANTENNA_DIVERSITY)
+    list(APPEND OT_PLATFORM_DEFINES
+        "ANTENNA_DIVERSITY_ENABLE"
+)
+endif()
+
 set(K32W0_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms

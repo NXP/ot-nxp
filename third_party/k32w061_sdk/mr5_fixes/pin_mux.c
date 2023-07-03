@@ -320,6 +320,99 @@ static void ConfigureDongleLEDs(void)
     IOCON_PinMuxSet(IOCON, 0U, 10U, port0_pin10_config);
 }
 
+#ifdef ANTENNA_DIVERSITY_ENABLE
+/*!
+ * @brief
+ * Select Analog/Digital Mode.
+ * 0 Analog mode.
+ * 1 Digital mode.
+ * When in analog mode, the receiver path in the IO cell is disabled.
+ * In this mode, it is essential that the digital function (e.
+ * g.
+ * GPIO) is not configured as an output.
+ * Otherwise it may conflict with analog stuff (loopback of digital on analog input).
+ * In other words, the digital output is not automatically disabled when the IO is in analog mode.
+ * As a consequence, it is not possible to disable the receiver path when the IO is used for digital output
+ * purpose.
+ * : Digital mode, digital input is enabled.
+ */
+#define PIO0_6_DIGIMODE_DIGITAL 0x01u
+/*!
+ * @brief Select digital function assigned to this pin.: Alternative connection 7. */
+#define PIO0_6_FUNC_ALT7 0x07u
+/*!
+ * @brief
+ * Select Analog/Digital Mode.
+ * 0 Analog mode.
+ * 1 Digital mode.
+ * When in analog mode, the receiver path in the IO cell is disabled.
+ * In this mode, it is essential that the digital function (e.
+ * g.
+ * GPIO) is not configured as an output.
+ * Otherwise it may conflict with analog stuff (loopback of digital on analog input).
+ * In other words, the digital output is not automatically disabled when the IO is in analog mode.
+ * As a consequence, it is not possible to disable the receiver path when the IO is used for digital output
+ * purpose.
+ * : Digital mode, digital input is enabled.
+ */
+#define PIO0_7_DIGIMODE_DIGITAL 0x01u
+/*!
+ * @brief Select digital function assigned to this pin.: Alternative connection 7. */
+#define PIO0_7_FUNC_ALT7 0x07u
+
+static void ConfigureAntennaDiversityPins(void)
+{
+   /* Enables the clock for the I/O controller block. 0: Disable. 1: Enable.: 0x01u */
+    CLOCK_EnableClock(kCLOCK_Iocon);
+
+    IOCON->PIO[0][6] = ((IOCON->PIO[0][6] &
+                         /* Mask bits to zero which are setting */
+                         (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
+
+                        /* Select digital function assigned to this pin.
+                         * : PORT06 (pin 9) is configured as ADE. */
+                        | IOCON_PIO_FUNC(PIO0_6_FUNC_ALT7)
+
+                        /* Select Analog/Digital Mode.
+                         * 0 Analog mode.
+                         * 1 Digital mode.
+                         * When in analog mode, the receiver path in the IO cell is disabled.
+                         * In this mode, it is essential that the digital function (e.
+                         * g.
+                         * GPIO) is not configured as an output.
+                         * Otherwise it may conflict with analog stuff (loopback of digital on analog input).
+                         * In other words, the digital output is not automatically disabled when the IO is in
+                         * analog mode.
+                         * As a consequence, it is not possible to disable the receiver path when the IO is used
+                         * for digital output purpose.
+                         * : Digital mode, digital input is enabled. */
+                        | IOCON_PIO_DIGIMODE(PIO0_6_DIGIMODE_DIGITAL));
+
+    IOCON->PIO[0][7] = ((IOCON->PIO[0][7] &
+                         /* Mask bits to zero which are setting */
+                         (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
+
+                        /* Select digital function assigned to this pin.
+                         * : PORT07 (pin 10) is configured as ADO. */
+                        | IOCON_PIO_FUNC(PIO0_7_FUNC_ALT7)
+
+                        /* Select Analog/Digital Mode.
+                         * 0 Analog mode.
+                         * 1 Digital mode.
+                         * When in analog mode, the receiver path in the IO cell is disabled.
+                         * In this mode, it is essential that the digital function (e.
+                         * g.
+                         * GPIO) is not configured as an output.
+                         * Otherwise it may conflict with analog stuff (loopback of digital on analog input).
+                         * In other words, the digital output is not automatically disabled when the IO is in
+                         * analog mode.
+                         * As a consequence, it is not possible to disable the receiver path when the IO is used
+                         * for digital output purpose.
+                         * : Digital mode, digital input is enabled. */
+                        | IOCON_PIO_DIGIMODE(PIO0_7_DIGIMODE_DIGITAL));
+}
+#endif /* ANTENNA_DIVERSITY_ENABLE */
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -337,6 +430,10 @@ void BOARD_InitPins(void)
 
     /* Debugger signals */
     ConfigureDebugPort();
+
+#if ANTENNA_DIVERSITY_ENABLE
+    ConfigureAntennaDiversityPins();
+#endif
 
 #if USE_USB_DONGLE
     ConfigureDongleLEDs();

@@ -29,6 +29,7 @@
 option(OT_RCP_FLOW_CONTROL "enable UART flow control for RCP" OFF)
 option(OT_CLOCK_32K_SOURCE_FRO "enable using the FRO_32K instead of the XTAL as a clock source" OFF)
 option(OT_RCP_UART_DMA "enable UART DMA for RCP" OFF)
+option(OT_ANTENNA_DIVERSITY "enable Antenna Diversity feature" OFF)
 
 SET_SOURCE_FILES_PROPERTIES($ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/gcc/startup_K32W061.c PROPERTIES LANGUAGE CXX)
 

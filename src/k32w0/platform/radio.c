@@ -154,6 +154,21 @@ extern void BOARD_GetCoexIoCfg(void **rfDeny, void **rfActive, void **rfStatus);
 #define DELAY_RX_CH_REVERT 0 /* usec */
 #endif
 
+#ifdef ANTENNA_DIVERSITY_ENABLE
+/* Antenna Diversity feature requires enabling the ADO/ADE functions on the pins connected to the RF switch.
+ * The K32W0x1 provides an output (ADO) on one of DIO7, DIO9 or DIO19 and optionally its complement (ADE) on
+ * DIO6 that can be used to control an antenna switch; this enables antenna diversity to be implemented easily.
+ */
+#ifdef MAC_PROTO_TAG
+#undef vMMAC_EnableAntennaDiversity
+#undef vMMAC_DisableAntennaDiversity
+#define vMMAC_EnableAntennaDiversity vMMAC_EnableAntennaDiversity
+#define vMMAC_DisableAntennaDiversity vMMAC_DisableAntennaDiversity
+void vMMAC_EnableAntennaDiversity(void);
+void vMMAC_DisableAntennaDiversity(void);
+#endif
+#endif /* ANTENNA_DIVERSITY_ENABLE */
+
 /* Structures */
 typedef struct
 {
@@ -495,6 +510,11 @@ otError otPlatRadioEnable(otInstance *aInstance)
         vMMAC_SetRxShortAddr(sShortAddress);
     }
 
+#ifdef ANTENNA_DIVERSITY_ENABLE
+    /* Enabling this feature requires setting correct pin config to ADE/ADO pins */
+    vMMAC_EnableAntennaDiversity();
+#endif
+
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /* Frame encryption is done in radio.c/OT stack, for now.
        Since there is no encryption support in MAC. */
@@ -516,6 +536,10 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otError error = OT_ERROR_INVALID_STATE;
 
     otEXPECT(otPlatRadioIsEnabled(aInstance));
+
+#ifdef ANTENNA_DIVERSITY_ENABLE
+    vMMAC_DisableAntennaDiversity();
+#endif
 
     /* stop the radio so there are no pending interrupts */
     vMMAC_RadioToOffAndWait();
