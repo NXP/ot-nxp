@@ -1,0 +1,60 @@
+diff --git a/components/serial_manager/fsl_component_serial_manager.c b/components/serial_manager/fsl_component_serial_manager.c
+index c74ae07..70faf4f 100644
+--- a/components/serial_manager/fsl_component_serial_manager.c
++++ b/components/serial_manager/fsl_component_serial_manager.c
+@@ -73,6 +73,9 @@
+ #define SERIAL_MANAGER_WRITE_TAG 0xAABB5754U
+ #define SERIAL_MANAGER_READ_TAG  0xBBAA5244U
+ 
++#ifndef RINGBUFFER_WATERMARK_THRESHOLD
++#define RINGBUFFER_WATERMARK_THRESHOLD 95U/100U
++#endif
+ #if (defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE > 0U))
+ typedef enum _serial_manager_transmission_mode
+ {
+@@ -796,13 +799,6 @@ void SerialManager_RxCallback(void *callbackParam,
+         for (uint32_t i = 0; i < message->length; i++)
+         {
+             handle->ringBuffer.ringBuffer[handle->ringBuffer.ringHead++] = message->buffer[i];
+-#if (defined(SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL) && (SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL > 0U))
+-            if ((handle->ringBuffer.ringHead - handle->ringBuffer.ringTail) >= handle->ringBuffer.ringBufferSize)
+-            {
+-                status = kStatus_SerialManager_RingBufferOverflow;
+-                break;
+-            }
+-#else
+             if (handle->ringBuffer.ringHead >= handle->ringBuffer.ringBufferSize)
+             {
+                 handle->ringBuffer.ringHead = 0U;
+@@ -816,7 +812,6 @@ void SerialManager_RxCallback(void *callbackParam,
+                     handle->ringBuffer.ringTail = 0U;
+                 }
+             }
+-#endif
+         }
+     }
+     else /*No wrap is expected so do a memcpy*/
+@@ -879,7 +874,10 @@ void SerialManager_RxCallback(void *callbackParam,
+         }
+     }
+ #if (defined(SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL) && (SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL > 0U))
+-    if (status != kStatus_SerialManager_RingBufferOverflow)
++    uint32_t ringBufferWaterMark =
++        handle->ringBuffer.ringHead + handle->ringBuffer.ringBufferSize - handle->ringBuffer.ringTail;
++    ringBufferWaterMark = ringBufferWaterMark % handle->ringBuffer.ringBufferSize;
++    if (ringBufferWaterMark < (uint32_t)(handle->ringBuffer.ringBufferSize * RINGBUFFER_WATERMARK_THRESHOLD))
+     {
+         (void)SerialManager_StartReading(handle, handle->openedReadHandleHead, NULL, ringBufferLength);
+     }
+@@ -1148,7 +1146,10 @@ static serial_manager_status_t SerialManager_Read(serial_read_handle_t readHandl
+         }
+     }
+ #if (defined(SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL) && (SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL > 0U))
+-    if ((handle->ringBuffer.ringHead - handle->ringBuffer.ringTail) < handle->ringBuffer.ringBufferSize)
++    uint32_t ringBufferWaterMark =
++        handle->ringBuffer.ringHead + handle->ringBuffer.ringBufferSize - handle->ringBuffer.ringTail;
++    ringBufferWaterMark = ringBufferWaterMark % handle->ringBuffer.ringBufferSize;
++    if (ringBufferWaterMark < (uint32_t)(handle->ringBuffer.ringBufferSize * RINGBUFFER_WATERMARK_THRESHOLD))
+     {
+         (void)SerialManager_StartReading(handle, handle->openedReadHandleHead, NULL, serialReadHandle->transfer.length);
+     }

@@ -30,6 +30,7 @@
 set -exo pipefail
 
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
+BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_k32w061}"
 
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
@@ -43,22 +44,121 @@ readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(
     "-DOT_APP_CLI=OFF"
     "-DOT_FTD=OFF"
     "-DOT_MTD=OFF"
+    "-DOT_1_2_SUPPORT=ON"
+)
+readonly OT_OPTIONS_RCP_ONLY_SPI=(
+    "-DOT_NCP_SPI=ON"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_1_2_SUPPORT=ON"
 )
 readonly OT_OPTIONS_NO_RCP=(
     "-DOT_APP_NCP=OFF"
     "-DOT_APP_RCP=OFF"
     "-DOT_RCP=OFF"
+    "-DOT_1_2_SUPPORT=ON"
+    "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
 )
+
+readonly OT_OPTIONS_RCP_UART_HCI_BB_UART_FC=(
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=ON"
+    "-DOT_APP_RCP_BLE_HCI_BB=ON"
+)
+
+readonly OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC=(
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=ON"
+    "-DOT_APP_RCP_BLE_HCI_BB=ON"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE_DIR=${OT_SRCDIR}/src/k32w0/platform/"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE=nxp_vendor_hook.cpp"
+    "-DOT_APP_RCP_BLE_HCI_BB_SINGLE_UART=ON"
+    "-DOT_1_2_SUPPORT=ON"
+)
+
+readonly OT_OPTIONS_RCP_SPI_HCI_BB_UART_FC=(
+    "-DOT_NCP_SPI=ON"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=ON"
+    "-DOT_APP_RCP_BLE_HCI_BB=ON"
+)
+
+readonly OT_OPTIONS_CLI_FTD_ZB_ED_RX_OFF=(
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=ON"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=OFF"
+    "-DOT_ZB_SUPPORT=ON"
+    "-DOT_APP_FTD_ZB_ED_RX_OFF=ON"
+    "-DOT_PING_SENDER=ON"
+    "-DOT_1_2_SUPPORT=ON"
+    "-DNO_THREAD_1_3_FLAGS=ON"
+)
+
+readonly OT_OPTIONS_RCP_UART_FC_ZB_ED_RX_OFF=(
+    "-DOT_RCP_FLOW_CONTROL=ON"
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=OFF"
+    "-DOT_ZB_SUPPORT=ON"
+    "-DOT_APP_RCP_UART_FC_ZB_ED_RX_OFF=ON"
+    "-DOT_1_2_SUPPORT=ON"
+)
+
+readonly OT_OPTIONS_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF=(
+    "-DOT_RCP_FLOW_CONTROL=ON"
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=OFF"
+    "-DOT_MTD=OFF"
+    "-DOT_ZB_SUPPORT=ON"
+    "-DOT_BLE_SUPPORT=ON"
+    # "-DOT_APP_RCP_BLE_HCI_BB=ON"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE_DIR=${OT_SRCDIR}/src/k32w0/platform/"
+    "-DOT_NCP_VENDOR_HOOK_SOURCE=nxp_vendor_hook.cpp"
+    "-DOT_APP_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF=ON"
+    "-DOT_1_2_SUPPORT=ON"
+)
+
+sign()
+{
+    if [ "$SDK_RELEASE" == "ON" ]; then
+        "$NXP_K32W0_SDK_ROOT"/tools/imagetool/sign_images.sh $1
+    else
+        "$NXP_K32W0_SDK_ROOT"/middleware/wireless/openthread/boards/dk6_jn5189/enablement/sign_images.sh $1 "$NXP_K32W0_SDK_ROOT"/tools/imagetool
+    fi
+}
 
 build()
 {
-    local builddir="${OT_CMAKE_BUILD_DIR:-build_k32w061}"
     local cmakeArgs=("${@}")
-    mkdir -p "${builddir}"
-    cd "${builddir}"
-    if [ "$1" = "ot_rcp_only_uart_flow_control" ]; then
+    mkdir -p "${BUILD_DIR}"
+    cd "${BUILD_DIR}"
+    if [ ! "$1" = "folder_not_specified" ]; then
         cmakeArgs=("${@:2}")
-        rcp_folder_name="rcp_only_uart_flow_control"
+        rcp_folder_name="$1"
         mkdir -p ${rcp_folder_name}
         cd ${rcp_folder_name}
     fi
@@ -72,61 +172,303 @@ build()
         ninja
     fi
 
-    if [ "$SDK_RELEASE" == "ON" ]; then
-        "$NXP_K32W061_SDK_ROOT"/tools/imagetool/sign_images.sh openthread/examples/apps/cli/
-        "$NXP_K32W061_SDK_ROOT"/tools/imagetool/sign_images.sh openthread/examples/apps/ncp/
-    else
-        "$NXP_K32W061_SDK_ROOT"/middleware/wireless/openthread/boards/dk6_jn5189/enablement/sign_images.sh openthread/examples/apps/cli/ "$NXP_K32W061_SDK_ROOT"/tools/imagetool
-        "$NXP_K32W061_SDK_ROOT"/middleware/wireless/openthread/boards/dk6_jn5189/enablement/sign_images.sh openthread/examples/apps/ncp/ "$NXP_K32W061_SDK_ROOT"/tools/imagetool
-    fi
-
     cd "${OT_SRCDIR}"
 }
 
-main()
+build_ot_rcp_only_uart_flow_control()
 {
-
-    # check if environmental variable NXP_K32W061_SDK_ROOT is set
-    #     if not, then use "../../../" as a possible path
-    # then  check if NXP_K32W061_SDK_ROOT contains a valid SDK
-    #     if SW-Content-Register.txt is found
-    #         then NXP_K32W061_SDK_ROOT points to a released SDK
-    #     else if .gitignore is found
-    #         then NXP_K32W061_SDK_ROOT points to a cloned repository
-
-    if [ -z "$NXP_K32W061_SDK_ROOT" ]; then
-        NXP_K32W061_SDK_ROOT="../../../"
-    fi
-
-    if [ -f $NXP_K32W061_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_RELEASE=ON
-    elif [ -f $NXP_K32W061_SDK_ROOT/.gitmodules ]; then
-        SDK_RELEASE=OFF
-    else
-        echo "Could not found a valid SDK package!"
-        return
-    fi
-
-    echo "NXP_K32W061_SDK_ROOT set to " $NXP_K32W061_SDK_ROOT
-
-    echo "Building OT RCP image ..."
-    local options=("ot_rcp_only_uart_flow_control")
+    echo "Building OT RCP image UART with flow control..."
+    app_folder_name="rcp_only_uart_flow_control"
+    local options=("${app_folder_name}")
     options+=("${OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL[@]}")
     options+=("${OT_OPTIONS[@]}")
     options+=("$@")
     options+=(" -DSDK_RELEASE=$SDK_RELEASE")
     build "${options[@]}"
 
+    #Sign the image
+    sign "${BUILD_DIR}/${app_folder_name}/openthread/examples/apps/ncp/"
+
     if [ $? -eq 1 ]; then
         exit 1
     fi
+}
 
-    echo "Building OT without RCP image ..."
-    options=("${OT_OPTIONS_NO_RCP[@]}")
+build_ot_rcp_only_spi()
+{
+    echo "Building OT RCP image SPI..."
+    app_folder_name="rcp_only_spi"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_ONLY_SPI[@]}")
     options+=("${OT_OPTIONS[@]}")
     options+=("$@")
     options+=(" -DSDK_RELEASE=$SDK_RELEASE")
     build "${options[@]}"
+
+    #Sign the image
+    sign "${BUILD_DIR}/${app_folder_name}/openthread/examples/apps/ncp/"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_without_rcp_image()
+{
+    echo "Building OT without RCP image ..."
+    app_folder_name="folder_not_specified"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_NO_RCP[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+
+    build "${options[@]}"
+
+    #Sign the image
+    sign "${BUILD_DIR}/openthread/examples/apps/cli/"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_uart_ble_hci_bb_uart_fc()
+{
+    echo "Building dual mode app OT RCP UART + BLE HCI BB UART FC..."
+    app_folder_name="ot_rcp_uart_ble_hci_bb_uart_fc"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_UART_HCI_BB_UART_FC[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/ot-rcp-ble-hci-bb-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_ble_hci_bb_single_uart_fc()
+{
+    echo "Building dual mode app OT RCP + BLE HCI BB SINGLE UART FC..."
+    app_folder_name="ot_rcp_ble_hci_bb_single_uart_fc"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_HCI_BB_SINGLE_UART_FC[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/ot-rcp-ble-hci-bb-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_spi_ble_hci_bb_uart_fc()
+{
+    echo "Building dual mode app OT RCP SPI + BLE HCI BB UART FC..."
+    app_folder_name="ot_rcp_spi_ble_hci_bb_uart_fc"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_SPI_HCI_BB_UART_FC[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_ble_hci_bb/k32w0/ot-rcp-ble-hci-bb-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_cli_ftd_zb_ed_rx_off()
+{
+    echo "Building dual mode app OT CLI FTD + Zigbee ED RX OFF..."
+    app_folder_name="ot_cli_ftd_zb_ed_rx_off"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_CLI_FTD_ZB_ED_RX_OFF[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_cli_ftd_zb_ed_rx_off/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_cli_ftd_zb_ed_rx_off/k32w0/ot-cli-ftd-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    arm-none-eabi-objcopy -v -O binary "${BUILD_DIR}/${app_folder_name}/ot-cli-ftd-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}/ot-cli-ftd-zb-ed-rx-off-k32w061.bin"
+    arm-none-eabi-objdump -d "${BUILD_DIR}/${app_folder_name}/ot-cli-ftd-zb-ed-rx-off-k32w061" >"${BUILD_DIR}/${app_folder_name}/ot-cli-ftd-zb-ed-rx-off-k32w061.dis"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_uart_fc_zb_ed_rx_off()
+{
+    echo "Building dual mode app OT RCP + Zigbee ED RX OFF"
+    app_folder_name="ot_rcp_uart_fc_zb_ed_rx_off"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_UART_FC_ZB_ED_RX_OFF[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_zb_ed_rx_off/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_zb_ed_rx_off/k32w0/ot-rcp-uart-fc-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    arm-none-eabi-objcopy -v -O binary "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-zb-ed-rx-off-k32w061.bin"
+    arm-none-eabi-objdump -d "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-zb-ed-rx-off-k32w061" >"${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-zb-ed-rx-off-k32w061.dis"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off()
+{
+    echo "Building tri-mode app OT RCP + BLE BB + Zigbee ED RX OFF"
+    app_folder_name="ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off/k32w0/"
+
+    #move application files to the top
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off/k32w0/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}"
+
+    arm-none-eabi-objcopy -v -O binary "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061.bin"
+    arm-none-eabi-objdump -d "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061" >"${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061.dis"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta()
+{
+    echo "Building tri-mode app OT RCP + BLE BB + Zigbee ED RX OFF with PTA support"
+    app_folder_name="ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF[@]}")
+    options+=("-DOT_BUILD_COEX=ON")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    sign "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off/k32w0/"
+
+    #move application files to the top
+    # Since we're piggybacking on an example with a slightly different name, adjust the names of the generated files here
+    mv "${BUILD_DIR}/${app_folder_name}/examples/hybrid/ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off/k32w0/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061" "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061"
+    mv "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-k32w061.map" "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061.map"
+
+    arm-none-eabi-objcopy -v -O binary "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061" "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061.bin"
+    arm-none-eabi-objdump -d "${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061" >"${BUILD_DIR}/${app_folder_name}/ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-pta-k32w061.dis"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+create_directory_and_build()
+{
+    if [ "$1" == 'all' ]; then
+        build_ot_rcp_only_uart_flow_control "$@"
+        build_ot_rcp_only_spi "$@"
+        build_ot_without_rcp_image "$@"
+        build_ot_rcp_uart_ble_hci_bb_uart_fc "$@"
+        build_ot_rcp_spi_ble_hci_bb_uart_fc "$@"
+        build_ot_rcp_ble_hci_bb_single_uart_fc "$@"
+        build_ot_cli_ftd_zb_ed_rx_off "$@"
+        build_ot_rcp_uart_fc_zb_ed_rx_off "$@"
+        build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off "$@"
+        build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta "$@"
+
+    elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
+        build_ot_rcp_only_uart_flow_control "$@"
+    elif [ "$1" == 'ot_rcp_only_spi' ]; then
+        build_ot_rcp_only_spi "$@"
+    elif [ "$1" == 'ot_without_rcp_image' ]; then
+        build_ot_without_rcp_image "$@"
+    elif [ "$1" == 'ot_rcp_uart_ble_hci_bb_uart_fc' ]; then
+        build_ot_rcp_uart_ble_hci_bb_uart_fc "$@"
+    elif [ "$1" == 'ot_rcp_spi_ble_hci_bb_uart_fc' ]; then
+        build_ot_rcp_spi_ble_hci_bb_uart_fc "$@"
+    elif [ "$1" == 'ot_rcp_ble_hci_bb_single_uart_fc' ]; then
+        build_ot_rcp_ble_hci_bb_single_uart_fc "$@"
+    elif [ "$1" == 'ot_cli_ftd_zb_ed_rx_off' ]; then
+        build_ot_cli_ftd_zb_ed_rx_off "$@"
+    elif [ "$1" == 'ot_rcp_uart_fc_zb_ed_rx_off' ]; then
+        build_ot_rcp_uart_fc_zb_ed_rx_off "$@"
+    elif [ "$1" == 'ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off' ]; then
+        build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off "$@"
+    elif [ "$1" == 'ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta' ]; then
+        build_ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta "$@"
+    else
+        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_spi, ot_without_rcp_image, ot_rcp_uart_ble_hci_bb_uart_fc, ot_rcp_spi_ble_hci_bb_uart_fc, ot_rcp_ble_hci_bb_single_uart_fc, ot_cli_ftd_zb_ed_rx_off, ot_rcp_uart_fc_zb_ed_rx_off, ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off, ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off_pta"
+        # 128 for Invalid arguments
+        exit 128
+    fi
+}
+
+main()
+{
+
+    # check if environmental variable NXP_K32W0_SDK_ROOT is set
+    #     if not, then use "../../../" as a possible path
+    # then  check if NXP_K32W0_SDK_ROOT contains a valid SDK
+    #     if SW-Content-Register.txt is found
+    #         then NXP_K32W0_SDK_ROOT points to a released SDK
+    #     else if .gitignore is found
+    #         then NXP_K32W0_SDK_ROOT points to a cloned repository
+
+    if [ -z "$NXP_K32W0_SDK_ROOT" ]; then
+        NXP_K32W0_SDK_ROOT="../../../"
+    fi
+
+    if [ -f $NXP_K32W0_SDK_ROOT/SW-Content-Register.txt ]; then
+        SDK_RELEASE=ON
+    elif [ -f $NXP_K32W0_SDK_ROOT/.gitmodules ]; then
+        SDK_RELEASE=OFF
+    else
+        echo "Could not found a valid SDK package!"
+        return
+    fi
+
+    echo "NXP_K32W0_SDK_ROOT set to " $NXP_K32W0_SDK_ROOT
+
+    if [ $# == 0 ]; then
+        create_directory_and_build all $SDK_RELEASE "$@"
+    else
+        create_directory_and_build $1 $SDK_RELEASE "$@"
+    fi
+
 }
 
 main "$@"

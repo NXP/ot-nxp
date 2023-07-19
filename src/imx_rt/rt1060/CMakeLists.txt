@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@ add_library(openthread-rt1060
     ../../common/alarm_freertos.c
     ../../common/diag.c
     ../../common/entropy.c
-    ../../common/flash_nvm.c
+    ../../common/flash_littlefs.c
     ../../common/logging.c
     ../platform/misc.c
     ../platform/radio.cpp
@@ -39,7 +39,11 @@ add_library(openthread-rt1060
     ../../common/uart.c
     board/pin_mux.c
     board/hardware_init.c
+    board/peripherals.c
+    board/clock_config.c
+    board/board.c
 )
+
 
 set_target_properties(
     openthread-rt1060
@@ -77,9 +81,11 @@ target_compile_options(openthread-rt1060
         -DSPINEL_UART_INSTANCE=3
         -DSPINEL_ENABLE_RX_RTS=1
         -DSPINEL_ENABLE_TX_RTS=1
+        -DRESET_PIN_PORT=6
+        -DRESET_PIN_NUM=2
         -DOT_PLAT_SYS_CRYPTO_INIT
         -DOT_PLAT_SYS_LOG_MANAGEMENT
-        -DOT_PLAT_SYS_NVM_SUPPORT
+        -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
         -DOPENTHREAD_FTD=1
         -Wno-unknown-pragmas
         -Wno-sign-compare
@@ -92,9 +98,17 @@ target_include_directories(openthread-rt1060
     PUBLIC
         board
         freertos
+        ../platform
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src/common
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
         ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include
 )
+
+if (OT_BUILD_COEX)
+    target_compile_definitions(ot-config
+        INTERFACE
+        OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1
+)
+endif()

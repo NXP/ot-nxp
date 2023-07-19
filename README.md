@@ -7,21 +7,24 @@
 
 # OpenThread on NXP platforms
 
-This repo contains example platform drivers for [NXP K32W061 SoC][k32w061], [NXP JN5189 SoC][jn5189] and [NXP RT 1060 Crossover MCU][rt1060].
+This repo contains example platform drivers for [NXP K32W061 SoC][k32w061], [NXP JN5189 SoC][jn5189], [NXP RT 1060 Crossover MCU][rt1060] and [NXP RT 1170 Crossover MCU][rt1170].
 
 [k32w061]: https://www.nxp.com/products/wireless/thread/k32w061-41-high-performance-secure-and-ultra-low-power-mcu-for-zigbeethread-and-bluetooth-le-5-0-with-built-in-nfc-option:K32W061_41
 [jn5189]: https://www.nxp.com/products/wireless/thread/jn5189-88-t-high-performance-and-ultra-low-power-mcus-for-zigbee-and-thread-with-built-in-nfc-option:JN5189_88_T
 [rt1060]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1060-crossover-mcu-with-arm-cortex-m7-core:i.MX-RT1060
+[rt1170]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1170-crossover-mcu-family-first-ghz-mcu-with-arm-cortex-m7-and-cortex-m4-cores:i.MX-RT1170
 
 To learn more about building and running the examples please check:
 
 - [OpenThread on NXP K32W061 examples][k32w061-page]
 - [OpenThread on NXP JN5189 examples][jn5189-page]
 - [OpenThread on RT1060 examples][rt1060-page]
+- [OpenThread on RT1170 examples][rt1170-page]
 
 [k32w061-page]: src/k32w0/k32w061/README.md
 [jn5189-page]: src/k32w0/jn5189/README.md
 [rt1060-page]: src/imx_rt/rt1060/README.md
+[rt1170-page]: src/imx_rt/rt1170/README.md
 
 # Contributing
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,11 +31,12 @@
  *   This file includes the platform-specific initializers.
  *
  */
-#include "NVM_Interface.h"
+
 #include "fsl_os_abstraction.h"
 #include "ot_platform_common.h"
 #include <stdlib.h>
 #include <openthread/platform/alarm-milli.h>
+#include "common/logging.hpp"
 
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0))
 #include "fsl_component_log_backend_debugconsole.h"
@@ -45,9 +46,17 @@
 #include "ksdk_mbedtls.h"
 #endif
 
+#ifdef MULTICORE_LOGGING_ENABLED
+#include "multicore.h"
+#endif
+
 #define SYSTEM_BUFFER_LOG_SIZE 256
 
 extern void BOARD_InitHardware(void);
+
+#if defined(OT_CONTROLLER_INIT)
+extern void controller_init(void);
+#endif
 
 #ifdef OT_PLAT_SYS_LOG_MANAGEMENT
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0)) && ((defined LOG_ENABLE_ASYNC_MODE) && (LOG_ENABLE_ASYNC_MODE))
@@ -57,23 +66,17 @@ static uint8_t bufferLog[SYSTEM_BUFFER_LOG_SIZE];
 
 void otPlatExitFunction(void)
 {
-    OT_PLAT_ERR("======> OT error stack blocked ");
+    otLogCritPlat("======> OT error stack blocked ");
+#ifdef LOG_BUFFER_ENABLED
     OSA_TimeDelay(osaWaitForever_c);
+#else
+    while (1)
+        ;
+#endif
 }
 
 void otSysInit(int argc, char *argv[])
 {
-    bool bHwInit = true;
-
-    if ((argc == 1) && (!strcmp(argv[0], "app")))
-    {
-        bHwInit = false;
-    }
-
-    if (bHwInit)
-    {
-        BOARD_InitHardware();
-    }
 #ifdef OT_PLAT_SYS_LOG_MANAGEMENT
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0))
     LOG_Init();
@@ -84,13 +87,20 @@ void otSysInit(int argc, char *argv[])
 #endif
 #endif
 
-#ifdef OT_PLAT_SYS_NVM_SUPPORT
-    /* Init the NVM module */
-    NvModuleInit();
-#endif
+    otPlatLogInit();
 
 #ifdef OT_PLAT_SYS_CRYPTO_INIT
     CRYPTO_InitHardware();
+#endif
+
+#ifdef MULTICORE_LOGGING_ENABLED
+    multicore_init();
+#endif
+
+    otPlatRadioInitSpinelInterface();
+
+#if defined(OT_CONTROLLER_INIT)
+    controller_init();
 #endif
 
     otPlatRadioInit();
@@ -98,6 +108,7 @@ void otSysInit(int argc, char *argv[])
 #ifndef OT_PLAT_SYS_RANDOM_DISABLE
     otPlatRandomInit();
 #endif
+
     atexit(otPlatExitFunction);
 }
 
@@ -124,12 +135,25 @@ void otSysProcessDrivers(otInstance *aInstance)
 
 void otSysRunIdleTask(void)
 {
-#ifdef OT_PLAT_SYS_NVM_SUPPORT
-    NvIdle();
-#endif
+    otPlatSaveSettingsIdle();
+
 #ifdef OT_PLAT_SYS_LOG_MANAGEMENT
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0)) && ((defined LOG_ENABLE_ASYNC_MODE) && (LOG_ENABLE_ASYNC_MODE))
     LOG_Dump(bufferLog, sizeof(bufferLog), NULL);
 #endif
 #endif
+
+    /* Apply reset if it was requested, better to do that after filesystem writes */
+    otPlatResetIdle();
+}
+
+/*
+ * Setup the systick timer to generate the tick interrupts at the required
+ * frequency.
+ */
+void vPortSetupTimerInterrupt(void)
+{
+    BOARD_InitHardware();
+    /* Configure SysTick to interrupt at the requested rate. */
+    SysTick_Config(SystemCoreClock / configTICK_RATE_HZ);
 }

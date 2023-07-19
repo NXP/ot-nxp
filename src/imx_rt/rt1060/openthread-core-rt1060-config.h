@@ -35,20 +35,20 @@
 #ifndef OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
 #define OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
 
+//#define OT_STACK_ENABLE_LOG
+
 #ifdef OT_STACK_ENABLE_LOG
 #define LOG_ENABLE 1
 #define LOG_ENABLE_TIMESTAMP 1
-#include "fsl_component_log.h"
+//#include "fsl_component_log.h"
 /* Logging for ot stack */
-#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
-#define OPENTHREAD_CONFIG_LOG_LEVEL 5
-#define OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY 1
-#define OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME OT_STACK_LOG
-LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
-#define OT_STACK_LOG(aLogLevel, aRegion, fmt, ...) \
-    OT_UNUSED_VARIABLE(aLogLevel);                 \
-    OT_UNUSED_VARIABLE(aRegion);                   \
-    LOG_DBG("%s " fmt, "", ##__VA_ARGS__)
+//#define OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY 1
+//#define OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME OT_STACK_LOG
+// LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
+//#define OT_STACK_LOG(aLogLevel, aRegion, fmt, ...) OT_UNUSED_VARIABLE(aLogLevel); OT_UNUSED_VARIABLE(aRegion);
+// LOG_DBG("%s " fmt, "", ##__VA_ARGS__)
+#else
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
 #endif
 
 /**
@@ -252,7 +252,7 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  * `RadioSpinel` platform is used.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 512
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 4096
 
 /**
  * @def OPENTHREAD_CONFIG_PING_SENDER_ENABLE
@@ -261,15 +261,6 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  *
  */
 #define OPENTHREAD_CONFIG_PING_SENDER_ENABLE 1
-
-/**
- * @def OPENTHREAD_CONFIG_THREAD_VERSION
- *
- * Force 1.1 version by default to be able to support K32W0 transceiver
- *
- */
-#undef OPENTHREAD_CONFIG_THREAD_VERSION
-#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
@@ -318,5 +309,15 @@ LOG_MODULE_DEFINE(ot_stack_log, kLOG_LevelDebug)
  *
  */
 #define PACKAGE_URL "TODO: replace it with a link to the public GIthub repo"
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+ *
+ * Define to 1 if you want to enable radio coexistence implemented in platform.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE 0
+#endif
 
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_

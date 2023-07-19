@@ -33,3 +33,15 @@ endif()
 if(OT_BUILD_K32W061 OR OT_BUILD_JN5189)
     add_subdirectory(k32w0)
 endif()
+
+if(OT_BUILD_K32W1)
+    add_subdirectory(k32w1)
+endif()
+
+if(OT_BUILD_RW)
+    add_subdirectory(rw)
+endif()
+
+if(OT_BUILD_IWX12)
+    #add_subdirectory(iwx12)
+endif()

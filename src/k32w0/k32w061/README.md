@@ -1,6 +1,6 @@
 # OpenThread on NXP K32W061 Example
 
-This directory contains example platform drivers for the [NXP K32W061][k32w061] based on [K32W061-DK006][k32w061-dk006] hardware platform.
+This directory contains example platform drivers for the [NXP K32W0x1][k32w0x1] based on [K32W0x1-DK006][k32w0x1-dk006] hardware platform, including all variants of devices like K32W041 and K32W061.
 
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
@@ -36,10 +36,10 @@ $ pip3 install pycryptodome
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [K32W061 SDK 2.6.3](https://mcuxpresso.nxp.com/).
+- Download [K32W061 SDK 2.6.4](https://mcuxpresso.nxp.com/).
   Creating an nxp.com account is required before being able to download the
   SDK. Once the account is created, login and follow the steps for downloading
-  SDK_2.6.3_K32W061DK6. The SDK Builder UI selection should be similar with
+  SDK_2.6.4_K32W061DK6. The SDK Builder UI selection should be similar with
   the one from the image below.
   ![MCUXpresso SDK Download](../../../doc/img/k32w/mcux-sdk-download.JPG)
 
@@ -47,7 +47,7 @@ $ pip3 install pycryptodome
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_K32W061_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ export NXP_K32W0_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ third_party/k32w061_sdk/mr3_fixes/patch_k32w061_mr3_sdk.sh
 $ ./script/build_k32w061
 ```

@@ -18,7 +18,7 @@ processor: MIMXRT1062xxxxA
 package_id: MIMXRT1062DVL6A
 mcu_data: ksdk2_0
 processor_version: 7.0.1
-board: MIMXRT1060-EVK
+board: MIMXRT1060-EVKB
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -454,6 +454,7 @@ pull_up_down_config: Pull_Down_100K_Ohm, pull_keeper_select: Keeper, pull_keeper
 speed: MHZ_100}
   - {pin_num: K10, peripheral: LPUART3, signal: RX, pin_signal: GPIO_AD_B1_07, pull_up_down_config: Pull_Down_100K_Ohm,
 pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Disable, speed: MHZ_100}
+  - {pin_num: M11, peripheral: GPIO6, signal: 'gpio_io, 02', pin_signal: GPIO_AD_B0_02}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 
@@ -472,6 +473,11 @@ void BOARD_InitArduinoUARTPins(void)
     IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_11_LPUART8_RX, 0U);
     IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_10_LPUART8_TX, 0x10B0U);
     IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_11_LPUART8_RX, 0x10B0U);
+
+    /* Reset PIN */
+    IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_02_GPIO1_IO02, 0U);
+    IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 & (~(BOARD_INITARDUINOUARTPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) |
+                         IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x04U));
 
     /* BLE UART PIN if used */
     IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_04_LPUART3_CTS_B, /* GPIO_AD_B1_04 is configured as LPUART3_CTS_B */

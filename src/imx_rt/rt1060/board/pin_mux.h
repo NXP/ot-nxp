@@ -332,6 +332,9 @@ void BOARD_InitUSDHCPins(void);
  */
 void BOARD_InitQSPIPins(void);
 
+#define BOARD_INITARDUINOUARTPINS_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK \
+    0x04U /*!< GPIO1 and GPIO6 share same IO MUX function, GPIO_MUX1 selects one GPIO function: affected bits mask */
+
 /* GPIO_AD_B1_06 (coord J12), CSI_VSYNC/J35[18]/J22[2]/UART_TX */
 #define BOARD_INITARDUINOUARTPINS_CSI_VSYNC_PERIPHERAL LPUART3 /*!< Device name: LPUART3 */
 #define BOARD_INITARDUINOUARTPINS_CSI_VSYNC_SIGNAL TX          /*!< LPUART3 signal: TX */

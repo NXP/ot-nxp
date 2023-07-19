@@ -44,7 +44,11 @@
 #define OT_PLAT_UART_INSTANCE 1
 #endif
 #ifndef OT_PLAT_UART_CLK_FREQ
+#ifdef CPU_RW610EVA0IK
+#define OT_PLAT_UART_CLK_FREQ CLOCK_GetFlexCommClkFreq(3)
+#else
 #define OT_PLAT_UART_CLK_FREQ BOARD_BT_UART_CLK_FREQ
+#endif
 #endif
 #ifndef OT_PLAT_UART_BAUDRATE
 #define OT_PLAT_UART_BAUDRATE 115200
@@ -57,6 +61,12 @@
 #endif
 #ifndef OT_PLAT_UART_RECEIVE_BUFFER_SIZE
 #define OT_PLAT_UART_RECEIVE_BUFFER_SIZE (128)
+#endif
+
+#ifdef CPU_RW610EVA0IK
+#define BOARD_APP_UART_FRG_CLK \
+    (&(const clock_frg_clk_config_t){3, kCLOCK_FrgPllDiv, 255, 0}) /*!< Select FRG3 mux as frg_pll */
+#define BOARD_APP_UART_CLK_ATTACH kFRG_to_FLEXCOMM3
 #endif
 
 static SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
@@ -87,7 +97,14 @@ static const serial_manager_config_t s_serialManagerConfig = {
 
 otError otPlatUartEnable(void)
 {
-    otError error        = OT_ERROR_FAILED;
+    otError error = OT_ERROR_FAILED;
+
+#ifdef CPU_RW610EVA0IK
+    /* attach FRG0 clock to FLEXCOMM0 (debug console) */
+    CLOCK_SetFRGClock(BOARD_APP_UART_FRG_CLK);
+    CLOCK_AttachClk(BOARD_APP_UART_CLK_ATTACH);
+#endif
+
     uartConfig.clockRate = OT_PLAT_UART_CLK_FREQ;
     do
     {

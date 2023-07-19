@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "evkbmimxrt1060")
+
 set_property(SOURCE $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S PROPERTY LANGUAGE C)
 
 if (SDK_RELEASE)
     message("SDK_RELEASE driver path chosen")
-    set(BOARD_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/boards/evkmimxrt1060/project_template)
     set(DRIVER_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/drivers)
     set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_PIT_FILES_PATH ${DRIVER_FILES_PATH})
@@ -48,7 +49,6 @@ if (SDK_RELEASE)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/xip)
 else ()
     message("SDK_DEV driver path chosen")
-    set(BOARD_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/boards/evkmimxrt1060)
     set(DRIVER_LPUART_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/platform/drivers/lpuart)
     set(DRIVER_PIT_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/platform/drivers/pit)
     set(DRIVER_TRNG_FILES_PATH $ENV{NXP_RT1060_SDK_ROOT}/platform/drivers/trng)
@@ -80,13 +80,10 @@ add_library(nxp-rt1060-driver
     $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S
     #$ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/mcuxpresso/startup_mimxrt1062.c
     $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1062/system_MIMXRT1062.c
-#board files
-    ${BOARD_FILES_PATH}/board.c 
-    ${BOARD_FILES_PATH}/dcd.c
-    ${BOARD_FILES_PATH}/clock_config.c
 #other SDK files
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart.c
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart_edma.c
+    ${DRIVER_IGPIO_FILES_PATH}/fsl_gpio.c
     ${DRIVER_PIT_FILES_PATH}/fsl_pit.c
     ${DRIVER_TRNG_FILES_PATH}/fsl_trng.c
     ${DRIVER_FLEXSPI_FILES_PATH}/fsl_flexspi.c
@@ -100,7 +97,7 @@ add_library(nxp-rt1060-driver
     ${STR_FILES_PATH}/fsl_str.c
 # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
-    $ENV{NXP_RT1060_SDK_ROOT}/boards/evkmimxrt1060/xip/evkmimxrt1060_flexspi_nor_config.c
+    $ENV{NXP_RT1060_SDK_ROOT}/boards/${EVK_RT1060_BOARD}/xip/${EVK_RT1060_BOARD}_flexspi_nor_config.c
 #SDK components
     $ENV{NXP_RT1060_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
     $ENV{NXP_RT1060_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
@@ -113,19 +110,24 @@ add_library(nxp-rt1060-driver
     $ENV{NXP_RT1060_SDK_ROOT}/components/timer/fsl_adapter_pit.c
     $ENV{NXP_RT1060_SDK_ROOT}/components/rng/fsl_adapter_trng.c
     $ENV{NXP_RT1060_SDK_ROOT}/components/internal_flash/fsl_adapter_flexspi_nor_flash.c
+    $ENV{NXP_RT1060_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
 #Framework files
     $ENV{NXP_RT1060_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
-    $ENV{NXP_RT1060_SDK_ROOT}/middleware/wireless/framework/NVM/Source/NV_Flash.c
+#File system
+    $ENV{NXP_RT1060_SDK_ROOT}/middleware/littlefs/lfs.c
+    $ENV{NXP_RT1060_SDK_ROOT}/middleware/littlefs/lfs_util.c
+    $ENV{NXP_RT1060_SDK_ROOT}/components/flash/mflash/mimxrt1062/mflash_drv.c
+    #TODO : move these files into SDK connectivity framework
+    ${PROJECT_SOURCE_DIR}/third_party/rt1060_sdk/fwk_platform_flash.c
+    ${PROJECT_SOURCE_DIR}/third_party/rt1060_sdk/fwk_filesystem.c
 )
 
-#freertos 
+
 target_include_directories(nxp-rt1060-driver 
     PUBLIC
 #freertos includes
         $ENV{NXP_RT1060_SDK_ROOT}/rtos/freertos/freertos_kernel/include
         $ENV{NXP_RT1060_SDK_ROOT}/rtos/freertos/freertos_kernel/portable/GCC/ARM_CM4F
-#boards include path location
-        ${BOARD_FILES_PATH}
 #CMSIS includes
         $ENV{NXP_RT1060_SDK_ROOT}/CMSIS/Core/Include 
 #other SDK files
@@ -145,7 +147,7 @@ target_include_directories(nxp-rt1060-driver
         ${STR_FILES_PATH}
 # XIP
         $ENV{NXP_RT1060_SDK_ROOT}/devices/MIMXRT1052/xip
-        $ENV{NXP_RT1060_SDK_ROOT}/boards/evkmimxrt1060/xip
+        $ENV{NXP_RT1060_SDK_ROOT}/boards/${EVK_RT1060_BOARD}/xip
 #SDK components
         $ENV{NXP_RT1060_SDK_ROOT}/components/uart
         $ENV{NXP_RT1060_SDK_ROOT}/components/serial_manager
@@ -157,10 +159,17 @@ target_include_directories(nxp-rt1060-driver
         $ENV{NXP_RT1060_SDK_ROOT}/components/timer
         $ENV{NXP_RT1060_SDK_ROOT}/components/rng
         $ENV{NXP_RT1060_SDK_ROOT}/components/internal_flash
+        $ENV{NXP_RT1060_SDK_ROOT}/components/gpio
 #Framework files
         $ENV{NXP_RT1060_SDK_ROOT}/middleware/wireless/framework/FunctionLib
         $ENV{NXP_RT1060_SDK_ROOT}/middleware/wireless/framework/Common
-        $ENV{NXP_RT1060_SDK_ROOT}/middleware/wireless/framework/NVM/Interface
+#File system
+        $ENV{NXP_RT1060_SDK_ROOT}/middleware/littlefs
+        $ENV{NXP_RT1060_SDK_ROOT}/components/flash/mflash
+        $ENV{NXP_RT1060_SDK_ROOT}/components/flash/mflash/mimxrt1062
+        #TODO : move the files lfs_mflash.[ch] into SDK connectivity framework
+        ${PROJECT_SOURCE_DIR}/third_party/rt1060_sdk
+
 )
 
 target_compile_definitions(nxp-rt1060-driver
@@ -168,8 +177,9 @@ target_compile_definitions(nxp-rt1060-driver
     -D__STARTUP_CLEAR_BSS
     -D__STARTUP_INITIALIZE_NONCACHEDATA
     #-DSERIAL_MANAGER_NON_BLOCKING_MODE=1
-    #-DSERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY=1
+    -DSERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY=1
     -DSDK_OS_FREE_RTOS
+    -DUSE_RTOS
     -DOSA_USED
     -DFSL_OSA_MAIN_FUNC_ENABLE=0
     -DFSL_RTOS_FREE_RTOS
@@ -184,20 +194,33 @@ target_compile_definitions(nxp-rt1060-driver
     -DSDK_DEBUGCONSOLE_UART=1
     -DSERIAL_PORT_TYPE_UART=1
     -DCONFIG_ARM=1
+    -DSERIAL_MANAGER_RING_BUFFER_FLOWCONTROL=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
+    -DFWK_FILESYSTEM_LOCAL_BUF_SIZE=1024
+    -DLFS_THREADSAFE=1
+    -DLFS_NO_DEBUG
+    -DLFS_NO_ERROR
+    -DLFS_NO_WARN
     #DMA support enablement
     #-DHAL_UART_DMA_ENABLE=1
     #-DSERIAL_PORT_TYPE_UART_DMA=1
-    #NVM flags
-    -DgNvStorageIncluded_d=1
-    -DgNvTableKeptInRam_d=1
-    -DNVM_NO_COMPONNET=1
     #Async logging feature
-    -DLOG_ENABLE_ASYNC_MODE=1
-    -DLOG_MAX_ARGUMENT_COUNT=17
-    -DLOG_MAX_BUFF_LOG_COUNT=250
-    -DLOG_ENABLE_OVERWRITE=1
+    #-DLOG_ENABLE_ASYNC_MODE=1
+    #-DLOG_MAX_ARGUMENT_COUNT=17
+    #-DLOG_MAX_BUFF_LOG_COUNT=250
+    #-DLOG_ENABLE_OVERWRITE=1
 )
+
+if (OT_STACK_ENABLE_LOG)
+#move logs to UART2
+target_compile_definitions(nxp-rt1060-driver
+    PUBLIC
+    BOARD_DEBUG_UART_BASEADDR=LPUART2
+    BOARD_DEBUG_UART_INSTANCE=2U
+    BOARD_UART_IRQ=LPUART2_IRQn
+    BOARD_UART_IRQ_HANDLER=LPUART2_IRQHandler
+)
+endif ()
 
 target_link_libraries(nxp-rt1060-driver
     PRIVATE
@@ -318,12 +341,12 @@ target_include_directories(nxp-rt1060-mbedtls
     PUBLIC
     $ENV{NXP_RT1060_SDK_ROOT}/middleware/mbedtls/include
     $ENV{NXP_RT1060_SDK_ROOT}/middleware/mbedtls/port/ksdk
+    ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls
 )
 
 target_compile_definitions(nxp-rt1060-mbedtls 
     PUBLIC
-    "MBEDTLS_USER_CONFIG_FILE=\"rt1060-mbedtls-config.h\""
-    "MBEDTLS_CONFIG_FILE=\"${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/mbedtls-config.h\"" 
+    "MBEDTLS_CONFIG_FILE=\"rt-mbedtls-config.h\""
 )
 
 target_compile_options(nxp-rt1060-mbedtls

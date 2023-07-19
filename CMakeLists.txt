@@ -38,6 +38,8 @@ if(OT_PACKAGE_VERSION STREQUAL "")
 endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
+set(CHIP "" CACHE STRING "Chip famille name")
+
 if (OT_BUILD_RT)
     if (OT_BUILD_RT1060)
         set(PLAT_LIB "openthread-rt1060")
@@ -45,8 +47,37 @@ if (OT_BUILD_RT)
         set(CORE_CONFIG_FILE "\"openthread-core-rt1060-config.h\"")
         set(CORE_CONFIG_CHECK "\"openthread-core-rt1060-config-check.h\"")
         set(PLATFORM rt1060)
-        set(CHIP imx_rt)
+    elseif (OT_BUILD_RT1170)
+        set(PLAT_LIB "openthread-rt1170")
+        set(CONFIG_FILE "\"openthread-core-rt1170-config.h\"")
+        set(CORE_CONFIG_FILE "\"openthread-core-rt1170-config.h\"")
+        set(CORE_CONFIG_CHECK "\"openthread-core-rt1170-config-check.h\"")
+        set(PLATFORM rt1170)        
     endif()
+    set(CHIP imx_rt)
+elseif (OT_BUILD_RW)
+    if (OT_BUILD_RW610)
+        set(PLAT_LIB "openthread-rw610")
+        set(CONFIG_FILE "\"openthread-core-rw610-config.h\"")
+        set(CORE_CONFIG_FILE "\"openthread-core-rw610-config.h\"")
+        set(CORE_CONFIG_CHECK "\"openthread-core-rw610-config-check.h\"")
+        set(PLATFORM rw610)
+        set(CHIP rw)
+    elseif (OT_BUILD_RW610N)
+        set(PLAT_LIB "openthread-rw610n")
+        set(CONFIG_FILE "\"openthread-core-rw610n-config.h\"")
+        set(CORE_CONFIG_FILE "\"openthread-core-rw610n-config.h\"")
+        set(CORE_CONFIG_CHECK "\"openthread-core-rw610n-config-check.h\"")
+        set(PLATFORM rw610n)
+        set(CHIP rw)
+    endif()
+elseif (OT_BUILD_K32W1)
+        set(PLAT_LIB "openthread-k32w1")
+        set(CONFIG_FILE "\"openthread-core-k32w1-config.h\"")
+        set(CORE_CONFIG_FILE "\"openthread-core-k32w1-config.h\"")
+        set(CORE_CONFIG_CHECK "\"openthread-core-k32w1-config-check.h\"")
+        set(PLATFORM k32w1)
+        set(CHIP k32w1)
 elseif (OT_BUILD_K32W0)
     if (OT_BUILD_K32W061)
         set(PLAT_LIB "openthread-k32w061")
@@ -63,6 +94,12 @@ elseif (OT_BUILD_K32W0)
         set(PLATFORM jn5189)
         set(CHIP k32w0)
     endif()
+elseif (OT_BUILD_IWX12)
+        set(PLAT_LIB "openthread-iwx12")
+        set(CONFIG_FILE "\"openthread-core-iwx12-config.h\"")
+        set(CORE_CONFIG_FILE ${CONFIG_FILE})
+        set(CORE_CONFIG_CHECK "\"openthread-core-iwx12-config-check.h\"")
+        set(PLATFORM iwx12)
 endif()
 
 set(OT_PLATFORM_LIB ${PLAT_LIB})
@@ -71,57 +108,44 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(RUNTIME_OUTPUT_CMAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
+#Set default log level if not set
+if (OT_STACK_ENABLE_LOG)
+    if (NOT OT_LOG_LEVEL)
+        set(OT_LOG_LEVEL DEBG)
+    endif()
+    if (NOT OT_LOG_LEVEL)
+        set(OT_LOG_OUTPUT APP)
+    endif()
+endif()
+
 add_subdirectory(openthread)
+
+# If OT logging is enabled add a dependency to SDK log components
+if (OT_STACK_ENABLE_LOG)
+    target_link_libraries(ot-config
+        INTERFACE
+        nxp-${PLATFORM}-driver)
+    target_compile_definitions(ot-config
+        INTERFACE
+        -DOT_STACK_ENABLE_LOG)
+endif ()
 
 target_compile_definitions(ot-config INTERFACE
     OPENTHREAD_CONFIG_FILE=${CONFIG_FILE}
     OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${CORE_CONFIG_FILE}
     OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=${CORE_CONFIG_CHECK}
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
 )
 
-target_include_directories(ot-config INTERFACE
-    ${PROJECT_SOURCE_DIR}/src/${CHIP}/${PLATFORM}
-)
-
-add_subdirectory(src)
-add_subdirectory(third_party)
-
-if (OT_APP_CLI_FREERTOS)
-    ## If OT logging is enabled add a dependency to SDK log components
-    if (OT_STACK_ENABLE_LOG)
-        target_link_libraries(ot-config
-            INTERFACE
-            nxp-${PLATFORM}-driver)
-        target_compile_definitions(ot-config
-            INTERFACE
-            -DOT_STACK_ENABLE_LOG)
-    endif()
-
-    ### Build the OT cli application
-    set(OT_CLI_APP_SRC
-        ${PROJECT_SOURCE_DIR}/examples/cli/main.c
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+if(CHIP)
+    target_include_directories(ot-config INTERFACE
+        ${PROJECT_SOURCE_DIR}/src/${CHIP}/${PLATFORM}
     )
-
-    add_executable(ot-cli-${PLATFORM}
-        ${PROJECT_SOURCE_DIR}/examples/cli/rtos/app_ot_freertos.c
-        ${PROJECT_SOURCE_DIR}/examples/cli/main.c
-    )
-
-    target_sources(ot-cli-${PLATFORM} PRIVATE
-        ${OT_CLI_APP_SRC}
-    )
-    target_include_directories(ot-cli-${PLATFORM} PRIVATE
-        ${PROJECT_SOURCE_DIR}/examples/cli
-        ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-    )
-
-    target_link_libraries(ot-cli-${PLATFORM} PUBLIC
-        openthread-cli-ftd
-        openthread-ftd
-        ${OT_PLATFORM_LIB}
-        ot-config
-        -Wl,--start-group openthread-${PLATFORM} -Wl,--end-group
-    )
+else()
+    target_include_directories(ot-config INTERFACE
+        ${PROJECT_SOURCE_DIR}/src/${PLATFORM}
+        )
 endif()
+
+add_subdirectory(third_party)
+add_subdirectory(src)
+add_subdirectory(examples)

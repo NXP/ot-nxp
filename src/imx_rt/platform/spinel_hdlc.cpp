@@ -33,6 +33,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include "common/logging.hpp"
 
 #ifndef SPINEL_UART_INSTANCE
 #define SPINEL_UART_INSTANCE 8
@@ -52,6 +53,18 @@
 #define SPINEL_UART_CLOCK_RATE BOARD_BT_UART_CLK_FREQ
 #endif
 
+#ifndef OT_PLATFORM_CONFIG_DEFAULT_RESET_DELAY_MS
+#define OT_PLATFORM_CONFIG_DEFAULT_RESET_DELAY_MS 2000 ///< Default delay after R̅E̅S̅E̅T̅ assertion, in miliseconds.
+#endif
+
+#ifndef RESET_PIN_PORT
+#define RESET_PIN_PORT 3
+#endif
+
+#ifndef RESET_PIN_NUM
+#define RESET_PIN_NUM 3
+#endif
+
 #if (defined(HAL_UART_DMA_ENABLE) && (HAL_UART_DMA_ENABLE > 0U) && (SPINEL_ENABLE_TX_RTS > 0U) && \
      (SPINEL_ENABLE_RX_RTS > 0U))
 #error "DMA on UART with flow control not required"
@@ -63,28 +76,6 @@
 #define SPINEL_HDLC_MALLOC pvPortMalloc
 #define SPINEL_HDLC_FREE vPortFree
 
-static void Uart_RxCallBackStatic(void *                             pData,
-                                  serial_manager_callback_message_t *message,
-                                  serial_manager_status_t            status)
-{
-    /* notify the main loop that a RX buffer is available */
-#if (defined(SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY) && (SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY > 0U))
-    otTaskletsSignalPending(NULL);
-#else
-    otSysEventSignalPending();
-#endif
-}
-
-static void Uart_TxCallBackStatic(void *                             pData,
-                                  serial_manager_callback_message_t *message,
-                                  serial_manager_status_t            status)
-{
-    /* Close the write handle */
-    SerialManager_CloseWriteHandle((serial_write_handle_t)pData);
-    /* Free the buffer */
-    SPINEL_HDLC_FREE(pData);
-}
-
 namespace ot {
 
 namespace RT {
@@ -92,12 +83,16 @@ namespace RT {
 HdlcInterface::HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
                              void *                                            aCallbackContext,
                              ot::Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mReceiveFrameBuffer(aFrameBuffer)
+    : mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
     , encoderBuffer()
     , mHdlcEncoder(encoderBuffer)
-    , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
+    , hdlcSerialManagerTxCallbackField(HdlcSerialManagerTxCallback)
+    , hdlcSerialManagerRxCallbackField(HdlcSerialManagerRxCallback)
+    , mReceiveFrameBuffer(aFrameBuffer)
+    , mReceiveFrameCallback(aCallback)
+    , mReceiveFrameContext(aCallbackContext)
+    , isInitialized(false)
+
 {
 }
 
@@ -105,9 +100,53 @@ HdlcInterface::~HdlcInterface(void)
 {
 }
 
+void HdlcInterface::TriggerReset(void)
+{
+    hal_gpio_status_t status;
+
+    // Set Reset pin to low level.
+    status = HAL_GpioSetOutput((hal_gpio_handle_t)otGpioResetHandle, 0);
+    assert(status == kStatus_HAL_GpioSuccess);
+
+    OSA_TimeDelay(200);
+
+    // Set Reset pin to high level.
+    status = HAL_GpioSetOutput((hal_gpio_handle_t)otGpioResetHandle, 1);
+    assert(status == kStatus_HAL_GpioSuccess);
+
+    OT_PLAT_DBG_NO_FUNC("Triggered hardware reset");
+    OT_UNUSED_VARIABLE(status);
+}
+
 void HdlcInterface::Init(void)
 {
-    InitUart();
+    hal_gpio_status_t     status;
+    hal_gpio_pin_config_t resetPinConfig = {
+        .direction = kHAL_GpioDirectionOut,
+        .level     = 0U,
+        .port      = RESET_PIN_PORT,
+        .pin       = RESET_PIN_NUM,
+    };
+
+    if (!isInitialized)
+    {
+        InitUart();
+
+        mResetDelay = OT_PLATFORM_CONFIG_DEFAULT_RESET_DELAY_MS;
+
+        /* Init the reset output gpio */
+        status = HAL_GpioInit((hal_gpio_handle_t)otGpioResetHandle, &resetPinConfig);
+        assert(status == kStatus_HAL_GpioSuccess);
+
+        /* Reset RCP chip. */
+        TriggerReset();
+
+        /* Waiting for the RCP chip starts up */
+        OSA_TimeDelay(mResetDelay);
+        isInitialized = true;
+    }
+
+    OT_UNUSED_VARIABLE(status);
 }
 
 void HdlcInterface::Deinit(void)
@@ -120,13 +159,20 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     otError error = OT_ERROR_NONE;
     assert(encoderBuffer.IsEmpty());
 
+    /* Disable IRQs to prevent concurrent accesses to class fields or
+     * serial manager global variables that could be accessed in the
+     * Write function
+     */
+    OSA_InterruptDisable();
+
     SuccessOrExit(error = mHdlcEncoder.BeginFrame());
     SuccessOrExit(error = mHdlcEncoder.Encode(aFrame, aLength));
     SuccessOrExit(error = mHdlcEncoder.EndFrame());
-    OT_PLAT_DBG("frame len to send = %d/%d", encoderBuffer.GetLength(), aLength);
+    otLogDebgPlat("frame len to send = %d/%d", encoderBuffer.GetLength(), aLength);
     SuccessOrExit(error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength()));
 
 exit:
+    OSA_InterruptEnable();
     if (error != OT_ERROR_NONE)
     {
         OT_PLAT_ERR("error = 0x%x", error);
@@ -142,17 +188,20 @@ void HdlcInterface::Process(const otInstance &aInstance)
 
 otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 {
-    // OT_PLAT_DBG("Send tx frame len = %d", aLength);
-    // otDump(OT_LOG_LEVEL_DEBG, OT_LOG_REGION_PLATFORM, "-PLAT---", aFrame, aLength);
-
     otError                 otResult = OT_ERROR_FAILED;
     serial_manager_status_t serialManagerStatus;
     uint8_t *pWriteHandleAndFrame = (uint8_t *)SPINEL_HDLC_MALLOC(SERIAL_MANAGER_WRITE_HANDLE_SIZE + aLength);
     uint8_t *pNewFrameBuffer      = NULL;
+
+    otLogDebgPlat("Send tx frame len = %d", aLength);
+
     do
     {
         if (pWriteHandleAndFrame == NULL)
+        {
+            otLogCritPlat("frame alloc failure");
             break;
+        }
         pNewFrameBuffer = pWriteHandleAndFrame + SERIAL_MANAGER_WRITE_HANDLE_SIZE;
         memcpy(pNewFrameBuffer, aFrame, aLength);
         serialManagerStatus = SerialManager_OpenWriteHandle((serial_handle_t)otTransceiverSerialHandle,
@@ -160,7 +209,7 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
         if (serialManagerStatus != kStatus_SerialManager_Success)
             break;
         serialManagerStatus = SerialManager_InstallTxCallback((serial_write_handle_t)pWriteHandleAndFrame,
-                                                              Uart_TxCallBackStatic, pWriteHandleAndFrame);
+                                                              hdlcSerialManagerTxCallbackField, pWriteHandleAndFrame);
         if (serialManagerStatus != kStatus_SerialManager_Success)
             break;
         serialManagerStatus =
@@ -172,11 +221,37 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 
     if (otResult != OT_ERROR_NONE && pWriteHandleAndFrame != NULL)
     {
+        otLogCritPlat("Error send %d", serialManagerStatus);
         SPINEL_HDLC_FREE(pWriteHandleAndFrame);
     }
+
     /* Always clear the encoder */
     encoderBuffer.Clear();
     return otResult;
+}
+
+void HdlcInterface::HdlcSerialManagerTxCallback(void *                             pData,
+                                                serial_manager_callback_message_t *message,
+                                                serial_manager_status_t            status)
+{
+    OSA_InterruptDisable();
+    /* Close the write handle */
+    SerialManager_CloseWriteHandle((serial_write_handle_t)pData);
+    OSA_InterruptEnable();
+    /* Free the buffer */
+    SPINEL_HDLC_FREE(pData);
+}
+
+void HdlcInterface::HdlcSerialManagerRxCallback(void *                             pData,
+                                                serial_manager_callback_message_t *message,
+                                                serial_manager_status_t            status)
+{
+    /* notify the main loop that a RX buffer is available */
+#if (defined(SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY) && (SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY > 0U))
+    otTaskletsSignalPending(NULL);
+#else
+    otSysEventSignalPending();
+#endif
 }
 
 uint32_t HdlcInterface::TryReadAndDecode(bool fullRead)
@@ -184,6 +259,7 @@ uint32_t HdlcInterface::TryReadAndDecode(bool fullRead)
     uint32_t totalBytesRead = 0U;
     uint32_t bytesRead      = 0;
     uint8_t  mUartRxBuffer[256];
+
     do
     {
         OSA_InterruptDisable();
@@ -192,11 +268,17 @@ uint32_t HdlcInterface::TryReadAndDecode(bool fullRead)
         OSA_InterruptEnable();
         if (bytesRead != 0)
         {
-            // OT_PLAT_DBG("bytesRead = %d", bytesRead);
+            otLogDebgPlat("bytesRead = %d", bytesRead);
             mHdlcDecoder.Decode(mUartRxBuffer, bytesRead);
             totalBytesRead += bytesRead;
             if (!fullRead)
+            {
+                if (bytesRead != 0)
+                {
+                    otTaskletsSignalPending(NULL);
+                }
                 break;
+            }
         }
     } while (bytesRead != 0);
 
@@ -229,14 +311,16 @@ void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 
 void HdlcInterface::HandleHdlcFrame(otError aError)
 {
+    otDumpDebgPlat("RX FRAME", mReceiveFrameBuffer.GetFrame(), mReceiveFrameBuffer.GetLength());
+
     if (aError == OT_ERROR_NONE)
     {
-        OT_PLAT_DBG_NO_FUNC("Frame correctly received");
+        otLogDebgPlat("Frame correctly received");
         mReceiveFrameCallback(mReceiveFrameContext);
     }
     else
     {
-        OT_PLAT_DBG_NO_FUNC("Frame will be discarded error = 0x%x", aError);
+        otLogCritPlat("Frame will be discarded error = 0x%x", aError);
         mReceiveFrameBuffer.DiscardFrame();
     }
 }
@@ -261,9 +345,9 @@ void HdlcInterface::InitUart(void)
 #endif
 #endif
 #if (defined(HAL_UART_DMA_ENABLE) && (HAL_UART_DMA_ENABLE > 0U))
-    serial_port_uart_dma_config_t uartConfig =
+    const serial_port_uart_dma_config_t uartConfig =
 #else
-    serial_port_uart_config_t uartConfig =
+    const serial_port_uart_config_t uartConfig =
 #endif
     {.clockRate       = SPINEL_UART_CLOCK_RATE,
      .baudRate        = SPINEL_UART_BAUD_RATE,
@@ -294,7 +378,7 @@ void HdlcInterface::InitUart(void)
 #endif
     };
 
-    serial_manager_config_t serialManagerConfig = {
+    const serial_manager_config_t serialManagerConfig = {
         .ringBuffer     = &s_ringBuffer[0],
         .ringBufferSize = sizeof(s_ringBuffer),
 #if (defined(HAL_UART_DMA_ENABLE) && (HAL_UART_DMA_ENABLE > 0U))
@@ -306,14 +390,26 @@ void HdlcInterface::InitUart(void)
         .portConfig = (serial_port_uart_config_t *)&uartConfig,
     };
 
-    status = SerialManager_Init((serial_handle_t)otTransceiverSerialHandle, &serialManagerConfig);
+    /*
+     * Make sure to disable interrupts while initializating the serial manager interface
+     * Some issues could happen a UART IRQ is fired during serial manager initialization
+     */
+    OSA_InterruptDisable();
+    do
+    {
+        status = SerialManager_Init((serial_handle_t)otTransceiverSerialHandle, &serialManagerConfig);
+        if (status != kStatus_SerialManager_Success)
+            break;
+        status = SerialManager_OpenReadHandle((serial_handle_t)otTransceiverSerialHandle,
+                                              (serial_read_handle_t)otTransceiverSerialReadHandle);
+        if (status != kStatus_SerialManager_Success)
+            break;
+        status = SerialManager_InstallRxCallback((serial_read_handle_t)otTransceiverSerialReadHandle,
+                                                 hdlcSerialManagerRxCallbackField, this);
+    } while (0);
+    OSA_InterruptEnable();
     assert(status == kStatus_SerialManager_Success);
-    status = SerialManager_OpenReadHandle((serial_handle_t)otTransceiverSerialHandle,
-                                          (serial_read_handle_t)otTransceiverSerialReadHandle);
-    assert(status == kStatus_SerialManager_Success);
-    status = SerialManager_InstallRxCallback((serial_read_handle_t)otTransceiverSerialReadHandle, Uart_RxCallBackStatic,
-                                             NULL);
-    assert(status == kStatus_SerialManager_Success);
+
     OT_UNUSED_VARIABLE(status);
 }
 

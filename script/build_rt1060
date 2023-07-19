@@ -37,7 +37,7 @@ readonly OT_OPTIONS=(
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
-    "-DOT_THREAD_VERSION=1.1"
+    "-DOT_EXTERNAL_HEAP=ON"
     "-DOT_EXTERNAL_MBEDTLS=nxp-rt1060-mbedtls"
     "-DOT_STACK_ENABLE_LOG=OFF"
     "-DOT_APP_NCP=OFF"
@@ -53,6 +53,7 @@ readonly OT_OPTIONS=(
 
 build()
 {
+    local otCliFreeRtosAxfLocation="examples/cli/rtos/ot-cli-rt1060"
     local builddir="${OT_CMAKE_BUILD_DIR:-build_rt1060}"
 
     mkdir -p "${builddir}"
@@ -68,7 +69,21 @@ build()
         ninja
     fi
 
+    if [ -f "${otCliFreeRtosAxfLocation}" ]; then
+        # create the corresponding bin
+        arm-none-eabi-objcopy -v -O binary ${otCliFreeRtosAxfLocation} ${otCliFreeRtosAxfLocation}.bin
+
+        #move application files to the top
+        mv ${otCliFreeRtosAxfLocation} ${otCliFreeRtosAxfLocation}.bin .
+    fi
+
     cd "${OT_SRCDIR}"
+}
+
+apply_patches()
+{
+    # Apply SDK patches
+    patch -N ${NXP_RT1060_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c <${OT_SRCDIR}/third_party/rt1060_sdk/fixes/serial_manager_ring_flowcontrol_fix.patch || :
 }
 
 main()
@@ -96,6 +111,8 @@ main()
     fi
 
     echo "NXP_RT1060_SDK_ROOT set to " $NXP_RT1060_SDK_ROOT
+
+    apply_patches
 
     local options=("${OT_OPTIONS[@]}")
 

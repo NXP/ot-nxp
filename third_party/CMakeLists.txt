@@ -30,10 +30,30 @@ if(OT_BUILD_RT1060)
     add_subdirectory(rt1060_sdk)
 endif()
 
+if(OT_BUILD_RT1170)
+    add_subdirectory(rt1170_sdk)
+endif()
+
 if(OT_BUILD_K32W061)
     add_subdirectory(k32w061_sdk)
 endif()
 
 if(OT_BUILD_JN5189)
     add_subdirectory(jn5189_sdk)
+endif()
+
+if(OT_BUILD_K32W1)
+    add_subdirectory(k32w1_sdk)
+endif()
+
+if(OT_BUILD_RW610N)
+    add_subdirectory(rw610n_sdk)
+endif()
+
+if(OT_BUILD_RW610)
+    add_subdirectory(rw610_sdk)
+endif()
+
+if(OT_BUILD_IWX12)
+    #add_subdirectory(iwx12_sdk)
 endif()

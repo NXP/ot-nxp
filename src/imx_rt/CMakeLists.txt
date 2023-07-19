@@ -28,4 +28,6 @@
 
 if(OT_BUILD_RT1060)
     add_subdirectory(rt1060)
+elseif (OT_BUILD_RT1170)
+    add_subdirectory(rt1170)
 endif()

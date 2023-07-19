@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,28 @@
 #include <assert.h>
 
 #include "FunctionLib.h"
+#include "fsl_os_abstraction.h"
+
+#ifndef SAVE_IN_FLASH_DISABLED
 #include "NVM_Interface.h"
+#else
+#define NVM_RegisterDataSet(...)
+#define NvModuleInit(...)
+#define NvRestoreDataSet(...)
+#define NvSaveOnIdle(...)
+#define NvSyncSave(...)
+#endif
+
+#ifndef OT_PLAT_SAVE_NVM_DATA_ON_IDLE
+#define OT_PLAT_SAVE_NVM_DATA_ON_IDLE 1
+#endif
+
+#ifdef DEBUG_NVM
+#include "fsl_debug_console.h"
+#define DBG_PRINTF PRINTF
+#else
+#define DBG_PRINTF(...)
+#endif
 
 #define TLV_TAG_SIZE sizeof(((structTLV_t *)0)->tag)
 #define TLV_LEN_SIZE sizeof(((structTLV_t *)0)->len)
@@ -63,6 +84,7 @@ typedef struct
 
 static otSettingsBuffer_t otSettingsBuffer;
 static bool               isInitialized = false;
+static OSA_MUTEX_HANDLE_DEFINE(mFlashRamBufferMutexId);
 
 NVM_RegisterDataSet((void *)&otSettingsBuffer, 1, sizeof(otSettingsBuffer), NVM_ID_OT_DATA, gNVM_MirroredInRam_c);
 
@@ -113,11 +135,16 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     if (!isInitialized)
     {
         isInitialized = true;
+        /* Mutex create */
+        (void)OSA_MutexCreate(mFlashRamBufferMutexId);
+        assert(NULL != mFlashRamBufferMutexId);
         NvModuleInit();
+        (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
         FLib_MemSet((void *)&otSettingsBuffer, 0, sizeof(otSettingsBuffer));
         otSettingsBuffer.recordFreeLen = OT_SETTINGS_BUFFER_SIZE - otSettingsBuffer.recordLen;
         /* Try to load the ot dataset in RAM */
         NvRestoreDataSet((void *)&otSettingsBuffer, 0);
+        (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
     }
 }
 
@@ -133,6 +160,8 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     uint8_t *    pBufferIterator = otSettingsBuffer.buffer;
     structTLV_t *pTlvIterator    = NULL;
     int          nbKeyFound      = 0;
+
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
 
     /* Loop on the otSeetingsBuffer and try to find a tag corresponding to aKey */
     while (pBufferIterator < otSettingsBuffer.buffer + otSettingsBuffer.recordLen)
@@ -159,6 +188,8 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
         pBufferIterator += pTlvIterator->len;
     }
 
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
+
     return error;
 }
 
@@ -170,6 +201,8 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     structTLV_t *pTlvIterator    = NULL;
     bool         tagFound        = false;
     bool         moveRequired    = false;
+
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
 
     /* Check that we have enough space to store the value */
     if (otSettingsBuffer.recordFreeLen >= TLV_HEADER_SIZE + aValueLength)
@@ -207,9 +240,18 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
         FLib_MemCpy(pBufferIterator, &aValueLength, sizeof(aValueLength));
         pBufferIterator += sizeof(aValueLength);
         FLib_MemCpy(pBufferIterator, aValue, aValueLength);
+
+#if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
         NvSaveOnIdle(&otSettingsBuffer, false);
+#else
+        NvSyncSave(&otSettingsBuffer, false);
+#endif
+
         error = OT_ERROR_NONE;
     }
+
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
+
     return error;
 }
 
@@ -222,6 +264,8 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     uint8_t *    ptagFoundOffset = NULL;
     bool         moveRequired    = false;
     uint32_t     bytesToRemove   = 0;
+
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
 
     /* Try to find an entry with a tag = akey */
     while (pBufferIterator < otSettingsBuffer.buffer + otSettingsBuffer.recordLen)
@@ -255,6 +299,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
         else
         {
             /* Add at the end */
+            otSettingsBuffer.recordLen -= bytesToRemove;
             otSettingsBuffer.recordLen += (TLV_HEADER_SIZE + aValueLength);
             otSettingsBuffer.recordFreeLen = OT_SETTINGS_BUFFER_SIZE - otSettingsBuffer.recordLen;
         }
@@ -268,9 +313,17 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
         FLib_MemCpy(ptagFoundOffset, &aValueLength, sizeof(aValueLength));
         ptagFoundOffset += sizeof(aValueLength);
         FLib_MemCpy(ptagFoundOffset, aValue, aValueLength);
+
+#if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
         NvSaveOnIdle(&otSettingsBuffer, false);
+#else
+        NvSyncSave(&otSettingsBuffer, false);
+#endif
+
         error = OT_ERROR_NONE;
     }
+
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
     return error;
 }
 
@@ -283,6 +336,8 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     int          nbKeyFound           = 0;
     uint8_t *    pOffsetStartToRemove = NULL;
     uint8_t *    pOffsetEndToRemove   = NULL;
+
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
 
     /* Loop on the otSettingsBuffer and try to find a tag corresponding to aKey */
     while (pBufferIterator < otSettingsBuffer.buffer + otSettingsBuffer.recordLen)
@@ -327,9 +382,17 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
         {
             moveData(pOffsetEndToRemove, pOffsetStartToRemove);
         }
+
+#if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
         NvSaveOnIdle(&otSettingsBuffer, false);
+#else
+        NvSyncSave(&otSettingsBuffer, false);
+#endif
+
         error = OT_ERROR_NONE;
     }
+
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
 
     return error;
 }
@@ -337,23 +400,38 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
     FLib_MemSet((void *)&otSettingsBuffer, 0, sizeof(otSettingsBuffer));
     otSettingsBuffer.recordFreeLen = OT_SETTINGS_BUFFER_SIZE - otSettingsBuffer.recordLen;
     /* Save it in flash now */
     NvSyncSave(&otSettingsBuffer, false);
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
 }
 
-#if 0
-#include "fsl_debug_console.h"
+void otPlatSaveSettingsIdle(void)
+{
+    if (isInitialized)
+    {
+#if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
+        (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
+        NvIdle();
+        (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
+#endif
+    }
+}
+
+#ifdef DEBUG_NVM
 void otPlatDumpOtSettings(void)
 {
-    PRINTF("otSettingsBuffer.recordLen = %d\n", otSettingsBuffer.recordLen);
-    PRINTF("otSettingsBuffer.recordFreeLen = %d\n", otSettingsBuffer.recordFreeLen);
-    PRINTF("Content = [ ");
-    for(int i=0; i<OT_SETTINGS_BUFFER_SIZE; i++)
+    (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
+    DBG_PRINTF("otSettingsBuffer.recordLen = %d\n", otSettingsBuffer.recordLen);
+    DBG_PRINTF("otSettingsBuffer.recordFreeLen = %d\n", otSettingsBuffer.recordFreeLen);
+    DBG_PRINTF("Content = [ ");
+    for (int i = 0; i < OT_SETTINGS_BUFFER_SIZE; i++)
     {
-        PRINTF("0x%x ", otSettingsBuffer.buffer[i]);
+        DBG_PRINTF("0x%x ", otSettingsBuffer.buffer[i]);
     }
-    PRINTF("]\n");
+    DBG_PRINTF("]\n");
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
 }
 #endif

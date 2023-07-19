@@ -153,3 +153,15 @@ void vApplicationMallocFailedHook(void)
     assert(0);
 }
 #endif
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return pvPortMalloc(aNum * aSize);
+}
+
+void otPlatFree(void *aPtr)
+{
+    vPortFree(aPtr);
+}
+#endif
