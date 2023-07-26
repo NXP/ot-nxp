@@ -221,6 +221,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+ *
+ * The maximum number of supported IPv6 address registrations per child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 16
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
  *
  * Define to 1 to enable the DHCP CLIENT service.
@@ -517,6 +527,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 #define OPENTHREAD_CONFIG_MAC_FILTER_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ENABLE_IP6_FRAGMENTATION
+ *
+ * Define as 1 to enable IPv6 Fragmentation support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+#define OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE 1
 #endif
 
 #endif // OPENTHREAD_CORE_RW612_CONFIG_H_
