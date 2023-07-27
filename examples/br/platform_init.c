@@ -26,21 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+/**
+ * @file
+ *   This file implements initialization of wifi and openthread on IW612 module.
+ */
 
-#include <openthread/instance.h>
+/* -------------------------------------------------------------------------- */
+/*                                  Includes                                  */
+/* -------------------------------------------------------------------------- */
 
-#include "lwip/netif.h"
+#include "wpl.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* -------------------------------------------------------------------------- */
+/*                              Public functions                              */
+/* -------------------------------------------------------------------------- */
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-
-#ifdef __cplusplus
+int PLATFORM_InitOt(void)
+{
+    wpl_ret_t ret = WPL_Init();
+    if (ret != WPLRET_SUCCESS)
+    {
+        return -1;
+    }
+    return 0;
 }
-#endif
-#endif /* __OT_INFRA_IF_H__ */

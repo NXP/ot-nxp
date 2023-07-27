@@ -25,15 +25,26 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+if(NOT DEFINED OT_NXP_LWIP_WIFI)
+    set(OT_NXP_LWIP_WIFI 0)
+    message(FATAL_ERROR "wifi cli must be used with wifi. Set OT_NXP_LWIP_WIFI ON")
+endif()
+if(NOT OT_NXP_LWIP_WIFI)
+    message(FATAL_ERROR "wifi cli must be used with wifi. Set OT_NXP_LWIP_WIFI ON")
+endif ()
 
-target_sources(ot-cli-addons PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/iperf_cli.c
+target_sources(ot-cli-addons PRIVATE
+    wifi_cli.c
 )
 
 target_include_directories(ot-cli-addons PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    .
 )
 
 target_compile_definitions(ot-cli-addons PRIVATE
-    -DOT_APP_CLI_IPERF_ADDON
+    -DOT_APP_CLI_WIFI_ADDON
+)
+
+target_link_libraries(ot-cli-addons PRIVATE
+    wifi
 )

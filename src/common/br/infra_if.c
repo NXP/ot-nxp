@@ -46,6 +46,9 @@
 #include "lwip/api.h"
 #include "lwip/icmp6.h"
 #include "lwip/inet.h"
+#include "lwip/ip.h"
+#include "lwip/nd6.h"
+#include "lwip/prot/nd6.h"
 #include "lwip/raw.h"
 #include "lwip/sockets.h"
 #include "lwip/tcpip.h"
@@ -120,6 +123,50 @@ void InfraIfDeInit()
     }
 }
 
+static void custom_pbuf_free(struct pbuf *p)
+{
+    OT_UNUSED_VARIABLE(p);
+}
+
+static void ResendRaToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint16_t aBufferLength)
+{
+    struct pbuf       *pbuf;
+    struct pbuf_custom pbuf_buf;
+    struct netif      *n;
+    int                i;
+
+    LWIP_ASSERT_CORE_LOCKED();
+
+    assert(aBufferLength >= 1);
+
+    if (aBuffer[0] != ICMP6_TYPE_RA)
+    {
+        return;
+    }
+
+    pbuf_buf.custom_free_function = &custom_pbuf_free;
+    pbuf = pbuf_alloced_custom(PBUF_RAW, aBufferLength, PBUF_RAM, &pbuf_buf, (void *)aBuffer, aBufferLength);
+
+    assert(pbuf != NULL);
+
+    n = netif_get_by_index(aInfraIfIndex);
+
+    /* Processing of lower layers is skipped so fill in source IP and hop limit into ip_data global struct*/
+    for (i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++)
+    {
+        const ip6_addr_t *src_addr = netif_ip6_addr(n, i);
+
+        /* Find the first link local address and use it as source */
+        if (ip6_addr_islinklocal(src_addr))
+        {
+            ip6_addr_copy(ip_data.current_iphdr_src.u_addr.ip6, *src_addr);
+            ip_data.current_ip6_header->_hoplim = 255;
+            nd6_input(pbuf, n);
+            break;
+        }
+    }
+}
+
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
@@ -133,7 +180,12 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     dst.sin6_scope_id = sInfraIfIndex;
 
-    sendErr = sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr *)&dst, sizeof(dst));
+    sendErr = lwip_sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr *)&dst, sizeof(dst));
+
+    /* Send RA to lwip stack to allow it to configure IP from announced prefix. */
+    LOCK_TCPIP_CORE();
+    ResendRaToLwip(aInfraIfIndex, aBuffer, aBufferLength);
+    UNLOCK_TCPIP_CORE();
 
     return (sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED);
 }
@@ -189,7 +241,7 @@ static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *
     case ICMP6_TYPE_RA: /* Router advertisement */
     case ICMP6_TYPE_NA: /* Neighbor advertisement */
 
-        memcpy(aPeerAddr.mFields.m8, ip_2_ip6(addr), sizeof(ip6_addr_t));
+        memcpy(aPeerAddr.mFields.m8, ip_2_ip6(addr), sizeof(otIp6Address));
         otPlatInfraIfRecvIcmp6Nd(sInstance, sInfraIfIndex, &aPeerAddr,
                                  (const uint8_t *)((uint8_t *)p->payload + icmpv6_type_pos), p->len);
         break;

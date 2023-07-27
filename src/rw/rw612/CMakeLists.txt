@@ -42,10 +42,12 @@ endif()
 if(OT_APP_BR_FREERTOS)
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/udp_plat.c
     )
 
     set(OT_BR_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/common/br
+        ${PROJECT_SOURCE_DIR}/examples/br/border_agent
     )
 endif()
 

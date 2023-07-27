@@ -26,21 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __OT_UDP_PLAT_H__
+#define __OT_UDP_PLAT_H__
 
 #include <openthread/instance.h>
-
 #include "lwip/netif.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
+void UdpPlatInit(otInstance *aInstance, struct netif *backboneNetif, struct netif *otNetif);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __OT_UDP_PLAT_H__ */

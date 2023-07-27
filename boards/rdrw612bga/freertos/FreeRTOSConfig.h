@@ -69,14 +69,14 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configUSE_PREEMPTION 1
 #define configUSE_IDLE_HOOK 1
 #define configUSE_TICK_HOOK 0
-#define configUSE_TICKLESS_IDLE 1
+#define configUSE_TICKLESS_IDLE 0
 #define configUSE_DAEMON_TASK_STARTUP_HOOK 0
 #define configCPU_CLOCK_HZ (SystemCoreClock)
 #define configTICK_RATE_HZ ((TickType_t)1000)
 #define configMAX_PRIORITIES (10)
-#define configMINIMAL_STACK_SIZE ((uint16_t)1024)
+#define configMINIMAL_STACK_SIZE ((uint16_t)512)
 #define configAPPLICATION_ALLOCATED_HEAP 1
-#define configTOTAL_HEAP_SIZE ((size_t)(124 * 1024))
+#define configTOTAL_HEAP_SIZE ((size_t)(140 * 1024))
 #define configSUPPORT_STATIC_ALLOCATION 0
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
 #define configFRTOS_MEMORY_SCHEME 4

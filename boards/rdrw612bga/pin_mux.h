@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 NXP.
+ * Copyright 2021-2023 NXP.
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -38,6 +38,8 @@ void BOARD_InitBootPins(void);
 void BOARD_InitPins(void); /*!< Function assigned for the core: Cortex-M4[cm4] */
 
 void BOARD_InitQuadSpiFlashPins(void);
+
+void BOARD_InitENETPins(void);
 
 #if defined(__cplusplus)
 }

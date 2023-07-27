@@ -26,14 +26,20 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-SET(WIFI_SSID "my__wifi" CACHE STRING "wifi ssid")
-SET(WIFI_PASSWORD "wifi__password" CACHE STRING "wifi password")
+if(DEFINED OT_NXP_TRANSCEIVER)
+    if (OT_NXP_LWIP_WIFI AND (${OT_NXP_TRANSCEIVER} STREQUAL "iwx12"))
+        SET(PLATFORM_INIT "platform_init.c")
+    endif()
+endif()
 
 add_executable(ot-br-${OT_NXP_PLATFORM}
     br_ot_freertos.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
     main.c
+    ${PLATFORM_INIT}
     ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+    ${PROJECT_SOURCE_DIR}/src/common/br/udp_plat.c
+    ${PROJECT_SOURCE_DIR}/examples/br/border_agent/border_agent.c
 )
 
 if(OT_NXP_LWIP_WIFI)
@@ -54,6 +60,7 @@ endif()
 target_include_directories(ot-br-${OT_NXP_PLATFORM} PRIVATE
     ..
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+    ${PROJECT_SOURCE_DIR}/examples/br/border_agent
 )
 
 target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
@@ -65,6 +72,8 @@ target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
     ${NXP_DRIVER_LIB}
     ot-config
     -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+
+    ot-cli-addons
 )
 
 if(NXP_BOARD_LIB)
@@ -73,8 +82,16 @@ if(NXP_BOARD_LIB)
     )
 endif()
 
-target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
-    PRIVATE
-    WIFI_PASSWORD="${WIFI_PASSWORD}"
-    WIFI_SSID="${WIFI_SSID}"
-)
+if(DEFINED WIFI_SSID)
+    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+        PRIVATE
+        WIFI_SSID="${WIFI_SSID}"
+    )
+endif()
+
+if(DEFINED WIFI_PASSWORD)
+    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+        PRIVATE
+        WIFI_PASSWORD="${WIFI_PASSWORD}"
+    )
+endif()

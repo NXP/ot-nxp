@@ -41,6 +41,7 @@ list(APPEND BOARD_COMPILE_DEFINITIONS_PRIVATE)
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND BOARD_SOURCES
         sdmmc_config.c
+        wifi_bt_config.c
     )
     list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
         -DSDIO_ENABLED
@@ -71,6 +72,20 @@ if(NOT DEFINED BOARD_APP_UART_INSTANCE)
     set(BOARD_APP_UART_INSTANCE 1)
 endif()
 
+if(${BOARD_USE_M2})
+    list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
+        BOARD_USE_M2
+    )
+endif()
+
+if(DEFINED ${EVK_RT1170_BOARD})
+    if(${EVK_RT1170_BOARD} STREQUAL evkmimxrt1170)
+        list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
+            EVK_RT1170_BOARD
+        )
+    endif()
+endif()
+
 add_library(${NXP_BOARD_LIB}
     ${BOARD_SOURCES}
 )
@@ -93,10 +108,13 @@ target_compile_definitions(${NXP_BOARD_LIB}
 
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
+        ot-config
         ${NXP_DRIVER_LIB}
 )
 
 target_compile_options(${NXP_BOARD_LIB}
+    PUBLIC
+        -include ${PROJECT_SOURCE_DIR}/third_party/wifi/wifi_${OT_NXP_PLATFORM}/app_config.h
     PRIVATE
         ${OT_CFLAGS}
         -Wno-unknown-pragmas

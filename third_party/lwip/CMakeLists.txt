@@ -105,6 +105,7 @@ endif()
 
 add_library(nxp-lwip
    ${LWIP_SDK_SOURCES}
+    lwip_tcpip_init_once.c
 )
 
 target_compile_definitions(nxp-lwip
@@ -120,6 +121,7 @@ target_include_directories(nxp-lwip
     ${LWIP_PATH}/src/include
     ${LWIP_PATH}/src/include/lwip/apps
     ${PROJECT_SOURCE_DIR}/src/common/lwip
+    ./
 )
 
 target_link_libraries(nxp-lwip

@@ -26,12 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(OT_APP_BR_FREERTOS)
+    set(OT_NXP_BUILD_APP_AS_LIB 1) #This must be set before cli is added.
+    add_subdirectory(br)
+endif()
+
 if (OT_APP_CLI_FREERTOS)
     add_subdirectory(cli)
 endif()
 
 add_subdirectory(hybrid)
 
-if(OT_APP_BR_FREERTOS)
-    add_subdirectory(br)
-endif()
+

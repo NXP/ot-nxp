@@ -26,6 +26,12 @@ To learn more about building and running the examples please check:
 [rt1060-page]: src/imx_rt/rt1060/README.md
 [rt1170-page]: src/imx_rt/rt1170/README.md
 
+# NXP OpenThread Border Router
+
+To learn more about this project, see [NXP OTBR README][otbr-readme-page].
+
+[otbr-readme-page]:examples/br/README-OTBR.md
+
 # Contributing
 
 We would love for you to contribute to OpenThread and help make it even better

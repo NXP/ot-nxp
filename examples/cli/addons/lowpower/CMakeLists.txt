@@ -26,16 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_policy(SET CMP0079 NEW)
-
-target_sources(ot-cli-${OT_NXP_PLATFORM} PUBLIC
+target_sources(ot-cli-addons PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/lowpower_cli.c
 )
 
-target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+target_include_directories(ot-cli-addons PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_compile_definitions(ot-config INTERFACE
+target_compile_definitions(ot-cli-addons PRIVATE
     OT_APP_CLI_LOWPOWER_ADDON
 )

@@ -27,9 +27,7 @@
 #
 
 add_library(${NXP_BOARD_LIB}
-    app_services_init.c
     board.c
-    board_lp.c
     pin_mux.c
     clock_config.c
     hardware_init.c
@@ -40,13 +38,13 @@ add_library(${NXP_BOARD_LIB}
 target_include_directories(${NXP_BOARD_LIB}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${OT_NXP_FREERTOS_CONFIG_PATH}
 )
 
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
         ot-config
         ${NXP_DRIVER_LIB}
-        ${OT_PLATFORM_LIB}
 )
 
 if(NOT DEFINED BOARD_APP_UART_INSTANCE)

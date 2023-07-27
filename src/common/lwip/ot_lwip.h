@@ -88,6 +88,13 @@ struct pbuf *otPlatLwipConvertToLwipMsg(otMessage *otIpPkt, bool bTransport);
  */
 otMessage *otPlatLwipConvertToOtMsg(struct pbuf *lwipIpPkt);
 
+/*!
+ * @brief This function returns a pointer to the already assigned OpenThread network interface
+ *
+ * @return struct netif* pointer to OT network intergace
+ */
+struct netif *otPlatLwipGetOtNetif(void);
+
 #ifdef __cplusplus
 }
 #endif

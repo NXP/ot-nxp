@@ -28,6 +28,12 @@
 
 set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
 
+set(LWIP_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/lwip PARENT_SCOPE)
+set(WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp CACHE PATH "wifi path")
+set(WIFI_BT_MODULE_PATH $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module  CACHE PATH "wifi_bt_module path")
+set(EDGEFAST_WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/edgefast_wifi CACHE PATH "edgefast_wifi path")
+
+
 set(EVK_MIMXRT1170 "evkbmimxrt1170" CACHE STRING "evkbmimxrt1170")
 set(MIMXRT1170_EVK "mimxrt1170evkb" CACHE STRING "mimxrt1170evkb")
 
@@ -44,7 +50,9 @@ if (SDK_RELEASE)
     set(DRIVER_DEVICE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_DEVICE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cm7)
     set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH})
@@ -65,6 +73,8 @@ else ()
     set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
     set(DRIVER_EDMA_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/edma)
     set(DRIVER_DMAMUX_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/dmamux)
+    set(DRIVER_ENET_FILES_PATH $ENV{NXP_SDK_ROOT}/platform/drivers/enet)
+    set(DRIVER_DEVICE_FILES_PATH $ENV{NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
     set(DRIVER_USDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/usdhc)
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/armv7-m7)
     set(DRIVER_CAAM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/caam)
@@ -116,7 +126,7 @@ list(APPEND SDK_INCLUDES
 #File system
     ${NXP_SDK_ROOT}/middleware/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
-    ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
+    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170
 )
 
 list(APPEND SDK_SOURCES
@@ -242,6 +252,27 @@ elseif ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
     )
+endif ()
+
+
+if (OT_NXP_LWIP_ETH)
+    list(APPEND SDK_INCLUDES
+        $ENV{NXP_SDK_ROOT}/components/phy/
+        $ENV{NXP_SDK_ROOT}/components/phy/device/phyrtl8211f
+        $ENV{NXP_SDK_ROOT}/components/silicon_id
+        $ENV{NXP_SDK_ROOT}/components/silicon_id/socs
+        ${DRIVER_ENET_FILES_PATH}
+        ${DRIVER_DEVICE_FILES_PATH}
+        )
+    list(APPEND SDK_SOURCES
+        $ENV{NXP_SDK_ROOT}/components/phy/device/phyrtl8211f/fsl_phyrtl8211f.c
+        $ENV{NXP_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
+        $ENV{NXP_SDK_ROOT}/components/silicon_id/socs/imxrt1170/fsl_silicon_id_soc.c
+        ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
+        ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
+        )
+    list(APPEND SDK_COMPILE_DEFINITIONS
+        )
 endif ()
 
 if (MULTICORE_LOGGING)

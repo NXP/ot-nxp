@@ -26,14 +26,25 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(NOT DEFINED OT_NXP_LWIP)
+    set(OT_NXP_LWIP OFF)
+endif()
+if(NOT OT_NXP_LWIP)
+    message(FATAL_ERROR "lwip cli must be used with lwip. Set OT_NXP_LWIP ON")
+endif ()
+
 target_sources(ot-cli-addons PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/iperf_cli.c
+    lwip_cli.c
 )
 
 target_include_directories(ot-cli-addons PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    .
 )
 
 target_compile_definitions(ot-cli-addons PRIVATE
-    -DOT_APP_CLI_IPERF_ADDON
+    -DOT_APP_CLI_LWIP_ADDON
+)
+
+target_link_libraries(ot-cli-addons PRIVATE
+    nxp-lwip
 )

@@ -26,21 +26,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef LWIP_CLI_H_
+#define LWIP_CLI_H_
 
-#include <openthread/instance.h>
+/* -------------------------------------------------------------------------- */
+/*                                  Includes                                  */
+/* -------------------------------------------------------------------------- */
 
-#include "lwip/netif.h"
+/* -------------------------------------------------------------------------- */
+/*                              Public prototypes                             */
+/* -------------------------------------------------------------------------- */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*!
+ * @brief Handler called from ot-cli when lwip command is used
+ *
+ * @param[in] aContext pointer to a context, not used
+ * @param[in] aArgsLength
+ * @param[in] aArgs
+ * @return otError
+ */
+otError ProcessLwip(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* LWIP_CLI_H_ */

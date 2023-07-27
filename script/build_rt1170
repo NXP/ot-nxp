@@ -124,7 +124,7 @@ build()
     cd "$1"
 
     # shellcheck disable=SC2068
-    cmake -GNinja "${@:3}" "-DSDK_RELEASE=$2" "${OT_SRCDIR}"
+    cmake -GNinja "${@:3}" "-DSDK_RELEASE=$2" $CMD_PARAMS "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
@@ -169,6 +169,8 @@ main()
     #     else if .gitignore is found
     #         then NXP_RT1170_SDK_ROOT points to a cloned repository
 
+    CMD_PARAMS=""
+
     if [ -z "$NXP_RT1170_SDK_ROOT" ]; then
         NXP_RT1170_SDK_ROOT="../../../"
     fi
@@ -187,7 +189,10 @@ main()
     if [ $# == 0 ]; then
         create_directory_and_build all $SDK_RELEASE
     else
-        create_directory_and_build "$1" $SDK_RELEASE
+	XMITER=$1
+	shift 1
+	CMD_PARAMS="$@"
+        create_directory_and_build $XMITER $SDK_RELEASE
     fi
 }
 

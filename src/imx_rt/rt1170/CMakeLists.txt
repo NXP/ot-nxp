@@ -53,6 +53,31 @@ list(APPEND OT_PLAT_FLAGS
     -DOPENTHREAD_FTD=1
 )
 
+if(OT_NXP_LWIP)
+    set(LWIP_SRC_FILE
+            ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+            )
+    set(OT_LWIP_INCLUDES
+            ${PROJECT_SOURCE_DIR}/src/common/lwip
+            )
+    set(OT_LWIP_LIBS
+            nxp-lwip
+            openthread-ftd
+            )
+endif()
+
+if(OT_APP_BR_FREERTOS)
+    set(INFRA_IF_SRC_FILE
+            ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+            ${PROJECT_SOURCE_DIR}/src/common/br/udp_plat.c
+            )
+
+    set(OT_BR_INCLUDES
+            ${PROJECT_SOURCE_DIR}/src/common/br
+            ${PROJECT_SOURCE_DIR}/examples/br/border_agent
+            )
+endif()
+
 if (MULTICORE_LOGGING)
     list(APPEND OT_PLAT_SOURCES
             multicore/multicore.c
@@ -81,9 +106,18 @@ else ()
     )
 endif ()
 
+if(${BOARD_USE_M2})
+    list(APPEND OT_PLATFORM_DEFINES
+        "BOARD_USE_M2"
+        "OT_PLATFORM_CONFIG_SPI_INSTANCE=6"
+    )
+endif()
+
 
 add_library(${OT_PLATFORM_LIB}
     ${OT_PLAT_SOURCES}
+    ${LWIP_SRC_FILE}
+    ${INFRA_IF_SRC_FILE}
 )
 
 set_target_properties(
@@ -105,9 +139,16 @@ target_link_libraries(${OT_PLATFORM_LIB}
         connfwk-platform-${OT_NXP_PLATFORM}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
+	${OT_LWIP_LIBS}
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1170/RT1170_cm7.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+)
+
+#OT needs freeRTOS config dependency
+target_link_libraries(ot-config
+    INTERFACE
+    ${OT_PLATFORM_LIB}
 )
 
 target_compile_definitions(${OT_PLATFORM_LIB}
@@ -142,7 +183,17 @@ endif ()
 target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLAT_INCLUDES}
+        ${OT_LWIP_INCLUDES}
+        ${OT_BR_INCLUDES}
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+        ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include
 )
+
+if (OT_BUILD_COEX)
+    target_compile_definitions(ot-config
+            INTERFACE
+            OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1
+            )
+endif()

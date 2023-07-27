@@ -425,7 +425,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DSDK_DEBUGCONSOLE_UART=1
     -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING
     -DSERIAL_PORT_TYPE_UART=1
-    -DHAL_UART_ADAPTER_LOWPOWER=1
+    #-DHAL_UART_ADAPTER_LOWPOWER=1
     #-DSERIAL_MANAGER_NON_BLOCKING_MODE=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=1024
     -DSERIAL_MANAGER_TASK_PRIORITY=PRIORITY_RTOS_TO_OSA\(2\)
@@ -437,7 +437,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DgAspCapability_d=1
     -DFFU_CNS_TX_PWR_TABLE_CALIBRATION=1
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
-    -DgPlatformDisableBleLowPower_d=0 # Enable BLE/15.4 low power feature
+    -DgPlatformDisableBleLowPower_d=1 # Enable BLE/15.4 low power feature
     LFS_CONFIG=fwk_lfs_config.h
     LFS_THREADSAFE=1
 )

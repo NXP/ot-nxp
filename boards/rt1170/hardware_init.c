@@ -20,7 +20,11 @@ void BOARD_InitHardware(void)
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
 #ifdef BOARD_SPINEL_OVER_SPI
-    BOARD_InitArduinoSPIPins();
+#ifndef BOARD_USE_M2
+    BOARD_InitOtSPI1Pins();
+#else
+    BOARD_InitOtSPI6Pins();
+#endif
 #elif BOARD_SPINEL_OVER_UART
     BOARD_InitArduinoUARTPins();
 #endif

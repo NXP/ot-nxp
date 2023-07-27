@@ -41,6 +41,7 @@
 #include <openthread/ip6.h>
 
 #include "lwip/tcpip.h"
+#include "lwip_tcpip_init_once.h"
 
 /* -------------------------------------------------------------------------- */
 /*                                 Definitions                                */
@@ -76,7 +77,7 @@ void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb)
 
 #ifndef DISABLE_TCPIP_INIT
     /* Initialize LWIP stack */
-    tcpip_init(NULL, NULL);
+    tcpip_init_once(NULL, NULL);
 #endif
 
     memset(sAddrAssigned, 0, sizeof(sAddrAssigned));
@@ -296,6 +297,11 @@ exit:
         otIpPkt = NULL;
     }
     return otIpPkt;
+}
+
+struct netif *otPlatLwipGetOtNetif(void)
+{
+    return &sThreadNetIf;
 }
 
 /* -------------------------------------------------------------------------- */

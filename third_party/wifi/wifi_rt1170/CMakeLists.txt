@@ -26,14 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_sources(ot-cli-addons PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/iperf_cli.c
+list (APPEND WIFI_COMMON_SOURCES
+    ${WIFI_PATH}/wifidriver/firmware_dnld.c
+    ${WIFI_PATH}/wifidriver/mlan_sdio.c
+    ${WIFI_PATH}/wifidriver/mlan_action.c
+    ${WIFI_PATH}/wifidriver/mlan_mbo.c
+    ${WIFI_PATH}/wifidriver/mlan_11k.c
+    ${WIFI_PATH}/wifidriver/mlan_11v.c
+    ${WIFI_PATH}/wifidriver/sdio.c
+    ${WIFI_PATH}/wifidriver/wifi-sdio.c
 )
-
-target_include_directories(ot-cli-addons PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-target_compile_definitions(ot-cli-addons PRIVATE
-    -DOT_APP_CLI_IPERF_ADDON
-)
+set (WIFI_COMMON_SOURCES ${WIFI_COMMON_SOURCES} PARENT_SCOPE)

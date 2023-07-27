@@ -157,7 +157,7 @@ void BOARD_SDCardPowerResetInit(void)
 {
     hal_gpio_pin_config_t sw_config = {
         .direction = kHAL_GpioDirectionOut,
-        .level     = 0U,
+        .level     = BOARD_SDMMC_SD_POWER_RESET_LVL_OFF,
         .port      = BOARD_SDMMC_SD_POWER_RESET_GPIO_INSTANCE,
         .pin       = BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN,
     };
@@ -169,13 +169,11 @@ void BOARD_SDCardPowerControl(bool enable)
 {
     if (enable)
     {
-        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, 1);
-        // GPIO_PinWrite(BOARD_SDMMC_SD_POWER_RESET_GPIO_BASE, BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN, 1);
+        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, BOARD_SDMMC_SD_POWER_RESET_LVL_ON);
     }
     else
     {
-        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, 0);
-        // GPIO_PinWrite(BOARD_SDMMC_SD_POWER_RESET_GPIO_BASE, BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN, 0);
+        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, BOARD_SDMMC_SD_POWER_RESET_LVL_OFF);
     }
 }
 #endif

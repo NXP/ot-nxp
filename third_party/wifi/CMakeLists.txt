@@ -91,7 +91,7 @@ target_compile_definitions(wifi
     PRIVATE
     vApplicationIdleHook=vApplicationIdleHook_wifi #hack to prevent definition of multiple idle tasks (OT has one)
     SDK_DEBUGCONSOLE=DEBUGCONSOLE_DISABLE
-    tcpip_init=tcpip_init_wifi
+    tcpip_init=tcpip_init_once
 )
 
 target_include_directories(wifi
@@ -121,7 +121,6 @@ target_link_libraries(wifi
     ${NXP_DRIVER_LIB}
     ${NXP_BOARD_LIB}
 )
-
 target_compile_options(wifi
     PUBLIC
     -include ${PROJECT_SOURCE_DIR}/third_party/wifi/wifi_${OT_NXP_PLATFORM}/app_config.h

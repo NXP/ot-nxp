@@ -26,6 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+cmake_policy(SET CMP0076 NEW) # target_sources() command now converts relative source file paths to absolute
+
 if(OT_NXP_BUILD_APP_AS_LIB)
     add_library(ot-cli-${OT_NXP_PLATFORM}
         app_ot_freertos.c
@@ -53,6 +55,7 @@ target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
     ${OT_PLATFORM_LIB}
     ${NXP_DRIVER_LIB}
     ot-config
+    ot-cli-addons
     -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
     #Wrapping libc malloc functions and defining the libc heap size to 0
     -Wl,--defsym=__heap_size__=0

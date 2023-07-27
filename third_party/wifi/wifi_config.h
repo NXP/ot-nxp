@@ -16,7 +16,7 @@
 #define CONFIG_MAX_AP_ENTRIES 30
 #endif
 
-#if defined(SD8977) || defined(SD8978) || defined(SD8987) || defined(RW610)
+#if defined(SD8977) || defined(SD8978) || defined(SD8987) || defined(RW610)|| defined(IW61x)
 #define CONFIG_5GHz_SUPPORT 1
 #endif
 
@@ -24,7 +24,7 @@
 #define CONFIG_SDIO_MULTI_PORT_RX_AGGR 1
 #endif
 
-#if defined(SD8987) || defined(RW610)
+#if defined(SD8987) || defined(RW610)|| defined(IW61x)
 #define CONFIG_11AC
 #undef CONFIG_WMM
 #endif
@@ -70,6 +70,13 @@
 #define CONFIG_COMPRESS_TX_PWTBL
 // OTP options
 #undef OTP_CHANINFO
+#endif
+
+#if defined(IW61x)
+#define CONFIG_11AX
+#define CONFIG_EXT_SCAN_SUPPORT 1
+#undef CONFIG_WIFI_CAPA
+#undef MULTI_BSSID_SUPPORT
 #endif
 
 #define CONFIG_IPV6               1
