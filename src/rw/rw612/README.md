@@ -47,13 +47,13 @@ Make sure that the paths of all these tools are set into the `Path` system varia
 
 ## Downloading the SDK
 
-Before downloading the SDK you have to create an account at nxp.com. Once the account is created, login and follow the steps for downloading the SDK_2.13.0_RD-RW612-BGA.
+Before downloading the SDK you have to create an account at nxp.com. Once the account is created, login and follow the steps for downloading the SDK.
 To get the SDK go to the public [repo](https://mcuxpresso.nxp.com/) and select the RD-RW612-BGA (RW612) board
 
-Click on "Build MCUXpresso SDK v2.13.0" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
-Once the SDK_2.13.0_RD-RW612-BGA.zip archive is downloaded unzip it and access the contents.
+Click on "Build MCUXpresso SDK" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
+Once the SDK zip archive is downloaded, unzip it, and access the contents.
 
-![Board Selection](../../../doc/img/sdk-build.jpg)
+![Board Selection](../../../doc/img/rw612/sdk-build.jpg)
 
 ## Building the examples
 
