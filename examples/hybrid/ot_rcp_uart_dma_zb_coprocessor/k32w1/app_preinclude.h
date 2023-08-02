@@ -13,7 +13,11 @@
 extern "C" {
 #endif
 
-// #define OT_ZB_SUPPORT 1      // DUAL_MODE_APP is used instead
+/* Avoid the inclusion of empty files found in ZB example source dir (ZB repo) */
+#include "pdum_gen.h"
+#include "zps_gen.h"
+
+#define DUAL_MODE_APP
 
 #define TRACE_APP TRUE
 #define TRACE_ZCL TRUE

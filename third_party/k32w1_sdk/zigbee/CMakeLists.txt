@@ -50,10 +50,28 @@ list(APPEND SDK_ZB_LIBS
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/lib/libieee-802.15.4_split.a
 )
 
-add_library(nxp-k32w1-zigbee
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZQueue.c
+add_library(nxp-k32w1-zigbee-common
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/app_zps_link_keys.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZdpExtraction.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsBeaconHandler.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsExtendedDebug.c
+)
 
+target_include_directories(nxp-k32w1-zigbee-common
+    PRIVATE $<TARGET_PROPERTY:nxp-k32w1-zigbee,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+target_compile_definitions(nxp-k32w1-zigbee-common
+    PRIVATE $<TARGET_PROPERTY:nxp-k32w1-zigbee,INTERFACE_COMPILE_DEFINITIONS>
+)
+
+list(APPEND ZB_LIB_COMMON_SOURCES
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZQueue.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
+)
+
+if (NOT OT_APP_RCP_UART_DMA_ZB_COPROCESSOR)
+list(APPEND ZB_LIB_COMMON_SOURCES
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Source/zcl_common.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Source/zcl_timer.c
 
@@ -108,12 +126,6 @@ add_library(nxp-k32w1-zigbee
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Source/zcl_WriteAttributesResponseHandle.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Source/zcl.c
 
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/app_zps_link_keys.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZdpExtraction.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsBeaconHandler.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsExtendedDebug.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZQueue.c
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
 
 #        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCL/Clusters/OTA/Source/OTA_client.c
 #        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCL/Clusters/OTA/Source/OTA_ClientUpgradeManager.c
@@ -158,6 +170,11 @@ add_library(nxp-k32w1-zigbee
 
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkSteering/bdb_ns.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/BDB/Source/NwkFormation/bdb_nf.c
+)
+endif()
+
+add_library(nxp-k32w1-zigbee
+        ${ZB_LIB_COMMON_SOURCES}
 )
 
 target_compile_definitions(nxp-k32w1-zigbee
@@ -258,13 +275,13 @@ target_compile_definitions(nxp-k32w1-zigbee-plat
         JN518x
         FSL_OSA_BM_TIMER_CONFIG=FSL_OSA_BM_TIMER_SYSTICK
 )
-
 if (OT_ZB_SUPPORT)
     target_compile_definitions(nxp-k32w1-zigbee-plat
         PUBLIC
             -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
     )
 endif()
+
 target_include_directories(nxp-k32w1-zigbee-plat
     PUBLIC
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform
@@ -317,4 +334,6 @@ target_include_directories(nxp-k32w1-zigbee-plat
 # some generated files are included in the platform.
 target_link_libraries(nxp-k32w1-zigbee-plat PUBLIC nxp-k32w1-zigbee-gen)
 
-target_link_libraries(nxp-k32w1-zigbee PUBLIC ${NXP_DRIVER_LIB} ${SDK_ZB_LIBS} nxp-k32w1-zigbee-plat nxp-k32w1-zigbee-gen)
+# There's a dependency between the stack libs & ZigbeeCommon files, as such force here
+# the proper linking order 
+target_link_libraries(nxp-k32w1-zigbee PUBLIC ${NXP_DRIVER_LIB} ${SDK_ZB_LIBS} nxp-k32w1-zigbee-common nxp-k32w1-zigbee-plat nxp-k32w1-zigbee-gen)

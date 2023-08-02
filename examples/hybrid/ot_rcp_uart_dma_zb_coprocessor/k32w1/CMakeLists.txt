@@ -27,7 +27,7 @@
 #
 
 if (SDK_RELEASE)
-    message(FATAL_ERROR "Not supported yet")
+    set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/boards/k32w148evk/wireless_examples/zigbee/coprocessor/bm)
 else()
     set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zigbee_coprocessor/src)
 endif()
@@ -49,17 +49,13 @@ add_executable(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM}
     ${EXAMPLE_BASE_DIR}/app_serial_commands.c
     ${EXAMPLE_BASE_DIR}/app_zb_stack_utils.c
 
-    ${EXAMPLE_BASE_DIR}/SerialLink.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/serial_link_wkr.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/serial_link_cmds_wkr.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_zigbee_config.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_uart.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
-
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/app_zps_link_keys.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZdpExtraction.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsBeaconHandler.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/appZpsExtendedDebug.c
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_leds.c
 )
@@ -68,13 +64,19 @@ add_library(nxp-k32w1-zigbee-gen
     ${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c
     ${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c
     ${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h
 )
 
 target_include_directories(nxp-k32w1-zigbee-gen
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 
+    ${EXAMPLE_BASE_DIR}
+
     $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/internal
+
+    $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480
+
     $ENV{NXP_K32W1_SDK_ROOT}/CMSIS/Core/Include
 
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
@@ -95,6 +97,10 @@ target_include_directories(nxp-k32w1-zigbee-gen
 target_compile_definitions(nxp-k32w1-zigbee-gen
     PRIVATE
     CPU_K32W1480VFTA
+)
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
+    COMMAND NXP_SDK_ROOT=$ENV{NXP_K32W1_SDK_ROOT} VERSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/version.h sh "${EXAMPLE_BASE_DIR}/build_version.sh"
 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.h" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S"
@@ -136,8 +142,6 @@ target_compile_options(ot-config INTERFACE
 #Add a dependeny to SDK files with app_pre_include
 target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
-        APP_PRE_INCLUDE="${CMAKE_CURRENT_SOURCE_DIR}/app_preinclude.h"
-        DUAL_MODE_APP
         FSL_OSA_TASK_ENABLE=1
         FSL_OSA_MAIN_FUNC_ENABLE=1
         SDK_DEBUGCONSOLE=DEBUGCONSOLE_REDIRECT_TO_SDK
@@ -155,22 +159,24 @@ target_compile_definitions(nxp-k32w1-zigbee
         SINGLE_CHANNEL=${SINGLE_CHANNEL}
 )
 
-target_include_directories(nxp-k32w1-zigbee PUBLIC
-    ${EXAMPLE_BASE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
+target_compile_options(nxp-k32w1-zigbee-plat
+    PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/app_preinclude.h
 )
 
-if (SDK_RELEASE)
-    target_include_directories(nxp-k32w1-zigbee PUBLIC
-#        ${EXAMPLE_BASE_DIR}/bm
-    )
-endif()
+target_include_directories(nxp-k32w1-zigbee-plat PUBLIC
+    ${EXAMPLE_BASE_DIR}
+)
+
+target_include_directories(nxp-k32w1-zigbee PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${EXAMPLE_BASE_DIR}
+)
 
 target_compile_definitions(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM}
     PUBLIC
         DISABLE_OTA
-        DUAL_MODE_APP
-        ZIGBEE_COPRO
+        NCP_COPRO
         ZB_COORD_DEVICE
 #        Router		// for OTA. Collides with OT code
         PRINTF_ADVANCED_ENABLE=1
@@ -198,8 +204,4 @@ target_link_libraries(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM} PUBLIC
     ${OT_MBEDTLS}
     ot-config
     -Llib
-     -Xlinker --start-group
-     -Xlinker openthread-radio.a ${OT_PLATFORM_LIB}
-     -Xlinker --end-group
 )
-

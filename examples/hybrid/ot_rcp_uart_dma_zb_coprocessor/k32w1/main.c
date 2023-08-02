@@ -185,7 +185,6 @@ void App_ZB_Run(uint32_t param)
         APP_vRunZigbee();
         ZTIMER_vTask();
         APP_ZpsEventTask();
-        APP_taskCoordinator();
         APP_taskAtSerial();
         APP_SerialCmdTask();
 
