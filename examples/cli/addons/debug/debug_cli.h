@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
+#ifndef DEBUG_CLI_H_
+#define DEBUG_CLI_H_
 
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
-
 /* -------------------------------------------------------------------------- */
 /*                              Public prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+/*!
+ * @brief Handler called from ot-cli when radio_nxp command is used
+ *
+ * @param[in] aContext pointer to a context, not used
+ * @param[in] aArgsLength
+ * @param[in] aArgs
+ * @return otError
+ */
+otError ProcessDebug(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
-{
-    /* Init board hardware */
-    BOARD_InitHardware();
-
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
-}
+#endif /* DEBUG_CLI_H_ */

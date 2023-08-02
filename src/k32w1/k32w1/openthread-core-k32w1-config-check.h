@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
+#ifndef OPENTHREAD_CORE_K32W1_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_K32W1_CONFIG_CHECK_H_
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#error "Platform k32w1 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
+#endif
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
-
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
-{
-    /* Init board hardware */
-    BOARD_InitHardware();
-
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
-}
+#endif /* OPENTHREAD_CORE_K32W1_CONFIG_CHECK_H_ */

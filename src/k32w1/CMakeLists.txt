@@ -26,25 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM}_sdk)
-
-if(OT_EXTERNAL_MBEDTLS)
-    # Build mbedtls library from the SDK
-    add_subdirectory(mbedtls)
-endif()
-
-if(OT_NXP_LWIP)
-    add_subdirectory(lwip)
-endif()
-
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(wifi)
-endif()
-
-if(FREERTOS_PORT)
-    add_subdirectory(freertos-kernel)
-endif()
-
-if(CONNFWK_PLATFORM)
-    add_subdirectory(connfwk)
-endif()
+add_subdirectory(${OT_NXP_PLATFORM})

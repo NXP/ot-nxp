@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,64 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
+#include "openthread/platform/misc.h"
+#include "fsl_device_registers.h"
+#include <stdint.h>
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
-
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
-
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
+void otPlatReset(otInstance *aInstance)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
+    OT_UNUSED_VARIABLE(aInstance);
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
+    NVIC_SystemReset();
 
-    appOtStart(argc, argv);
+    while (1)
+    {
+    }
+}
 
-    vTaskStartScheduler();
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
 
-    return 0;
+    otPlatResetReason reason;
+    uint32_t          reset_status = CMC0->SRS;
+
+    if (reset_status & CMC_SRS_POR_MASK)
+    {
+        reason = OT_PLAT_RESET_REASON_POWER_ON;
+    }
+    else if (reset_status & CMC_SRS_SW_MASK)
+    {
+        reason = OT_PLAT_RESET_REASON_SOFTWARE;
+    }
+    else if ((reset_status & CMC_SRS_WDOG0_MASK) || (reset_status & CMC_SRS_WDOG1_MASK))
+    {
+        reason = OT_PLAT_RESET_REASON_WATCHDOG;
+    }
+    else if (reset_status & CMC_SRS_PIN_MASK)
+    {
+        reason = OT_PLAT_RESET_REASON_EXTERNAL;
+    }
+    else if ((reset_status & CMC_SRS_LOCKUP_MASK) || (reset_status & CMC_SRS_RSTACK_MASK) ||
+             (reset_status & CMC_SRS_FATAL_MASK))
+    {
+        reason = OT_PLAT_RESET_REASON_CRASH;
+    }
+    else
+    {
+        reason = OT_PLAT_RESET_REASON_OTHER;
+    }
+
+    return reason;
+}
+
+void otPlatAssertFail(const char *aFilename, int aLineNumber)
+{
+    OT_UNUSED_VARIABLE(aFilename);
+    OT_UNUSED_VARIABLE(aLineNumber);
+}
+
+void otPlatWakeHost(void)
+{
+    // TODO: implement an operation to wake the host from sleep state.
 }

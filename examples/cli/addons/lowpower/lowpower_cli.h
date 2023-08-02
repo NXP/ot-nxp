@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
+#ifndef LOWPOWER_CLI_H_
+#define LOWPOWER_CLI_H_
 
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
+#include <openthread/instance.h>
 
 /* -------------------------------------------------------------------------- */
 /*                              Public prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+/*!
+ * @brief Initializes lowpower cli addon
+ *
+ * @param[in] aInstance pointer to OT instance
+ */
+void otAppLowPowerCliInit(otInstance *aInstance);
 
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
+/*!
+ * @brief Handler called from ot-cli when lp command is used
+ *
+ * @param[in] aContext pointer to a context, not used
+ * @param[in] aArgsLength
+ * @param[in] aArgs
+ * @return otError
+ */
+otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
-int main(int argc, char *argv[])
-{
-    /* Init board hardware */
-    BOARD_InitHardware();
-
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
-}
+#endif /* LOWPOWER_CLI_H_ */

@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
+#ifndef K32W1_MBEDTLS_CONFIG_H
+#define K32W1_MBEDTLS_CONFIG_H
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
+// For BLE WirelessUART project
+#define MBEDTLS_ECDH_C
 
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
-{
-    /* Init board hardware */
-    BOARD_InitHardware();
-
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
-}
+#endif

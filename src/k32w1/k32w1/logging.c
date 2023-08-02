@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,43 +27,24 @@
  */
 
 /**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
+ * @file logging.c
+ * Platform abstraction for the logging
  *
  */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#ifndef OT_EXTERNAL_BUILD
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+#endif
+#include <openthread/platform/logging.h>
+#include <openthread/platform/toolchain.h>
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
-
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
+#if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) || \
+    (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
-
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+    OT_UNUSED_VARIABLE(aFormat);
 }
+#endif

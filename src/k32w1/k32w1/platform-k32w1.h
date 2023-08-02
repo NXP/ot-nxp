@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,42 +28,63 @@
 
 /**
  * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
+ *   This file includes the platform-specific initializers.
  *
  */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#ifndef PLATFORM_K32W1_H_
+#define PLATFORM_K32W1_H_
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
+#ifndef OT_EXTERNAL_BUILD
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+#endif
 
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
+#include <stdint.h>
 
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+#include <openthread/instance.h>
 
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
+/**
+ * This function initializes the alarm service used by OpenThread.
+ *
+ */
+void otPlatAlarmInit(void);
 
-int main(int argc, char *argv[])
-{
-    /* Init board hardware */
-    BOARD_InitHardware();
+/**
+ * This function performs alarm driver processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void otPlatAlarmProcess(otInstance *aInstance);
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
+/**
+ * This function performs uart driver processing.
+ *
+ */
+void otPlatUartProcess();
 
-    appOtStart(argc, argv);
+/**
+ * This function performs UART Blocking Send
+ *
+ * @param[in]  aBuf  Buffer to be sent over UART
+ * @param[in]  len   Length of the above buffer
+ *
+ */
+void otPlatUartSendBlocking(const uint8_t *aBuf, uint32_t len);
 
-    vTaskStartScheduler();
+/**
+ * This function initializes the radio service used by OpenThread.
+ *
+ */
+void otPlatRadioInit(void);
 
-    return 0;
-}
+/**
+ * This function performs radio driver processing.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+void otPlatRadioProcess(otInstance *aInstance);
+
+#endif // PLATFORM_K32W1_H_

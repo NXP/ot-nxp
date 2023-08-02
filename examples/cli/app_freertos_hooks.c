@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2022, NXP
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,7 +28,7 @@
 
 /**
  * @file
- * This file implements an example OpenThread CLI application.
+ * This file implements FreeRTOS hooks that can be enabled through FreeRTOSConfig.h
  *
  * This file is just for example, but not for production.
  *
@@ -40,31 +39,55 @@
 /* -------------------------------------------------------------------------- */
 
 #include "FreeRTOS.h"
-#include "app_ot.h"
+#include "assert.h"
+#include "ot_platform_common.h"
 #include "task.h"
 
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
+#include "PWR_Interface.h"
+#include "fsl_common.h"
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-int main(int argc, char *argv[])
+void vApplicationIdleHook(void)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
+    otSysRunIdleTask();
+}
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    assert(0);
+}
 
-    appOtStart(argc, argv);
+void vApplicationMallocFailedHook(void)
+{
+    assert(0);
+}
 
-    vTaskStartScheduler();
+void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime)
+{
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
+    bool     abortIdle = false;
+    uint64_t expectedIdleTimeUs, actualIdleTimeUs;
 
-    return 0;
+    uint32_t irqMask = DisableGlobalIRQ();
+
+    /* Disable and prepare systicks for low power */
+    abortIdle = PWR_SysticksPreProcess((uint32_t)xExpectedIdleTime, &expectedIdleTimeUs);
+
+    if (abortIdle == false)
+    {
+        /* Enter low power with a maximal timeout */
+        actualIdleTimeUs = PWR_EnterLowPower(expectedIdleTimeUs);
+
+        /* Re enable systicks and compensate systick timebase */
+        PWR_SysticksPostProcess(expectedIdleTimeUs, actualIdleTimeUs);
+    }
+
+    /* Exit from critical section */
+    EnableGlobalIRQ(irqMask);
+#endif
 }

@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,6 +47,14 @@ extern "C" {
  *
  */
 void appOtStart(int argc, char *argv[]);
+
+/**
+ * This function is used to lock/unlock the OpenThread task using a mutex
+ *
+ * @param[in] bLockState      Set to TRUE to lock the task and to FALSE to unlock it.
+ *
+ */
+void appOtLockOtTask(bool bLockState);
 
 #ifdef __cplusplus
 }

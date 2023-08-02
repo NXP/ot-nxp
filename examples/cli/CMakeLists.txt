@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2022-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,50 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM}_sdk)
-
-if(OT_EXTERNAL_MBEDTLS)
-    # Build mbedtls library from the SDK
-    add_subdirectory(mbedtls)
+if(OT_NXP_BUILD_APP_AS_LIB)
+    add_library(ot-cli-${OT_NXP_PLATFORM}
+        app_ot_freertos.c
+        libc_hook.cpp
+        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+    )
+else()
+    add_executable(ot-cli-${OT_NXP_PLATFORM}
+        main.c
+        app_ot_freertos.c
+        app_freertos_hooks.c
+        libc_hook.cpp
+        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+    )
 endif()
 
-if(OT_NXP_LWIP)
-    add_subdirectory(lwip)
+target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    ..
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+)
+
+target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    openthread-cli-ftd
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    ${NXP_DRIVER_LIB}
+    ot-config
+    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+    #Wrapping libc malloc functions and defining the libc heap size to 0
+    -Wl,--defsym=__heap_size__=0
+    -Wl,--wrap=_malloc_r
+    -Wl,--wrap=_realloc_r
+    -Wl,--wrap=_free_r
+    -Wl,--wrap=_calloc_r
+    -Wl,--wrap=malloc
+    -Wl,--wrap=free
+    -Wl,--wrap=realloc
+    -Wl,--wrap=calloc
+)
+
+if(NXP_BOARD_LIB)
+    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+        ${NXP_BOARD_LIB}
+    )
 endif()
 
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(wifi)
-endif()
-
-if(FREERTOS_PORT)
-    add_subdirectory(freertos-kernel)
-endif()
-
-if(CONNFWK_PLATFORM)
-    add_subdirectory(connfwk)
-endif()
+add_subdirectory(addons)

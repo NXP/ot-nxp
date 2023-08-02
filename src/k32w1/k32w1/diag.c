@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,42 +28,68 @@
 
 /**
  * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
+ *   This file implements the OpenThread platform abstraction for the diagnostics.
  *
  */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#include "fsl_device_registers.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
+#ifndef OT_EXTERNAL_BUILD
+#include <openthread/config.h>
+#endif
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+/**
+ * Diagnostics mode variables.
+ *
+ */
+static bool sDiagMode = false;
 
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(argc);
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
-
-    appOtStart(argc, argv);
-
-    vTaskStartScheduler();
-
-    return 0;
+    // Add more platform specific diagnostics features here.
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
 }
+
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
+
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
+
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
+
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

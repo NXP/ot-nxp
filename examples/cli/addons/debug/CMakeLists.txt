@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM}_sdk)
 
-if(OT_EXTERNAL_MBEDTLS)
-    # Build mbedtls library from the SDK
-    add_subdirectory(mbedtls)
-endif()
+target_sources(ot-cli-${OT_NXP_PLATFORM} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/debug_cli.c
+)
 
-if(OT_NXP_LWIP)
-    add_subdirectory(lwip)
-endif()
+target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(wifi)
-endif()
-
-if(FREERTOS_PORT)
-    add_subdirectory(freertos-kernel)
-endif()
-
-if(CONNFWK_PLATFORM)
-    add_subdirectory(connfwk)
-endif()
+target_compile_definitions(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+    -DOT_APP_CLI_DEBUG_ADDON
+)

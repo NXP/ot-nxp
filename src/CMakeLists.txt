@@ -26,10 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_BUILD_RT)
-    add_subdirectory(imx_rt)
-endif()
-
-if(OT_BUILD_K32W061 OR OT_BUILD_JN5189)
-    add_subdirectory(k32w0)
+if(OT_NXP_PLATFORM_FAMILY)
+    add_subdirectory(${OT_NXP_PLATFORM_FAMILY})
+else()
+    add_subdirectory(${OT_NXP_PLATFORM})
 endif()

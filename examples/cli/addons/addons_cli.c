@@ -1,6 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,44 +26,78 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
- *
- */
-
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
+#include <common/code_utils.hpp>
+#include <openthread/cli.h>
+#include <openthread/instance.h>
+
+#ifdef OT_APP_CLI_IPERF_ADDON
+#include "iperf_cli.h"
+#include "ot_lwip.h"
+#endif
+
+#ifdef OT_APP_CLI_DEBUG_ADDON
+#include "debug_cli.h"
+#endif
+
+#include "radio_cli.h"
+
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
+#include "lowpower_cli.h"
+#endif
 
 /* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
+/*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
+static const otCliCommand addonsCommands[] = {
+#ifdef OT_APP_CLI_IPERF_ADDON
+    {"iperf", ProcessIperf},
+#endif
+    {"radio_nxp", ProcessRadio},
+#ifdef OT_APP_CLI_DEBUG_ADDON
+    {"debug", ProcessDebug},
+#endif
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
+    {"lp", ProcessLowPower},
+#endif
+};
+
+/* -------------------------------------------------------------------------- */
+/*                             Private prototypes                             */
+/* -------------------------------------------------------------------------- */
+
+static void otAppCliStateChangeCallback(otChangedFlags flags, void *context);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-int main(int argc, char *argv[])
+void otAppCliAddonsInit(otInstance *aInstance)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
+#ifdef OT_APP_CLI_IPERF_ADDON
+    otAppCliIperfCliInit(aInstance);
+#endif
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
+#ifdef OT_APP_CLI_LOWPOWER_ADDON
+    otAppLowPowerCliInit(aInstance);
+#endif
 
-    appOtStart(argc, argv);
+    otSetStateChangedCallback(aInstance, otAppCliStateChangeCallback, NULL);
 
-    vTaskStartScheduler();
+    otCliSetUserCommands(addonsCommands, OT_ARRAY_LENGTH(addonsCommands), NULL);
+}
 
-    return 0;
+/* -------------------------------------------------------------------------- */
+/*                              Private functions                             */
+/* -------------------------------------------------------------------------- */
+
+static void otAppCliStateChangeCallback(otChangedFlags flags, void *context)
+{
+#ifdef OT_APP_CLI_IPERF_ADDON
+    otPlatLwipUpdateState(flags, context);
+#endif
 }

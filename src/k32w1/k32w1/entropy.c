@@ -1,6 +1,5 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,42 +28,31 @@
 
 /**
  * @file
- * This file implements an example OpenThread CLI application.
- *
- * This file is just for example, but not for production.
+ *   This file implements an entropy source based on TRNG.
  *
  */
 
-/* -------------------------------------------------------------------------- */
-/*                                  Includes                                  */
-/* -------------------------------------------------------------------------- */
+#include <openthread/platform/entropy.h>
+#include "mbedtls/entropy_poll.h"
+#include "utils/code_utils.h"
 
-#include "FreeRTOS.h"
-#include "app_ot.h"
-#include "task.h"
-
-/* -------------------------------------------------------------------------- */
-/*                              Public prototypes                             */
-/* -------------------------------------------------------------------------- */
-
-extern void BOARD_InitHardware(void);
-extern void APP_InitServices(void);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions                              */
-/* -------------------------------------------------------------------------- */
-
-int main(int argc, char *argv[])
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    /* Init board hardware */
-    BOARD_InitHardware();
+    otError error     = OT_ERROR_NONE;
+    size_t  outputLen = 0;
 
-    /* Init services needed by the application such as low power module */
-    APP_InitServices();
+    otEXPECT_ACTION(aOutput, error = OT_ERROR_INVALID_ARGS);
 
-    appOtStart(argc, argv);
+    for (size_t partialLen = 0; outputLen < aOutputLength; outputLen += partialLen)
+    {
+        const uint16_t remaining = aOutputLength - outputLen;
+        partialLen               = 0;
 
-    vTaskStartScheduler();
+        // Non-zero return values for mbedtls_hardware_poll() signify an error has occurred
+        otEXPECT_ACTION(0 == mbedtls_hardware_poll(NULL, &aOutput[outputLen], remaining, &partialLen),
+                        error = OT_ERROR_FAILED);
+    }
 
-    return 0;
+exit:
+    return error;
 }
