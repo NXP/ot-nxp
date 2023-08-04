@@ -99,15 +99,25 @@ target_compile_definitions(nxp-k32w1-zigbee-gen
     CPU_K32W1480VFTA
 )
 
+if (SDK_RELEASE)
+    add_custom_command(OUTPUT ${ZPSCFG}
+        COMMAND dos2unix -q $ENV{PDUMCONFIG}
+        COMMAND dos2unix -q $ENV{ZPSCONFIG}
+        COMMAND dos2unix -q $ENV{EXAMPLE_BASE_DIR}/build_version.sh
+    )
+endif()
+
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
     COMMAND NXP_SDK_ROOT=$ENV{NXP_K32W1_SDK_ROOT} VERSION_FILE=${CMAKE_CURRENT_SOURCE_DIR}/version.h sh "${EXAMPLE_BASE_DIR}/build_version.sh"
 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.h" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S"
+    DEPENDS ${ZPSCFG}
     COMMAND sh "$ENV{PDUMCONFIG}" -z coordinator -e ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.h"
+    DEPENDS ${ZPSCFG}
     COMMAND sh "$ENV{ZPSCONFIG}" -n coordinator -t JN518x -l $ENV{ZPS_NWK_LIB} -a $ENV{ZPS_APL_LIB} -e LITTLE_ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
