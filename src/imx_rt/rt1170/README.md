@@ -33,7 +33,7 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [the latest SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. Select the **MIMXRT1170-EVKB** board. Select the latest SDK version with FIRECREST tag.
+- Download [the SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. Select the **MIMXRT1170-EVKB** board. Select the SDK version 2.13.2.
 In the SDK Builder UI selection you should select at least
   the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain**.
 
