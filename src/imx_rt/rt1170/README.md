@@ -33,26 +33,32 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download the [IMXRT1170 SDK](https://mcuxpresso.nxp.com/).
-  Creating an nxp.com account is required before being able to download the
-  SDK. Once the account is created, login and follow the steps for downloading
-  SDK. The SDK Builder UI selection should be similar with the one from the image below with the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain** selected.
+- Download [the SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. S Select the **MIMXRT1170-EVKB** board. Select the SDK version 2.13.2.
+  In the SDK Builder UI selection you should select at least
+  the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain**.
 
-![MCUXpresso SDK Download](../../../doc/img/imxrt1170/mcux-sdk-download.png)
+## Building examples
 
-Please refer to release notes for getting the latest released SDK.
+```bash
+$ cd <path-to-ot-nxp>
+$ export NXP_RT1170_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ ./script/build_rt1170
+```
 
-Note: if the IWX12 transceiver is chosen a dedicated SDK with this support should be chosen.
+After a successful build, the ot-cli-rt1170 FreeRTOS version could be found in `build_rt1170` and include FTD (Full Thread Device).
+
+Note: FreeRTOS is required to be able to build the IMXRT1170 platform files. By default, if no argument is given when running the script `build_rt1170`, a freertos ot cli will be created to support the following configurations:
+
+- RT1170 + IWX12 with spinel over SPI (binaries located in `build_rt1170/iwx12_spi`)
 
 ## Hardware requirements RT1170 + IWX12
 
 Host part:
 
 - 1 EVKB-MIMXRT1170
+  ![](../../../doc/img/imxrt1170/IMX-RT1170-EVK-TOP.jpg)
 
-![](../../../doc/img/imxrt1170/IMX-RT1170-EVK-TOP.jpg)
-
-Transceiver parts :
+Transceiver part:
 
 - 1 [2EL M2 A1 IW612 Secure Module](https://www.nxp.com/products/wireless/wi-fi-plus-bluetooth-plus-802-15-4/2-4-5-ghz-dual-band-1x1-wi-fi-6-802-11ax-plus-bluetooth-5-2-plus-802-15-4-tri-radio-solution:IW612)
 
@@ -70,7 +76,7 @@ Transceiver parts :
 
 ### Hardware rework for SPI support on EVKB-MIMXRT1170
 
-To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406,R2015.
+To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406.
 
 ### Hardware rework to connect SPI on 2EL M2 IW612 Module
 
@@ -123,51 +129,13 @@ To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resist
 |  RESET (J26.2)  |     J9.3      |
 |   GND (J26.1)   |     J7.6      |
 
-### Building the freeRTOS ot-cli example
+## Flash Binaries
 
-```bash
-$ cd <path-to-ot-nxp>
-$ export NXP_RT1170_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rt1170 iwx12_spi
-```
+### Flashing the IWX12 transceiver firmware
 
-After a successful build, the ot-cli-rt1170.elf FreeRTOS version could be found in `build_rt1170/iwx12/bin` and include support of the FTD (Full Thread Device) role.
+At each boot the RT1170 will automatically download the IWX12 firmware on the board via SDIO.
 
-## Hardware requirements RT1170 + K32W0 - Warning: No longer maintain
-
-Host part:
-
-- 1 EVKB-MIMXRT1170
-
-Transceiver part:
-
-- 1 OM15076-3 Carrier Board (DK6 board)
-- 1 K32W061 Module to be plugged on the Carrier Board
-
-### Board settings (Spinel over UART)
-
-The below table explains pin settings (UART settings) to connect the evkbmimxrt1170 (host) to a k32w061 transceiver (rcp).
-
-| PIN NAME OF K32W061 | DK6 (K32W061) | I.MXRT1170  | PIN NAME OF RT1170 | GPIO NAME OF RT1170 |
-| :-----------------: | :-----------: | :---------: | :----------------: | :-----------------: |
-|      UART_TXD       |     PIO 8     | J25, pin 13 |    LPUART7_RXD     |     GPIO_AD_01      |
-|      UART_RXD       |     PIO 9     | J25, pin 15 |    LPUART7_TXD     |     GPIO_AD_00      |
-|      UART_RTS       |     PIO 6     | J25, pin 11 |    LPUART7_CTS     |     GPIO_AD_02      |
-|      UART_CTS       |     PIO 7     | J25, pin 9  |    LPUART7_RTS     |     GPIO_AD_03      |
-|         GND         |   J3, pin 1   | J10, pin 14 |         XX         |         XX          |
-|        RESET        |     RSTN      | J26, pin 2  |     GPIO_AD_10     |     GPIO_AD_10      |
-
-### Building the freeRTOS ot-cli example
-
-```bash
-$ cd <path-to-ot-nxp>
-$ export NXP_RT1170_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rt1170 k32w0_uart_flow_control
-```
-
-After a successful build, the ot-cli-rt1170.elf FreeRTOS version could be found in `build_rt1170/k32w0_uart_flow_control/bin` and include support of the FTD (Full Thread Device) role.
-
-## Flashing the IMXRT ot-cli-rt1170 host image using MCUXpresso IDE
+### Flashing the IMXRT ot-cli-rt1170 host image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
 
