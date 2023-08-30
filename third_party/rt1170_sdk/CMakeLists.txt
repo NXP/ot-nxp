@@ -234,7 +234,7 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
             ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
     )
     list(APPEND SDK_COMPILE_DEFINITIONS
-        -DIW61x
+        -DSD9177
         -DSDMMCHOST_OPERATION_VOLTAGE_3V3
         -DCONFIG_MAX_AP_ENTRIES=10
         -DCONFIG_UAP_AMPDU_TX=1
