@@ -43,19 +43,6 @@
 #include <utils/code_utils.h>
 #include <openthread/platform/memory.h>
 
-#if PDM_SAVE_IDLE
-#include "fsl_os_abstraction.h"
-
-#if defined(USE_RTOS) && (USE_RTOS == 1)
-#define mutex_lock OSA_MutexLock
-#define mutex_unlock OSA_MutexUnlock
-#else
-#define mutex_lock(...)
-#define mutex_unlock(...)
-#endif
-
-#define MAX_QUEUE_SIZE (16)
-
 /* PDM can use either internal flash or external flash for persistent storage.
  * Set PDM_SAVE_IDLE_PAGE_SIZE to internal flash page size (512) as default.
  *
@@ -73,6 +60,20 @@
 /* Segment data size is: PDM page size - size of internal header (D_PDM_NVM_SEGMENT_HEADER_SIZE).
  * Subtract 64 to have more margin. */
 #define PDM_SEGMENT_SIZE (PDM_SAVE_IDLE_PAGE_SIZE - 64)
+
+#if PDM_SAVE_IDLE
+#include "fsl_os_abstraction.h"
+
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+#define mutex_lock OSA_MutexLock
+#define mutex_unlock OSA_MutexUnlock
+#else
+#define mutex_lock(...)
+#define mutex_unlock(...)
+#endif
+
+#define MAX_QUEUE_SIZE (16)
+
 /* Dummy keys are introduced at the end of a PDM region if the current key does not fit the free space. */
 #define kRamBufferDummyKey (uint16_t)0xFFFF
 
@@ -237,7 +238,7 @@ static void HandleError(ramBufferDescriptor **buffer)
  *
  * Returns the number of sequential PDM ids.
  */
-static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle, bool_t extendedSearch)
+static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle)
 {
     uint16_t counter = 0;
     uint16_t length;
@@ -247,7 +248,7 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle, bool_t e
         handle->header.length += length;
         counter++;
 
-        if (extendedSearch == FALSE)
+        if (handle->header.extendedSearch == FALSE)
         {
             break;
         }
@@ -279,8 +280,10 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t e
     ramDescr->header.mutexHandle = OSA_MutexCreate();
     otEXPECT_ACTION(ramDescr->header.mutexHandle != NULL, HandleError(&ramDescr));
 #endif
+    ramDescr->header.extendedSearch    = extendedSearch;
+    ramDescr->header.backendRegionSize = PDM_SEGMENT_SIZE;
 
-    nbPdmIds = doesDataExist(nvmId, ramDescr, extendedSearch);
+    nbPdmIds = doesDataExist(nvmId, ramDescr);
     otEXPECT_ACTION(ramDescr->header.maxLength <= kRamBufferMaxAllocSize, HandleError(&ramDescr));
 
 #if PDM_ENCRYPTION
@@ -353,15 +356,17 @@ exit:
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch)
 {
     OT_UNUSED_VARIABLE(initialSize);
-    OT_UNUSED_VARIABLE(extendedSearch);
+
     rsError              err       = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr  = (ramBufferDescriptor *)&sPdmBuffer;
     uint16_t             bytesRead = 0;
 
-    ramDescr->header.maxLength   = PDM_BUFFER_SIZE - kRamDescSize;
-    ramDescr->buffer             = (uint8_t *)&sPdmBuffer[kRamDescSize];
+    ramDescr->header.extendedSearch    = extendedSearch;
+    ramDescr->header.backendRegionSize = PDM_SEGMENT_SIZE;
+    ramDescr->header.maxLength         = PDM_BUFFER_SIZE - kRamDescSize;
+    ramDescr->buffer                   = (uint8_t *)&sPdmBuffer[kRamDescSize];
 #if PDM_SAVE_IDLE
-    ramDescr->header.mutexHandle = OSA_MutexCreate();
+    ramDescr->header.mutexHandle       = OSA_MutexCreate();
     otEXPECT_ACTION((NULL != ramDescr->header.mutexHandle), ramDescr = NULL);
 #endif
 
@@ -384,7 +389,6 @@ exit:
 #endif
 
 #if PDM_SAVE_IDLE
-
 /* Overwrite the weak implementation from ram_storage.c */
 rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t aValueLength)
 {
