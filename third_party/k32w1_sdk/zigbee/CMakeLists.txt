@@ -255,6 +255,7 @@ add_library(nxp-k32w1-zigbee-plat
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/glue.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/leds.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/timer.c
 
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/PWRM_adapter.c
