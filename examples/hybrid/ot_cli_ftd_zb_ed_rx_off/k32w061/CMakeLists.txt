@@ -65,30 +65,50 @@ add_executable(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM}
     pdum_apdu.S
 )
 
-add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.h" "${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S"
+# Add specific target for the generated files files, no need to create a lib,
+# running the command for generating them is enough.
+add_custom_target(zigbee-gen
     COMMAND "$ENV{PDUMCONFIG}" -z enddevice_rxoff -e ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND "$ENV{ZPSCONFIG}" -n enddevice_rxoff -t JN518x -l $ENV{ZPS_NWK_LIB} -a $ENV{ZPS_APL_LIB} -e LITTLE_ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
+    BYPRODUCTS
+        ${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S
 )
 
-add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c" "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.h"
-    COMMAND "$ENV{ZPSCONFIG}" -n enddevice_rxoff -t JN518x -l $ENV{ZPS_NWK_LIB} -a $ENV{ZPS_APL_LIB} -e LITTLE_ENDIAN -f ${ZPSCFG} -o ${CMAKE_CURRENT_SOURCE_DIR}
+# Mark files as generated, otherwise compilation would fail (source not found).
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/pdum_gen.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/pdum_apdu.S
+    GENERATED
 )
+
+# Make the zigbee lib depend on the new target, the app depends on the zigbee lib,
+# and it is compiled first.
+add_dependencies(nxp-k32w061-zigbee zigbee-gen)
 
 target_include_directories(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/ieee-802.15.4/MacDynamic/Include
     ${PROJECT_SOURCE_DIR}/examples/hybrid/zb_common
+    $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform
+    ${EXAMPLE_BASE_DIR}
 )
 
 if (SDK_RELEASE)
     # for SDK release, app.h is in under bm
-    target_include_directories(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM} PUBLIC
+    target_include_directories(nxp-k32w061-zigbee PUBLIC
         ${EXAMPLE_BASE_DIR}/bm
     )
 else()
-    target_include_directories(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM} PRIVATE
+    target_include_directories(nxp-k32w061-zigbee PUBLIC
         # for non-SDK release, app.h resides here
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/board/dk6
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/board/dk6
     )
 endif()
 
@@ -110,7 +130,8 @@ target_compile_definitions(nxp-k32w061-zigbee
         SINGLE_CHANNEL=${SINGLE_CHANNEL}
 )
 
-target_include_directories(nxp-k32w061-zigbee PUBLIC
+target_include_directories(nxp-k32w061-zigbee PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${EXAMPLE_BASE_DIR}
 )
 
@@ -127,6 +148,13 @@ target_compile_definitions(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM}
         POLL_TIME_FAST=500    # ZED sends a Data Req every POLL_TIME_FAST ms
         ZED_MAX_POLLS=3       # ZED sends ZED_MAX_POLLS + 1 Data Reqs
         ZB_PROTO_ID=0
+)
+
+# We can't use app_preinclude.h since it is -imacro-ed, and not -includ-ed
+# as it's done on other platforms
+target_compile_options(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM}
+    PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/../../zb_common/zigbee_gen.h
 )
 
 #create empty libraries to be able to link with connectivity.ld

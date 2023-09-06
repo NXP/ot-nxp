@@ -34,19 +34,19 @@ set(ENV{PDUMCONFIG} "${TOOL_BASE_DIR}/PDUMConfig/Source/PDUMConfig")
 set(ENV{ZPSCONFIG} "${TOOL_BASE_DIR}/ZPSConfig/Source/ZPSConfig")
 
 
-set(ENV{ZPS_NWK_LIB} "$ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSNWK_ZED.a")
-set(ENV{ZPS_APL_LIB} "$ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSAPL.a")
+set(ENV{ZPS_NWK_LIB} "$ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSNWK_ZED.a")
+set(ENV{ZPS_APL_LIB} "$ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSAPL.a")
 
 list(APPEND SDK_ZB_LIBS
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDUM/Library/libPDUM.a
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PWRM/Library/libPWRM.a
 
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSGP_ZED.a
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSIPAN_ZED.a
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSAPL.a
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSNWK_ZED.a
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSTSV.a
-        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/Library/libZPSMAC_Mini_SOC.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSGP_ZED.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSIPAN_ZED.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSAPL.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSNWK_ZED.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSTSV.a
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/libs/libZPSMAC_Mini_SOC.a
 )
 
 add_library(nxp-k32w061-zigbee
