@@ -50,6 +50,10 @@ list(APPEND SDK_ZB_LIBS
 )
 
 add_library(nxp-k32w061-zigbee
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/leds.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/buttons.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
+
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZQueue.c
 
@@ -180,6 +184,8 @@ target_compile_definitions(nxp-k32w061-zigbee
 
 target_include_directories(nxp-k32w061-zigbee
     PUBLIC
+            $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform
+
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Include
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZCL/Clusters/OTA/Include
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Include
