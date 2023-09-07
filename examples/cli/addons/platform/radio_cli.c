@@ -63,6 +63,7 @@
 #define MFG_CMD_PHY_TX_TEST_PSDU 0x39      // 57
 #define MFG_CMD_PHY_RX_TX_ACK_TEST 0x3A    // 58
 #define MFG_CMD_SET_GENERIC_PARAM 0x3B     // 59
+#define MFG_CMD_GET_SET_LATENCY 0x3C       // 60
 #define MAX_VERSION_STRING_SIZE 128        //< Max size of version string.
 
 // NXP Spinel commands
@@ -573,6 +574,39 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                                           &outputLen);
                     if ((outputLen >= 5) && (payload[3] == 0))
                     {
+                        error = OT_ERROR_NONE;
+                    }
+                    else
+                    {
+                        error = OT_ERROR_FAILED;
+                    }
+                }
+            }
+            break;
+
+            case MFG_CMD_GET_SET_LATENCY:
+            {
+                if (aArgsLength == 11)
+                {
+                    payload[1] = MFG_CMD_GET_SET_LATENCY;
+                    payload[2] = (uint8_t)atoi(aArgs[1]); // Get or set
+                    payload[4] = (uint8_t)atoi(aArgs[3]); // State
+                    payload[5] = (uint8_t)atoi(aArgs[4]); // TX/RX Toggle
+                    payload[6] = (uint8_t)atoi(aArgs[5]); // GPIO number
+                    payload[7] = (uint8_t)atoi(aArgs[6]); // PANID[15:8]
+                    payload[8] = (uint8_t)atoi(aArgs[7]); // PANID[7:0]
+
+                    otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
+                                          &outputLen);
+                    if ((outputLen >= 9) && (payload[3] == 0))
+                    {
+                        if (payload[2] == MFG_CMD_ACTION_GET)
+                        {
+                            otCliOutputFormat("State: %d\r\n", payload[4]);
+                            otCliOutputFormat("TX/RX Toggle: %d\r\n", payload[5]);
+                            otCliOutputFormat("GPIO number: %d\r\n", payload[6]);
+                            otCliOutputFormat("PANID: %d\r\n", (payload[7] << 8) | (payload[8]));
+                        }
                         error = OT_ERROR_NONE;
                     }
                     else
