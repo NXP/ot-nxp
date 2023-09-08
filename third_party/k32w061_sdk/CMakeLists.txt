@@ -50,6 +50,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/system_K32W061.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_aes.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_clock.c
+        $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_rtc.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_ctimer.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_common.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_gint.c
@@ -106,6 +107,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W0_SDK_ROOT}/components/serial_manager/serial_port_uart.c
         $ENV{NXP_K32W0_SDK_ROOT}/components/uart/usart_adapter.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_clock.c
+        $ENV{NXP_K32W0_SDK_ROOT}/platform/drivers/jn_rtc/fsl_rtc.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_power.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_reset.c
         $ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/drivers/fsl_wtimer.c
