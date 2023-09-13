@@ -43,23 +43,18 @@
 #include <utils/code_utils.h>
 #include <openthread/platform/memory.h>
 
-/* PDM can use either internal flash or external flash for persistent storage.
- * Set PDM_SAVE_IDLE_PAGE_SIZE to internal flash page size (512) as default.
- *
- * If an application uses PDM in external flash, it's mandatory to define
- * PDM_SAVE_IDLE_PAGE_SIZE to the external flash page size.
- */
-#ifndef PDM_EXT_FLASH
-#include "fsl_flash.h"
-#define PDM_SAVE_IDLE_PAGE_SIZE FLASH_PAGE_SIZE
-#else
-#include "Eeprom.h"
-#define PDM_SAVE_IDLE_PAGE_SIZE 2048
-#endif // PDM_EXT_FLASH
+/* Stores the PDM segment size. Retrieved at run time. */
+static uint32_t sPdmSegmentSize = 0;
 
-/* Segment data size is: PDM page size - size of internal header (D_PDM_NVM_SEGMENT_HEADER_SIZE).
- * Subtract 64 to have more margin. */
-#define PDM_SEGMENT_SIZE (PDM_SAVE_IDLE_PAGE_SIZE - 64)
+/* Segment margin. Minimum value is size of internal header, D_PDM_NVM_SEGMENT_HEADER_SIZE.
+ * By default, use a larger value (64) for more margin.
+ */
+#ifndef PDM_SEGMENT_MARGIN
+#define PDM_SEGMENT_MARGIN (64)
+#endif
+
+/* Segment data size is: PDM page size - PDM margin size. */
+#define PDM_SEGMENT_SIZE (sPdmSegmentSize - PDM_SEGMENT_MARGIN)
 
 #if PDM_SAVE_IDLE
 #include "fsl_os_abstraction.h"
@@ -263,6 +258,12 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle)
     return counter;
 }
 
+bool_t PDM_RetrieveSegmentSize()
+{
+    sPdmSegmentSize = PDM_GetSegmentBufferSize();
+    return sPdmSegmentSize > PDM_SEGMENT_MARGIN;
+}
+
 /* Set extendedSearch to TRUE to enable retrieving data from additional PDM ids, until
  * the incremented PDM id does not exist.
  */
@@ -432,7 +433,7 @@ uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
 
 bool_t FS_Init()
 {
-    if (PDM_SAVE_IDLE_PAGE_SIZE != PDM_GetSegmentBufferSize())
+    if (!sPdmSegmentSize)
     {
         return FALSE;
     }

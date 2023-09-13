@@ -57,6 +57,9 @@ extern "C" {
 rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 #endif
 
+/* Wrapper over PDM_GetSegmentBufferSize. */
+bool_t PDM_RetrieveSegmentSize();
+
 /* Return a RAM buffer with initialSize and populated with the contents of NVM ID - if found in flash
  * Main use case is for dynamic memory allocation
  * In case static memory allocation is used, initialSize is unused
