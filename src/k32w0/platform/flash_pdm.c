@@ -96,6 +96,8 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
      */
     if (settingsInitialized)
         return;
+
+    otEXPECT_ACTION((TRUE == FS_Init()), error = OT_ERROR_NO_BUFS);
 #endif
 
     otEXPECT_ACTION((PDM_E_STATUS_OK == PDM_Init()), error = OT_ERROR_NO_BUFS);
@@ -115,6 +117,8 @@ exit:
         {
             mutex_destroy(pdmMutexHandle);
         }
+
+        FS_Deinit();
     }
     else
     {
@@ -143,6 +147,10 @@ void otPlatSettingsDeinit(otInstance *aInstance)
 
     otPlatFree(ramDescr);
     ramDescr = NULL;
+#endif
+
+#if PDM_SAVE_IDLE
+    FS_Deinit();
 #endif
 }
 
