@@ -54,7 +54,6 @@
 #define PDM_SAVE_IDLE_PAGE_SIZE FLASH_PAGE_SIZE
 #else
 #include "Eeprom.h"
-// TODO: update to PDM_NVM_BYTES_PER_SEGMENT
 #define PDM_SAVE_IDLE_PAGE_SIZE 2048
 #endif // PDM_EXT_FLASH
 
@@ -90,7 +89,7 @@ static uint8_t      u8QueueReadPtr;
 static osaMutexId_t asQueueMutex;
 static bool_t       asQueueMutexTaken;
 /* Buffer used to temporary copy RAM buffer data in order to sync save it. */
-static uint8_t sSegmentBuffer[PDM_SEGMENT_SIZE];
+static uint8_t *sSegmentBuffer = NULL;
 
 static uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue);
 
@@ -429,6 +428,26 @@ uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
     }
 
     return u8IncrementedPtr;
+}
+
+bool_t FS_Init()
+{
+    if (PDM_SAVE_IDLE_PAGE_SIZE != PDM_GetSegmentBufferSize())
+    {
+        return FALSE;
+    }
+
+    sSegmentBuffer = (uint8_t *)malloc(PDM_SEGMENT_SIZE);
+    return sSegmentBuffer != NULL;
+}
+
+void FS_Deinit()
+{
+    if (sSegmentBuffer)
+    {
+        free(sSegmentBuffer);
+        sSegmentBuffer = NULL;
+    }
 }
 
 PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer)

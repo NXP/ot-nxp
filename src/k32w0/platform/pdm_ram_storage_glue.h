@@ -64,6 +64,8 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch);
 
 #if PDM_SAVE_IDLE
+bool_t       FS_Init();
+void         FS_Deinit();
 PDM_teStatus FS_eSaveRecordDataInIdleTask(uint16_t u16IdValue, ramBufferDescriptor *pvDataBuffer);
 void         FS_vIdleTask(uint8_t u8WritesAllowed);
 bool_t       idleMutexIsTaken();
