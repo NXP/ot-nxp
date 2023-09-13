@@ -90,6 +90,8 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     OT_UNUSED_VARIABLE(aSensitiveKeysLength);
     otError error = OT_ERROR_NONE;
 
+    otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), error = OT_ERROR_NO_BUFS);
+
 #if PDM_SAVE_IDLE
     /* settings may have been already initialized:
      * e.g.: for PDM_SAVE_IDLE in XCVR context
