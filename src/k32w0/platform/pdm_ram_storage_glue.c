@@ -530,7 +530,7 @@ static void FS_SaveRecordData(tsQueueEntry *entry)
 {
     ramBufferDescriptor *handle   = entry->pvDataBuffer;
     uint16_t             length   = handle->header.length;
-    uint8_t              segments = (length / PDM_SEGMENT_SIZE) + 1;
+    uint8_t              segments = (length + PDM_SEGMENT_SIZE - 1) / PDM_SEGMENT_SIZE;
 
     for (uint8_t i = 0; i < segments; i++)
     {
