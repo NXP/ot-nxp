@@ -215,6 +215,23 @@ static void loadData(uint16_t id, uint16_t nbIds, ramBufferDescriptor *handle)
     }
 }
 
+bool_t PDM_RetrieveSegmentSize()
+{
+    if (sPdmSegmentSize > PDM_SEGMENT_MARGIN)
+    {
+        return TRUE;
+    }
+
+    sPdmSegmentSize = PDM_GetSegmentBufferSize();
+    if (sPdmSegmentSize <= PDM_SEGMENT_MARGIN)
+    {
+        sPdmSegmentSize = 0;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 #if ENABLE_STORAGE_DYNAMIC_MEMORY
 
 static void HandleError(ramBufferDescriptor **buffer)
@@ -258,12 +275,6 @@ static uint16_t doesDataExist(uint16_t id, ramBufferDescriptor *handle)
     return counter;
 }
 
-bool_t PDM_RetrieveSegmentSize()
-{
-    sPdmSegmentSize = PDM_GetSegmentBufferSize();
-    return sPdmSegmentSize > PDM_SEGMENT_MARGIN;
-}
-
 /* Set extendedSearch to TRUE to enable retrieving data from additional PDM ids, until
  * the incremented PDM id does not exist.
  */
@@ -272,6 +283,8 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t e
     rsError              err      = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr = NULL;
     uint16_t             nbPdmIds = 0;
+
+    otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), ramDescr = NULL);
 
     ramDescr = (ramBufferDescriptor *)otPlatCAlloc(1, kRamDescSize);
     otEXPECT_ACTION(ramDescr != NULL, HandleError(&ramDescr));
@@ -361,6 +374,8 @@ ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t e
     rsError              err       = RS_ERROR_NONE;
     ramBufferDescriptor *ramDescr  = (ramBufferDescriptor *)&sPdmBuffer;
     uint16_t             bytesRead = 0;
+
+    otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), ramDescr = NULL);
 
     ramDescr->header.extendedSearch    = extendedSearch;
     ramDescr->header.backendRegionSize = PDM_SEGMENT_SIZE;
