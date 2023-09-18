@@ -44,7 +44,7 @@
 #define OT_PLAT_SAVE_NVM_DATA_ON_IDLE 1
 #endif
 
-// #define DEBUG_NVM
+//#define DEBUG_NVM
 
 #ifdef DEBUG_NVM
 #include "fsl_debug_console.h"
@@ -87,7 +87,8 @@ static otSettingsBuffer_t otSettingsBuffer;
 static bool               isInitialized = false;
 
 #if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
-static bool ot_settings_to_save_in_flash = false;
+static bool               ot_settings_to_save_in_flash = false;
+static otSettingsBuffer_t otSettingsBufferIdle;
 #endif
 
 #ifdef DEBUG_NVM
@@ -474,19 +475,26 @@ void otPlatSaveSettingsIdle(void)
         ot_settings_to_save_in_flash = false;
 
         (void)OSA_MutexLock((osa_mutex_handle_t)mFlashLittleFSMutexId, osaWaitForever_c);
-        if (otSettingsBuffer.recordLen == 0)
+
+        otSettingsBufferIdle.recordLen     = otSettingsBuffer.recordLen;
+        otSettingsBufferIdle.recordFreeLen = otSettingsBuffer.recordFreeLen;
+        memcpy(otSettingsBufferIdle.buffer, otSettingsBuffer.buffer, otSettingsBuffer.recordLen);
+
+        (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashLittleFSMutexId);
+
+        if (otSettingsBufferIdle.recordLen == 0)
         {
             FSA_DeleteFile(ot_setting_file_name);
             DBG_PRINTF("ot setting deleted\r\n");
         }
         else
         {
-            int res =
-                FSA_WriteBufferToFile(ot_setting_file_name, &otSettingsBuffer.buffer[0], otSettingsBuffer.recordLen);
+            int res = FS_WriteBufferToFile(ot_setting_file_name, &otSettingsBufferIdle.buffer[0],
+                                           otSettingsBufferIdle.recordLen);
             (void)res;
             DBG_PRINTF("ot setting written ret=%d\r\n", res);
         }
-        (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashLittleFSMutexId);
+
 #ifdef DEBUG_NVM
         otPlatDumpOtSettings();
 #endif
