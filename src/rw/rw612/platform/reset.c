@@ -8,6 +8,7 @@
 #include "fwk_platform_ot.h"
 #include <openthread/error.h>
 
+#if (OT_NXP_INDEPENDENT_RST == 1)
 otError otPlatResetOt(void)
 {
     otError error = OT_ERROR_NONE;
@@ -17,3 +18,4 @@ otError otPlatResetOt(void)
 
     return error;
 }
+#endif

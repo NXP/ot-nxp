@@ -129,6 +129,13 @@ if(OT_NXP_LNT)
     )
 endif()
 
+if(OT_NXP_INDEPENDENT_RESET MATCHES "ON")
+    target_compile_definitions(${OT_PLATFORM_LIB}
+	PUBLIC
+            -DOT_NXP_INDEPENDENT_RST=1
+    )
+endif()
+
 if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
     if(OT_APP_CLI_FREERTOS_IPERF MATCHES "ON")
         target_compile_definitions(${OT_PLATFORM_LIB}
