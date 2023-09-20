@@ -153,10 +153,12 @@ void vPortSetupTimerInterrupt(void)
     SysTick_Config(SystemCoreClock / configTICK_RATE_HZ);
 }
 
+#if !defined(OT_NXP_INDEPENDENT_RST) || (OT_NXP_INDEPENDENT_RST == 0)
 /*
  * Reset the radio module.
  */
-otError __attribute__((weak)) otPlatResetOt(void)
+otError otPlatResetOt(void)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+#endif
