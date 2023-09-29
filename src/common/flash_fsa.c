@@ -489,8 +489,8 @@ void otPlatSaveSettingsIdle(void)
         }
         else
         {
-            int res = FS_WriteBufferToFile(ot_setting_file_name, &otSettingsBufferIdle.buffer[0],
-                                           otSettingsBufferIdle.recordLen);
+            int res = FSA_WriteBufferToFile(ot_setting_file_name, &otSettingsBufferIdle.buffer[0],
+                                            otSettingsBufferIdle.recordLen);
             (void)res;
             DBG_PRINTF("ot setting written ret=%d\r\n", res);
         }
