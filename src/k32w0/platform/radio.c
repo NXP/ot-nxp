@@ -88,7 +88,10 @@ extern void BOARD_GetCoexIoCfg(void **rfDeny, void **rfActive, void **rfStatus);
 
 #define K32W_RADIO_MIN_TX_POWER_DBM (-30)
 #define K32W_RADIO_MAX_TX_POWER_DBM (15)
+
 #define K32W_RADIO_RX_SENSITIVITY_DBM (-100)
+#define K32W_RADIO_RX_MAX_DBM (10)
+
 #define K32W_RADIO_DEFAULT_CHANNEL (11)
 
 #define US_PER_SYMBOL (16) /* Duration of a single symbol in [us] */
@@ -1086,7 +1089,7 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     uint8_t edThreshold;
 
     /* K32W0 RSSI between -100 and 10 dBm */
-    if ((aThreshold < -100) || (aThreshold > 10))
+    if ((aThreshold < K32W_RADIO_RX_SENSITIVITY_DBM) || (aThreshold > K32W_RADIO_RX_MAX_DBM))
     {
         error = OT_ERROR_INVALID_ARGS;
     }
@@ -1730,8 +1733,14 @@ static void K32WGetVsIeGen(void *t, uint8_t *b)
     otRadioFrame f;
     otMacAddress dstAddr;
 
+    /* the RSSI range for k32w0 is [-100, 10] dBm but the Thread spec requires it to be [-130, 0]
+       Adjust RSSI to be [-110, 0] */
+
     uint8_t lqi  = u8MMAC_GetRxLqi(NULL);
-    int8_t  rssi = i8Radio_GetLastPacketRSSI();
+    int8_t  rssi = i8Radio_GetLastPacketRSSI() - K32W_RADIO_RX_MAX_DBM;
+
+    /* set the noise floor used by Link Metrics (-110 dBm) */
+    otLinkMetricsInit(K32W_RADIO_RX_SENSITIVITY_DBM - K32W_RADIO_RX_MAX_DBM);
 
     f.mPsdu   = ((tsPhyFrame *)t)->uPayload.au8Byte;
     f.mLength = ((tsPhyFrame *)t)->u8PayloadLength;
