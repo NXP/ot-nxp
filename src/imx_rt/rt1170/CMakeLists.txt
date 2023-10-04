@@ -26,6 +26,29 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(OT_NXP_LWIP)
+    list(APPEND OT_PLAT_SOURCES
+        ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+    )
+    list(APPEND OT_PLAT_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/lwip
+    )
+    set(OT_LWIP_LIBS
+        nxp-lwip
+        openthread-ftd
+    )
+endif()
+
+if(OT_APP_BR_FREERTOS)
+    list(APPEND OT_PLAT_SOURCES
+        ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+    )
+
+    list(APPEND OT_PLAT_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/br
+    )
+endif()
+
 list(APPEND OT_PLAT_SOURCES
     ../../common/alarm_freertos.c
     ../../common/diag.c
@@ -105,6 +128,7 @@ target_link_libraries(${OT_PLATFORM_LIB}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC
         connfwk-config
+        ${OT_LWIP_LIBS}
         ${NXP_DRIVER_LIB}
         -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1170/RT1170_cm7.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage

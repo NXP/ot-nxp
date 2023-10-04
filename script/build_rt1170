@@ -141,16 +141,23 @@ build()
 
 create_directory_and_build()
 {
+    local options=("-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT")
+    options+=("${@:2}")
+
     if [ "$1" == 'all' ]; then
-        build iwx12_spi "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
+        build iwx12_spi "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
-        build k32w0_uart_flow_control "${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}"
+        options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
+        build k32w0_uart_flow_control "${options[@]}"
     elif [ "$1" == 'k32w0_spi' ]; then
         echo "Warning: No longer maintain"
-        build k32w0_spi "${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}")
+        build k32w0_spi "${options[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
-        build iwx12_spi "${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}" "-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT"
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
+        build iwx12_spi "${options[@]}"
     else
         echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_spi, iwx12_spi"
         # 128 for Invalid arguments
@@ -172,7 +179,7 @@ main()
     if [ $# == 0 ]; then
         create_directory_and_build all
     else
-        create_directory_and_build "$1"
+        create_directory_and_build "$@"
     fi
 }
 
