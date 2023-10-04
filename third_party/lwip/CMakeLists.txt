@@ -114,7 +114,6 @@ target_compile_definitions(nxp-lwip
 target_include_directories(nxp-lwip
     PUBLIC
     ${LWIP_PATH}
-    ${PROJECT_SOURCE_DIR}/examples/br
     ${LWIP_PATH}/port
     ${LWIP_PATH}/port/arch
     ${LWIP_PATH}/src/include
