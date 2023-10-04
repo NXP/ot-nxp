@@ -43,7 +43,7 @@ else()
 endif()
 
 target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    ..
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
