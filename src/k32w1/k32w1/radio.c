@@ -152,7 +152,6 @@ static uint8_t           sRxAckData[OT_RADIO_FRAME_MAX_SIZE];
 static otRadioCaps       caps;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-static uint32_t sMacFrameCounter;
 static uint32_t sCslPeriod;
 static uint32_t sCslSampleTimeUs;
 #endif
@@ -520,18 +519,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         msg->msgData.dataReq.startTime = gPhySeqStartAsap_c;
     }
 
-    msg->msgData.dataReq.bEncryptFrame = false;
+    msg->msgData.dataReq.flags = 0;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame))
     {
         if (!aFrame->mInfo.mTxInfo.mIsSecurityProcessed)
         {
-            msg->msgData.dataReq.bEncryptFrame = true;
+            msg->msgData.dataReq.flags |= gPhyEncFrame;
 
             if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
             {
-                otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
+                msg->msgData.dataReq.flags |= gPhyUpdHDr;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
                 if (aFrame->mInfo.mTxInfo.mCslPresent)
@@ -766,8 +765,6 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sMacFrameCounter = aMacFrameCounter;
-
     macToPlmeMessage_t msg;
 
     msg.msgType                 = gPlmeSetMacFrameCounter_c;
@@ -780,10 +777,12 @@ void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacF
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    if (aMacFrameCounter > sMacFrameCounter)
-    {
-        otPlatRadioSetMacFrameCounter(aInstance, aMacFrameCounter);
-    }
+    macToPlmeMessage_t msg;
+
+    msg.msgType                 = gPlmeSetMacFrameCounterIfLarger_c;
+    msg.msgData.MacFrameCounter = aMacFrameCounter;
+
+    (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 }
 
 uint64_t otPlatRadioGetNow(otInstance *aInstance)
@@ -1021,6 +1020,14 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
     {
     case gPdDataCnf_c:
         /* TX activity is done */
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
+            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+        {
+            otMacFrameSetFrameCounter(&sTxFrame, pDataMsg->fc);
+        }
+#endif
+
         sTxStatus            = OT_ERROR_NONE;
         sState               = OT_RADIO_STATE_RECEIVE;
         sRxAckFrame.mChannel = sChannel;
@@ -1029,6 +1036,7 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         sTxDone = true;
         MSG_Free(pMsg); // for Ack we can free PHY Allocated buffer
         break;
+
     case gPdDataInd_c:
         /* RX activity is done */
         sRxDone = true;
@@ -1055,8 +1063,6 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
             {
                 pRxFrame->RxFrame.mInfo.mRxInfo.mAckFrameCounter = pDataMsg->msgData.dataInd.ackFrameCounter;
                 pRxFrame->RxFrame.mInfo.mRxInfo.mAckKeyId        = pDataMsg->msgData.dataInd.ackKeyId;
-                /* Updated the value from PHY, need to support this also on Data Cnf in the future */
-                sMacFrameCounter = pDataMsg->msgData.dataInd.ackFrameCounter;
             }
 #endif
             // Push received frame
@@ -1113,6 +1119,14 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         if (OT_RADIO_STATE_TRANSMIT == sState)
         {
             /* Ack timeout */
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+            if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
+                !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+            {
+                otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
+            }
+#endif
+
             sState    = OT_RADIO_STATE_RECEIVE;
             sTxStatus = OT_ERROR_NO_ACK;
             sTxDone   = true;
@@ -1126,6 +1140,14 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         break;
     case gPlmeAbortInd_c:
         /* TX Packet was loaded into TX Packet RAM but the TX/TR seq did not ended ok */
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+        if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
+            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+        {
+            otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
+        }
+#endif
+
         sState    = OT_RADIO_STATE_RECEIVE;
         sTxStatus = OT_ERROR_ABORT;
         sTxDone   = true;
