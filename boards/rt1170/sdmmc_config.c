@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 NXP
+ * Copyright 2020-2023 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -38,9 +38,10 @@ static sdmmchost_t s_host;
 
 #ifdef SDIO_ENABLED
 static sdio_card_int_t s_sdioInt;
-GPIO_HANDLE_DEFINE(sdmmcSdCdGpioHandle);
-GPIO_HANDLE_DEFINE(sdmmcSdPowerResetGpioHandle);
 #endif
+
+GPIO_HANDLE_DEFINE(s_CardDetectGpioHandle);
+GPIO_HANDLE_DEFINE(s_PowerResetGpioHandle);
 
 /*******************************************************************************
  * Code
@@ -81,17 +82,24 @@ void BOARD_USDHC_Errata(void)
 #if defined(SDIO_ENABLED) || defined(SD_ENABLED)
 bool BOARD_SDCardGetDetectStatus(void)
 {
-    uint32_t gpioPinValue = 0;
-    HAL_GpioGetInput((hal_gpio_handle_t)sdmmcSdCdGpioHandle, (uint8_t *)&gpioPinValue);
-    return gpioPinValue == BOARD_SDMMC_SD_CD_INSERT_LEVEL;
+    uint8_t pinState;
+
+    if (HAL_GpioGetInput(s_CardDetectGpioHandle, &pinState) == kStatus_HAL_GpioSuccess)
+    {
+        if (pinState == BOARD_SDMMC_SD_CD_INSERT_LEVEL)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
-static void SdmmcSdCdGpioCallback(void *pData)
+void SDMMC_SD_CD_Callback(void *param)
 {
-    sd_detect_card_t *ps_cd = (sd_detect_card_t *)pData;
-    if (ps_cd->callback != NULL)
+    if (s_cd.callback != NULL)
     {
-        ps_cd->callback(BOARD_SDCardGetDetectStatus(), ps_cd->userData);
+        s_cd.callback(BOARD_SDCardGetDetectStatus(), s_cd.userData);
     }
 }
 
@@ -117,6 +125,8 @@ void BOARD_SDCardDAT3PullFunction(uint32_t status)
 
 void BOARD_SDCardDetectInit(sd_cd_t cd, void *userData)
 {
+    uint8_t pinState;
+
     /* install card detect callback */
     s_cd.cdDebounce_ms = BOARD_SDMMC_SD_CARD_DETECT_DEBOUNCE_DELAY_MS;
     s_cd.type          = BOARD_SDMMC_SD_CD_TYPE;
@@ -126,22 +136,24 @@ void BOARD_SDCardDetectInit(sd_cd_t cd, void *userData)
 
     if (BOARD_SDMMC_SD_CD_TYPE == kSD_DetectCardByGpioCD)
     {
-        uint32_t              gpioPinValue = 0;
-        hal_gpio_pin_config_t sw_config    = {
-               .direction = kHAL_GpioDirectionIn,
-               .level     = 0U,
-               .port      = BOARD_SDMMC_SD_CD_GPIO_INSTANCE,
-               .pin       = BOARD_SDMMC_SD_CD_GPIO_PIN,
+        hal_gpio_pin_config_t sw_config = {
+            kHAL_GpioDirectionIn,
+            0,
+            BOARD_SDMMC_SD_CD_GPIO_PORT,
+            BOARD_SDMMC_SD_CD_GPIO_PIN,
         };
-        HAL_GpioInit((hal_gpio_handle_t)sdmmcSdCdGpioHandle, &sw_config);
-        HAL_GpioInstallCallback((hal_gpio_handle_t)sdmmcSdCdGpioHandle, SdmmcSdCdGpioCallback, &s_cd);
-        HAL_GpioSetTriggerMode((hal_gpio_handle_t)sdmmcSdCdGpioHandle, kHAL_GpioInterruptEitherEdge);
-        HAL_GpioGetInput((hal_gpio_handle_t)sdmmcSdCdGpioHandle, (uint8_t *)&gpioPinValue);
-        if (gpioPinValue == BOARD_SDMMC_SD_CD_INSERT_LEVEL)
+        HAL_GpioInit(s_CardDetectGpioHandle, &sw_config);
+        HAL_GpioSetTriggerMode(s_CardDetectGpioHandle, BOARD_SDMMC_SD_CD_INTTERUPT_TYPE);
+        HAL_GpioInstallCallback(s_CardDetectGpioHandle, SDMMC_SD_CD_Callback, NULL);
+
+        if (HAL_GpioGetInput(s_CardDetectGpioHandle, &pinState) == kStatus_HAL_GpioSuccess)
         {
-            if (cd != NULL)
+            if (pinState == BOARD_SDMMC_SD_CD_INSERT_LEVEL)
             {
-                cd(true, userData);
+                if (cd != NULL)
+                {
+                    cd(true, userData);
+                }
             }
         }
     }
@@ -150,32 +162,30 @@ void BOARD_SDCardDetectInit(sd_cd_t cd, void *userData)
     if (BOARD_SDMMC_SD_CD_TYPE == kSD_DetectCardByHostDATA3)
     {
         s_cd.dat3PullFunc = BOARD_SDCardDAT3PullFunction;
+        BOARD_SDCardPowerControl(true);
     }
 }
 
 void BOARD_SDCardPowerResetInit(void)
 {
     hal_gpio_pin_config_t sw_config = {
-        .direction = kHAL_GpioDirectionOut,
-        .level     = 0U,
-        .port      = BOARD_SDMMC_SD_POWER_RESET_GPIO_INSTANCE,
-        .pin       = BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN,
+        kHAL_GpioDirectionOut,
+        1,
+        BOARD_SDMMC_SD_POWER_RESET_GPIO_PORT,
+        BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN,
     };
-
-    HAL_GpioInit((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, &sw_config);
+    HAL_GpioInit(s_PowerResetGpioHandle, &sw_config);
 }
 
 void BOARD_SDCardPowerControl(bool enable)
 {
     if (enable)
     {
-        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, 1);
-        // GPIO_PinWrite(BOARD_SDMMC_SD_POWER_RESET_GPIO_BASE, BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN, 1);
+        HAL_GpioSetOutput(s_PowerResetGpioHandle, 0);
     }
     else
     {
-        HAL_GpioSetOutput((hal_gpio_handle_t)sdmmcSdPowerResetGpioHandle, 0);
-        // GPIO_PinWrite(BOARD_SDMMC_SD_POWER_RESET_GPIO_BASE, BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN, 0);
+        HAL_GpioSetOutput(s_PowerResetGpioHandle, 1);
     }
 }
 #endif
