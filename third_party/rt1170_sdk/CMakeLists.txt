@@ -244,7 +244,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${DRIVER_USDHC_FILES_PATH}
         ${DRIVER_SDHC_FILES_PATH}
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware/nw61x
         ${NXP_SDK_ROOT}/middleware/sdmmc/common
         ${NXP_SDK_ROOT}/middleware/sdmmc/sdio
         ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc
@@ -254,16 +254,23 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/incl
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/fwdnld_intf_abs
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/incl
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/firmware_dnld
         ${NXP_SDK_ROOT}/components/wifi_bt_module/template
+        ${NXP_SDK_ROOT}/components/wifi_bt_module/incl
     )
     list(APPEND SDK_SOURCES
         ${NXP_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
         ${NXP_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
         ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
         ${NXP_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/firmware_dnld.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/mlan_sdio.c
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/firmware_dnld/firmware_dnld.c
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
+        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/mlan_sdio.c
         ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
         ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
         ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c

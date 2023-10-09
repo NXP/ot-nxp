@@ -5,7 +5,8 @@
  *  SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "app_config.h"
+#include "wifi_bt_module_config.h"
+#include "wifi_config.h"
 
 
 /* Re-define particular wifi flags */
