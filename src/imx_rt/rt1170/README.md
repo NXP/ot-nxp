@@ -33,7 +33,7 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [the SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. S Select the **MIMXRT1170-EVKB** board. Select the SDK version 2.13.2.
+- Download [the SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. S Select the **MIMXRT1170-EVKB** board. Select the SDK version 2.13.3 .
   In the SDK Builder UI selection you should select at least
   the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain**.
 
@@ -64,7 +64,7 @@ Transceiver parts :
 
 - 1 [2EL M2 A1 IW612 Secure Module](https://www.nxp.com/products/wireless/wi-fi-plus-bluetooth-plus-802-15-4/2-4-5-ghz-dual-band-1x1-wi-fi-6-802-11ax-plus-bluetooth-5-2-plus-802-15-4-tri-radio-solution:IW612)
 
-![](../../../doc/img/imxrt1170iwx612_2EL.jpg)
+![](../../../doc/img/imxrt1170/iwx612_2EL.jpg)
 
 - 1 [Murata uSD to M2 adapter](https://www.murata.com/en-eu/products/connectivitymodule/wi-fi-bluetooth/overview/lineup/usd-m2-adapter)
 
