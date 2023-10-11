@@ -318,8 +318,15 @@ static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const s
 {
     err_t lwipErr = ERR_IF;
 
+    /* Temporarily release the TCP/IP mutex, take OT mutex, and take back TCP/IP mutex to preserve the
+     * mutex take order as to avoid deadlock. */
+    UNLOCK_TCPIP_CORE();
+
     // Lock OT
     sLockTaskCb(true);
+
+    // Take back TCP/IP mutex which was temporarily released above
+    LOCK_TCPIP_CORE();
 
     otMessage *otIpPkt = otPlatLwipConvertToOtMsg(pkt);
 
