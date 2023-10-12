@@ -27,6 +27,7 @@
 /* ZB stuff */
 #include "app_coordinator.h"
 #include "app_main.h"
+#include "app_uart.h"
 #include "zigbee_config.h"
 
 /* OT includes */
@@ -73,6 +74,9 @@ static void App_ZB_Init(void);
 ************************************************************************************/
 extern void otAppNcpInit(otInstance *aInstance);
 extern void vAppMain(bool_t bColdStart);
+extern void APP_taskAtSerial(void);
+extern void APP_SerialCmdTask(void);
+
 /* DualPAN stuff */
 // extern void sched_enable(void);
 /************************************************************************************
@@ -216,7 +220,7 @@ void App_ZB_Init(void)
     /* Initialise the Persistent Data Manager */
     PDM_eInitialise(1200, 63, NULL);
 
-    UART_vInit();
+    UART_vInit(NULL);
 
     APP_vInitialiseCoordinator();
 
