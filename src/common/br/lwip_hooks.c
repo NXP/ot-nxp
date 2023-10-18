@@ -32,11 +32,13 @@
 #include <assert.h>
 #include <string.h>
 
+#include <openthread/backbone_router_ftd.h>
 #include <openthread/dataset.h>
 #include <openthread/ip6.h>
 #include <openthread/netdata.h>
 #include <openthread/thread.h>
 #include "lwip/ip.h"
+#include "lwip/ip6.h"
 #include "lwip/stats.h"
 
 static otInstance   *sInstance = NULL;
@@ -73,6 +75,8 @@ static int lwipAddressMatchesPrefix(const ip6_addr_t *address, const uint8_t *pr
  */
 static int forwardMulticast(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, struct netif *netif)
 {
+    struct ip6_hdr *hdr = (struct ip6_hdr *)p->payload;
+
     /* This hook does not care about non-multicast addresses */
     if (!ip6_addr_ismulticast(dest))
         return 1;
@@ -86,14 +90,33 @@ static int forwardMulticast(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, s
     {
         /* Forward only packets coming from groups that are listened to */
         if (lwipMcastFilterHas(dest))
-            ifThread->output_ip6(ifThread, p, dest);
+        {
+            if (IP6H_HOPLIM(hdr)-- > 1)
+            {
+                ifThread->output_ip6(ifThread, p, dest);
+            }
+        }
 
         return 0;
     }
     /* Packet coming from the Thread netif - forward it to the infra network */
     else if (netif == ifThread)
     {
-        ifInfra->output_ip6(ifInfra, p, dest);
+        // A secondary BBR SHOULD NOT forward a multicast packet onto an External Interface except when:
+        // 1) The secondary BBR is explicitly configured to forward (method outside the scope of Thread spec)
+        // 2) The secondary BBR is connected to other external networks than the Primary BBR (method outside the
+        // scope of Thread spec)
+
+        if (otBackboneRouterGetState(sInstance) == OT_BACKBONE_ROUTER_STATE_SECONDARY ||
+            otBackboneRouterGetState(sInstance) == OT_BACKBONE_ROUTER_STATE_DISABLED)
+        {
+            return 0;
+        }
+
+        if (IP6H_HOPLIM(hdr)-- > 1)
+        {
+            ifInfra->output_ip6(ifInfra, p, dest);
+        }
         return 0;
     }
 

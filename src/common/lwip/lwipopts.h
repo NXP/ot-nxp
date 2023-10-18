@@ -532,5 +532,7 @@ u32_t lwip_rand(void);
 #define LWIP_TCPIP_CORE_LOCKING 1
 #define LWIP_NETCONN_SEM_PER_THREAD 0
 #define LWIP_NETCONN_FULLDUPLEX 0
-#define MEMP_NUM_MLD6_GROUP 10
+// Note: According to Thread Conformance v1.2.0, a Thread Border Router MUST be able to hold a Multicast Listeners Table
+//  in memory with at least seventy five (75) entries.
+#define MEMP_NUM_MLD6_GROUP 10 + 75
 #endif /* __LWIPOPTS_H__ */
