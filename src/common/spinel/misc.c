@@ -31,13 +31,29 @@
 #include "fsl_os_abstraction.h"
 #include "ot_platform_common.h"
 
+void (*initSystemResetFunc)(void) = NULL;
+
 static bool system_reset_request = false;
+
+/* Use this API to set reset function to be handled at application level. This is to be used in
+   case the application uses another mechanism to reset instead of calling otPlatResetIdle */
+void otPlatSetResetFunction(void (*fp)(void))
+{
+    initSystemResetFunc = fp;
+}
 
 void otPlatReset(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    system_reset_request = true;
+    if (initSystemResetFunc != NULL)
+    {
+        initSystemResetFunc();
+    }
+    else
+    {
+        system_reset_request = true;
+    }
 }
 
 void otPlatResetIdle(void)
