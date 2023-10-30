@@ -111,11 +111,7 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
     ip6_addr_t   ip6_allrouters_ll;
     ip6_addr_set_allrouters_linklocal(&ip6_allrouters_ll);
 
-    if (netif == NULL)
-    {
-        otCliOutputFormat("\r\nBorder Routing feature is disabled: infra interface is missing");
-        return;
-    }
+    assert(netif != NULL);
 
     sInstance = aInstance;
     sNetifPtr = netif;
@@ -123,15 +119,10 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
     sInfraIfIndex = netif_get_index(sNetifPtr);
 
     sInfraIfIcmp6Socket = CreateIcmp6Socket();
-    if (sInfraIfIcmp6Socket != -1)
-    {
-        netif_index_to_name(sInfraIfIndex, (char *)&ifr.ifr_name);
-        if (setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0)
-        {
-            otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the interface");
-            return;
-        }
-    }
+    assert(sInfraIfIcmp6Socket != -1);
+
+    netif_index_to_name(sInfraIfIndex, (char *)&ifr.ifr_name);
+    assert(setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) >= 0);
 
     LOCK_TCPIP_CORE();
 
@@ -415,7 +406,6 @@ static int CreateIcmp6Socket()
 
     if ((sockdesc = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6)) < 0)
     {
-        otCliOutputFormat("\r\nFailed to get socket descriptor");
         return -1;
     }
 
@@ -425,7 +415,6 @@ static int CreateIcmp6Socket()
 
     if (bind(sockdesc, (struct sockaddr *)&src, sizeof(src)) != 0)
     {
-        otCliOutputFormat("\r\nFailed to bind icmp6 socket descriptor to the source address");
         return -1;
     }
     return sockdesc;
