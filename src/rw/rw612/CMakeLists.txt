@@ -64,7 +64,7 @@ add_library(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
     ${PROJECT_SOURCE_DIR}/src/common/uart.c
-    ${PROJECT_SOURCE_DIR}/src/common/flash_fsa.c
+    ${PROJECT_SOURCE_DIR}/src/common/flash_littlefs.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
     platform/entropy.c
     platform/diag.c
@@ -85,7 +85,7 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-hdlc
         openthread-spinel-rcp
         connfwk-FunctionLib
-        connfwk-FSAbstraction
+        connfwk-FileSystem
         connfwk-LowPower
         connfwk-platform-rw61x
         ${NXP_DRIVER_LIB}
