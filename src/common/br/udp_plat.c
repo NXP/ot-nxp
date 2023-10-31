@@ -315,6 +315,7 @@ exit:
 static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     (void)pcb;
+    otError           error       = OT_ERROR_NONE;
     otMessageSettings msgSettings = {.mLinkSecurityEnabled = false, .mPriority = OT_MESSAGE_PRIORITY_NORMAL};
 
     struct udpReceiveContext *udpReceiveContextPtr =
@@ -342,18 +343,17 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     udpReceiveContextPtr->message = otUdpNewMessage(sInstance, &msgSettings);
 
     VerifyOrExit(udpReceiveContextPtr->message != NULL, otPlatFree(udpReceiveContextPtr));
-    if (OT_ERROR_NONE == otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len))
-    {
-        // socket->mHandler(socket->mContext, message, &message_info);
-        otTaskletExecute(sInstance, otTaskCb, (void *)udpReceiveContextPtr);
-    }
-    else
+    VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) != OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+    VerifyOrExit(otTaskletExecute(sInstance, otTaskCb, (void *)udpReceiveContextPtr) != OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+
+exit:
+    if (error == OT_ERROR_FAILED)
     {
         otMessageFree(udpReceiveContextPtr->message);
         otPlatFree(udpReceiveContextPtr);
     }
-
-exit:
     pbuf_free(p);
 }
 
