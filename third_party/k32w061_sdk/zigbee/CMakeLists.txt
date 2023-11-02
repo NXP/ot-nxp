@@ -53,6 +53,7 @@ add_library(nxp-k32w061-zigbee
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/leds.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/buttons.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/timer.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/wdog.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W0/platform/crypto.c
 
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/ZTimer.c
