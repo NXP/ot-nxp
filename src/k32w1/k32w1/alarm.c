@@ -46,6 +46,7 @@
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
+#include <openthread/platform/time.h>
 
 static bool_t sEventFired = FALSE;
 TIMER_MANAGER_HANDLE_DEFINE(sAlarmTimerHandle);
@@ -154,7 +155,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 uint32_t otPlatAlarmMilliGetNow(void)
 {
     uint32_t tstamp;
-    tstamp = timestamp_to_ms(TM_GetTimestamp());
+    tstamp = timestamp_to_ms(otPlatTimeGet());
 
     return tstamp;
 }
@@ -162,7 +163,7 @@ uint32_t otPlatAlarmMilliGetNow(void)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-    return TM_GetTimestamp();
+    return otPlatTimeGet();
 }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
@@ -175,7 +176,7 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
     /* Calculate the difference between now and the requested timestamp aT0 - this time will be
        substracted from the total time until the event needs to fire */
-    uint32_t timestamp = TM_GetTimestamp();
+    uint32_t timestamp = otPlatAlarmMicroGetNow();
 
     otLogInfoPlat("Start timer: timestamp:%ld, aTo:%ld, aDt:%ld", timestamp, aT0, aDt);
     if (timestamp >= aT0)
@@ -210,6 +211,7 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 #endif /* OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE */
 
+/* Maintain a true 64bit timestamp using FWK API */
 uint64_t otPlatTimeGet(void)
 {
     static uint64_t u64SwTimestampUs = 0;
@@ -225,6 +227,8 @@ uint64_t otPlatTimeGet(void)
     /* Check if the timestamp has wrapped around */
     if (u64HwTimestampUs > u64HwTimestampUs_new)
     {
+        /* TM_GetTimestamp() doesn't return a true 64bit timestamp since it
+           converts the 32bit LPTMR counter to us => ~ 38bit timestamp */
         wrapped_val = COUNT_TO_USEC(((uint64_t)1 << 32), PLATFORM_TM_CLK_FREQ);
     }
 
