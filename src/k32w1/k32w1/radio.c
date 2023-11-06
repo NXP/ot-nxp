@@ -58,6 +58,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+#include <openthread/platform/time.h>
 
 #include "PWR_Interface.h"
 
@@ -542,7 +543,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                     /* Add TX_ENCRYPT_DELAY_SYM symbols delay to allow encryption to finish */
                     msg->msgData.dataReq.startTime = PhyTime_ReadClock() + TX_ENCRYPT_DELAY_SYM;
 
-                    hdrTimeUs = TM_GetTimestamp() +
+                    hdrTimeUs = otPlatTimeGet() +
                                 (TX_ENCRYPT_DELAY_SYM + IEEE802154_PHY_SHR_LEN_SYM) * IEEE802154_SYMBOL_TIME_US;
                     otMacFrameSetCslIe(aFrame, sCslPeriod, rf_compute_csl_phase(hdrTimeUs));
                 }
@@ -787,8 +788,9 @@ void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacF
 
 uint64_t otPlatRadioGetNow(otInstance *aInstance)
 {
-    /* The phy timestamp is in symbols so we need to convert it to microseconds */
-    return TM_GetTimestamp();
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return otPlatTimeGet();
 }
 
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
@@ -869,13 +871,13 @@ static void set_csl_sample_time()
 
     macToPlmeMessage_t msg;
     uint32_t           csl_period = sCslPeriod * 10 * IEEE802154_SYMBOL_TIME_US;
-    uint32_t           dt         = sCslSampleTimeUs - (uint32_t)TM_GetTimestamp();
+    uint32_t           dt         = sCslSampleTimeUs - (uint32_t)otPlatTimeGet();
 
     /* next channel sample should be in the future */
     while ((dt <= CMP_OVHD) || (dt > (CMP_OVHD + 2 * csl_period)))
     {
         sCslSampleTimeUs += csl_period;
-        dt = sCslSampleTimeUs - (uint32_t)TM_GetTimestamp();
+        dt = sCslSampleTimeUs - (uint32_t)otPlatTimeGet();
     }
 
     /* The CSL sample time is in microseconds and PHY function expects also microseconds */
@@ -984,7 +986,8 @@ static void rf_set_tx_power(int8_t tx_power)
     MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 }
 
-/* Used to convert from phy clock timestamp (in symbols) to time (in us) */
+/* Used to convert from phy clock timestamp (in symbols) to platform time (in us)
+   the reception timestamp which must use a true 64bit timestamp source */
 static uint64_t rf_adjust_tstamp_from_phy(uint64_t ts)
 {
     uint64_t now = PhyTime_ReadClock();
@@ -993,14 +996,14 @@ static uint64_t rf_adjust_tstamp_from_phy(uint64_t ts)
     delta = (now >= ts) ? (now - ts) : ((PHY_TMR_MAX_VALUE + now) - ts);
     delta *= IEEE802154_SYMBOL_TIME_US;
 
-    return TM_GetTimestamp() - delta;
+    return otPlatTimeGet() - delta;
 }
 
 static uint32_t rf_adjust_tstamp_from_ot(uint32_t time)
 {
     /* The phy timestamp is in symbols so we need to convert it to microseconds */
     uint64_t ts    = PhyTime_ReadClock() * IEEE802154_SYMBOL_TIME_US;
-    uint32_t delta = time - (uint32_t)TM_GetTimestamp();
+    uint32_t delta = time - (uint32_t)otPlatTimeGet();
 
     return (uint32_t)(ts + delta);
 }
