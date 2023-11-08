@@ -76,7 +76,7 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configMAX_PRIORITIES (10)
 #define configMINIMAL_STACK_SIZE ((uint16_t)1024)
 #define configAPPLICATION_ALLOCATED_HEAP 1
-#define configTOTAL_HEAP_SIZE ((size_t)(158 * 1024))
+#define configTOTAL_HEAP_SIZE ((size_t)(159 * 1024))
 #define configSUPPORT_STATIC_ALLOCATION 0
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
 #define configFRTOS_MEMORY_SCHEME 4
