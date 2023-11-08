@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 NXP.
+ * Copyright 2021-2023 NXP.
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -35,6 +35,15 @@ void BOARD_InitPins(void)
     /* USART0 is used to print OT logs */
     IO_MUX_SetPinMux(IO_MUX_FC0_USART_DATA);
 #endif
+}
+void BOARD_InitENETPins(void)
+{
+    IO_MUX_SetPinMux(IO_MUX_ENET_CLK);
+    IO_MUX_SetPinMux(IO_MUX_ENET_RX);
+    IO_MUX_SetPinMux(IO_MUX_ENET_TX);
+    IO_MUX_SetPinMux(IO_MUX_ENET_MDIO);
+    IO_MUX_SetPinMux(IO_MUX_GPIO21);
+    IO_MUX_SetPinMux(IO_MUX_GPIO55);
 }
 
 /***********************************************************************************************************************

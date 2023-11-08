@@ -37,7 +37,6 @@ readonly OT_OPTIONS=(
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_PLATFORM=rw612"
-    # "-DOT_NXP_DEVICE_REVISION=A0"
 )
 
 build()
@@ -76,6 +75,7 @@ main()
     options+=("-DNXP_SDK_ROOT=$NXP_RW612_SDK_ROOT")
 
     build "${options[@]}"
+
 }
 
 main "$@"

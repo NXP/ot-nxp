@@ -29,6 +29,7 @@
 if(OT_NXP_LWIP)
     set(LWIP_SRC_FILE
         ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+        ${PROJECT_SOURCE_DIR}/src/common/lwip/token_bucket.c
     )
     set(OT_LWIP_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/common/lwip
@@ -42,6 +43,11 @@ endif()
 if(OT_APP_BR_FREERTOS)
     set(INFRA_IF_SRC_FILE
         ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/udp_plat.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/lwip_hooks.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/lwip_mcast.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/border_agent.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/br_rtos_manager.c
     )
 
     set(OT_BR_INCLUDES
@@ -111,6 +117,7 @@ target_compile_options(${OT_PLATFORM_LIB}
         -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
         -DOT_PLAT_SPINEL_OVER_HDLC
         -DOPENTHREAD_FTD=1
+        -DOT_APP_THREAD_RATE_LIMIT=${OT_APP_THREAD_RATE_LIMIT}
         -Wno-unknown-pragmas
         -Wno-sign-compare
         -Wno-unused-function

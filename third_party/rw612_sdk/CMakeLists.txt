@@ -45,6 +45,7 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_MRT_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_CTIMER_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_RTC_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/format)
@@ -61,6 +62,7 @@ elseif (${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_CTIMER_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/ostimer)
     set(DRIVER_RTC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpc_rtc)
     set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
+    set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/enet)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
@@ -307,6 +309,15 @@ if(OT_NXP_MBEDTLS_PORT)
     )
 endif()
 
+if (OT_NXP_LWIP_ETH)
+    list(APPEND RW612_SDK_SOURCES
+        $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081/fsl_phyksz8081.c
+        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
+        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs/rw610/fsl_silicon_id_soc.c
+        ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
+        )
+endif ()
+
 add_library(${NXP_DRIVER_LIB}
     ${RW612_SDK_SOURCES}
 )
@@ -332,6 +343,7 @@ set(RW612_SDK_INCLUDES
         ${DRIVER_RTC_FILES_PATH}
         ${STR_FILES_PATH}
         ${FORMAT_FILES_PATH}
+        ${DRIVER_ENET_FILES_PATH}
 #SDK components
         ${NXP_SDK_ROOT}/components/uart
         ${NXP_SDK_ROOT}/components/serial_manager
@@ -350,6 +362,16 @@ set(RW612_SDK_INCLUDES
 #Loader files
         ${NXP_SDK_ROOT}/components/conn_fwloader/include
 )
+
+if (OT_NXP_LWIP_ETH)
+    list(APPEND RW612_SDK_INCLUDES
+        $ENV{NXP_RW612_SDK_ROOT}/components/phy/
+        $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081
+        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id
+        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs
+        ${DRIVER_ENET_FILES_PATH}
+        )
+endif ()
 
 if(OT_NXP_MBEDTLS_PORT)
     list(APPEND RW612_SDK_INCLUDES
@@ -453,6 +475,15 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     LFS_CONFIG=fwk_lfs_config.h
     LFS_THREADSAFE=1
 )
+
+if (OT_NXP_LWIP_ETH)
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+        -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
+        -DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS
+        -DUSE_RTOS
+    )
+endif ()
 
 if(OT_NXP_DEVICE_REVISION MATCHES "A0")
     target_compile_definitions(${NXP_DRIVER_LIB}

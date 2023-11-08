@@ -40,6 +40,7 @@ add_library(${NXP_BOARD_LIB}
 target_include_directories(${NXP_BOARD_LIB}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${OT_NXP_FREERTOS_CONFIG_PATH}
 )
 
 target_link_libraries(${NXP_BOARD_LIB}
