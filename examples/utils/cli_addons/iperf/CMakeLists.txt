@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2023, The OpenThread Authors.
+# Copyright (c) 2023, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,51 +26,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_NXP_BUILD_APP_AS_LIB)
-    add_library(ot-cli-${OT_NXP_PLATFORM}
-        app_ot_freertos.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-else()
-    add_executable(ot-cli-${OT_NXP_PLATFORM}
-        main.c
-        app_ot_freertos.c
-        app_freertos_hooks.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-endif()
+target_sources(ot-cli-addons PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/iperf_cli.c
+)
 
-target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+target_include_directories(ot-cli-addons PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-    ${PROJECT_SOURCE_DIR}/examples/common/includes
 )
 
-target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    openthread-cli-ftd
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    ${NXP_DRIVER_LIB}
-    ot-config
-    ot-cli-addons
-    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
-
-    # Wrapping libc malloc functions and defining the libc heap size to 0
-    -Wl,--defsym=__heap_size__=0
-    -Wl,--wrap=_malloc_r
-    -Wl,--wrap=_realloc_r
-    -Wl,--wrap=_free_r
-    -Wl,--wrap=_calloc_r
-    -Wl,--wrap=malloc
-    -Wl,--wrap=free
-    -Wl,--wrap=realloc
-    -Wl,--wrap=calloc
+target_compile_definitions(ot-cli-addons PRIVATE
+    -DOT_APP_CLI_IPERF_ADDON
 )
-
-if(NXP_BOARD_LIB)
-    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-        ${NXP_BOARD_LIB}
-    )
-endif()

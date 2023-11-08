@@ -30,6 +30,8 @@
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 #include "fsl_common.h"
+#include <FreeRTOS.h>
+
 #include "semphr.h"
 #include "wlan.h"
 #include "wpl.h"

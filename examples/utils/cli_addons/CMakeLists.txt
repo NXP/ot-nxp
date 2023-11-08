@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2023, The OpenThread Authors.
+# Copyright (c) 2023, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,51 +26,51 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_NXP_BUILD_APP_AS_LIB)
-    add_library(ot-cli-${OT_NXP_PLATFORM}
-        app_ot_freertos.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-else()
-    add_executable(ot-cli-${OT_NXP_PLATFORM}
-        main.c
-        app_ot_freertos.c
-        app_freertos_hooks.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    )
-endif()
+cmake_policy(SET CMP0076 NEW) # target_sources() command now converts relative source file paths to absolute
+cmake_policy(SET CMP0079 NEW)
 
-target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+add_library(ot-cli-addons
+    ${CMAKE_CURRENT_SOURCE_DIR}/addons_cli.c
+)
+
+target_include_directories(ot-cli-addons PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/common/includes
 )
 
-target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-    openthread-cli-ftd
-    openthread-ftd
+target_link_libraries(ot-cli-addons PRIVATE
     ${OT_PLATFORM_LIB}
-    ${NXP_DRIVER_LIB}
     ot-config
-    ot-cli-addons
-    -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
-
-    # Wrapping libc malloc functions and defining the libc heap size to 0
-    -Wl,--defsym=__heap_size__=0
-    -Wl,--wrap=_malloc_r
-    -Wl,--wrap=_realloc_r
-    -Wl,--wrap=_free_r
-    -Wl,--wrap=_calloc_r
-    -Wl,--wrap=malloc
-    -Wl,--wrap=free
-    -Wl,--wrap=realloc
-    -Wl,--wrap=calloc
 )
 
-if(NXP_BOARD_LIB)
-    target_link_libraries(ot-cli-${OT_NXP_PLATFORM} PRIVATE
-        ${NXP_BOARD_LIB}
+if(OT_APP_CLI_FREERTOS_LOWPOWER)
+    target_link_libraries(ot-cli-addons PRIVATE
+        connfwk-LowPower
     )
+endif()
+
+if(OT_APP_CLI_FREERTOS_IPERF)
+    add_subdirectory(iperf)
+endif()
+
+if(OT_APP_CLI_FREERTOS_PLATFORM)
+    add_subdirectory(platform)
+endif()
+
+if(OT_APP_CLI_FREERTOS_DEBUG)
+    add_subdirectory(debug)
+endif()
+
+if(OT_APP_CLI_FREERTOS_LOWPOWER)
+    add_subdirectory(lowpower)
+endif()
+
+if(OT_APP_CLI_FREERTOS_WIFI)
+    add_subdirectory(wifi)
+endif()
+
+if(OT_APP_CLI_FREERTOS_LWIP)
+    add_subdirectory(lwip)
 endif()

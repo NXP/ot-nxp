@@ -51,7 +51,9 @@
 #include "wifi_cli.h"
 #endif
 
+#ifdef OT_APP_CLI_PLATFORM_ADDON
 #include "radio_cli.h"
+#endif
 
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
 #include "lowpower_cli.h"
@@ -65,7 +67,9 @@ static const otCliCommand addonsCommands[] = {
 #ifdef OT_APP_CLI_IPERF_ADDON
     {"iperf", ProcessIperf},
 #endif
+#ifdef OT_APP_CLI_PLATFORM_ADDON
     {"radio_nxp", ProcessRadio},
+#endif
 #ifdef OT_APP_CLI_DEBUG_ADDON
     {"debug", ProcessDebug},
 #endif
