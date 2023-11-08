@@ -28,6 +28,14 @@
 
 set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
 
+set(LWIP_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/lwip PARENT_SCOPE)
+set(WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp CACHE PATH "wifi path")
+set(WIFI_BT_MODULE_PATH $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module  CACHE PATH "wifi_bt_module path")
+set(EDGEFAST_WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/edgefast_wifi CACHE PATH "edgefast_wifi path")
+
+set(CONNFWK_BOARD "rt1170" PARENT_SCOPE)
+set(CONNFWK_SDK_ROOT ${NXP_SDK_ROOT} PARENT_SCOPE)
+
 set(EVK_MIMXRT1170 "evkbmimxrt1170" CACHE STRING "evkbmimxrt1170")
 set(MIMXRT1170_EVK "mimxrt1170evkb" CACHE STRING "mimxrt1170evkb")
 
@@ -45,7 +53,9 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_DEVICE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_SDHC_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cm7)
     set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH})
@@ -65,7 +75,9 @@ elseif (${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
     set(DRIVER_EDMA_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/edma)
     set(DRIVER_DMAMUX_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/dmamux)
+    set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/enet)
     set(DRIVER_USDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/usdhc)
+    set(DRIVER_SDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/sdhc)
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/armv7-m7)
     set(DRIVER_CAAM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/caam)
     set(DRIVER_MU_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mu)
@@ -118,7 +130,7 @@ list(APPEND SDK_INCLUDES
 #File system
     ${NXP_SDK_ROOT}/middleware/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
-    ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
+    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170
 )
 
 list(APPEND SDK_SOURCES
@@ -208,6 +220,7 @@ list(APPEND SDK_COMPILE_DEFINITIONS
 if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND SDK_INCLUDES
             ${DRIVER_USDHC_FILES_PATH}
+            ${DRIVER_SDHC_FILES_PATH}
             ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
             ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware
             ${NXP_SDK_ROOT}/middleware/sdmmc/common
@@ -236,15 +249,34 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DSD9177
         -DSDMMCHOST_OPERATION_VOLTAGE_3V3
-        -DCONFIG_MAX_AP_ENTRIES=10
         -DCONFIG_UAP_AMPDU_TX=1
         -DCONFIG_UAP_AMPDU_RX=1
-        -DCONFIG_WIFI_MAX_PRIO=configMAX_PRIORITIES-1
     )
 elseif ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
     )
+endif ()
+
+
+if (OT_NXP_LWIP_ETH)
+    list(APPEND SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/phy/
+        ${NXP_SDK_ROOT}/components/phy/device/phyrtl8211f
+        ${NXP_SDK_ROOT}/components/silicon_id
+        ${NXP_SDK_ROOT}/components/silicon_id/socs
+        ${DRIVER_ENET_FILES_PATH}
+        ${DRIVER_DEVICE_FILES_PATH}
+        )
+    list(APPEND SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/phy/device/phyrtl8211f/fsl_phyrtl8211f.c
+        ${NXP_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
+        ${NXP_SDK_ROOT}/components/silicon_id/socs/imxrt1170/fsl_silicon_id_soc.c
+        ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
+        ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
+        )
+    list(APPEND SDK_COMPILE_DEFINITIONS
+        )
 endif ()
 
 if (MULTICORE_LOGGING)
@@ -288,6 +320,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     freertos_kernel
     ${NXP_BOARD_LIB}
     #Dependency to little_fs config files
+    connfwk-config
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}
 )

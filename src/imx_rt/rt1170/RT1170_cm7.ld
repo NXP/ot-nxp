@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022, The OpenThread Authors.
+ *  Copyright (c) 2021-2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@ m_text_size                  = NV_STORAGE_START_ADDRESS - m_text_start;
 
 OCRAM1_START                 = 0x20240000;
 OCRAM2_START                 = 0x202C0000;
-__NCACHE_REGION_START        = OCRAM2_START;
+__NCACHE_REGION_START        = 0x202FE000;
 __NCACHE_REGION_SIZE         = 0x2000;
 HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x800;
 STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x800;
@@ -71,9 +71,9 @@ MEMORY
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
   m_qacode              (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00040000
-  m_data                (RW)  : ORIGIN = OCRAM1_START, LENGTH = 0x000C0000
-  rpmsg_sh_mem          (RW)  : ORIGIN = 0x20300000, LENGTH = RPMSG_SHMEM_SIZE
+  m_data                (RW)  : ORIGIN = OCRAM1_START, LENGTH = 0x000BE000
   m_data_noncache       (RW)  : ORIGIN = __NCACHE_REGION_START, LENGTH = __NCACHE_REGION_SIZE
+  rpmsg_sh_mem          (RW)  : ORIGIN = 0x20300000, LENGTH = RPMSG_SHMEM_SIZE
   m_core1_image         (RX)  : ORIGIN = 0x30FC0000, LENGTH = 0x00040000
 }
 

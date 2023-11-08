@@ -24,6 +24,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+if (NOT DEFINED EVK_RT1170_BOARD)
+    set(EVK_RT1170_BOARD "evkbmimxrt1170")
+endif()
+
 set(PLATFORM_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard -mthumb -mfpu=fpv5-d16 -fno-common -ffreestanding -fno-builtin -mapcs")
 set(PLATFORM_CXX_FLAGS "${PLATFORM_C_FLAGS} -MMD -MP")
 set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u qspiflash_config -u image_vector_table -u boot_data -u dcd_data -Wl,--sort-section=alignment -Wl,--cref")
@@ -63,11 +67,43 @@ if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
         )
     endif()
 elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
-    set(CONNFWK_COMPILE_DEFINITIONS
-        -DPLATFORM_RESET_PIN_PORT=3
-        -DPLATFORM_RESET_PIN_NUM=9
-    )
+    if(BOARD_USE_M2)
+        set(CONNFWK_COMPILE_DEFINITIONS
+            -DPLATFORM_RESET_PIN_PORT=3
+            -DPLATFORM_RESET_PIN_NUM=30
+        )
+    else()
+        set(CONNFWK_COMPILE_DEFINITIONS
+            -DPLATFORM_RESET_PIN_PORT=10
+            -DPLATFORM_RESET_PIN_NUM=2
+        )
+        if (NOT (${EVK_RT1170_BOARD} STREQUAL "evkmimxrt1170") )
+            # 1170 evkB has different SD card power logic
+            list(APPEND CONNFWK_COMPILE_DEFINITIONS
+                -DPLATFORM_RESET_PIN_LVL_ON=0
+                -DPLATFORM_RESET_PIN_LVL_OFF=1
+            )
+        endif()
+    endif()
+
 endif()
 # Enable FunctionLib and FileSystem modules
 set(CONNFWK_FLIB ON)
 set(CONNFWK_FILESYSTEM ON)
+
+
+if(OT_APP_BR_FREERTOS)
+    #set(OT_NXP_PLATFORM_FAMILY "rw" CACHE STRING "")
+    #set(OT_NXP_BOARD "rdrw612bga" CACHE STRING "")
+    set(OT_NXP_MBEDTLS_PORT "els_pkc" CACHE STRING "")
+    set(OT_NXP_LWIP ON CACHE BOOL "")
+    set(OT_NXP_LWIP_IPERF ON CACHE BOOL "")
+    if(NOT OT_NXP_LWIP_ETH)
+        set(OT_NXP_LWIP_ETH OFF CACHE BOOL "")
+        set(OT_NXP_LWIP_WIFI ON CACHE BOOL "")
+    endif ()
+    set(OT_APP_BR_FREERTOS ON CACHE BOOL "")
+    set(OT_APP_CLI_FREERTOS ON CACHE BOOL "")
+    set(OT_APP_CLI_FREERTOS_IPERF OFF CACHE BOOL "")
+    set(OT_NXP_EXPORT_TO_BIN ON CACHE BOOL "")
+endif()
