@@ -30,6 +30,12 @@ To learn more about building and running the examples please check:
 [rt1060-page]: ../../src/imx_rt/rt1060/README.md
 [rw612-page]: ../..src/rw/rw612/README.md
 
+Current border router example supports wifi or ethernet. The default is WIFI. To use ethernet, add the following options to the build command:
+
+```bash
+$ ./script/build_rw612 -DOT_NXP_LWIP_ETH=ON -DOT_NXP_LWIP_WIFI=OFF
+```
+
 ## How to run the OTBR application
 
 In order to run the OTBR example, a minimum of devices is required: - NXP OTBR - A Thread CLI capable device - A windows/linux PC to run an mDNS client.
@@ -38,11 +44,55 @@ Note: For this demonstration, Ubuntu 21.10 with mDNSResponder was tested. Avahi 
 
 It is important that the Border Router and the PC to reside on the same Wi-Fi network
 
-To set wifi credentials (SSID and password), please update the corresponding sections from the file indicated below, then perform a clean build:
+To connect to the wifi network we can use the follwing cli command:
 
-[NXP OTBR CMake file][cmake-page]
+```
+> wifi connect <wifi_ssid> <wifi_passwd>
+done
+```
 
-[cmake-page]: examples/br/CMakeLists.txt
+To see the IP addresses assigned to each interface use:
+
+```
+> lwip ipaddr
+en2:
+ #0: FE80::D4D1:71FF:FEC8:6B42
+      preferred static
+ #1: FD37:C34C:FBD3:FD30:D4D1:71FF:FEC8:6B42
+      preferred pref_lft: forever valid_lft: forever
+
+ IPv4 Address: 192.168.2.207/24
+ Gateway     : 192.168.2.1
+
+ot1:
+ #0: FE80::8E0:2E65:6468:39C1
+      deprecated static
+ #1: FDB9:BDB1:412E:A443:4141:1B14:CE94:9111
+      deprecated static
+ #2: FDB9:BDB1:412E:A443:0:FF:FE00:FC00
+      deprecated static
+ #3: FDB9:BDB1:412E:A443:0:FF:FE00:FC10
+      deprecated static
+ #4: FDB9:BDB1:412E:A443:0:FF:FE00:FC38
+      deprecated static
+ #5: FD37:C34C:FBD3:FD34:E0D:BCDF:6294:40D6
+      preferred static
+ #6: FDB9:BDB1:412E:A443:0:FF:FE00:FC11
+      deprecated static
+
+lo0:
+ #0: ::1
+      deprecated static
+
+ IPv4 Address: 127.0.0.1/8
+ Gateway     : 127.0.0.1
+
+Done
+```
+
+To start the Thread network see the steps from this [readme][rw612-page]:
+
+[rw612-page]: ../..src/rw/rw612/README.md
 
 ### Advertising proxy functionality:
 
