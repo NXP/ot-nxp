@@ -26,13 +26,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_sources(ot-cli-${OT_NXP_PLATFORM} PUBLIC
+cmake_policy(SET CMP0076 NEW) # target_sources() command now converts relative source file paths to absolute
+cmake_policy(SET CMP0079 NEW)
+
+add_library(ot-cli-addons
     ${CMAKE_CURRENT_SOURCE_DIR}/addons_cli.c
 )
 
-target_include_directories(ot-cli-${OT_NXP_PLATFORM} PRIVATE
+target_include_directories(ot-cli-addons PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
+
+target_link_libraries(ot-cli-addons PRIVATE
+    ${OT_PLATFORM_LIB}
+    ot-config
+)
+
+if(OT_APP_CLI_FREERTOS_LOWPOWER)
+    target_link_libraries(ot-cli-addons PRIVATE
+    connfwk-LowPower
+    )
+endif()
+
 
 if(OT_APP_CLI_FREERTOS_IPERF)
     add_subdirectory(iperf)
@@ -46,4 +63,12 @@ endif()
 
 if(OT_APP_CLI_FREERTOS_LOWPOWER)
     add_subdirectory(lowpower)
+endif()
+
+if(OT_APP_CLI_FREERTOS_WIFI)
+    add_subdirectory(wifi)
+endif()
+
+if(OT_APP_CLI_FREERTOS_LWIP)
+    add_subdirectory(lwip)
 endif()

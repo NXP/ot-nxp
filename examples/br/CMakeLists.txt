@@ -26,14 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-SET(WIFI_SSID "my__wifi" CACHE STRING "wifi ssid")
-SET(WIFI_PASSWORD "wifi__password" CACHE STRING "wifi password")
-
 add_executable(ot-br-${OT_NXP_PLATFORM}
     br_ot_freertos.c
-    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
     main.c
-    ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
+    ${PROJECT_SOURCE_DIR}/examples/cli/libc_hook.cpp
+    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
 )
 
 if(OT_NXP_LWIP_WIFI)
@@ -60,11 +57,21 @@ target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
     openthread-cli-ftd
     openthread-ftd
     nxp-lwip
-
     ${OT_PLATFORM_LIB}
     ${NXP_DRIVER_LIB}
     ot-config
+    ot-cli-addons
     -Wl,--start-group ${OT_PLATFORM_LIB} -Wl,--end-group
+    #Wrapping libc malloc functions and defining the libc heap size to 0
+    -Wl,--defsym=__heap_size__=0
+    -Wl,--wrap=_malloc_r
+    -Wl,--wrap=_realloc_r
+    -Wl,--wrap=_free_r
+    -Wl,--wrap=_calloc_r
+    -Wl,--wrap=malloc
+    -Wl,--wrap=free
+    -Wl,--wrap=realloc
+    -Wl,--wrap=calloc
 )
 
 if(NXP_BOARD_LIB)
@@ -73,8 +80,16 @@ if(NXP_BOARD_LIB)
     )
 endif()
 
-target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
-    PRIVATE
-    WIFI_PASSWORD="${WIFI_PASSWORD}"
-    WIFI_SSID="${WIFI_SSID}"
-)
+if(DEFINED WIFI_SSID)
+    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+        PRIVATE
+        WIFI_SSID="${WIFI_SSID}"
+    )
+endif()
+
+if(DEFINED WIFI_PASSWORD)
+    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+        PRIVATE
+        WIFI_PASSWORD="${WIFI_PASSWORD}"
+    )
+endif()

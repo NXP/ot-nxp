@@ -25,3 +25,23 @@ Example of a typical command:
 ```bash
 ./script/build_<platform> -DOT_APP_CLI_FREERTOS_IPERF=ON -DOT_NXP_LWIP=ON -DOT_NXP_LWIP_IPERF=ON
 ```
+
+## lwip-cli addon
+
+Allows following:
+
+- Add/remove of IPv6 addresses.
+- Reading MAC addresses.
+- Read of link state.
+
+Enable addon using `-DOT_APP_CLI_FREERTOS_LWIP=ON` compilation parameter.
+
+Type `lwip help` to the cli to get list of all available commands.
+
+## wifi-cli addon
+
+Allows connecting/disconnecting from Wi-Fi network.
+
+Enable addon using `-DOT_APP_CLI_FREERTOS_WIFI=ON` compilation parameter.
+
+Type `wifi help` to the cli to get list of all available commands.

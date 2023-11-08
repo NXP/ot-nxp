@@ -26,12 +26,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+
 if (OT_APP_CLI_FREERTOS)
     add_subdirectory(cli)
 endif()
 
-add_subdirectory(hybrid)
-
 if(OT_APP_BR_FREERTOS)
     add_subdirectory(br)
 endif()
+
+add_subdirectory(hybrid)
+
+

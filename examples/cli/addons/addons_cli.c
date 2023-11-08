@@ -43,6 +43,14 @@
 #include "debug_cli.h"
 #endif
 
+#ifdef OT_APP_CLI_LWIP_ADDON
+#include "lwip_cli.h"
+#endif
+
+#ifdef OT_APP_CLI_WIFI_ADDON
+#include "wifi_cli.h"
+#endif
+
 #include "radio_cli.h"
 
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
@@ -63,6 +71,12 @@ static const otCliCommand addonsCommands[] = {
 #endif
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
     {"lp", ProcessLowPower},
+#endif
+#ifdef OT_APP_CLI_LWIP_ADDON
+    {"lwip", ProcessLwip},
+#endif
+#ifdef OT_APP_CLI_WIFI_ADDON
+    {"wifi", ProcessWifi},
 #endif
 };
 
