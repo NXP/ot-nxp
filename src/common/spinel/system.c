@@ -34,6 +34,7 @@
 
 #include "fsl_os_abstraction.h"
 #include "fwk_platform.h"
+#include "fwk_platform_coex.h"
 #include "fwk_platform_ot.h"
 #include "ot_platform_common.h"
 #include <stdlib.h>
@@ -93,6 +94,9 @@ void otSysInit(int argc, char *argv[])
     PLATFORM_InitTimeStamp();
 
     otPlatRadioInitSpinelInterface();
+#ifdef OT_PLAT_SYS_WIFI_INIT
+    PLATFORM_InitControllers((uint8_t)conn802_15_4_c | (uint8_t)connWlan_c);
+#endif
     PLATFORM_InitOt();
 
 #ifdef OT_PLAT_SYS_CRYPTO_INIT

@@ -93,8 +93,7 @@ add_library(wifi
 target_compile_definitions(wifi
     PRIVATE
     vApplicationIdleHook=vApplicationIdleHook_wifi #hack to prevent definition of multiple idle tasks (OT has one)
-    SDK_DEBUGCONSOLE=DEBUGCONSOLE_DISABLE
-    tcpip_init=tcpip_init_wifi
+    tcpip_init=tcpip_init_once
 )
 
 target_include_directories(wifi

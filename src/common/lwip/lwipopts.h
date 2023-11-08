@@ -41,15 +41,18 @@
 
 #define LWIP_IPV6_FORWARD 1
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+/* Enable IPv4 forwarding for NAT64 */
+#define IP_FORWARD 1
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+
 #define LWIP_IPV6_NUM_ADDRESSES 8
 
-#define LWIP_IPV6_SEND_ROUTER_ADVERTISE 1
-#define LWIP_IPV6_RA_NUM_ROUTE_INFOS 3
 #define LWIP_IPV6_SEND_ROUTER_SOLICIT 1
 
-#define LWIP_ND6_MAX_INITIAL_RA 3
-#define LWIP_ND6_INITIAL_RA_INTERVAL 2
-#define LWIP_ND6_NORMAL_RA_INTERVAL 600
+#define LWIP_IPV6_DHCP6 1
+#define LWIP_IPV6_DHCP6_STATEFUL 1
+#define LWIP_IPV6_DHCP6_PD 1
 
 #define CONFIG_NETWORK_HIGH_PERF 1
 //#define LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT 1
@@ -121,52 +124,6 @@
 #define DEFAULT_THREAD_STACKSIZE 512
 #define DEFAULT_THREAD_PRIO 1
 
-#define LWIP_DBG_MIN_LEVEL LWIP_DBG_LEVEL_WARNING
-
-//#define LWIP_DEBUG       0
-#define LWIP_DEBUG_TRACE 0
-#define SOCKETS_DEBUG LWIP_DBG_OFF // | LWIP_DBG_MASK_LEVEL
-
-#define IP_DEBUG LWIP_DBG_ON
-
-#define IP6_DEBUG LWIP_DBG_ON
-#define ICMP6_DEBUG LWIP_DBG_ON
-#define DHCP6_DEBUG LWIP_DBG_OFF
-
-#define ND6_DEBUG LWIP_DBG_ON
-
-#define ETHARP_DEBUG LWIP_DBG_OFF
-#define NETIF_DEBUG LWIP_DBG_OFF
-#define PBUF_DEBUG LWIP_DBG_ON
-#define MEMP_DEBUG LWIP_DBG_OFF
-#define API_LIB_DEBUG LWIP_DBG_OFF
-#define API_MSG_DEBUG LWIP_DBG_ON
-#define ICMP_DEBUG LWIP_DBG_ON
-#define IGMP_DEBUG LWIP_DBG_OFF
-#define INET_DEBUG LWIP_DBG_OFF
-#define IP_REASS_DEBUG LWIP_DBG_OFF
-#define RAW_DEBUG LWIP_DBG_OFF
-#define MEM_DEBUG LWIP_DBG_OFF
-#define SYS_DEBUG LWIP_DBG_OFF
-#define TCP_DEBUG LWIP_DBG_ON
-#define TCP_INPUT_DEBUG LWIP_DBG_ON
-#define TCP_FR_DEBUG LWIP_DBG_OFF
-#define TCP_RTO_DEBUG LWIP_DBG_OFF
-#define TCP_CWND_DEBUG LWIP_DBG_OFF
-#define TCP_WND_DEBUG LWIP_DBG_OFF
-#define TCP_OUTPUT_DEBUG LWIP_DBG_ON
-#define TCP_RST_DEBUG LWIP_DBG_OFF
-#define TCP_QLEN_DEBUG LWIP_DBG_OFF
-#define UDP_DEBUG LWIP_DBG_OFF
-#define TCPIP_DEBUG LWIP_DBG_OFF
-#define PPP_DEBUG LWIP_DBG_OFF
-#define SLIP_DEBUG LWIP_DBG_OFF
-#define DHCP_DEBUG LWIP_DBG_OFF
-#define AUTOIP_DEBUG LWIP_DBG_OFF
-#define SNMP_MSG_DEBUG LWIP_DBG_OFF
-#define SNMP_MIB_DEBUG LWIP_DBG_OFF
-#define DNS_DEBUG LWIP_DBG_OFF
-
 #define SYS_LIGHTWEIGHT_PROT 1
 
 /*
@@ -230,6 +187,17 @@
 #else
 #define MEMP_NUM_PBUF 10
 #endif
+
+/**
+ * MEMP_NUM_RAW_PCB: Number of raw connection PCBs
+ * (requires the LWIP_RAW option)
+ */
+#ifndef MEMP_NUM_RAW_PCB
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+/* Increase default as three PCBs are used for NAT64 */
+#define MEMP_NUM_RAW_PCB 7
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+#endif /* MEMP_NUM_RAW_PCB */
 
 /**
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
@@ -431,6 +399,21 @@
 #define LWIP_STATS_DISPLAY 1
 
 /*
+   ----------------------------------------
+   - Platform specific diagnostic output. -
+   ----------------------------------------
+*/
+#ifndef LWIP_PLATFORM_DIAG
+#include <openthread/cli.h>
+
+#define LWIP_PLATFORM_DIAG(x) \
+    do                        \
+    {                         \
+        otCliOutputFormat x;  \
+    } while (0)
+#endif /* LWIP_PLATFORM_DIAG */
+
+/*
    ----------------------------------
    ---------- DHCP options ----------
    ----------------------------------
@@ -440,7 +423,6 @@
  */
 #define LWIP_DHCP 1
 #define LWIP_NETIF_EXT_STATUS_CALLBACK 1
-#define LWIP_DHCP_DOES_ACD_CHECK LWIP_DHCP
 
 /**
  * DNS related options, revisit later to fine tune.
@@ -525,6 +507,20 @@
  */
 #define LWIP_CHKSUM_ALGORITHM 3
 
+/* Hooks are relevant only for a border router */
+#if OT_APP_BR_LWIP_HOOKS_EN
+
+/* Header file with lwIP hooks */
+#define LWIP_HOOK_FILENAME "lwip_hooks.h"
+
+/* Hook for multicast forwarding and other filtering */
+#define LWIP_HOOK_IP6_CANFORWARD lwipCanForwardHook
+
+/* Hook for filtering of input traffic */
+#define LWIP_HOOK_IP6_INPUT lwipInputHook
+
+#endif /* OT_APP_BR_LWIP_HOOKS_EN */
+
 #if (LWIP_DNS || LWIP_IGMP || LWIP_IPV6) && !defined(LWIP_RAND)
 /* When using IGMP or IPv6, LWIP_RAND() needs to be defined to a random-function returning an u32_t random value*/
 #include "lwip/arch.h"
@@ -536,4 +532,5 @@ u32_t lwip_rand(void);
 #define LWIP_TCPIP_CORE_LOCKING 1
 #define LWIP_NETCONN_SEM_PER_THREAD 0
 #define LWIP_NETCONN_FULLDUPLEX 0
+#define MEMP_NUM_MLD6_GROUP 10
 #endif /* __LWIPOPTS_H__ */

@@ -26,21 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __OT_BORDER_AGENT_H__
+#define __OT_BORDER_AGENT_H__
 
 #include <openthread/instance.h>
-
-#include "lwip/netif.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
+void BorderAgentInit(otInstance *aInstance);
+
+uint16_t ToBE16(uint16_t v);
+uint32_t ToBE32(uint32_t v);
+uint64_t ToBE64(uint64_t v);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __OT_BORDER_AGENT_H__ */

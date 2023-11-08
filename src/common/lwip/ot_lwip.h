@@ -88,6 +88,24 @@ struct pbuf *otPlatLwipConvertToLwipMsg(otMessage *otIpPkt, bool bTransport);
  */
 otMessage *otPlatLwipConvertToOtMsg(struct pbuf *lwipIpPkt);
 
+/*!
+ * @brief This function returns a pointer to the already assigned OpenThread network interface
+ *
+ * @return struct netif* pointer to OT network intergace
+ */
+struct netif *otPlatLwipGetOtNetif(void);
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+/*!
+ * @brief This function checks if an IPv4 lwIP datagram should be translated to an IPv6 datagram
+ * and sends it via the Thread interface if so.
+ *
+ * @param[in] lwipIpv4Pkt pointer to Lwip IPv4 message to forward as IPv6
+ * @return OT_ERROR_NONE if translated to IPv6 and successfully sent via NAT64, failure code otherwise
+ */
+otError otPlatLwipNat64Send(struct pbuf *lwipIpv4Pkt);
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+
 #ifdef __cplusplus
 }
 #endif

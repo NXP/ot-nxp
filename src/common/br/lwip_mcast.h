@@ -26,21 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#include <stdbool.h>
 
-#include <openthread/instance.h>
+#include "lwip/ip.h"
+#include "lwip/mld6.h"
 
-#include "lwip/netif.h"
+#include <openthread/ip6.h>
 
-#ifdef __cplusplus
-extern "C" {
+#ifndef __LWIP_MCAST_H__
+#define __LWIP_MCAST_H__
+
+err_t lwipMcastSubscribe(otIp6Address *addr, struct netif *ifInfra);
+err_t lwipMcastUnsubscribe(otIp6Address *addr, struct netif *ifInfra);
+
+bool lwipMcastFilterHas(ip6_addr_t *addr);
+
 #endif
-
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* __OT_INFRA_IF_H__ */

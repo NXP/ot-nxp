@@ -26,21 +26,30 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __LWIP_HOOKS_H__
+#define __LWIP_HOOKS_H__
 
 #include <openthread/instance.h>
+#include "lwip/ip6.h"
+#include "lwip/netifapi.h"
 
-#include "lwip/netif.h"
+/**
+ * @brief Initializes the lwIP hooks with the given OT instance and interfaces.
+ */
+void lwipHooksInit(otInstance *aInstance, struct netif *infra, struct netif *thread);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/**
+ * @brief lwIP forwarding hook.
+ */
+int lwipCanForwardHook(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, struct netif *netif);
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
+/**
+ * @brief lwIP IPv6 input hook.
+ *
+ * @param[in] pbuf received struct pbuf passed to ip6_input()
+ * @param[in] input_netif struct netif on which the packet has been received
+ * @return 0 if hook has not consumed the packet, other value - hook has consumed the packet (and will free it)
+ */
+int lwipInputHook(struct pbuf *pbuf, struct netif *input_netif);
 
-#ifdef __cplusplus
-}
-#endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __LWIP_HOOKS_H__ */

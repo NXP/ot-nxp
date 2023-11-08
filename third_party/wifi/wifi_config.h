@@ -16,7 +16,7 @@
 #define CONFIG_MAX_AP_ENTRIES 30
 #endif
 
-#if defined(SD8977) || defined(SD8978) || defined(SD8987) || defined(RW610)
+#if defined(SD8977) || defined(SD8978) || defined(SD8987) || defined(RW610) || defined(IW61x)
 #define CONFIG_5GHz_SUPPORT 1
 #endif
 
@@ -24,7 +24,7 @@
 #define CONFIG_SDIO_MULTI_PORT_RX_AGGR 1
 #endif
 
-#if defined(SD8987) || defined(RW610)
+#if defined(SD8987) || defined(RW610) || defined(IW61x)
 #define CONFIG_11AC
 #undef CONFIG_WMM
 #endif

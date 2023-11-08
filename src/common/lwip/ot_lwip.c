@@ -31,6 +31,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "ot_lwip.h"
+#include "token_bucket.h"
 
 #include <string.h>
 
@@ -39,7 +40,11 @@
 #include <openthread/icmp6.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/message.h>
+#include <openthread/nat64.h>
+#include <openthread/thread.h>
 
+#include "lwip_tcpip_init_once.h"
 #include "lwip/tcpip.h"
 
 /* -------------------------------------------------------------------------- */
@@ -54,13 +59,18 @@ static struct netif     sThreadNetIf;
 static otInstance      *sInstance = NULL;
 static bool             sAddrAssigned[LWIP_IPV6_NUM_ADDRESSES];
 static otPlatLockTaskCb sLockTaskCb = NULL;
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+static otTokenBucket sTokenBucket;
+#endif
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static err_t otPlatLwipThreadNetIfInitCallback(struct netif *netif);
-static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr);
-static void  otPlatLwipReceivePacket(otMessage *pkt, void *context);
+static err_t   otPlatLwipThreadNetIfInitCallback(struct netif *netif);
+static err_t   otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr);
+static err_t   otPlatLwipSendIp4Packet(struct netif *netif, struct pbuf *pkt, const struct ip4_addr *ipaddr);
+static void    otPlatLwipReceivePacket(otMessage *pkt, void *context);
+static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -76,11 +86,10 @@ void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb)
 
 #ifndef DISABLE_TCPIP_INIT
     /* Initialize LWIP stack */
-    tcpip_init(NULL, NULL);
+    tcpip_init_once(NULL, NULL);
 #endif
 
     memset(sAddrAssigned, 0, sizeof(sAddrAssigned));
-
 exit:
     return;
 }
@@ -102,13 +111,23 @@ void otPlatLwipAddThreadInterface(void)
     /* Start with the interface in the down state. */
     netif_set_link_down(&sThreadNetIf);
 
-    /* Unkock LwIP stack */
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    /* Initialize rate limiter. This is done while lwIP lock is held to prevent it being called before initialization is
+     * complete. */
+    otTokenBucketInit(&sTokenBucket,
+                      OT_APP_THREAD_RATE_LIMIT / 8U); /* Convert from bits per second to bytes per second. */
+#endif
+    /* Unlock LwIP stack */
     UNLOCK_TCPIP_CORE();
 
     VerifyOrExit(pNetIf != NULL);
 
     /* Arrange for OpenThread to call our otPlatLwipReceivePacket() method whenever an IPv6 packet is received. */
     otIp6SetReceiveCallback(sInstance, otPlatLwipReceivePacket, NULL);
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    /* We can use the same function for IPv6 and translated IPv4 messages. */
+    otNat64SetReceiveIp4Callback(sInstance, otPlatLwipReceivePacket, NULL);
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
     /* ICMPv6 Echo processing enabled for unicast and multicast requests */
     otIcmp6SetEchoMode(sInstance, OT_ICMP6_ECHO_HANDLER_ALL);
     /* Enable the receive filter for Thread control traffic. */
@@ -270,24 +289,14 @@ otMessage *otPlatLwipConvertToOtMsg(struct pbuf *lwipIpPkt)
 {
     otMessage              *otIpPkt     = NULL;
     const otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
-    uint16_t                remainingLen;
-    bool                    bFreeOtPkt = false;
+    bool                    bFreeOtPkt  = false;
 
     // Allocate an OpenThread message
     otIpPkt = otIp6NewMessage(sInstance, &msgSettings);
     VerifyOrExit(otIpPkt != NULL);
 
-    // Copy data from LwIP's packet buffer chain into the OpenThread message.
-    remainingLen = lwipIpPkt->tot_len;
-    for (struct pbuf *partialPkt = lwipIpPkt; partialPkt != NULL; partialPkt = partialPkt->next)
-    {
-        VerifyOrExit(partialPkt->len <= remainingLen, bFreeOtPkt = true);
-
-        VerifyOrExit(otMessageAppend(otIpPkt, partialPkt->payload, partialPkt->len) == OT_ERROR_NONE,
-                     bFreeOtPkt = true);
-        remainingLen = (uint16_t)(remainingLen - partialPkt->len);
-    }
-    VerifyOrExit(remainingLen == 0, bFreeOtPkt = true);
+    // Copy data into the OpenThread message
+    VerifyOrExit(otPlatLwipCopyToOtMsg(lwipIpPkt, otIpPkt) == OT_ERROR_NONE, bFreeOtPkt = true);
 
 exit:
     if (bFreeOtPkt)
@@ -298,6 +307,67 @@ exit:
     return otIpPkt;
 }
 
+struct netif *otPlatLwipGetOtNetif(void)
+{
+    return &sThreadNetIf;
+}
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+otError otPlatLwipNat64Send(struct pbuf *lwipIpv4Pkt)
+{
+    otMessageSettings settings;
+    otMessage        *message = NULL;
+    otNat64State      state;
+    otError           error;
+    otError           result = OT_ERROR_NONE;
+
+    /* Check if NAT64 translator is running to avoid copying the packet */
+    state = otNat64GetTranslatorState(sInstance);
+    VerifyOrExit(state == OT_NAT64_STATE_ACTIVE, result = OT_ERROR_INVALID_STATE);
+
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+#define IPV6_HEADER_OVERHEAD                                                                                     \
+    (20U) /* Expected length increase after translating from IPv4 to IPv6 (IPv6 header size (40) - smallest IPv4 \
+             header size (20)) */
+    /* Check we haven't exceeded rate limit so far */
+    VerifyOrExit(otTokenBucketCanTake(&sTokenBucket, lwipIpv4Pkt->tot_len + IPV6_HEADER_OVERHEAD),
+                 result = OT_ERROR_BUSY);
+#endif
+
+    /* Create OT message to copy lwIP packet into */
+    settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(sInstance) != OT_DEVICE_ROLE_DISABLED);
+    settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
+    message                       = otIp4NewMessage(sInstance, &settings);
+    VerifyOrExit(message != NULL, result = OT_ERROR_NO_BUFS);
+
+    /* Copy lwIP packet into OT message */
+    error = otPlatLwipCopyToOtMsg(lwipIpv4Pkt, message);
+    VerifyOrExit(error == OT_ERROR_NONE, result = error);
+
+    /* Time to Live in IPv4 packet is not adjusted intentionally.
+     * If it will be routed further to Thread network, router should do this. */
+
+    /* Try to forward packet to translator if it will consume it or not */
+    error   = otNat64Send(sInstance, message);
+    message = NULL; /* otNat64Send took ownership of message regardless if it has been sent or not */
+    VerifyOrExit(error == OT_ERROR_NONE, result = error);
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    /* Packet really consumed by translator, count it to the rate limit now.
+     * If tokenBucket has been depleted after the call to otTokenBucketCanTake
+     * from a concurrent task, we may have exceeded a rate limit a little. */
+    (void)otTokenBucketTake(&sTokenBucket, lwipIpv4Pkt->tot_len + IPV6_HEADER_OVERHEAD);
+#endif
+
+exit:
+    if (message != NULL)
+    {
+        otMessageFree(message);
+    }
+
+    return result;
+}
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
@@ -307,7 +377,7 @@ static err_t otPlatLwipThreadNetIfInitCallback(struct netif *netif)
     netif->name[0]    = 'o';
     netif->name[1]    = 't';
     netif->output_ip6 = otPlatLwipSendPacket;
-    netif->output     = NULL;
+    netif->output     = otPlatLwipSendIp4Packet;
     netif->linkoutput = NULL;
     netif->flags      = NETIF_FLAG_UP | NETIF_FLAG_LINK_UP | NETIF_FLAG_BROADCAST;
     netif->mtu        = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
@@ -328,22 +398,77 @@ static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const s
     // Take back TCP/IP mutex which was temporarily released above
     LOCK_TCPIP_CORE();
 
-    otMessage *otIpPkt = otPlatLwipConvertToOtMsg(pkt);
-
-    if (otIpPkt != NULL)
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    /* TODO: Instead of using lwIP packet length for rate limiting, calculate how many bytes
+     * would be output to Thread network with its fragmentation and different header size. */
+    if (otTokenBucketTake(&sTokenBucket, pkt->tot_len) != pkt->tot_len)
     {
-        /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage object
-         * regardless of whether otIp6Send() succeeds or fails. */
-        if (otIp6Send(sInstance, otIpPkt) == OT_ERROR_NONE)
-        {
-            lwipErr = ERR_OK;
-        }
+        /* Sending the packet would exceed the rate limit. */
+        lwipErr = ERR_IF;
     }
+    else
+    {
+#endif
+        otMessage *otIpPkt = otPlatLwipConvertToOtMsg(pkt);
+
+        if (otIpPkt != NULL)
+        {
+            /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage
+             * object regardless of whether otIp6Send() succeeds or fails. */
+            if (otIp6Send(sInstance, otIpPkt) == OT_ERROR_NONE)
+            {
+                lwipErr = ERR_OK;
+            }
+        }
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    }
+#endif
 
     // Unlock OT
     sLockTaskCb(false);
 
-    /* pktPBuf is freed by LWIP stack */
+    /* pkt is freed by LWIP stack */
+    return lwipErr;
+}
+
+static err_t otPlatLwipSendIp4Packet(struct netif *netif, struct pbuf *pkt, const struct ip4_addr *ipaddr)
+{
+    err_t lwipErr = ERR_IF;
+
+    // Lock OT
+    sLockTaskCb(true);
+
+    (void)netif;
+    (void)ipaddr;
+
+    /* If IPv4 packet is to be output on Thread interface, it can only be translated to IPv6 via NAT64,
+     * otherwise it is an error */
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    switch (otPlatLwipNat64Send(pkt))
+    {
+    case OT_ERROR_NONE:
+        lwipErr = ERR_OK;
+        break;
+    case OT_ERROR_NO_BUFS:
+        lwipErr = ERR_BUF;
+        break;
+    case OT_ERROR_DROP:
+    case OT_ERROR_NO_ROUTE:
+        lwipErr = ERR_RTE;
+        break;
+    case OT_ERROR_BUSY:
+        lwipErr = ERR_WOULDBLOCK;
+        break;
+    default:
+        lwipErr = ERR_IF;
+        break;
+    }
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+
+    // Unlock OT
+    sLockTaskCb(false);
+
+    /* pkt is freed by LWIP stack */
     return lwipErr;
 }
 
@@ -364,4 +489,25 @@ static void otPlatLwipReceivePacket(otMessage *pkt, void *context)
 
     /* Always free the OpenThread message. */
     otMessageFree(pkt);
+}
+
+static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt)
+{
+    uint16_t remainingLen;
+    otError  error = OT_ERROR_FAILED;
+
+    // Copy data from LwIP's packet buffer chain into the OpenThread message.
+    remainingLen = lwipIpPkt->tot_len;
+    for (struct pbuf *partialPkt = lwipIpPkt; (partialPkt != NULL) && (remainingLen > 0); partialPkt = partialPkt->next)
+    {
+        VerifyOrExit(partialPkt->len <= remainingLen);
+
+        VerifyOrExit(otMessageAppend(otIpPkt, partialPkt->payload, partialPkt->len) == OT_ERROR_NONE);
+        remainingLen = (uint16_t)(remainingLen - partialPkt->len);
+    }
+    VerifyOrExit(remainingLen == 0);
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
 }

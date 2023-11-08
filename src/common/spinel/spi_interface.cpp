@@ -52,6 +52,10 @@
 #define OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE \
     48 ///< Default smallest SPI packet size we can receive in a single transaction.
 
+#ifndef OT_PLATFORM_CONFIG_SPI_INSTANCE
+#define OT_PLATFORM_CONFIG_SPI_INSTANCE 1
+#endif
+
 using ot::Spinel::SpinelInterface;
 
 static void SpiIntGpioCallback(void *pData)
@@ -136,7 +140,7 @@ void SpiInterface::InitSpi(void)
         .polarity     = kHAL_SpiClockPolarityActiveHigh,
         .phase        = kHAL_SpiClockPhaseFirstEdge,
         .direction    = kHAL_SpiMsbFirst,
-        .instance     = 1,
+        .instance     = OT_PLATFORM_CONFIG_SPI_INSTANCE,
         .enableMaster = true,
     };
 

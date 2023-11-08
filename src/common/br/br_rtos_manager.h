@@ -26,21 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __BR_RTOS_MANAGER_H__
+#define __BR_RTOS_MANAGER_H__
 
-#include <openthread/instance.h>
-
+#include <openthread/backbone_router_ftd.h>
+#include <openthread/ip6.h>
 #include "lwip/netif.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void BrInitServices(otInstance *aInstance, struct netif *aNetif, struct netif *aThreadNetif);
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __BR_RTOS_MANAGER_H__ */
