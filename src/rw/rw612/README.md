@@ -88,6 +88,13 @@ After a successful build, the `elf` and `binary` files are found in `build_rw612
 - ot-cli-rw612 (the elf image)
 - ot-cli-rw612.bin (the binary)
 
+- ot-br-rw612 (the elf image)
+- ot-br-rw612.bin (the binary)
+
+For border router features see dedicated [README][otbr-readme-page] file.
+
+[otbr-readme-page]: ../../../examples/br/README-OTBR.md
+
 ## Flash Binaries
 
 To flash the binaries we use the JLink from Segger. You can download it and install it from https://www.segger.com/products/debug-probes/j-link.
@@ -138,8 +145,41 @@ J-Link> loadbin path/to/binary,0x08000000
 
 3. Open a terminal connection on the first board and start a new Thread network.
 
+   Note that setting channel, panid, and network key is not enough anymore because of an Open Thread stack update.
+
+   We first need to initialize a new dataset. Using `dataset` command we visualize the newly generated dataset.
+
 ```bash
-> panid 0xabcd
+> dataset init new
+Done
+> dataset
+Active Timestamp: 1
+Channel: 25
+Channel Mask: 0x07fff800
+Ext PAN ID: 42af793f623aab54
+Mesh Local Prefix: fd6e:c358:7078:5a8d::/64
+Network Key: f824658f79d8ca033fbb85ecc3ca91cc
+Network Name: OpenThread-b870
+PAN ID: 0xb870
+PSKc: f438a194a5e968cc43cc4b3a6f560ca4
+Security Policy: 672 onrc 0
+Done
+>
+```
+
+To change network parameters use:
+
+```bash
+> dataset panid 0xabcd
+Done
+> dataset channel 25
+Done
+```
+
+Then commit the new dataset:
+
+```bash
+> dataset commit active
 Done
 > ifconfig up
 Done
@@ -152,12 +192,16 @@ Done
 ```bash
 > state
 Leader
+> dataset active -x
+0e08000000000001000035060004001fffe0020842af793f623aab540708fd6ec35870785a8d0510f824658f79d8ca033fbb85ecc3ca91cc030f4f70656e5468726561642d623837300102b8700410f438a194a5e968cc43cc4b3a6f560ca40c0402a0f7f8000300000b
+Done
+>
 ```
 
 5. Open a terminal connection on the second board and attach a node to the network.
 
 ```bash
-> panid 0xabcd
+> dataset set active 0e08000000000001000035060004001fffe0020842af793f623aab540708fd6ec35870785a8d0510f824658f79d8ca033fbb85ecc3ca91cc030f4f70656e5468726561642d623837300102b8700410f438a194a5e968cc43cc4b3a6f560ca40c0402a0f7f8000300000b
 Done
 > ifconfig up
 Done
