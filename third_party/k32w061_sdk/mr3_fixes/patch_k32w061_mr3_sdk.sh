@@ -1,5 +1,10 @@
 #!/bin/bash
-
+#
+# Copyright 2023 NXP
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
 CURR_PATH="`dirname \"$0\"`" 
 
 if [[ ! -d $NXP_K32W0_SDK_ROOT ]]; then

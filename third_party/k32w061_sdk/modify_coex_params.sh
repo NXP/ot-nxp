@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Copyright 2023 NXP
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
 
 if [ $# != 3 -a $# != 1 ]; then
 	echo "Usage: $0 <ELF file> [<variable> <new_value>]
