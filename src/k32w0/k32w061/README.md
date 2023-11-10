@@ -42,10 +42,10 @@ $ pip3 install pycryptodome
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [K32W061 SDK 2.6.6](https://mcuxpresso.nxp.com/). Creating an
+- Download [latest K32W061 SDK](https://mcuxpresso.nxp.com/). Creating an
   nxp.com account is required before being able to download the SDK. Once the
   account is created, login and follow the steps for downloading
-  SDK_2.6.6_K32W061DK6. The SDK Builder UI selection should be similar with
+  SDK_2.6.x_K32W061DK6. The SDK Builder UI selection should be similar with
   the one from the image below.
   ![MCUXpresso SDK Download](../../../doc/img/k32w/mcux-sdk-download.JPG)
 
