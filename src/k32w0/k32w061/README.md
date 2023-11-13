@@ -53,6 +53,7 @@ $ pip3 install pycryptodome
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ export NXP_K32W0_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_k32w061
 ```
