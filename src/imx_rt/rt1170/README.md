@@ -24,6 +24,7 @@ In a Bash terminal (found, for example, in Ubuntu OS), follow these instructions
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ ./script/bootstrap
 ```
 
