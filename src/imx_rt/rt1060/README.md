@@ -114,6 +114,7 @@ To target the RT1060 + K32W0 configuration, before building any Openthread host 
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ ./script/build_rt1060
 ```
 
