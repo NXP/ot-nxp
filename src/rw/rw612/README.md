@@ -62,6 +62,7 @@ Once the SDK zip archive is downloaded, unzip it, and access the contents.
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ ./script/build_rw612
 ```
