@@ -158,7 +158,7 @@ static void PublishMeshCopService(otInstance *aInstance)
         port = BORDER_AGENT_PORT;
     }
 
-    otMdnsServerAddService(aInstance, "nxp-br._meshcop._udp.local.", "_meshcop._udp.local.", port, mTxtEntries,
+    otMdnsServerAddService(aInstance, "nxp-br._meshcop._udp.local.", "_meshcop._udp.local.", NULL, 0, port, mTxtEntries,
                            numTxtEntries);
 }
 
