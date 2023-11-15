@@ -122,13 +122,6 @@ elseif(OT_MTD)
     )
 endif()
 
-if(OT_NXP_LNT)
-    target_compile_definitions(${OT_PLATFORM_LIB}
-	PUBLIC
-            -DOT_LNT_TEST=1
-    )
-endif()
-
 if(OT_NXP_INDEPENDENT_RESET MATCHES "ON")
     target_compile_definitions(${OT_PLATFORM_LIB}
 	PUBLIC
