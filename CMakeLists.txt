@@ -104,6 +104,13 @@ if(OT_APP_BR_FREERTOS)
         -DOPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE=0
         OT_NXP_PLATFORM_${OT_NXP_PLATFORM_UPPER}
     )
+
+else()
+    if(NOT DEFINED OT_APP_THREAD_RATE_LIMIT)
+        # Limit of traffic sent to the Thread network in bits per second, "0" for no limit.
+        set(OT_APP_THREAD_RATE_LIMIT "0" CACHE STRING "OT_APP_THREAD_RATE_LIMIT")
+    endif()
+
 endif()
 
 if(OT_NXP_LWIP)
