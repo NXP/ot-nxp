@@ -272,7 +272,13 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
             /* not found - add it */
             netif_add_ip6_address(netif, addr, &addr_idx);
         }
-        netif_ip6_addr_set_valid_life(netif, addr_idx, valid_t);
+        else if (ip6_addr_isdeprecated(netif_ip6_addr_state(netif, addr_idx)))
+        {
+            /* Addr found and is deprecated - change to preferred  */
+            netif_ip6_addr_set_state(netif, addr_idx, IP6_ADDR_PREFERRED);
+        }
+        /* Make address static otherwise LWIP will not be able to send packets using this prefix */
+        netif_ip6_addr_set_valid_life(netif, addr_idx, IP6_ADDR_LIFE_STATIC);
         netif_ip6_addr_set_pref_life(netif, addr_idx, pref_t);
     }
     else if (valid_t > 0)
@@ -288,7 +294,7 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
             /* Addr found and is preferred - change to deprecated */
             netif_ip6_addr_set_state(netif, addr_idx, IP6_ADDR_DEPRECATED);
         }
-        netif_ip6_addr_set_valid_life(netif, addr_idx, valid_t);
+        netif_ip6_addr_set_valid_life(netif, addr_idx, IP6_ADDR_LIFE_STATIC);
         netif_ip6_addr_set_pref_life(netif, addr_idx, 0);
     }
     else
@@ -317,7 +323,7 @@ static void RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint1
 
     LWIP_ASSERT_CORE_LOCKED();
 
-    if (GetAddrFromRa(aBuffer, aBufferLength, &addr, &pref_t, &valid_t))
+    if (GetAddrFromRa(aBuffer, aBufferLength, &addr, &valid_t, &pref_t))
     {
         struct netif *netif = netif_get_by_index(aInfraIfIndex);
         SetOrUpdateAddrFromRa(netif, &addr, valid_t, pref_t);
