@@ -343,9 +343,9 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     udpReceiveContextPtr->message = otUdpNewMessage(sInstance, &msgSettings);
 
     VerifyOrExit(udpReceiveContextPtr->message != NULL, otPlatFree(udpReceiveContextPtr));
-    VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) != OT_ERROR_NONE,
+    VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) == OT_ERROR_NONE,
                  error = OT_ERROR_FAILED);
-    VerifyOrExit(otTaskletExecute(sInstance, otTaskCb, (void *)udpReceiveContextPtr) != OT_ERROR_NONE,
+    VerifyOrExit(otTaskletExecute(sInstance, otTaskCb, (void *)udpReceiveContextPtr) == OT_ERROR_NONE,
                  error = OT_ERROR_FAILED);
 
 exit:
