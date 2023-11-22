@@ -568,29 +568,6 @@ void otSysEventSignalPending(void)
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-#if (defined(configUSE_IDLE_HOOK) && (configUSE_IDLE_HOOK > 0))
-void vApplicationIdleHook(void)
-{
-    otSysRunIdleTask();
-}
-#endif
-
-#if (defined(configCHECK_FOR_STACK_OVERFLOW) && (configCHECK_FOR_STACK_OVERFLOW > 0))
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
-{
-    __BKPT(1);
-    assert(0);
-}
-#endif
-
-#if (defined(configUSE_MALLOC_FAILED_HOOK) && (configUSE_MALLOC_FAILED_HOOK > 0))
-void vApplicationMallocFailedHook(void)
-{
-    __BKPT(1);
-    assert(0);
-}
-#endif
-
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {

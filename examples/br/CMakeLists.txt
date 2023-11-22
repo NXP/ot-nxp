@@ -30,6 +30,7 @@ add_executable(ot-br-${OT_NXP_PLATFORM}
     br_ot_freertos.c
     main.c
     ${PROJECT_SOURCE_DIR}/examples/cli/libc_hook.cpp
+    ${PROJECT_SOURCE_DIR}/examples/cli/app_freertos_hooks.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
 )
 
@@ -40,6 +41,12 @@ if(OT_NXP_LWIP_WIFI)
         target_compile_definitions(ot-br-${OT_NXP_PLATFORM} PRIVATE OT_APP_BR_WIFI_EN)
         target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE wifi)
     endif()
+
+    # In case of wifi support
+    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+        PRIVATE
+        WIFI_IDLE_HOOK_CALL_REQUIRED
+    )
 else()
     if(OT_NXP_LWIP_ETH)
         target_compile_definitions(ot-br-${OT_NXP_PLATFORM} PRIVATE OT_APP_BR_ETH_EN)

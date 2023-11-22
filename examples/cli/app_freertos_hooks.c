@@ -58,7 +58,6 @@
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
-
 void vApplicationIdleHook(void)
 {
     uint32_t   irqMask;
@@ -138,6 +137,10 @@ void vApplicationIdleHook(void)
     }
 
     EnableGlobalIRQ(irqMask);
+#ifdef WIFI_IDLE_HOOK_CALL_REQUIRED
+    extern void vApplicationIdleHook_wifi(void);
+    vApplicationIdleHook_wifi();
+#endif
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
