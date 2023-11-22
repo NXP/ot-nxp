@@ -174,6 +174,15 @@
 #define PoolsDetails_c AppPoolsDetails_c
 #endif
 
+/* OT specific for this exampe configuration parameters */
+/**
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
+ *
+ * The number of EID-to-RLOC cache entries.
+ *
+ */
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
+
 #endif /* _APP_PREINCLUDE_H_ */
 
 /*! *********************************************************************************
