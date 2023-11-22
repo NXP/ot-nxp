@@ -4,13 +4,13 @@
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 # 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
+# notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
 # 3. Neither the name of the copyright holder nor the
-#    names of its contributors may be used to endorse or promote products
-#    derived from this software without specific prior written permission.
+# names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -27,7 +27,7 @@
 set(PLATFORM_C_FLAGS "-mcpu=cortex-m33+nodsp -mfloat-abi=hard -mthumb -mfpu=fpv5-sp-d16")
 set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u flexspi_config")
 
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${PLATFORM_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PLATFORM_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PLATFORM_C_FLAGS}")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${PLATFORM_C_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} ")
@@ -73,6 +73,7 @@ set(OT_APP_BR_FREERTOS ON CACHE BOOL "")
 set(OT_APP_CLI_FREERTOS ON CACHE BOOL "")
 set(OT_APP_CLI_FREERTOS_LOWPOWER ON CACHE BOOL "")
 set(OT_APP_CLI_FREERTOS_IPERF OFF CACHE BOOL "")
+set(OT_APP_CLI_FREERTOS_PLATFORM ON CACHE BOOL "")
 set(OT_NXP_EXPORT_TO_BIN ON CACHE BOOL "")
 set(OT_NXP_INDEPENDENT_RESET ON CACHE BOOL "")
 
