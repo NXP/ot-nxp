@@ -1,36 +1,36 @@
 #
-#  Copyright (c) 2021-2023, The OpenThread Authors.
-#  All rights reserved.
+# Copyright (c) 2021-2023, The OpenThread Authors.
+# All rights reserved.
 #
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions are met:
-#  1. Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#  2. Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#  3. Neither the name of the copyright holder nor the
-#     names of its contributors may be used to endorse or promote products
-#     derived from this software without specific prior written permission.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the
+# names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-#  POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
 
 cmake_policy(SET CMP0079 NEW)
 
-if (${SDK_TYPE} STREQUAL "GITHUB")
+if(${SDK_TYPE} STREQUAL "GITHUB")
     message(FATAL_ERROR "GITHUB SDK is not supported for this platform")
-elseif (${SDK_TYPE} STREQUAL "PACKAGE")
+elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
     set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_FLEXCOMM_FILES_PATH ${DRIVER_FILES_PATH})
@@ -49,7 +49,7 @@ elseif (${SDK_TYPE} STREQUAL "PACKAGE")
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/format)
-elseif (${SDK_TYPE} STREQUAL "INTERNAL")
+elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/cache64)
     set(DRIVER_FLEXCOMM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexcomm)
     set(DRIVER_USART_FILES_PATH ${DRIVER_FLEXCOMM_FILES_PATH}/usart)
@@ -68,13 +68,15 @@ elseif (${SDK_TYPE} STREQUAL "INTERNAL")
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
-endif ()
+endif()
 
 set(RW612_SDK_SOURCES
-#startup files
+
+    # startup files
     ${NXP_SDK_ROOT}/devices/RW612/gcc/startup_RW612.S
     ${NXP_SDK_ROOT}/devices/RW612/system_RW612.c
-#other SDK files
+
+    # other SDK files
     ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
     ${DRIVER_COMMON_FILES_PATH}/fsl_common_arm.c
     ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
@@ -93,24 +95,28 @@ set(RW612_SDK_SOURCES
     ${DEBUG_CONSOLE_FILES_PATH}/fsl_debug_console.c
     ${STR_FILES_PATH}/fsl_str.c
     ${FORMAT_FILES_PATH}/fsl_format.c
-#SDK components
+
+    # SDK components
     ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
     ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_port_uart.c
     ${NXP_SDK_ROOT}/components/lists/fsl_component_generic_list.c
     ${NXP_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
     ${NXP_SDK_ROOT}/components/uart/fsl_adapter_usart.c
     ${NXP_SDK_ROOT}/components/rpmsg/fsl_adapter_rfimu.c
-    #${NXP_SDK_ROOT}/components/rng/fsl_adapter_software_rng.c
+
+    # ${NXP_SDK_ROOT}/components/rng/fsl_adapter_software_rng.c
     ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga/mflash_drv.c
     ${NXP_SDK_ROOT}/components/rng/fsl_adapter_trng.c
     ${NXP_SDK_ROOT}/components/time_stamp/fsl_adapter_ostimer_time_stamp.c
     ${NXP_SDK_ROOT}/components/power_manager/devices/RW612/fsl_pm_device.c
     ${NXP_SDK_ROOT}/components/power_manager/core/fsl_pm_core.c
     ${DRIVER_CTIMER_FILES_PATH}/fsl_ostimer.c
-# LittleFS
+
+    # LittleFS
     ${NXP_SDK_ROOT}/middleware/littlefs/lfs.c
     ${NXP_SDK_ROOT}/middleware/littlefs/lfs_util.c
-#Loader files
+
+    # Loader files
     ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/life_cycle.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/nboot_hal.c
@@ -119,6 +125,7 @@ set(RW612_SDK_SOURCES
 if(OT_NXP_MBEDTLS_PORT)
     set(ELS_PKC_CL_PATH ${NXP_SDK_ROOT}/components/els_pkc)
     list(APPEND RW612_SDK_SOURCES
+
         # els_pkc component for mbedtls els_pkc port
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAeadModes/src/mcuxClAeadModes_Els_AesCcm.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAeadModes/src/mcuxClAeadModes_Els_AesGcm.c
@@ -309,72 +316,78 @@ if(OT_NXP_MBEDTLS_PORT)
     )
 endif()
 
-if (OT_NXP_LWIP_ETH)
+if(OT_NXP_LWIP_ETH)
     list(APPEND RW612_SDK_SOURCES
         $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081/fsl_phyksz8081.c
         $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
         $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs/rw610/fsl_silicon_id_soc.c
         ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
-        )
-endif ()
+    )
+endif()
 
 add_library(${NXP_DRIVER_LIB}
     ${RW612_SDK_SOURCES}
 )
 
 set(RW612_SDK_INCLUDES
-#CMSIS includes
-        ${NXP_SDK_ROOT}/CMSIS/Core/Include
-#other SDK files
-        ${NXP_SDK_ROOT}/devices/RW612/drivers
-        ${NXP_SDK_ROOT}/devices/RW612
-        ${NXP_SDK_ROOT}/platform/drivers/ostimer
-        ${DRIVER_COMMON_FILES_PATH}
-        ${DRIVER_DEVICE_FILES_PATH}
-        ${DRIVER_FLEXSPI_FILES_PATH}
-        ${DEBUG_CONSOLE_FILES_PATH}
-        ${DRIVER_CACHE_FILES_PATH}
-        ${DRIVER_FLEXCOMM_FILES_PATH}
-        ${DRIVER_USART_FILES_PATH}
-        ${DRIVER_LPC_GPIO_FILES_PATH}
-        ${DRIVER_IMU_FILES_PATH}
-        ${DRIVER_GDMA_FILES_PATH}
-        ${DRIVER_TRNG_FILES_PATH}
-        ${DRIVER_RTC_FILES_PATH}
-        ${STR_FILES_PATH}
-        ${FORMAT_FILES_PATH}
-        ${DRIVER_ENET_FILES_PATH}
-#SDK components
-        ${NXP_SDK_ROOT}/components/uart
-        ${NXP_SDK_ROOT}/components/serial_manager
-        ${NXP_SDK_ROOT}/components/lists
-        ${NXP_SDK_ROOT}/components/osa
-        ${NXP_SDK_ROOT}/components/rpmsg
-        ${NXP_SDK_ROOT}/components/rng
-        ${NXP_SDK_ROOT}/components/flash/mflash
-        ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga
-        ${NXP_SDK_ROOT}/components/timer
-        ${NXP_SDK_ROOT}/components/time_stamp
-        ${NXP_SDK_ROOT}/components/power_manager/devices/RW612
-        ${NXP_SDK_ROOT}/components/power_manager/core/
-# LittleFS
-        ${NXP_SDK_ROOT}/middleware/littlefs
-#Loader files
-        ${NXP_SDK_ROOT}/components/conn_fwloader/include
+
+    # CMSIS includes
+    ${NXP_SDK_ROOT}/CMSIS/Core/Include
+
+    # other SDK files
+    ${NXP_SDK_ROOT}/devices/RW612/drivers
+    ${NXP_SDK_ROOT}/devices/RW612
+    ${NXP_SDK_ROOT}/platform/drivers/ostimer
+    ${DRIVER_COMMON_FILES_PATH}
+    ${DRIVER_DEVICE_FILES_PATH}
+    ${DRIVER_FLEXSPI_FILES_PATH}
+    ${DEBUG_CONSOLE_FILES_PATH}
+    ${DRIVER_CACHE_FILES_PATH}
+    ${DRIVER_FLEXCOMM_FILES_PATH}
+    ${DRIVER_USART_FILES_PATH}
+    ${DRIVER_LPC_GPIO_FILES_PATH}
+    ${DRIVER_IMU_FILES_PATH}
+    ${DRIVER_GDMA_FILES_PATH}
+    ${DRIVER_TRNG_FILES_PATH}
+    ${DRIVER_RTC_FILES_PATH}
+    ${STR_FILES_PATH}
+    ${FORMAT_FILES_PATH}
+    ${DRIVER_ENET_FILES_PATH}
+
+    # SDK components
+    ${NXP_SDK_ROOT}/components/uart
+    ${NXP_SDK_ROOT}/components/serial_manager
+    ${NXP_SDK_ROOT}/components/lists
+    ${NXP_SDK_ROOT}/components/osa
+    ${NXP_SDK_ROOT}/components/rpmsg
+    ${NXP_SDK_ROOT}/components/rng
+    ${NXP_SDK_ROOT}/components/flash/mflash
+    ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga
+    ${NXP_SDK_ROOT}/components/timer
+    ${NXP_SDK_ROOT}/components/time_stamp
+    ${NXP_SDK_ROOT}/components/power_manager/devices/RW612
+    ${NXP_SDK_ROOT}/components/power_manager/core/
+
+    # LittleFS
+    ${NXP_SDK_ROOT}/middleware/littlefs
+
+    # Loader files
+    ${NXP_SDK_ROOT}/components/conn_fwloader/include
 )
 
-if (OT_NXP_LWIP_ETH)
+if(OT_NXP_LWIP_ETH)
     list(APPEND RW612_SDK_INCLUDES
         $ENV{NXP_RW612_SDK_ROOT}/components/phy/
         $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081
         $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id
         $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs
         ${DRIVER_ENET_FILES_PATH}
-        )
-endif ()
+    )
+endif()
 
 if(OT_NXP_MBEDTLS_PORT)
     list(APPEND RW612_SDK_INCLUDES
+
         # els_pkc component for mbedtls els_pkc port
         ${ELS_PKC_CL_PATH}
         ${ELS_PKC_CL_PATH}/src/compiler
@@ -435,13 +448,13 @@ if(OT_NXP_MBEDTLS_PORT)
 endif()
 
 if(OT_NXP_BUILD_APP_AS_LIB)
-    #ethermind/coex_app_cli include
+    # ethermind/coex_app_cli include
     list(APPEND RW612_SDK_INCLUDES
         $ENV{NXP_RW612_SDK_ROOT}/middleware/wireless/ethermind/examples/coex_app_cli/mbedtls
     )
 endif()
 
-#freertos
+# freertos
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
     ${RW612_SDK_INCLUDES}
@@ -460,7 +473,8 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING
     -DSERIAL_PORT_TYPE_UART=1
     -DHAL_UART_ADAPTER_LOWPOWER=1
-    #-DSERIAL_MANAGER_NON_BLOCKING_MODE=1
+
+    # -DSERIAL_MANAGER_NON_BLOCKING_MODE=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=1024
     -DSERIAL_MANAGER_TASK_PRIORITY=PRIORITY_RTOS_TO_OSA\(2\)
     -DTM_ENABLE_TIME_STAMP=1
@@ -474,16 +488,18 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DgPlatformDisableBleLowPower_d=0 # Enable BLE/15.4 low power feature
     LFS_CONFIG=fwk_lfs_config.h
     LFS_THREADSAFE=1
+    -DNOT_DEFINE_DEFAULT_WIFI_MODULE
+    -DWIFI_BOARD_RW610
 )
 
-if (OT_NXP_LWIP_ETH)
+if(OT_NXP_LWIP_ETH)
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
         -DLWIP_DISABLE_PBUF_POOL_SIZE_SANITY_CHECKS
         -DUSE_RTOS
     )
-endif ()
+endif()
 
 if(OT_NXP_DEVICE_REVISION MATCHES "A0")
     target_compile_definitions(${NXP_DRIVER_LIB}
@@ -495,31 +511,32 @@ endif()
 if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
-        -DCONFIG_WPA_SUPP_MBEDTLS #Enable wpa_supplicant mbedtls extend config
+        -DCONFIG_WPA_SUPP_MBEDTLS # Enable wpa_supplicant mbedtls extend config
     )
 endif()
 
 target_compile_options(${NXP_DRIVER_LIB}
     PRIVATE
-        ${OT_CFLAGS}
-        -Wno-unknown-pragmas
-        -Wno-sign-compare
-        -Wno-unused-function
-        -Wno-unused-parameter
-        -Wno-unused-variable
-        -Wno-empty-body
-        -Wno-int-conversion
-        -Wno-int-in-bool-context
-        -Wno-memset-elt-size
-        -Wno-parentheses
+    ${OT_CFLAGS}
+    -Wno-unknown-pragmas
+    -Wno-sign-compare
+    -Wno-unused-function
+    -Wno-unused-parameter
+    -Wno-unused-variable
+    -Wno-empty-body
+    -Wno-int-conversion
+    -Wno-int-in-bool-context
+    -Wno-memset-elt-size
+    -Wno-parentheses
 )
 
 target_link_libraries(${NXP_DRIVER_LIB}
     PRIVATE
-        ${NXP_BOARD_LIB} # board.h needed by firmware loader for flexspi flash
+    ${NXP_BOARD_LIB} # board.h needed by firmware loader for flexspi flash
     PUBLIC
-        freertos_kernel
-        # Dependencies to LFS_CONFIG
-        connfwk-config
-        connfwk-platform-${CONNFWK_PLATFORM}
+    freertos_kernel
+
+    # Dependencies to LFS_CONFIG
+    connfwk-config
+    connfwk-platform-${CONNFWK_PLATFORM}
 )
