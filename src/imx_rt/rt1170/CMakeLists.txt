@@ -140,9 +140,8 @@ else()
     )
 endif()
 
-if(${BOARD_USE_M2})
+if(${OT_NXP_TRANSCEIVER_INTERFACE_DETAIL} STREQUAL WIFI_IW612_BOARD_MURATA_2EL_M2)
     list(APPEND OT_PLATFORM_DEFINES
-        "BOARD_USE_M2"
         "OT_PLATFORM_CONFIG_SPI_INSTANCE=6"
     )
 endif()
@@ -176,12 +175,6 @@ target_link_libraries(${OT_PLATFORM_LIB}
     ${NXP_DRIVER_LIB}
     -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1170/RT1170_cm7.ld
     -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
-)
-
-# OT needs freeRTOS config dependency
-target_link_libraries(ot-config
-    INTERFACE
-    ${OT_PLATFORM_LIB}
 )
 
 target_compile_definitions(${OT_PLATFORM_LIB}
@@ -221,7 +214,6 @@ target_include_directories(${OT_PLATFORM_LIB}
     PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-    ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include
 )
 
 if(OT_BUILD_COEX)

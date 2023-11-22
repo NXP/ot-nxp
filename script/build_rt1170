@@ -33,86 +33,57 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL=(
-    "-DBUILD_TESTING=OFF"
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
-    "-DCMAKE_BUILD_TYPE=Debug"
-    "-DOT_NXP_EXPORT_TO_BIN=ON"
-    "-DOT_PLATFORM=external"
-    "-DOT_SLAAC=ON"
-    "-DOT_SERVICE=ON"
-    "-DOT_PING_SENDER=ON"
-    "-DOT_EXTERNAL_HEAP=ON"
-    "-DOT_EXTERNAL_MBEDTLS=nxp-rt1170-mbedtls"
-    "-DOT_STACK_ENABLE_LOG=OFF"
-    "-DOT_APP_NCP=OFF"
-    "-DOT_APP_RCP=OFF"
-    "-DOT_RCP=OFF"
-    # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
-    "-DOT_APP_CLI=OFF"
-    "-DOT_APP_CLI_FREERTOS=ON"
-    "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
     "-DOT_NXP_PLATFORM=rt1170"
-    "-DOT_NXP_BOARD=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=Debug"
     "-DSPINEL_INTERFACE_TYPE=UART"
     "-DOT_NXP_TRANSCEIVER=k32w0"
     "-DOT_NXP_TRANSCEIVER_BIN_PATH=build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h"
-    "-DMULTICORE_LOGGING=OFF"
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 readonly OT_OPTIONS_TRANSCEIVER_K32W0_SPI=(
-    "-DBUILD_TESTING=OFF"
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
-    "-DCMAKE_BUILD_TYPE=Debug"
-    "-DOT_NXP_EXPORT_TO_BIN=ON"
-    "-DOT_PLATFORM=external"
-    "-DOT_SLAAC=ON"
-    "-DOT_SERVICE=ON"
-    "-DOT_PING_SENDER=ON"
-    "-DOT_EXTERNAL_HEAP=ON"
-    "-DOT_EXTERNAL_MBEDTLS=nxp-rt1170-mbedtls"
-    "-DOT_STACK_ENABLE_LOG=OFF"
-    "-DOT_APP_NCP=OFF"
-    "-DOT_APP_RCP=OFF"
-    "-DOT_RCP=OFF"
-    # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
-    "-DOT_APP_CLI=OFF"
-    "-DOT_APP_CLI_FREERTOS=ON"
-    "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
     "-DOT_NXP_PLATFORM=rt1170"
-    "-DOT_NXP_BOARD=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=Debug"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=k32w0"
     "-DOT_NXP_TRANSCEIVER_BIN_PATH=build_k32w061/rcp_only_spi/bin/ot-rcp.elf.bin.h"
-    "-DMULTICORE_LOGGING=OFF"
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
-    "-DBUILD_TESTING=OFF"
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
-    "-DCMAKE_BUILD_TYPE=Debug"
-    "-DOT_NXP_EXPORT_TO_BIN=ON"
-    "-DOT_PLATFORM=external"
-    "-DOT_SLAAC=ON"
-    "-DOT_SERVICE=ON"
-    "-DOT_PING_SENDER=ON"
-    "-DOT_EXTERNAL_HEAP=ON"
-    "-DOT_EXTERNAL_MBEDTLS=nxp-rt1170-mbedtls"
-    "-DOT_STACK_ENABLE_LOG=OFF"
-    "-DOT_APP_NCP=OFF"
-    "-DOT_APP_RCP=OFF"
-    "-DOT_RCP=OFF"
-    # Default OT app cli is disabled, instead a freeRTOS version of the CLI is built
-    "-DOT_APP_CLI=OFF"
-    "-DOT_APP_CLI_FREERTOS=ON"
-    "-DOT_APP_CLI_FREERTOS_DEBUG=ON"
-    "-DOT_NXP_PLATFORM_FAMILY=imx_rt"
     "-DOT_NXP_PLATFORM=rt1170"
-    "-DOT_NXP_BOARD=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iwx12"
-    "-DMULTICORE_LOGGING=OFF"
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
+)
+
+readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DSPINEL_INTERFACE_TYPE=SPI"
+    "-DOT_NXP_TRANSCEIVER=iwx12"
+    "-DOT_APP_BR_FREERTOS=ON"
+    # FREERTOS CLI is disabled in this target build as it will be available in the BR app
+    "-DOT_APP_CLI_FREERTOS=OFF"
+    "-DOT_NXP_LWIP_ETH=ON"
+)
+
+readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DSPINEL_INTERFACE_TYPE=SPI"
+    "-DOT_NXP_TRANSCEIVER=iwx12"
+    "-DOT_APP_BR_FREERTOS=ON"
+    # FREERTOS CLI is disabled in this target build as it will be available in the BR app
+    "-DOT_APP_CLI_FREERTOS=OFF"
+    "-DOT_NXP_LWIP_WIFI=ON"
 )
 
 build()
@@ -147,6 +118,10 @@ create_directory_and_build()
     if [ "$1" == 'all' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
+        options=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
+        build iwx12_spi_br_ethernet "${options[@]}"
+        options=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
+        build iwx12_spi_br_wifi "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
@@ -158,8 +133,14 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
+    elif [ "$1" == 'iwx12_spi_br_ethernet' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
+        build iwx12_spi_br_ethernet "${options[@]}"
+    elif [ "$1" == 'iwx12_spi_br_wifi' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
+        build iwx12_spi_br_wifi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_spi, iwx12_spi"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_spi, iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
         # 128 for Invalid arguments
         exit 128
     fi
