@@ -71,6 +71,8 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_ETH=ON"
+    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
+    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
@@ -84,6 +86,8 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_WIFI=ON"
+    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
+    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 build()
