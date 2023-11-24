@@ -33,6 +33,10 @@
 #include "lwip/ip6.h"
 #include "lwip/netifapi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initializes the lwIP hooks with the given OT instance and interfaces.
  */
@@ -52,4 +56,7 @@ int lwipCanForwardHook(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, struct
  */
 int lwipInputHook(struct pbuf *pbuf, struct netif *input_netif);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __LWIP_HOOKS_H__ */

@@ -39,7 +39,6 @@
 #include "br_rtos_manager.h"
 #include "border_agent.h"
 #include "infra_if.h"
-#include "ot_lwip.h"
 #include "udp_plat.h"
 
 #include "lwip_hooks.h"

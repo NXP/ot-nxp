@@ -36,9 +36,16 @@
 #ifndef __LWIP_MCAST_H__
 #define __LWIP_MCAST_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 err_t lwipMcastSubscribe(otIp6Address *addr, struct netif *ifInfra);
 err_t lwipMcastUnsubscribe(otIp6Address *addr, struct netif *ifInfra);
 
 bool lwipMcastFilterHas(ip6_addr_t *addr);
 
+#ifdef __cplusplus
+}
 #endif
+#endif /* __LWIP_MCAST_H__ */

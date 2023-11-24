@@ -33,6 +33,13 @@
 #include <openthread/ip6.h>
 #include "lwip/netif.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void BrInitServices(otInstance *aInstance, struct netif *aNetif, struct netif *aThreadNetif);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __BR_RTOS_MANAGER_H__ */
