@@ -135,7 +135,7 @@ list(APPEND SDK_INCLUDES
     # File system
     ${NXP_SDK_ROOT}/middleware/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
-    $ENV{NXP_RT1170_SDK_ROOT}/components/flash/mflash/mimxrt1170
+    ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
 )
 
 list(APPEND SDK_SOURCES
