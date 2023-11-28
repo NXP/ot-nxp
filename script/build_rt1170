@@ -125,9 +125,9 @@ create_directory_and_build()
         options=("-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
-        options=("-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
-        build iwx12_spi_br_wifi "${options[@]}"
+        #options=("-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT")
+        #options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
+        #build iwx12_spi_br_wifi "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
