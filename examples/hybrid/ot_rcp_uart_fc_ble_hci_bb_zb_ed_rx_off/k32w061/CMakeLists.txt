@@ -56,6 +56,7 @@ add_executable(ot-rcp-uart-fc-ble-hci-bb-zb-ed-rx-off-${OT_NXP_PLATFORM}
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_zigbee_config.c
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_ota_client.c
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_leds.c
+    $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_crypto.c
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_buttons.c
 
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
