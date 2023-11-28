@@ -201,13 +201,13 @@ target_include_directories(nxp-k32w1-zigbee
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/Common
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/Include
-            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/RNG/Interface
 
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCL/Clusters/OTA/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZCIF/Include
 
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDUM/Include
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG
 
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSAPL/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSMAC/Include
@@ -257,6 +257,7 @@ add_library(nxp-k32w1-zigbee-plat
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/uart_hal.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/timer.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/console.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/platform/crypto.c
 
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PDM/PDM_adapter.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/PWRM_adapter.c
@@ -290,7 +291,6 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/Common
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/PWRM/Include
-            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/RNG/Interface
 
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/mMac/Include
@@ -330,6 +330,7 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDUM/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG
 )
 
 # Force dependency order between the platform lib & the zigbee-gen since
