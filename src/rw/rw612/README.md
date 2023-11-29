@@ -60,11 +60,32 @@ Once the SDK zip archive is downloaded, unzip it, and access the contents.
 
 ### Linux-like environment
 
+- OT CLI application :
+
 ```bash
 $ cd <path-to-ot-nxp>
 $ git submodule update --init
 $ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rw612
+$ git submodule update --init
+$ ./script/build_rw612 ot_cli
+```
+
+- Border Router application with Wi-Fi:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ git submodule update --init
+$ ./script/build_rw612 ot_br_wifi
+```
+
+- Border Router application with Ethernet:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
+$ git submodule update --init
+$ ./script/build_rw612 ot_br_eth
 ```
 
 To build for a specific device revision such as A0:
@@ -72,21 +93,18 @@ To build for a specific device revision such as A0:
 ```bash
 $ cd <path-to-ot-nxp>
 $ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rw612 -DOT_NXP_DEVICE_REVISION=A0
+$ git submodule update --init
+$ ./script/build_rw612 ot_cli -DOT_NXP_DEVICE_REVISION=A0
 ```
 
-### Windows
-
-```bash
-$ cd <path-to-ot-nxp>
-$ set NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ script\build-rw612.bat
-```
-
-After a successful build, the `elf` and `binary` files are found in `build_rw612/bin`:
+After a successful ot-cli build, the `elf` and `binary` files are found in `build_rw612/rw612_ot_cli/bin`:
 
 - ot-cli-rw612 (the elf image)
 - ot-cli-rw612.bin (the binary)
+
+After a successful ot-br build, the `elf` and `binary` files are found in:
+`build_rw612/rw612_ot_br_wifi/bin` : for Wi-Fi configuration
+`build_rw612/rw612_ot_br_eth/bin` : for Ethernet configuration
 
 - ot-br-rw612 (the elf image)
 - ot-br-rw612.bin (the binary)
@@ -126,7 +144,7 @@ If successfull you will see the following screen:
 
 ![JLink Connection](../../../doc/img/rw612/jlink-connection.jpg)
 
-At this point flush the image with the following command
+At this point flash the image with the following command
 
 ```bash
 J-Link> loadbin path/to/binary,0x08000000
