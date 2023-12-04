@@ -262,6 +262,9 @@ static void appConfigEnetHw()
     SDK_DelayAtLeastUs(10000, CLOCK_GetFreq(kCLOCK_CpuClk));
     GPIO_WritePinOutput(GPIO1, 9, 1);
 #elif defined(OT_NXP_PLATFORM_RW612)
+    /* tddr_mci_flexspi_clk 320MHz */
+    CLOCK_InitTddrRefClk(kCLOCK_TddrFlexspiDiv10);
+    CLOCK_EnableClock(kCLOCK_TddrMciFlexspiClk); /* 320MHz */
     gpio_pin_config_t gpio_config = {kGPIO_DigitalOutput, 1U};
     /* Set 50MHz output clock required by PHY. */
     CLOCK_EnableClock(kCLOCK_TddrMciEnetClk);
