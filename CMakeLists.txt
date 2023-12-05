@@ -69,7 +69,11 @@ else()
     set(OT_LOG_OUTPUT NONE)
 endif()
 
-add_subdirectory(openthread)
+if(OT_APP_BR_FREERTOS)
+    add_subdirectory(openthread-br)
+else()
+    add_subdirectory(openthread)
+endif()
 
 if(OT_APP_BR_FREERTOS)
     if(NOT DEFINED OT_APP_CLI_FREERTOS_LWIP)

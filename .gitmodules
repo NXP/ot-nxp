@@ -1,3 +1,6 @@
 [submodule "openthread"]
 	path = openthread
 	url = ../openthread.git
+[submodule "openthread-br"]
+	path = openthread-br
+	url = ../openthread.git
