@@ -40,7 +40,9 @@
 #if defined(HDI_MODE) && (HDI_MODE == 1)
 #include "hdi.h"
 #endif
+#if !USE_RTOS
 #include "NVM_Interface.h"
+#endif
 #include "RNG_Interface.h"
 #include "SecLib.h"
 #include "app.h"
