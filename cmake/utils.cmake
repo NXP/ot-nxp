@@ -112,9 +112,16 @@ function(otnxp_git_version git_version)
         OUTPUT_VARIABLE GIT_REV_OTNXP OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
+
+    if(OT_APP_BR_FREERTOS)
+        set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread-br)
+    else()
+        set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread)
+    endif()
+
     execute_process(
         COMMAND git describe --dirty --always --exclude "*"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/openthread
+        WORKING_DIRECTORY ${WORKING_DIRECTORY_PATH}
         OUTPUT_VARIABLE GIT_REV_OT OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(${git_version} "${GIT_REV_OT} OT-NXP/${GIT_REV_OTNXP}" PARENT_SCOPE)
