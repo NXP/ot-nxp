@@ -441,7 +441,7 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-#define MAX_ARGS_BUFFER_SIZE 16
+#define MAX_ARGS_BUFFER_SIZE 256
 
 otError otPlatRadioMfgCommand(otInstance   *aInstance,
                               uint32_t      aKey,
