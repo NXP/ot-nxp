@@ -32,6 +32,7 @@ set -exo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
+readonly OT_BR_RTOS_CONFIG_PATH='boards/rdrw612bga/freertos/br'
 readonly OT_OPTIONS=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
@@ -45,6 +46,8 @@ readonly OT_OPTIONS_BR_WIFI=(
     "-DOT_NXP_LWIP_ETH=OFF"
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
+    # FREERTOS config file is different for BR project.
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY='${OT_SRCDIR}/${OT_BR_RTOS_CONFIG_PATH}'"
 )
 
 readonly OT_OPTIONS_BR_ETH=(
@@ -53,6 +56,8 @@ readonly OT_OPTIONS_BR_ETH=(
     "-DOT_NXP_LWIP_ETH=ON"
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
+    # FREERTOS config file is different for BR project.
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY='${OT_SRCDIR}/${OT_BR_RTOS_CONFIG_PATH}'"
 )
 
 build()
