@@ -58,7 +58,9 @@
 static struct netif     sThreadNetIf;
 static otInstance      *sInstance = NULL;
 static bool             sAddrAssigned[LWIP_IPV6_NUM_ADDRESSES];
-static otPlatLockTaskCb sLockTaskCb = NULL;
+static otPlatLockTaskCb sLockTaskCb          = NULL;
+static bool             sLwipUninitialized   = true;
+static bool             sThreadIfaceNotAdded = true;
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
 static otTokenBucket sTokenBucket;
 #endif
@@ -78,6 +80,7 @@ static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt)
 
 void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb)
 {
+    VerifyOrExit(sLwipUninitialized);
     VerifyOrExit(aInstance != NULL);
     VerifyOrExit(lockTaskCb != NULL);
 
@@ -90,6 +93,7 @@ void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb)
 #endif
 
     memset(sAddrAssigned, 0, sizeof(sAddrAssigned));
+    sLwipUninitialized = false;
 exit:
     return;
 }
@@ -97,6 +101,8 @@ exit:
 void otPlatLwipAddThreadInterface(void)
 {
     struct netif *pNetIf;
+
+    VerifyOrExit(sThreadIfaceNotAdded);
 
     /* otPlatLwipInit must be called first */
     VerifyOrExit(sInstance != NULL);
@@ -133,6 +139,7 @@ void otPlatLwipAddThreadInterface(void)
     /* Enable the receive filter for Thread control traffic. */
     otIp6SetReceiveFilterEnabled(sInstance, true);
 
+    sThreadIfaceNotAdded = false;
 exit:
     return;
 }
