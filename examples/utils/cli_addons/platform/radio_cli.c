@@ -37,6 +37,8 @@
 #include <openthread/instance.h>
 #include "common/logging.hpp"
 
+#include <openthread/crypto.h>
+
 #include "ot_platform_common.h"
 #include "radio_cli.h"
 #include <openthread/platform/radio.h>
@@ -64,6 +66,8 @@
 #define MFG_CMD_PHY_RX_TX_ACK_TEST 0x3A    // 58
 #define MFG_CMD_SET_GENERIC_PARAM 0x3B     // 59
 #define MFG_CMD_GET_SET_LATENCY 0x3C       // 60
+#define MFG_CMD_BRIC_ENCRYPT 0x46          // 70
+#define MFG_CMD_BRIC_DECRYPT 0x47          // 71
 #define MAX_VERSION_STRING_SIZE 128        //< Max size of version string.
 
 // NXP Spinel commands
@@ -90,6 +94,49 @@
 // Manufacturing Properties range [0x3F0 - 0x3FF]
 #define SPINEL_CMD_VENDOR_NXP_MFG (SPINEL_CMD_VENDOR__BEGIN + 0x3FF)
 
+#define MFG_CMD_ACTION_USE_BRIC_CRYPTO MFG_CMD_ACTION_GET
+#define MFG_CMD_ACTION_USE_OT_SW_CRYPTO MFG_CMD_ACTION_SET
+
+#define MFG_AES128_CCM_Encrypt MFG_CMD_ACTION_USE_BRIC_CRYPTO
+//#define MFG_AES128_CCM_Encrypt MFG_CMD_ACTION_USE_OT_SW_CRYPTO
+
+//#define MFG_AES128_CCM_Decrypt MFG_CMD_ACTION_USE_BRIC_CRYPTO
+#define MFG_AES128_CCM_Decrypt MFG_CMD_ACTION_USE_OT_SW_CRYPTO
+
+#define PAYLOAD_LENGTH_STATUS 16
+#define PAYLOAD_LENGTH_TAG 16
+
+#define SETUP_AUTHTAGLEN 10
+
+// MACRO: ASCII-Hexadecimal encoded string to Hexadecimal converter
+#define M_AHTOH(S, L, P)                                                                                       \
+    for (uint8_t i = 0; i < (L / 2); i++, P++)                                                                 \
+    {                                                                                                          \
+        *P = (S[2 * i] <= '9')                                                                                 \
+                 ? ((S[2 * i] - '0') * 16)                                                                     \
+                 : ((S[2 * i] <= 'F') ? (((S[2 * i] - 'A') + 10) << 4) : (((S[2 * i] - 'a') + 10) << 4));      \
+        *P |= (S[(2 * i) + 1] <= '9')                                                                          \
+                  ? (S[(2 * i) + 1] - '0')                                                                     \
+                  : ((S[(2 * i) + 1] <= 'F') ? ((S[(2 * i) + 1] - 'A') + 10) : ((S[(2 * i) + 1] - 'a') + 10)); \
+    }
+
+// MACRO: ASCII string to Hexadecimal converter
+#define M_ATOH(S, L, P)                                                                                  \
+    for (uint8_t i = 0; i < L; i++, P++)                                                                 \
+    {                                                                                                    \
+        *P = (S[i] <= '9') ? (S[i] - '0') : ((S[i] <= 'F') ? ((S[i] - 'A') + 10) : ((S[i] - 'a') + 10)); \
+    }
+
+// MACRO: Hexadecimal to ASCII string converter
+#define M_HTOA(S, L, P)                                                                           \
+    {                                                                                             \
+        uint8_t  myi;                                                                             \
+        uint8_t *myp;                                                                             \
+        otCliOutputFormat(S);                                                                     \
+        for (myi = 0, myp = (uint8_t *)P; myi < L; myi++, myp++) otCliOutputFormat("%02x", *myp); \
+        otCliOutputFormat("\r\n");                                                                \
+    }
+
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -107,6 +154,8 @@ static otError ProcessMfgSetInt8(void   *aContext,
 static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessGetSetCcaCfg(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessGetFwVersion(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+static otError ProcessAES128CCMEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+static otError ProcessAES128CCMDecrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -114,12 +163,14 @@ static otError ProcessGetFwVersion(void *aContext, uint8_t aArgsLength, char *aA
 static uint8_t mfgEnable = 0;
 
 static const otCliCommand radioCommands[] = {
-    {"ircmd", ProcessIRCmd},             //=> InBand Independent Reset command
-    {"seteui64", ProcessSetEui64},       //=> Set ieee.802.15.4 MAC Address
-    {"txpwrlimit", ProcessTxPowerLimit}, //=> Set/Get TX power limit for 15.4
-    {"mfgcmd", ProcessMfgCommands},      //=> Generic VSC for MFG RF commands
-    {"ccacfg", ProcessGetSetCcaCfg},     //=> Set/Get CCA configuration for 802.15.4 CCA Before Tx operation
-    {"fwversion", ProcessGetFwVersion},  //=> Get firmware version for 15.4
+    {"ircmd", ProcessIRCmd},              //=> InBand Independent Reset command
+    {"seteui64", ProcessSetEui64},        //=> Set ieee.802.15.4 MAC Address
+    {"txpwrlimit", ProcessTxPowerLimit},  //=> Set/Get TX power limit for 15.4
+    {"mfgcmd", ProcessMfgCommands},       //=> Generic VSC for MFG RF commands
+    {"ccacfg", ProcessGetSetCcaCfg},      //=> Set/Get CCA configuration for 802.15.4 CCA Before Tx operation
+    {"fwversion", ProcessGetFwVersion},   //=> Get firmware version for 15.4
+    {"encrypt", ProcessAES128CCMEncrypt}, //=> self-test AES128_CCM Encrypt
+    {"decrypt", ProcessAES128CCMDecrypt}, //=> self-test AES128_CCM Decrypt
 };
 
 /* -------------------------------------------------------------------------- */
@@ -721,5 +772,611 @@ static otError ProcessGetFwVersion(void *aContext, uint8_t aArgsLength, char *aA
             otCliOutputFormat("%s\r\n", version);
         }
     }
+    return error;
+}
+
+static otError ProcessAES128CCMEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    /*
+    ** AES module within FFU 15.4/Thread IP block:
+    ** ------------------------------------------
+    **
+    ** Redfinch FFU 15.4/Thread IP block embed a Basic Radio Integrated Crypto engine, called BRIC
+    ** For our 15.4/Thread operations we use only the encryption function: AES_CCM() for encryption
+    **     with a key size of 128 bits​.
+    **
+    */
+
+    /*
+    ** CMD Syntax:          radio_nxp  encrypt  <AES_128_Key> <IV/Nonce> <PT/PlainText>
+    ** Return:              [GeneratedTag] [CT (CipherText)]
+    */
+
+    // IMU variables
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    uint8_t cmdId = MFG_CMD_BRIC_ENCRYPT;
+
+    uint8_t payload[256 - 4] = {11};
+    uint8_t payloadLen       = 0;
+    uint8_t outputLen        = 0;
+
+    // INPUT variables:    <AES_128_Key> <IV/Nonce> <PlainText>
+    char   *key  = NULL;
+    uint8_t Klen = 0;
+
+    char   *nonce = NULL;
+    uint8_t Nlen  = 0;
+
+    char   *PT    = NULL;
+    uint8_t PTlen = 0;
+
+    // OUTPUT variables:    [GeneratedTag] [CT (CipherText)]
+    // uint8_t AuthTaglen = SETUP_AUTHTAGLEN;
+
+    uint8_t CTlen = 0;
+
+    // local var.
+    uint8_t *ptr;
+    uint8_t  i;
+
+    /*
+    **
+    ** Message format exchanged between CPU3_APP and CPU2_NBU:
+    ** ------------------------------------------------------
+    **
+    **       --1B--   --1B--   --1B--   -----1B----   ---n*1B---
+    **       length | cmd_id | action | return_code | body[256-4]
+    **
+    **
+    ** INPUT payload body format:
+    ** -------------------------
+    **
+    **                    -1B-   -n*1B-   -1B-   -n*1B-    -1B-    ----n*1B---
+    **       body format: Klen |  key   | Nlen |  nonce | PTlen | PT (PlainText)
+    **
+    **                    key:       AES 128 bits key (hexa value sent, )
+    **                    nonce:     initialization vector (nonce) (hexa value sent)
+    **                    PT:        input plain text to encrypt in the CCM mode
+    **
+    **
+    ** OUTPUT payload body format:
+    ** --------------------------
+    **
+    **       return_code (OT_ERROR_NONE | OT_ERROR_FAILED | OT_ERROR_INVALID_ARGS | OT_ERROR_NOT_A_FEATURE)
+    **
+    **                    -1B-    -1B-    ---1B---     -1B-    ----4B---    -n*1B-    ----n*1B----
+    **       body format: Klen |  Nlen | AuthTaglen | CTlen | BRIC retval |  Tag   | CT (CipherText)
+    **
+    **                    Klen:        size of the AES 128 bits key
+    **                    Nlen:        size of the initialization vector (nonce)
+    **                    AuthTaglen:  size of the authentication tag generated after encryption
+    **                    CTlen:       size of the resulting ciphered text
+    **                    BRIC retval: return value of the encryption done by the BRIC HW Crypto module
+    **                    if ( BRIC_retval == Success )
+    **                        ..........alignment to next 16-Byte boundary..........
+    **                        Tag:         the authentication tag generated after encryption (size: 10 Bytes)
+    **                        ..........alignment to next 16-Byte boundary..........
+    **                        CT:          resulting ciphered text (MAX size: 230 Bytes)
+    */
+
+    if ((aArgsLength == 0) || (aArgsLength < 3) || (aArgsLength > 3))
+    {
+        if (strcmp(aArgs[0], "help") == 0)
+        {
+            otCliOutputFormat("Usage: radio_nxp encrypt <AES_128_Key> <IV/Nonce> <PlainText>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Description: This function encrypts the input plain text in the CCM mode as specified "
+                              "in [NIST SP 800-38C]\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Arguments:\r\n");
+            otCliOutputFormat("    AES_128_Key      AES 128 bits key (size: 16 Bytes)\r\n");
+            otCliOutputFormat(
+                "    IV/Nonce         initialization vector (nonce) (sizes: 7,8,9,10,11,12 or 13 Bytes)\r\n");
+            otCliOutputFormat(
+                "    PlainText        input plain text to encrypt in the CCM mode (MAX size: 230 Bytes)\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Results:\r\n");
+            otCliOutputFormat(
+                "    GTag             the authentication tag generated after encryption (size: 10 Bytes)\r\n");
+            otCliOutputFormat("    CipherText       resulting ciphered text (MAX size: 230 Bytes)\r\n");
+
+            error = OT_ERROR_NONE;
+        }
+        else
+        {
+            otCliOutputFormat("Description: This function encrypts the input plain text in the CCM mode as specified "
+                              "in [NIST SP 800-38C]\r\n");
+            otCliOutputFormat("Usage:       radio_nxp encrypt <AES_128_Key> <IV/Nonce> <PlainText>\r\n");
+            otCliOutputFormat("Please type 'radio_nxp encrypt help' to see the arguments in detail\r\n");
+
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+    else
+    {
+        // Prepare Payload message to CPU2_NBU
+        ptr = payload;
+        ++ptr;                           // payload[0] = {11}
+        *ptr++ = cmdId;                  // payload[1] = MFG_CMD_BRIC_ENCRYPT=70
+        *ptr++ = MFG_AES128_CCM_Encrypt; // payload[2] = either MFG_CMD_ACTION_GET=0 (Use BRIC HW Crypto)
+        //              or     MFG_CMD_ACTION_SET=1 (Use OT SW layer)
+        *ptr++ = OT_ERROR_NONE; // payload[3] = return_code (set to OT_ERROR_NONE=0)
+
+        // 2 'key' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 1234567890123456 __OR__ (Hex) 0x01020304050607080900010203040506
+        key  = aArgs[0];
+        Klen = strlen(aArgs[0]);
+
+        if (key[0] == '0' && key[1] == 'x')
+        {
+            key += 2;
+            Klen -= 2;
+            *ptr++ = Klen / 2;
+            M_AHTOH(key, Klen, ptr);
+            Klen = Klen / 2;
+        }
+        else
+        {
+            *ptr++ = Klen; // Klen
+            M_ATOH(key, Klen, ptr);
+        }
+
+        // 2 'IV/Nonce' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 0123456789012 __OR__ (Hex) 0x00010203040506070809000102
+        nonce = aArgs[1];
+        Nlen  = strlen(aArgs[1]);
+
+        if (nonce[0] == '0' && nonce[1] == 'x')
+        {
+            nonce += 2;
+            Nlen -= 2;
+            *ptr++ = Nlen / 2;
+            M_AHTOH(nonce, Nlen, ptr);
+            Nlen = Nlen / 2;
+        }
+        else
+        {
+            *ptr++ = Nlen; // Nlen
+            M_ATOH(nonce, Nlen, ptr);
+        }
+
+        // 2 'PlainText' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) Hello_World! __OR__ (Hex) 0x48656c6c6f5f576f726c6421
+        PT    = aArgs[2];
+        PTlen = strlen(aArgs[2]);
+
+        if (PT[0] == '0' && PT[1] == 'x')
+        {
+            PT += 2;
+            PTlen -= 2;
+            *ptr++ = PTlen / 2;
+            M_AHTOH(PT, PTlen, ptr);
+            PTlen = PTlen / 2;
+        }
+        else
+        {
+            *ptr++ = PTlen; // PTlen
+            for (i = 0; i < PTlen; i++, ptr++) *ptr = PT[i];
+        }
+
+        // lengths sent and received to/from CPU2_NBU
+        payloadLen = (Klen + 1) + (Nlen + 1) + (PTlen + 1) + 4;
+        CTlen      = PTlen;
+        outputLen  = PAYLOAD_LENGTH_STATUS + PAYLOAD_LENGTH_TAG + CTlen;
+
+        if (payload[2] == MFG_CMD_ACTION_USE_BRIC_CRYPTO)
+        {
+            //--------------------------------------------------------------------------------
+            // Delegate Cryptograhic operation (using BRIC Crypto HW nodule) to CPU2_NBU
+            //--------------------------------------------------------------------------------
+            otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen, &outputLen);
+
+            if (payload[3])
+            {
+                if (payload[3] == 0xff)
+                {
+                    // ERROR returned by CPU2_NBU: Invalid Input arguments!
+                    otCliOutputFormat("ERROR: Invalid Input arguments!\r\n");
+                }
+                else
+                {
+                    // ERROR returned by CPU2_NBU / BRIC HW Crypto module
+                    otCliOutputFormat("ERROR: AES128_CCM Encryption error '%d'\r\n", (int8_t)payload[3]);
+                }
+            }
+            else
+            {
+                // SUCCESS: AES128_CCM Encryption operation did the job :-)
+
+                // dump GTag
+                M_HTOA("GeneratedTag: 0x", payload[6], &payload[PAYLOAD_LENGTH_STATUS]);
+
+                // dump CT (CipherText)
+                M_HTOA("CipherText:   0x", payload[7], &payload[PAYLOAD_LENGTH_STATUS + PAYLOAD_LENGTH_TAG]);
+            }
+        }
+        else if (payload[2] == MFG_CMD_ACTION_USE_OT_SW_CRYPTO)
+        {
+            char   *MY_key  = NULL;
+            uint8_t MY_Klen = 0;
+
+            char   *MY_nonce = NULL;
+            uint8_t MY_Nlen  = 0;
+
+            char    *MY_PT    = NULL;
+            uint32_t MY_PTlen = 0;
+
+            // extract Crypto info from payload[]
+            MY_Nlen  = (uint8_t)payload[4 + MY_Klen + 1];
+            MY_nonce = (char *)&payload[4 + MY_Klen + 1 + 1];
+
+            MY_PTlen = (uint32_t)payload[4 + MY_Klen + 1 + Nlen + 1];
+            MY_PT    = (char *)&payload[4 + MY_Klen + 1 + Nlen + 1 + 1];
+
+            char     MY_CT[256 - PAYLOAD_LENGTH_STATUS - PAYLOAD_LENGTH_TAG] = {0};
+            uint32_t MY_CTlen                                                = MY_PTlen;
+            char     MY_Tag[16]                                              = {0};
+            uint8_t  MY_AuthTaglen                                           = SETUP_AUTHTAGLEN;
+
+            otCryptoKey MY_CryptoKey;
+
+            MY_CryptoKey.mKey       = (uint8_t *)MY_key;
+            MY_CryptoKey.mKeyLength = (uint16_t)MY_Klen; // MY_Klen
+            MY_CryptoKey.mKeyRef    = 0;
+            if ((MY_Klen != 16) || ((MY_Nlen < 7) || (MY_Nlen > 13)) ||
+                (MY_PTlen > (256 - PAYLOAD_LENGTH_STATUS - PAYLOAD_LENGTH_TAG)))
+            {
+                // ERROR: Invalid Input arguments!
+                otCliOutputFormat("ERROR: Invalid Input arguments!\r\n");
+            }
+            else
+            {
+                //--------------------------------------------------------------------------------
+                // Delegate Cryptograhic operation (using OpenThread SW layer) to CPU3_APP
+                //--------------------------------------------------------------------------------
+                otCryptoAesCcm(&MY_CryptoKey, MY_AuthTaglen, MY_nonce, MY_Nlen, NULL, 0,
+                               MY_PT, // IN
+                               MY_CT, // OUT
+                               (uint32_t)MY_PTlen,
+                               true,    // AES128_CCM Encrypt
+                               MY_Tag); // OUT
+                // dump GTag
+                M_HTOA("GeneratedTag: 0x", MY_AuthTaglen, MY_Tag);
+
+                // dump CT (CipherText)
+                M_HTOA("CipherText:   0x", MY_CTlen, MY_CT);
+            }
+        }
+        else
+        {
+            otCliOutputFormat("ERROR ... Choose either AES128_CCM Encrypt done by BRIC HW Crypto Engine or done by "
+                              "OpenThread SW layer\r\n");
+        }
+
+        error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+
+static otError ProcessAES128CCMDecrypt(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    /*
+    ** AES module within OpenThread SW layer:
+    ** -------------------------------------
+    **
+    ** OpenThread Security applies AES CCM (Counter with CBC-MAC) crypto to encrypt/decrypt the IEEE 802.15.4 or
+    **     MLE messages and validates the message integration code.
+    ** Hardware acceleration should at least support basic AES ECB (Electronic Codebook Book) mode for AES CCM basic
+    *functional call.    **
+    ** REF1: [ AES module ]               https://openthread.io/guides/porting/implement-advanced-features
+    ** REF2: [ void otCryptoAesCcm(...) ] https://openthread.io/reference/group/api-crypto
+    **
+    */
+
+    /*
+    ** CMD Syntax:          radio_nxp  decrypt  <AES_128_Key> <IV/Nonce> <GeneratedTag> <CT/CipherText>
+    ** Return:              [ComputedTag] [PT (PlainText)]
+    */
+
+    // IMU variables
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    uint8_t cmdId = MFG_CMD_BRIC_DECRYPT;
+
+    uint8_t payload[256 - 4] = {11};
+    uint8_t payloadLen       = 0;
+    uint8_t outputLen        = 0;
+
+    // INPUT variables:    <AES_128_Key> <IV/Nonce> <GeneratedTag> <CipherText>
+    char   *key  = NULL;
+    uint8_t Klen = 0;
+
+    char   *nonce = NULL;
+    uint8_t Nlen  = 0;
+
+    char   *Tag        = NULL; // IN & OUT
+    uint8_t AuthTaglen = 0;
+
+    char   *CT    = NULL;
+    uint8_t CTlen = 0;
+
+    // OUTPUT variables:    [ComputedTag] [PT (PlainText)]
+    uint8_t PTlen = 0;
+
+    // local var.
+    uint8_t *ptr;
+    uint8_t  i;
+
+    /*
+    **
+    ** Message format exchanged between CPU3_APP and CPU2_NBU:
+    ** ------------------------------------------------------
+    **
+    **       --1B--   --1B--   --1B--   -----1B----   ---n*1B---
+    **       length | cmd_id | action | return_code | body[256-4]
+    **
+    **
+    ** INPUT payload body format:
+    ** -------------------------
+    **
+    **                    -1B-   -n*1B-   -1B-   -n*1B-    -1B-    ----n*1B---
+    **       body format: Klen |  key   | Nlen |  nonce | AuthTaglen |  GTag  | CTlen | CT (CipherText)
+    **
+    **                    key:       AES 128 bits key (hexa value sent, )
+    **                    nonce:     initialization vector (nonce) (hexa value sent)
+    **                    GTag:      the authentication tag generated after encryption
+    **                    CT:        input ciphered text to encrypt in the CCM mode
+    **
+    **
+    ** OUTPUT payload body format:
+    ** --------------------------
+    **
+    **       return_code (OT_ERROR_NONE | OT_ERROR_FAILED | OT_ERROR_INVALID_ARGS | OT_ERROR_NOT_A_FEATURE)
+    **
+    **                    -1B-    -1B-    ---1B---     -1B-    ----4B---    -n*1B-    ----n*1B----
+    **       body format: Klen |  Nlen | AuthTaglen | CTlen | BRIC retval |  CTag   | PT (PlainText)
+    **
+    **                    Klen:        size of the AES 128 bits key
+    **                    Nlen:        size of the initialization vector (nonce)
+    **                    AuthTaglen:  size of the authentication tag generated after encryption
+    **                    CTlen:       size of the resulting ciphered text
+    **                    BRIC retval: return value of the encryption done by the BRIC HW Crypto module
+    **                    if ( BRIC_retval == Success )
+    **                        ..........alignment to next 16-Byte boundary..........
+    **                        CTag:        the authentication tag computed after decryption (size: 10 Bytes)
+    **                        ..........alignment to next 16-Byte boundary..........
+    **                        PT:          resulting plain text (MAX size: 230 Bytes)
+    */
+
+    if ((aArgsLength == 0) || (aArgsLength < 4) || (aArgsLength > 4))
+    {
+        if (strcmp(aArgs[0], "help") == 0)
+        {
+            otCliOutputFormat("Usage: radio_nxp decrypt <AES_128_Key> <IV/Nonce> <GTag> <CipherText>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Description: This function decrypts the input ciphered text in the CCM mode as "
+                              "specified in [NIST SP 800-38C]\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Arguments:\r\n");
+            otCliOutputFormat("    AES_128_Key      AES 128 bits key (size: 16 Bytes)\r\n");
+            otCliOutputFormat(
+                "    IV/Nonce         initialization vector (nonce) (sizes: 7,8,9,10,11,12 or 13 Bytes)\r\n");
+            otCliOutputFormat(
+                "    GTag             the authentication tag generated after encryption (size: 10 Bytes)\r\n");
+            otCliOutputFormat(
+                "    CipherText       input ciphered text to decrypt in the CCM mode (MAX size: 230 Bytes)\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Result:\r\n");
+            otCliOutputFormat(
+                "    CTag             the authentication tag computed after decryption (size: 10 Bytes)\r\n");
+            otCliOutputFormat("    PlainText        resulting plain text (MAX size: 230 Bytes)\r\n");
+            error = OT_ERROR_NONE;
+        }
+        else
+        {
+            otCliOutputFormat("Description: This function decrypts the input ciphered text in the CCM mode as "
+                              "specified in [NIST SP 800-38C]\r\n");
+            otCliOutputFormat("Usage:       radio_nxp decrypt <AES_128_Key> <IV/Nonce> <GTag> <CipherText>\r\n");
+            otCliOutputFormat("Please type 'radio_nxp decrypt help' to see the arguments in detail\r\n");
+
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+    else
+    {
+        // Prepare Payload message to CPU2_NBU
+        ptr = payload;
+        ++ptr;                           // payload[0] = {11}
+        *ptr++ = cmdId;                  // payload[1] = MFG_CMD_BRIC_DECRYPT=71
+        *ptr++ = MFG_AES128_CCM_Decrypt; // payload[2] = either MFG_CMD_ACTION_GET=0 (Use BRIC HW Crypto)
+                                         //              or     MFG_CMD_ACTION_SET=1 (Use OT SW layer)
+        *ptr++ = OT_ERROR_NONE;          // payload[3] = return_code (set to OT_ERROR_NONE=0)
+
+        // 2 'key' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 1234567890123456 __OR__ (Hex) 0x01020304050607080900010203040506
+        key  = aArgs[0];
+        Klen = strlen(aArgs[0]);
+
+        if (key[0] == '0' && key[1] == 'x')
+        {
+            key += 2;
+            Klen -= 2;
+            *ptr++ = Klen / 2;
+            M_AHTOH(key, Klen, ptr);
+            Klen = Klen / 2;
+        }
+        else
+        {
+            *ptr++ = Klen; // Klen
+            M_ATOH(key, Klen, ptr);
+        }
+
+        // 2 'IV/Nonce' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 0123456789012 __OR__ (Hex) 0x00010203040506070809000102
+        nonce = aArgs[1];
+        Nlen  = strlen(aArgs[1]);
+
+        if (nonce[0] == '0' && nonce[1] == 'x')
+        {
+            nonce += 2;
+            Nlen -= 2;
+            *ptr++ = Nlen / 2;
+            M_AHTOH(nonce, Nlen, ptr);
+            Nlen = Nlen / 2;
+        }
+        else
+        {
+            *ptr++ = Nlen; // Nlen
+            M_ATOH(nonce, Nlen, ptr);
+        }
+
+        // 2 'Tag' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 0123AbC789 __OR__ (Hex) 0x000102030a0b0c070809
+        Tag        = aArgs[2];
+        AuthTaglen = strlen(aArgs[2]);
+
+        if (Tag[0] == '0' && Tag[1] == 'x')
+        {
+            Tag += 2;
+            AuthTaglen -= 2;
+            *ptr++ = AuthTaglen / 2;
+            M_AHTOH(Tag, AuthTaglen, ptr);
+            AuthTaglen = AuthTaglen / 2;
+        }
+        else
+        {
+            *ptr++ = AuthTaglen; // AuthTaglen
+            M_ATOH(Tag, AuthTaglen, ptr);
+        }
+
+        // 2 'CipherText' input formats allowed (either ASCII __OR__ Hexadecimal)
+        //     Example: (ASCII) 0123AbC789012 __OR__ (Hex) 0x000102030a0b0c070809000102
+        CT    = aArgs[3];
+        CTlen = strlen(aArgs[3]);
+
+        if (CT[0] == '0' && CT[1] == 'x')
+        {
+            CT += 2;
+            CTlen -= 2;
+            *ptr++ = CTlen / 2;
+            M_AHTOH(CT, CTlen, ptr);
+            CTlen = CTlen / 2;
+        }
+        else
+        {
+            *ptr++ = CTlen; // CTlen
+            for (i = 0; i < CTlen; i++, ptr++) *ptr = CT[i];
+        }
+
+        // lengths sent and received to/from CPU2_NBU
+        payloadLen = (Klen + 1) + (Nlen + 1) + (AuthTaglen + 1) + (CTlen + 1) + 4;
+        PTlen      = CTlen;
+        outputLen  = PAYLOAD_LENGTH_STATUS + PAYLOAD_LENGTH_TAG + PTlen;
+        if (payload[2] == MFG_CMD_ACTION_USE_BRIC_CRYPTO)
+        {
+            //--------------------------------------------------------------------------------
+            // Delegate Cryptograhic operation (using BRIC Crypto HW nodule) to CPU2_NBU
+            //--------------------------------------------------------------------------------
+            otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen, &outputLen);
+
+            if (payload[3])
+            {
+                if (payload[3] == 0xff)
+                {
+                    // ERROR returned by CPU2_NBU: Invalid Input arguments!
+                    otCliOutputFormat("ERROR: Invalid Input arguments!\r\n");
+                }
+                else
+                {
+                    // ERROR returned by CPU2_NBU / BRIC HW Crypto module
+                    otCliOutputFormat("ERROR: AES128_CCM Decryption error '%d'\r\n", (int8_t)payload[3]);
+                }
+            }
+            else
+            {
+                // SUCCESS: AES128_CCM Decryption operation did the job :-)
+
+                // dump CTag
+                M_HTOA("ComputedTag:  0x", payload[6], &payload[PAYLOAD_LENGTH_STATUS]);
+
+                // dump PT (PlainText)
+                M_HTOA("PlainText:    0x", payload[7], &payload[PAYLOAD_LENGTH_STATUS + PAYLOAD_LENGTH_TAG]);
+            }
+        }
+        else if (payload[2] == MFG_CMD_ACTION_USE_OT_SW_CRYPTO)
+        {
+            char   *MY_key  = NULL;
+            uint8_t MY_Klen = 0;
+
+            char   *MY_nonce = NULL;
+            uint8_t MY_Nlen  = 0;
+
+            // char  *MY_Tag        = NULL;
+            uint8_t MY_AuthTaglen = 0;
+
+            char    *MY_CT    = NULL;
+            uint32_t MY_CTlen = 0;
+
+            // extract Crypto info from payload[]
+            MY_Klen = (uint8_t)payload[4];
+            MY_key  = (char *)&payload[4 + 1];
+
+            MY_Nlen  = (uint8_t)payload[4 + MY_Klen + 1];
+            MY_nonce = (char *)&payload[4 + MY_Klen + 1 + 1];
+
+            MY_AuthTaglen = (uint8_t)payload[4 + MY_Klen + 1 + Nlen + 1];
+            // MY_Tag        = (char *)   &payload[4+MY_Klen+1+Nlen+1+1];
+
+            MY_CTlen = (uint32_t)payload[4 + MY_Klen + 1 + Nlen + 1 + AuthTaglen + 1];
+            MY_CT    = (char *)&payload[4 + MY_Klen + 1 + Nlen + 1 + AuthTaglen + 1 + 1];
+
+            char     MY_PT[256 - PAYLOAD_LENGTH_STATUS - PAYLOAD_LENGTH_TAG] = {0};
+            uint32_t MY_PTlen                                                = MY_CTlen;
+
+            char    MY_Comp_Tag[16]    = {0};
+            uint8_t MY_Comp_AuthTaglen = MY_AuthTaglen;
+
+            otCryptoKey MY_CryptoKey;
+
+            MY_CryptoKey.mKey       = (uint8_t *)MY_key;
+            MY_CryptoKey.mKeyLength = (uint16_t)MY_Klen; // MY_Klen
+            MY_CryptoKey.mKeyRef    = 0;
+
+            if ((MY_Klen != 16) || ((MY_Nlen < 7) || (MY_Nlen > 13)) || (MY_AuthTaglen != SETUP_AUTHTAGLEN) ||
+                (MY_CTlen > (256 - PAYLOAD_LENGTH_STATUS - PAYLOAD_LENGTH_TAG)))
+            {
+                // ERROR: Invalid Input arguments!
+                otCliOutputFormat("ERROR: Invalid Input arguments!\r\n");
+            }
+            else
+            {
+                //--------------------------------------------------------------------------------
+                // Delegate Cryptograhic operation (using OpenThread SW layer) to CPU3_APP
+                //--------------------------------------------------------------------------------
+                otCryptoAesCcm(&MY_CryptoKey, MY_AuthTaglen, MY_nonce, MY_Nlen, NULL, 0,
+                               MY_PT, // OUT
+                               MY_CT, // IN
+                               (uint32_t)MY_CTlen,
+                               false,        // AES128_CCM Decrypt
+                               MY_Comp_Tag); // OUT
+
+                // dump CTag
+                M_HTOA("ComputedTag:  0x", MY_Comp_AuthTaglen, MY_Comp_Tag);
+
+                // dump PT (PlainText)
+                M_HTOA("PlainText:    0x", MY_PTlen, MY_PT);
+            }
+        }
+        else
+        {
+            otCliOutputFormat("ERROR ... Choose either AES128_CCM Decrypt done by BRIC HW Crypto Engine or done by "
+                              "OpenThread SW layer\r\n");
+        }
+
+        error = OT_ERROR_NONE;
+    }
+
     return error;
 }
