@@ -116,7 +116,11 @@ function(otnxp_git_version git_version)
     if(OT_APP_BR_FREERTOS)
         set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread-br)
     else()
-        set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread)
+        if (OT_NXP_PLATFORM STREQUAL "k32w1")
+            set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread-k32w1)
+        else()
+            set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread)
+        endif()
     endif()
 
     execute_process(
