@@ -146,6 +146,13 @@ if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
     endif()
 endif()
 
+if (A2_ETH_REWORK MATCHES "ON")
+    target_compile_definitions(${OT_PLATFORM_LIB}
+        PUBLIC
+            -DgBoardUseFro32k_d=1
+    )
+endif()
+
 target_compile_options(${OT_PLATFORM_LIB}
     PRIVATE
         ${OT_CFLAGS}

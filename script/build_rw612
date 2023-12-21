@@ -58,6 +58,8 @@ readonly OT_OPTIONS_BR_ETH=(
     "-DOT_APP_CLI_FREERTOS=OFF"
     # FREERTOS config file is different for BR project.
     "-DFREERTOS_CONFIG_FILE_DIRECTORY='${OT_SRCDIR}/${OT_BR_RTOS_CONFIG_PATH}'"
+    # Enable this define when using an A2 board with ETH rework
+    "-DA2_ETH_REWORK=OFF"
 )
 
 build()
