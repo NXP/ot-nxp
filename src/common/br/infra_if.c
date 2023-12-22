@@ -66,6 +66,7 @@
 /* -------------------------------------------------------------------------- */
 
 #define ICMP_RA_MINIMUM_SIZE 16
+#define RAW_TX_USING_SOCK 0
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -91,8 +92,9 @@ static const uint8_t      sValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
-
-static int     CreateIcmp6Socket();
+#if RAW_TX_USING_SOCK
+static int CreateIcmp6Socket();
+#endif
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static uint8_t ReceiveIPV4Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
@@ -118,11 +120,13 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 
     sInfraIfIndex = netif_get_index(sNetifPtr);
 
+#if RAW_TX_USING_SOCK
     sInfraIfIcmp6Socket = CreateIcmp6Socket();
     assert(sInfraIfIcmp6Socket != -1);
 
     netif_index_to_name(sInfraIfIndex, (char *)&ifr.ifr_name);
     assert(setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) >= 0);
+#endif
 
     LOCK_TCPIP_CORE();
 
@@ -132,6 +136,12 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 
     raw_bind_netif(sIcmp6RawPcb, netif);
     raw_recv(sIcmp6RawPcb, ReceiveIcmp6Message, NULL);
+
+#if !RAW_TX_USING_SOCK
+    /* Enable checksum computation for TX and set checksum offset in ICMP packet since we are using RAW send */
+    sIcmp6RawPcb->chksum_reqd   = 1;
+    sIcmp6RawPcb->chksum_offset = 2;
+#endif
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
@@ -161,11 +171,13 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 
 void InfraIfDeInit()
 {
+#if RAW_TX_USING_SOCK
     if (sInfraIfIcmp6Socket != -1)
     {
         close(sInfraIfIcmp6Socket);
         sInfraIfIcmp6Socket = -1;
     }
+#endif
     if (sIcmp6RawPcb != NULL)
     {
         raw_remove(sIcmp6RawPcb);
@@ -335,22 +347,54 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
+    err_t   sendErr;
+    otError retError;
+#if RAW_TX_USING_SOCK
     struct sockaddr_in6 dst = {0};
-    err_t               sendErr;
+#else
+    ip_addr_t         dst_ip     = {0};
+    ip_addr_t         src_ip     = {0};
+    const ip6_addr_t *src_ip_ptr = NULL;
+    struct pbuf      *pbuf       = NULL;
+#endif
 
+#if RAW_TX_USING_SOCK
     dst.sin6_family = AF_INET6;
     memcpy(&dst.sin6_addr.un.u32_addr, aDestAddress->mFields.m32, sizeof(dst.sin6_addr.un.u32_addr));
 
     dst.sin6_scope_id = sInfraIfIndex;
 
     sendErr = lwip_sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr *)&dst, sizeof(dst));
+#else
+    memcpy(ip_2_ip6(&dst_ip)->addr, aDestAddress->mFields.m8, sizeof(ip_2_ip6(&dst_ip)->addr));
+    dst_ip.type            = IPADDR_TYPE_V6;
+    dst_ip.u_addr.ip6.zone = IP6_NO_ZONE;
+
+    src_ip_ptr = netif_ip6_addr(sNetifPtr, 0);
+    memcpy(ip_2_ip6(&src_ip)->addr, src_ip_ptr->addr, sizeof(ip_2_ip6(&src_ip)->addr));
+    src_ip.type            = IPADDR_TYPE_V6;
+    src_ip.u_addr.ip6.zone = IP6_NO_ZONE;
+
+    pbuf = pbuf_alloc(PBUF_TRANSPORT, aBufferLength, PBUF_RAM);
+    VerifyOrExit(pbuf != NULL, retError = OT_ERROR_NO_BUFS);
+    memcpy(pbuf->payload, aBuffer, aBufferLength);
+
+    LOCK_TCPIP_CORE();
+    sendErr = raw_sendto_if_src(sIcmp6RawPcb, pbuf, &dst_ip, sNetifPtr, &src_ip);
+    UNLOCK_TCPIP_CORE();
+
+    pbuf_free(pbuf);
+#endif
 
     /* Send RA to lwip stack to allow it to configure IP from announced prefix. */
     LOCK_TCPIP_CORE();
     RaFromOtToLwip(aInfraIfIndex, aBuffer, aBufferLength);
     UNLOCK_TCPIP_CORE();
 
-    return (sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED);
+    retError = sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED;
+
+exit:
+    return retError;
 }
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
@@ -404,7 +448,7 @@ exit:
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
-
+#if RAW_TX_USING_SOCK
 static int CreateIcmp6Socket()
 {
     static struct sockaddr_in6 src      = {0};
@@ -425,6 +469,7 @@ static int CreateIcmp6Socket()
     }
     return sockdesc;
 }
+#endif
 
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr)
 {
