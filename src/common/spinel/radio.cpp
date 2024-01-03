@@ -54,7 +54,7 @@ static ot::Spinel::RadioSpinel<ot::NXP::HdlcSpinelHciInterface> sRadioSpinel;
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    SuccessOrDie(sRadioSpinel.GetIeeeEui64(aIeeeEui64));
+    SuccessOrDie(sRadioSpinel.Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, aIeeeEui64));
 }
 
 void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
