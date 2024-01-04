@@ -29,11 +29,20 @@
 list(APPEND BOARD_SOURCES
     app_services_init.c
     board.c
-    pin_mux.c
-    clock_config.c
     hardware_init.c
     peripherals.c
 )
+list(APPEND BOARD_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
+
+if("${EVK_RT1060_BOARD}" STREQUAL "evkcmimxrt1060")
+    list(APPEND BOARD_SOURCES ${EVK_RT1060_BOARD}/pin_mux.c)
+    list(APPEND BOARD_SOURCES ${EVK_RT1060_BOARD}/clock_config.c)
+    list(APPEND BOARD_INCLUDE_DIRECTORIES ${EVK_RT1060_BOARD})
+else()
+    list(APPEND BOARD_SOURCES evkbimxrt1060/pin_mux.c)
+    list(APPEND BOARD_SOURCES evkbimxrt1060/clock_config.c)
+    list(APPEND BOARD_INCLUDE_DIRECTORIES evkbimxrt1060)
+endif()
 
 list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC)
 list(APPEND BOARD_COMPILE_DEFINITIONS_PRIVATE)
@@ -77,7 +86,7 @@ add_library(${NXP_BOARD_LIB}
 
 target_include_directories(${NXP_BOARD_LIB}
     PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${BOARD_INCLUDE_DIRECTORIES}
 )
 
 target_compile_definitions(${NXP_BOARD_LIB}
