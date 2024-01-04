@@ -70,6 +70,7 @@ set(WIFI_COMMON_SOURCES
     ${WIFI_PATH}/wifidriver/mlan_uap_cmdevent.c
     ${WIFI_PATH}/wifidriver/mlan_uap_ioctl.c
     ${WIFI_PATH}/wifidriver/mlan_wmm.c
+    ${WIFI_PATH}/wifidriver/mlan_action.c
     ${WIFI_PATH}/wifidriver/wifi-debug.c
     ${WIFI_PATH}/wifidriver/wifi-mem.c
     ${WIFI_PATH}/wifidriver/wifi-uap.c
