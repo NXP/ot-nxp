@@ -28,11 +28,6 @@
 
 set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
 
-set(LWIP_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/lwip PARENT_SCOPE)
-set(WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/wifi_nxp CACHE PATH "wifi path")
-set(WIFI_BT_MODULE_PATH $ENV{NXP_RT1170_SDK_ROOT}/components/wifi_bt_module CACHE PATH "wifi_bt_module path")
-set(EDGEFAST_WIFI_PATH $ENV{NXP_RT1170_SDK_ROOT}/middleware/edgefast_wifi CACHE PATH "edgefast_wifi path")
-
 set(CONNFWK_BOARD "rt1170" PARENT_SCOPE)
 set(CONNFWK_SDK_ROOT ${NXP_SDK_ROOT} PARENT_SCOPE)
 
@@ -40,11 +35,43 @@ set(EVK_MIMXRT1170 "evkbmimxrt1170" CACHE STRING "evkbmimxrt1170")
 set(MIMXRT1170_EVK "mimxrt1170evkb" CACHE STRING "mimxrt1170evkb")
 
 if(${SDK_TYPE} STREQUAL "GITHUB")
-    message(FATAL_ERROR "GITHUB SDK is not supported for this platform")
+    message("SDK_GITHUB driver path chosen")
+    set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
+    set(NXP_SDK_ROOT ${NXP_SDK_ROOT}/core)
+    set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/drivers)
+    set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH}/lpuart)
+    set(DRIVER_LPSPI_FILES_PATH ${DRIVER_FILES_PATH}/lpspi)
+    set(DRIVER_GPT_FILES_PATH ${DRIVER_FILES_PATH}/gpt)
+    set(DRIVER_LPI2C_FILES_PATH ${DRIVER_FILES_PATH}/lpi2c)
+    set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH}/edma)
+    set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH}/dmamux)
+    set(DRIVER_PIT_FILES_PATH ${DRIVER_FILES_PATH}/pit)
+    set(DRIVER_TRNG_FILES_PATH ${DRIVER_FILES_PATH}/trng)
+    set(DRIVER_FLEXSPI_FILES_PATH ${DRIVER_FILES_PATH}/flexspi)
+    set(DRIVER_IGPIO_FILES_PATH ${DRIVER_FILES_PATH}/igpio)
+    set(DRIVER_DCP_FILES_PATH ${DRIVER_FILES_PATH}/dcp)
+    set(DRIVER_FSL_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cache/armv7-m7)
+    set(DRIVER_COMMON_FILES_PATH ${DRIVER_FILES_PATH}/common)
+    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH}/enet)
+    set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH}/usdhc)
+    set(DRIVER_SDHC_FILES_PATH ${DRIVER_FILES_PATH}/sdhc)
+    set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH}/caam)
+    set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH}/mu)
+    set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
+    set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers/cm7)
+    set(UTILITIES_FILES_PATH ${NXP_SDK_ROOT}/utilities)
+    set(UTILITIES_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities)
+    set(ASSERT_FILES_PATH ${UTILITIES_FILES_PATH}/assert)
+    set(DEBUG_CONSOLE_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console_lite)
+    set(STR_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console/str)
+    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
+    set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/utilities/misc_utilities)
+    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/wireless_config_template/wifi_bt_config.c)
 elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
     set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_LPSPI_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_LPI2C_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_PIT_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_GPT_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_FLEXSPI_FILES_PATH ${DRIVER_FILES_PATH})
@@ -64,9 +91,12 @@ elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/incbin)
+    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c)
+    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/wireless_config_template/wifi_bt_config.c)
 elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_LPUART_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpuart)
     set(DRIVER_LPSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpspi)
+    set(DRIVER_LPI2C_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpi2c)
     set(DRIVER_PIT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/pit)
     set(DRIVER_GPT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/gpt)
     set(DRIVER_FLEXSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexspi)
@@ -86,6 +116,7 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
+    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -102,6 +133,7 @@ list(APPEND SDK_INCLUDES
     ${DRIVER_COMMON_FILES_PATH}
     ${DRIVER_LPUART_FILES_PATH}
     ${DRIVER_LPSPI_FILES_PATH}
+    ${DRIVER_LPI2C_FILES_PATH}
     ${DRIVER_IGPIO_FILES_PATH}
     ${DRIVER_PIT_FILES_PATH}
     ${DRIVER_GPT_FILES_PATH}
@@ -112,6 +144,7 @@ list(APPEND SDK_INCLUDES
     ${DRIVER_MU_FILES_PATH}
     ${DRIVER_DMAMUX_FILES_PATH}
     ${DEBUG_CONSOLE_FILES_PATH}
+    ${UTILITIES_FILES_PATH}/debug_console/debug_console
     ${STR_FILES_PATH}
 
     # XIP
@@ -133,7 +166,7 @@ list(APPEND SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/time_stamp
 
     # File system
-    ${NXP_SDK_ROOT}/middleware/littlefs
+    ${MIDDLEWARE_PATH}/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
 )
@@ -149,6 +182,7 @@ list(APPEND SDK_SOURCES
     # other SDK files
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart.c
     ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi.c
+    ${DRIVER_LPI2C_FILES_PATH}/fsl_lpi2c.c
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart_edma.c
     ${DRIVER_IGPIO_FILES_PATH}/fsl_gpio.c
     ${DRIVER_PIT_FILES_PATH}/fsl_pit.c
@@ -189,8 +223,8 @@ list(APPEND SDK_SOURCES
     ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
 
     # File system
-    ${NXP_SDK_ROOT}/middleware/littlefs/lfs.c
-    ${NXP_SDK_ROOT}/middleware/littlefs/lfs_util.c
+    ${MIDDLEWARE_PATH}/littlefs/lfs.c
+    ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}/mflash_drv.c
 )
 
@@ -243,37 +277,37 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND SDK_INCLUDES
         ${DRIVER_USDHC_FILES_PATH}
         ${DRIVER_SDHC_FILES_PATH}
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifi_bt_firmware/nw61x
-        ${NXP_SDK_ROOT}/middleware/sdmmc/common
-        ${NXP_SDK_ROOT}/middleware/sdmmc/sdio
-        ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc
-        ${NXP_SDK_ROOT}/middleware/sdmmc/osa
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/wifidriver
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/wlcmgr
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/incl/port/os
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/incl
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/incl
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/fwdnld_intf_abs
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/incl
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/firmware_dnld
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x
+        ${MIDDLEWARE_PATH}/sdmmc/common
+        ${MIDDLEWARE_PATH}/sdmmc/sdio
+        ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
+        ${MIDDLEWARE_PATH}/sdmmc/osa
+        ${MIDDLEWARE_PATH}/wifi_nxp/incl/wifidriver
+        ${MIDDLEWARE_PATH}/wifi_nxp/incl
+        ${MIDDLEWARE_PATH}/wifi_nxp/incl/wlcmgr
+        ${MIDDLEWARE_PATH}/wifi_nxp/incl/port/os
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
+        ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/incl
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/incl
+        ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs
+        ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/incl
+        ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld
         ${NXP_SDK_ROOT}/components/wifi_bt_module/template
         ${NXP_SDK_ROOT}/components/wifi_bt_module/incl
     )
     list(APPEND SDK_SOURCES
-        ${NXP_SDK_ROOT}/middleware/sdmmc/common/fsl_sdmmc_common.c
-        ${NXP_SDK_ROOT}/middleware/sdmmc/sdio/fsl_sdio.c
-        ${NXP_SDK_ROOT}/middleware/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
-        ${NXP_SDK_ROOT}/middleware/sdmmc/osa/fsl_sdmmc_osa.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/firmware_dnld/firmware_dnld.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/sdio_nxp_abs/mlan_sdio.c
-        ${NXP_SDK_ROOT}/middleware/wifi_nxp/wifidriver/sdio.c
+        ${MIDDLEWARE_PATH}/sdmmc/common/fsl_sdmmc_common.c
+        ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
+        ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
+        ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/mlan_sdio.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/sdio.c
         ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
-        ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
+        ${WIFI_BT_CONFIG_SOURCE_FILE}
     )
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DNOT_DEFINE_DEFAULT_WIFI_MODULE
@@ -307,22 +341,22 @@ endif()
 
 if(MULTICORE_LOGGING)
     list(APPEND SDK_INCLUDES
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/freertos
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/imxrt1170
-        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/include
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/include/environment/freertos
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/include/platform/imxrt1170
+        ${MIDDLEWARE_PATH}/multicore/mcmgr/src
     )
     list(APPEND SDK_SOURCES
-        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_mu_internal.c
-        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr.c
-        ${NXP_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
-        ${NXP_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
+        ${MIDDLEWARE_PATH}/multicore/mcmgr/src/mcmgr_mu_internal.c
+        ${MIDDLEWARE_PATH}/multicore/mcmgr/src/mcmgr.c
+        ${MIDDLEWARE_PATH}/multicore/mcmgr/src/mcmgr_internal_core_api_imxrt1170.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/common/llist.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_ns.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/virtio/virtqueue.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_freertos.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_queue.c
+        ${MIDDLEWARE_PATH}/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/imxrt1170/rpmsg_platform.c
         ${INCBIN_FILES_PATH}/fsl_incbin.S
     )
 endif()

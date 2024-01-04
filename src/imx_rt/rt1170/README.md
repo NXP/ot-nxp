@@ -34,25 +34,27 @@ $ ./script/bootstrap
 
 [mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
 
-- Download [the SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. S Select the **MIMXRT1170-EVKB** board. Select the SDK version 2.13.3 .
-  In the SDK Builder UI selection you should select at least
-  the **FreeRTOS component**, the **BT/BLE component** and the **ARM GCC Toolchain**.
+- Download the NXP MCUXpresso git SDK
+  and associated middleware from GitHub using the west tool.
 
-## Building examples
-
-```bash
-$ cd <path-to-ot-nxp>
-$ export NXP_RT1170_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_rt1170
+```
+bash
+$ cd third_party/github_sdk
+$ west init -l manifest --mf west.yml
+$ west update
 ```
 
-After a successful build, the ot-cli-rt1170 FreeRTOS version could be found in `build_rt1170` and include FTD (Full Thread Device).
+In case there are local modifications to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
-Note: FreeRTOS is required to be able to build the IMXRT1170 platform files. By default, if no argument is given when running the script `build_rt1170`, a freertos ot cli will be created to support the following configurations:
+```
+bash
+$ cd third_party/github_sdk/repo
+$ west forall -c "git reset --hard && git clean -xdf" -a
+```
 
-- RT1170 + IWX12 with spinel over SPI (binaries located in `build_rt1170/iwx12_spi`)
+## Hardware requirements
 
-## Hardware requirements RT1170 + IWX12
+### RT1170 + IWX12
 
 Host part:
 
@@ -77,11 +79,11 @@ Transceiver parts :
 
 - Male to female Burg cables – 20 number’s
 
-### Hardware rework for SPI support on EVKB-MIMXRT1170
+#### Hardware rework for SPI support on EVKB-MIMXRT1170
 
 To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406.
 
-### Hardware rework to connect SPI on 2EL M2 IW612 Module
+#### Hardware rework to connect SPI on 2EL M2 IW612 Module
 
 - Solder burg wires (male to female) at JP1 for SPI interface.
 
@@ -94,7 +96,7 @@ To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resist
 
 ![](../../../doc/img/imxrt1170/level_shifter_soldering.jpg)
 
-### Board settings (Spinel over SPI)
+#### Board settings (Spinel over SPI)
 
 - Murata uSD to M2 adapter connections description:
 
@@ -132,18 +134,42 @@ To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resist
 |  RESET (J26.2)  |     J9.3      |
 |   GND (J26.1)   |     J7.6      |
 
-## Flash Binaries
+## Building examples
 
-### Flashing the IWX12 transceiver firmware
+The build script located in `<ot_nxp_repo>/script/build_rt1170` allows to build various openthread application targeted to run on RT1060 platform.
+By default if no argument is given when running the script will generate all binaries for each supported configuration.
 
-At each boot the RT1170 will automatically download the IWX12 firmware on the board via SDIO.
+To build application only for a particular configuration, you should follow the next dedicated section.
 
-### Flashing the IMXRT ot-cli-rt1170 host image using MCUXpresso IDE
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060
+```
+
+### Building only RT1170+IWX12 applications
+
+1.
+
+- app_name: `iwx12_spi`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the IWX12 transceiver will exchange message over a SPI interface.
+- Status: Fully supported
+
+How to build them ?
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1170 iwx12_spi
+```
+
+After a successful build, the generated binary can be found in
+`build_rt1170/<app_name>/bin`.
+
+## Example: Flashing the IMXRT Openthread rt1060 image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
 
 - Import the previously downloaded NXP SDK into MCUXpresso IDE. This can be done by drag-and-dropping the SDK archive into MCUXpresso IDE.
-- Follow the same procedure as described in [OpenThread on RT1060 examples][rt1060-page] in section "Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE". Instead of selecting the RT1060 MCU, the RT1170 MCU should be chosen.
+- Follow the same procedure as described in [OpenThread on RT1060 examples][rt1060-page] in section "## Example: Flashing the IMXRT Openthread rt1060 image using MCUXpresso IDE". Instead of selecting the RT1060 MCU, the RT1170 MCU should be chosen.
 
 [rt1060-page]: ../rt1060/README.md
 

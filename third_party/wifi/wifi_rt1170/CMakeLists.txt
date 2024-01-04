@@ -27,9 +27,7 @@
 #
 
 list(APPEND WIFI_COMMON_SOURCES
-    ${WIFI_PATH}/wifidriver/mlan_action.c
-    ${WIFI_PATH}/wifidriver/mlan_mbo.c
-    ${WIFI_PATH}/wifidriver/mlan_11k.c
-    ${WIFI_PATH}/wifidriver/mlan_11v.c
+
+    # Empty for now dedicated file could be added later if needed
 )
 set(WIFI_COMMON_SOURCES ${WIFI_COMMON_SOURCES} PARENT_SCOPE)
