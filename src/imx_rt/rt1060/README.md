@@ -14,6 +14,7 @@ necessarily highlight the platform's full capabilities.
 Here are listed configurations that allow to support Openthread on RT1060:
 
 - RT1060 + K32W0
+- RT1060 + IWX12 (work in progress)
 
 ## Prerequisites
 
@@ -43,7 +44,7 @@ $ ./script/bootstrap
 
 ```
 bash
-$ cd third_party/rt1060_sdk/repo
+$ cd third_party/github_sdk
 $ west init -l manifest --mf west.yml
 $ west update
 ```
@@ -52,11 +53,13 @@ In case there are local modifications to the already installed git NXP SDK. Use 
 
 ```
 bash
-$ cd third_party/rt1060_sdk/repo
+$ cd third_party/github_sdk/repo
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
-## Hardware requirements RT1060 + K32W0
+## Hardware requirements
+
+### RT1060 + K32W0
 
 Host part:
 
@@ -71,7 +74,7 @@ Note : The pin connections between the boards are slightly different according
 to which version of the board is used (MIMXRT1060-EVKB or EVK-MIMXRT1060).The
 different settings are described below.
 
-### Board settings (Spinel over UART)
+#### Board settings (Spinel over UART)
 
 The below table explains pin settings (UART settings) to connect the
 evkbmimxrt1060 (host) to a k32w061 transceiver (rcp).
@@ -90,7 +93,7 @@ The below picture shows pins connections for the EVK-MIMXRT1060.
 
 ![rt1060_k32w061_pin_settings](../../../doc/img/imxrt1060/rt1060_k32w061_pin_settings.jpg)
 
-### Generating a K32W0 OT-RCP transceiver image
+#### Generating a K32W0 OT-RCP transceiver image
 
 To target a RT1060 + K32W0 configuration, before building any Openthread host applications, it is required to generate a K32W0 RCP image.
 To know how to build an Openthread K32W0 application it is recommended to follow the [K32W061
@@ -108,9 +111,24 @@ After a successful build, application binaries will be generated in
 [k32w061-readme]: ../../k32w0/k32w061/README.md
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
-### Building the freeRTOS ot-cli example
+### RT1060 + IWX12
 
-To target the RT1060 + K32W0 configuration, before building any Openthread host applications make sure to have correctly generated a K32W0 RCP binary.
+Host part:
+
+- 1 MIMXRT1060-EVKC
+
+TODO
+
+## Building examples
+
+### Building all targets
+
+The build script located in `<ot_nxp_repo>/script/build_rt1060` allows to build various openthread application targeted to run on RT1060 platform.
+By default if no argument is given when running the script will generate all binaries for each supported configuration.
+
+To build application only for a particular configuration, you should follow the next dedicated section.
+
+Note: to target the RT1060 + K32W0 configuration, before building any Openthread host applications make sure to have correctly generated a K32W0 RCP binary.
 
 ```bash
 $ cd <path-to-ot-nxp>
@@ -118,23 +136,60 @@ $ git submodule update --init
 $ ./script/build_rt1060
 ```
 
+### Building only RT1060+k32W0 applications
+
+Supported application(s):
+
+1.
+
+- app_name: `k32w0_uart_flow_control`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the K32W0 transceiver will exchange message over a UART interface with flow control.
+- Status: fully supported
+
+How to build them ?
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060 k32w0_uart_flow_control
+```
+
 Note : The option `-DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h` could be added to indicate the path of the k32w0 transceiver to use. If not set, the binary file located in "<ot_nxp>/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" will be used.
 
 ```bash
-$ ./script/build_rt1060 -DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h
+$ ./script/build_rt1060 <app_name> -DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h
 ```
 
 Note : If the EVK-MIMXRT1060 board is used instead of MIMXRT1060-EVKB, make sure
 to specify it using the following build command :
 
 ```bash
-$ ./script/build_rt1060 -DEVK_RT1060_BOARD="evkmimxrt1060"
+$ ./script/build_rt1060 <app_name> -DEVK_RT1060_BOARD="evkmimxrt1060"
 ```
 
-After a successful build, the ot-cli-rt1060.elf FreeRTOS version could be found in
-`build_rt1060/bin` and include support of the FTD (Full Thread Device) role.
+After a successful build, the generated binary can be found in
+`build_rt1060/<app_name>/bin`.
 
-## Flashing the IMXRT ot-cli-rt1060 host image using MCUXpresso IDE
+### Building only RT1060+IW612 applications
+
+Supported application(s):
+
+1.
+
+- app_name: `iwx12_spi`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the IWX12 transceiver will exchange message over a SPI interface.
+- Status: WORK IN PROGESS
+
+How to build them ?
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060 iwx12_spi
+```
+
+After a successful build, the generated binary can be found in
+`build_rt1060/<app_name>/bin`.
+
+## Example: Flashing the IMXRT Openthread rt1060 image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using
 [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).

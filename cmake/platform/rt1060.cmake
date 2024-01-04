@@ -1,16 +1,16 @@
-# Copyright (c) 2022, NXP.
+# Copyright (c) 2022-2023, NXP.
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 # 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
+# notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
 # 3. Neither the name of the copyright holder nor the
-#    names of its contributors may be used to endorse or promote products
-#    derived from this software without specific prior written permission.
+# names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -23,41 +23,48 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+include(imx_rt)
 
-set(PLATFORM_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard -mthumb -mfpu=fpv5-d16 -fno-common -ffreestanding -fno-builtin -mapcs")
-set(PLATFORM_CXX_FLAGS "${PLATFORM_C_FLAGS} -MMD -MP")
-set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u qspiflash_config -u image_vector_table -u boot_data -u dcd_data -Wl,--sort-section=alignment -Wl,--cref")
+set(OT_EXTERNAL_MBEDTLS "nxp-rt1060-mbedtls" CACHE STRING "")
 
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${PLATFORM_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PLATFORM_CXX_FLAGS}")
-set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${PLATFORM_C_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} ")
+# ot-nxp config
+set(OT_NXP_BOARD "rt1060" CACHE STRING "")
 
-# FreeRTOS CMake config
-set(FREERTOS_PORT GCC_ARM_CM4F CACHE STRING "")
-set(FREERTOS_HEAP 4)
+set(MULTICORE_LOGGING OFF CACHE BOOL "")
 
-# Use Connectivity Framework CMake build system to build required modules
+# ot-nxp host name config
+set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "")
+
+# ot-nxp transceiver config
+set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW612_BOARD_MURATA_2EL_M2" CACHE STRING "Provide information on the transceiver to use")
+
+# Connectivity Framework CMake config
 set(CONNFWK_PLATFORM rt1060)
-set(CONNFWK_PLATFORM_FAMILY imx_rt)
-set(CONNFWK_TRANSCEIVER ${OT_NXP_TRANSCEIVER})
-if ("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
-    #Define here the default transceiver path can be overwritten by cmake -D option
-    set(OT_NXP_TRANSCEIVER_BIN_PATH "${PROJECT_SOURCE_DIR}/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" CACHE PATH "Path to the transceiver binary file")
-    set(CONNFWK_TRANSCEIVER_BIN_PATH ${OT_NXP_TRANSCEIVER_BIN_PATH})
-    set(CONNFWK_OTW ON)
+
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     set(CONNFWK_COMPILE_DEFINITIONS
-        #HDLC configuration
+
+        # HDLC configuration
         SPINEL_UART_INSTANCE=3
         SPINEL_ENABLE_RX_RTS=1
         SPINEL_ENABLE_TX_RTS=1
-        #OTW configurations
+
+        # OTW configurations
         OTW_RESET_PIN_PORT=1
         OTW_RESET_PIN_NUM=27
         OTW_DIO5_PIN_PORT=1
         OTW_DIO5_PIN_NUM=26
     )
+elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
+    if(${OT_NXP_TRANSCEIVER_INTERFACE_DETAIL} STREQUAL WIFI_IW612_BOARD_MURATA_2EL_M2)
+        set(CONNFWK_COMPILE_DEFINITIONS
+            PLATFORM_RESET_PIN_PORT=3
+            PLATFORM_RESET_PIN_NUM=9
+        )
+    else()
+        set(CONNFWK_COMPILE_DEFINITIONS
+            PLATFORM_RESET_PIN_PORT=3
+            PLATFORM_RESET_PIN_NUM=9
+        )
+    endif()
 endif()
-# Enable FunctionLib and FileSystem modules
-set(CONNFWK_FLIB ON)
-set(CONNFWK_FILESYSTEM ON)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 NXP
+ * Copyright 2020-2023 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -150,7 +150,7 @@ void BOARD_SDCardPowerResetInit(void)
 {
     hal_gpio_pin_config_t sw_config = {
         kHAL_GpioDirectionOut,
-        0,
+        1,
         BOARD_SDMMC_SD_POWER_RESET_GPIO_PORT,
         BOARD_SDMMC_SD_POWER_RESET_GPIO_PIN,
     };
@@ -161,11 +161,11 @@ void BOARD_SDCardPowerControl(bool enable)
 {
     if (enable)
     {
-        HAL_GpioSetOutput(s_PowerResetGpioHandle, 1);
+        HAL_GpioSetOutput(s_PowerResetGpioHandle, 0);
     }
     else
     {
-        HAL_GpioSetOutput(s_PowerResetGpioHandle, 0);
+        HAL_GpioSetOutput(s_PowerResetGpioHandle, 1);
     }
 }
 
