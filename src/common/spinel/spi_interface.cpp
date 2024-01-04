@@ -44,7 +44,9 @@
 #include "common/logging.hpp"
 #include "openthread/cli.h"
 
+#ifndef LPSPI_MASTER_CLK_FREQ
 #define LPSPI_MASTER_CLK_FREQ (CLOCK_GetFreqFromObs(CCM_OBS_LPSPI1_CLK_ROOT))
+#endif
 #define OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ 4000000 ///< Default SPI speed in hertz.
 
 #define OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE \
@@ -54,6 +56,14 @@
 
 #ifndef OT_PLATFORM_CONFIG_SPI_INSTANCE
 #define OT_PLATFORM_CONFIG_SPI_INSTANCE 1
+#endif
+
+#ifndef OT_PLATFORM_CONFIG_SPI_INT_PORT
+#define OT_PLATFORM_CONFIG_SPI_INT_PORT 3
+#endif
+
+#ifndef OT_PLATFORM_CONFIG_SPI_INT_PIN
+#define OT_PLATFORM_CONFIG_SPI_INT_PIN 10
 #endif
 
 using ot::Spinel::SpinelInterface;
@@ -105,8 +115,8 @@ void SpiInterface::Init(void)
     hal_gpio_pin_config_t spiIntPinConfig = {
         .direction = kHAL_GpioDirectionIn,
         .level     = 0U,
-        .port      = 3,
-        .pin       = 10,
+        .port      = OT_PLATFORM_CONFIG_SPI_INT_PORT,
+        .pin       = OT_PLATFORM_CONFIG_SPI_INT_PIN,
     };
 
     if (!isInitialized)
