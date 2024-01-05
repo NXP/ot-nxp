@@ -38,7 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
-#include <lib/spinel/radio_spinel.hpp>
+#include <lib/spinel/radio_spinel.hpp> // nogncheck
 
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
