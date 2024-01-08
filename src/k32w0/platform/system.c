@@ -48,11 +48,11 @@
 #include <utils/code_utils.h>
 
 #ifndef FRO32K_CALIBRATION_LOOPS
-#define FRO32K_CALIBRATION_LOOPS 1000000 /* equates to ~ 100 s */
+#define FRO32K_CALIBRATION_LOOPS 500
 #endif
 
 #ifndef FRO48M_CALIBRATION_LOOPS
-#define FRO48M_CALIBRATION_LOOPS 2000000 /* equates to ~ 200 s */
+#define FRO48M_CALIBRATION_LOOPS 500
 #endif
 
 typedef void (*pFroCalibrationStart)(void);
