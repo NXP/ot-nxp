@@ -122,9 +122,11 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${@:2}")
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
         build k32w0_uart_flow_control "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${@:2}")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
         #options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
