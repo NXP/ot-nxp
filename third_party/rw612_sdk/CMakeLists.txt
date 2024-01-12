@@ -463,6 +463,7 @@ target_include_directories(${NXP_DRIVER_LIB}
 target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
     -DCPU_RW612ETA1I
+    -DCPU_RW612ETA2I
     -DCPU3
     -D__STARTUP_CLEAR_BSS
     -DSDK_OS_FREE_RTOS
