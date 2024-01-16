@@ -367,6 +367,7 @@ set(RW612_SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/time_stamp
     ${NXP_SDK_ROOT}/components/power_manager/devices/RW612
     ${NXP_SDK_ROOT}/components/power_manager/core/
+    ${NXP_SDK_ROOT}/components/gpio/
 
     # LittleFS
     ${NXP_SDK_ROOT}/middleware/littlefs
