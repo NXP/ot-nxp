@@ -31,7 +31,7 @@ if(NOT WIFI_PATH)
 endif()
 
 if(NOT EDGEFAST_WIFI_PATH)
-    set(EDGEFAST_WIFI_PATH ${NXP_SDK_ROOT}/middleware/edgefast_wifi)
+    set(EDGEFAST_WIFI_PATH ${NXP_SDK_ROOT}/components/edgefast_wifi)
 endif()
 
 if(NOT WIFI_BT_MODULE_PATH)
@@ -39,8 +39,8 @@ if(NOT WIFI_BT_MODULE_PATH)
 endif()
 
 set(WIFI_COMMON_SOURCES
-    ${WIFI_PATH}/port/lwip/net.c
-    ${WIFI_PATH}/port/lwip/wifi_netif.c
+    ${WIFI_PATH}/port/net/net.c
+    ${WIFI_PATH}/port/net/wifi_netif.c
     ${WIFI_PATH}/port/os/os.c
     ${WIFI_PATH}/wifidriver/mlan_11ac.c
     ${WIFI_PATH}/wifidriver/mlan_11ax.c
@@ -100,11 +100,11 @@ target_compile_definitions(wifi
 target_include_directories(wifi
     PUBLIC
     ${WIFI_PATH}/port/os
-    ${WIFI_PATH}/port/lwip
+    ${WIFI_PATH}/port/net
     ${WIFI_PATH}/port/arch
     ${WIFI_PATH}/incl
     ${WIFI_PATH}/incl/port/os
-    ${WIFI_PATH}/incl/port/lwip
+    ${WIFI_PATH}/incl/port/net
     ${WIFI_PATH}/incl/wifidriver
     ${WIFI_PATH}/incl/wlcmgr
     ${WIFI_PATH}/wifidriver/incl
