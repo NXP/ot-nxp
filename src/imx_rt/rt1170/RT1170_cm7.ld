@@ -121,7 +121,7 @@ SECTIONS
   /* The program code and other data goes into internal RAM */
   .text :
   {
-    . = ALIGN(4);
+    . = ALIGN(0x20);
     *(EXCLUDE_FILE(
         /* Exclude flash and frequently executed functions from XIP */
         *fsl_adapter_flexspi_nor_flash.c.obj
@@ -135,7 +135,7 @@ SECTIONS
     *(.eh_frame)
     KEEP (*(.init))
     KEEP (*(.fini))
-    . = ALIGN(4);
+    . = ALIGN(0x20);
   } > m_text
 
   .ARM.extab :
