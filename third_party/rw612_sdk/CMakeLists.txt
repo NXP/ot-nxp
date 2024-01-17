@@ -118,6 +118,7 @@ set(RW612_SDK_SOURCES
 
     # Loader files
     ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader.c
+    ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader_utils.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/life_cycle.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/nboot_hal.c
 )
@@ -318,9 +319,9 @@ endif()
 
 if(OT_NXP_LWIP_ETH)
     list(APPEND RW612_SDK_SOURCES
-        $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081/fsl_phyksz8081.c
-        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
-        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs/rw610/fsl_silicon_id_soc.c
+        ${NXP_SDK_ROOT}/components/phy/device/phyksz8081/fsl_phyksz8081.c
+        ${NXP_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
+        ${NXP_SDK_ROOT}/components/silicon_id/socs/rw610/fsl_silicon_id_soc.c
         ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
     )
 endif()
@@ -378,10 +379,10 @@ set(RW612_SDK_INCLUDES
 
 if(OT_NXP_LWIP_ETH)
     list(APPEND RW612_SDK_INCLUDES
-        $ENV{NXP_RW612_SDK_ROOT}/components/phy/
-        $ENV{NXP_RW612_SDK_ROOT}/components/phy/device/phyksz8081
-        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id
-        $ENV{NXP_RW612_SDK_ROOT}/components/silicon_id/socs
+        ${NXP_SDK_ROOT}/components/phy/
+        ${NXP_SDK_ROOT}/components/phy/device/phyksz8081
+        ${NXP_SDK_ROOT}/components/silicon_id
+        ${NXP_SDK_ROOT}/components/silicon_id/socs
         ${DRIVER_ENET_FILES_PATH}
     )
 endif()
@@ -451,7 +452,7 @@ endif()
 if(OT_NXP_BUILD_APP_AS_LIB)
     # ethermind/coex_app_cli include
     list(APPEND RW612_SDK_INCLUDES
-        $ENV{NXP_RW612_SDK_ROOT}/middleware/wireless/ethermind/examples/coex_app_cli/mbedtls
+        ${NXP_SDK_ROOT}/middleware/wireless/wpa_supplicant-rtos/port/mbedtls
     )
 endif()
 

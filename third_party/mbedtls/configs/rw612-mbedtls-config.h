@@ -40,6 +40,9 @@
 #ifdef CONFIG_WPA_SUPP_MBEDTLS
 /* wpa_supplicant mbedtls extend config */
 #include "wpa_supp_els_pkc_mbedtls_config.h"
+#undef MBEDTLS_PLATFORM_STD_CALLOC
+#undef MBEDTLS_PLATFORM_STD_FREE
+#undef MBEDTLS_SSL_MAX_CONTENT_LEN
 #endif
 
 /* els_pkc_mbedtls_config.h uses the same include guard than OT mbedtls-config.h
