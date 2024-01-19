@@ -137,10 +137,11 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAeadModes/src/mcuxClAeadModes_Els_Oneshot.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAead/src/mcuxClAead.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAes/src/mcuxClAes_KeyTypes.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClBuffer/src/mcuxClBuffer.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/src/mcuxClCipherModes_Crypt_Els_Modes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/src/mcuxClCipherModes_Els_Aes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/src/mcuxClCipherModes_Els_EngineAes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/src/mcuxClCipherModes_Helper.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/src/mcuxClCipherModes_Modes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipher/src/mcuxClCipher.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Constants.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_GenerateKeyPair.c
@@ -152,7 +153,6 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_CalcHashModN.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_CalcHashModN_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_DecodePoint_Ed25519.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_DecodePoint_Ed448.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_DecodePoint_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_SetupEnvironment.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_EdDSA_Internal_SignatureMechanisms.c
@@ -169,14 +169,13 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Internal_SetupEnvironment_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Internal_Types.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_KeyTypes.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_DhKeyAgreement.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_DhKeyGeneration.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_MontDH_GenerateKeyPair.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_MontDH_KeyAgreement.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_Internal_DhSetupEnvironment.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_Internal_MontDhX.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_Internal_MontDhX_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_Internal_SecureScalarMult_XZMontLadder.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Mont_Internal_SecureScalarMult_XZMontLadder_FUP.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_SignatureMechanisms.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_FixScalarMult.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_PlainFixScalarMult25519.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_PlainPtrSelectComb.c
@@ -189,9 +188,8 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_PrecPointImportAndValidate.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_VarScalarMult.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_TwEd_Internal_VarScalarMult_FUP.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_GenerateCustomKeyType.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_GenerateDomainParams.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_GenerateDomainParams_FUP.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_GenerateKeyPair.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_KeyAgreement_ECDH.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_WeierECC_Internal_SetupEnvironment.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Weier_Internal_ConvertPoint_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEcc/src/mcuxClEcc_Weier_Internal_FUP.c
@@ -224,17 +222,21 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEls/src/mcuxClEls_Kdf.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEls/src/mcuxClEls_KeyManagement.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClEls/src/mcuxClEls_Rng.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/src/mcuxClHashModes_Core_c_sha1.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/src/mcuxClHashModes_Core_els_sha2.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/src/mcuxClHashModes_Internal_c_sha1.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/src/mcuxClHashModes_Internal_els_sha2.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHash/src/mcuxClHash_api_multipart_common.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHash/src/mcuxClHash_api_multipart_compute.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHash/src/mcuxClHash_api_oneshot_compute.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClHash/src/mcuxClHash_Internal.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_Els.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_Functions.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_Helper.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_KeyTypes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_Modes.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/mcuxClHmac_Sw.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/src/size/size.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClKey/src/mcuxClKey.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClKey/src/mcuxClKey_Protection.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMacModes/src/mcuxClMacModes.c
@@ -277,6 +279,7 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_ComputeD.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_ComputeD_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_GenerateProbablePrime.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_getMillerRabinTestIterations.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_KeyGeneration_Crt.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_KeyGeneration_Crt_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_KeyGeneration_Plain.c
@@ -284,8 +287,6 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_MillerRabinTest.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_MillerRabinTest_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_ModInv.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_NoEncode.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_NoVerify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Pkcs1v15Encode_sign.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Pkcs1v15Verify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PrivateCrt.c
@@ -294,16 +295,18 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PssEncode.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PssVerify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Public.c
-        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Public_FUP.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_PublicExp.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_RemoveBlinding.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_RemoveBlinding_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Sign.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Sign_NoEMSA.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPQDistance.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPQDistance_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPrimeCandidate.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_TestPrimeCandidate_FUP.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Verify.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_VerifyE.c
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClRsa/src/mcuxClRsa_Verify_NoEMSA.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClSession/src/mcuxClSession.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClTrng/src/mcuxClTrng_SA_TRNG.c
         ${ELS_PKC_CL_PATH}/src/comps/mcuxCsslMemory/src/mcuxCsslMemory_Clear.c
@@ -399,6 +402,8 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAeadModes/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAes/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClAes/inc/internal
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClBuffer/inc
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClBuffer/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipher/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipher/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClCipherModes/inc
@@ -412,6 +417,7 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHashModes/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/inc
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClHmac/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClKey/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMac/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMac/inc/internal
@@ -420,6 +426,7 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMath/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMath/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClMemory/inc
+        ${ELS_PKC_CL_PATH}/src/comps/mcuxClMemory/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClPadding/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClPadding/inc/internal
         ${ELS_PKC_CL_PATH}/src/comps/mcuxClPkc/inc
@@ -443,7 +450,6 @@ if(OT_NXP_MBEDTLS_PORT)
         ${ELS_PKC_CL_PATH}/src/comps/mcuxCsslParamIntegrity/inc
         ${ELS_PKC_CL_PATH}/src/comps/mcuxCsslSecureCounter/inc
         ${ELS_PKC_CL_PATH}/src/inc
-        ${ELS_PKC_CL_PATH}/src/inc/impl
         ${ELS_PKC_CL_PATH}/src/platforms/rw61x
         ${ELS_PKC_CL_PATH}/src/platforms/rw61x/inc
     )
