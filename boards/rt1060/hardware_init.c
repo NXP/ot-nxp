@@ -21,6 +21,7 @@ void BOARD_InitHardware(void)
     BOARD_InitBootClocks();
 #ifdef BOARD_SPINEL_OVER_SPI
 #ifdef BOARD_USE_M2
+    BOARD_InitUSDHCPins();
     BOARD_InitPinsM2();
     BOARD_InitM2SPIPins();
     BOARD_InitM2I2CPins();
