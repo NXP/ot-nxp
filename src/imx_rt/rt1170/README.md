@@ -69,70 +69,60 @@ Transceiver parts :
 
 ![](../../../doc/img/imxrt1170/iwx612_2EL.jpg)
 
-- 1 [Murata uSD to M2 adapter](https://www.murata.com/en-eu/products/connectivitymodule/wi-fi-bluetooth/overview/lineup/usd-m2-adapter)
+- 1 [Murata uSD to M2 adapter revC](https://www.murata.com/en-eu/products/connectivitymodule/wi-fi-bluetooth/overview/lineup/usd-m2-adapter-2we-2wf)
 
 ![](../../../doc/img/imxrt1170/murata_usd-M2_adapter.jpg)
 
-- TXS0108E level shifter module.
-
-![](../../../doc/img/imxrt1170/level_shifter.jpg)
-
-- Male to female Burg cables – 20 number’s
+- Male to female Burg cables
 
 #### Hardware rework for SPI support on EVKB-MIMXRT1170
 
 To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406.
 
-#### Hardware rework to connect SPI on 2EL M2 IW612 Module
-
-- Solder burg wires (male to female) at JP1 for SPI interface.
-
-![](../../../doc/img/imxrt1170/soldering_SPI_on_IW612-2EL.jpg)
-![](../../../doc/img/imxrt1170/soldering_SPI_on_IW612-2EL_after.jpg)
-
-- Solder 2X10 Berg Pins to TXS0108E connector.
-- Solder 10 K ohm resistor between OE and GND.
-- Connect OE and VA
-
-![](../../../doc/img/imxrt1170/level_shifter_soldering.jpg)
-
 #### Board settings (Spinel over SPI)
-
+- Plug IW612 Firecrest module to M.2 connector on Murata uSD to M2 adapter 
 - Murata uSD to M2 adapter connections description:
 
 ![](../../../doc/img/imxrt1170/murata_usd-m2_connections_1.jpg)
 
 ![](../../../doc/img/imxrt1170/murata_usd-m2_connections_2.jpg)
 
-- SPI connection between RT1170 to TXS0108E level shifter
+- Jumpers positions on Murata uSD to M2 adapter:
 
-|  MIMXRT1170-EVKB  | TXS0108E |
-| :---------------: | :------: |
-| VDD_3V3 (J10_16)  |    VB    |
-| SPI_MOSI (J10.8)  |    B1    |
-| SPI_MISO (J10.10) |    B2    |
-| SPI_CLK (J10.12)  |    B3    |
-|  SPI_CS (J10.6)   |    B4    |
-|  SPI_INT (J26.4)  |    B5    |
-|   GND (J10.14)    |   GND    |
+    Use USB-C power supply
 
-- SPI line connection between IWX612 2EL M2 Module to TXS0108E level shifter
+    | Jumper | Position|
+    | :----: | :-----: |
+    |   J1   |   1-2   |
+    |  J12   |   1-2   |
+    |  J13   |   1-2   |
+    |  J14   |   2-3   |
+    | JP1.1 (back side)|   ON    |
 
-|  IWX612 2EL M2   | TXS0108E |
-| :--------------: | :------: |
-| 1.8V_REF(J13.3)  |    VA    |
-| SPI_MOSI (JP1.4) |    A1    |
-| SPI_MISO (JP1.5) |    A2    |
-| SPI_CLK (JP1.2)  |    A3    |
-| SPI_SSEL (JP1.3) |    A4    |
-| SPI_INT (JP1.8)  |    A5    |
+- I2C connection to program IO-Expander on the IW612 module
+
+    |  MIMXRT1170-EVKB  | uSD-M2 adapter |
+    | :---------------: | :------------: |
+    | I2C_SDA (J10.18)  |       J5.2     |
+    | I2C_SDL (J10.20)  |       J5.4     |
+
+- SPI connection between RT1170 and uSD-M2 adapter
+
+    |  MIMXRT1170-EVKB  | uSD-M2 adapter |
+    | :---------------: | :------------: |
+    | SPI_MOSI (J10.8)  |      J5.10     |
+    | SPI_MISO (J10.10) |       J9.7     |
+    | SPI_CLK (J10.12)  |       J9.8     |
+    |  SPI_CS (J10.6)   |       J5.8     |
+    |  SPI_INT (J26.4)  |       J5.6     |
+    |   GND (J10.14)    |      J5.15     |
 
 - Reset line connection between RT1170 and uSD-M2 adapter
 
-| MIMXRT1170-EVKB | Murata uSD-M2 |
-| :-------------: | :-----------: |
-|  RESET (J26.2)  |     J9.3      |
-|   GND (J26.1)   |     J7.6      |
+    | MIMXRT1170-EVKB | uSD-M2 adapter |
+    | :-------------: | :------------: |
+    |  RESET (J26.2)  |      J9.3      |
+    |   GND (J26.1)   |      J7.6      |
 
 ## Building examples
 
@@ -143,7 +133,7 @@ To build application only for a particular configuration, you should follow the 
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/build_rt1060
+$ ./script/build_rt1170
 ```
 
 ### Building only RT1170+IWX12 applications
@@ -158,7 +148,7 @@ How to build them ?
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1170 iwx12_spi
+$ ./script/build_rt1170 <app_name> #example: ./script/build_rt1170 iwx12_spi
 ```
 
 After a successful build, the generated binary can be found in

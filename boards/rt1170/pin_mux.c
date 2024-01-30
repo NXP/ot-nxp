@@ -38,6 +38,7 @@ void BOARD_InitBootPins(void)
     BOARD_InitDEBUG_UARTPins();
     BOARD_InitUSDHCPins();
     BOARD_InitSPIPins();
+    BOARD_InitI2CPins();
 
     /* Init the reset pin */
     IOMUXC_SetPinMux(IOMUXC_GPIO_AD_10_GPIO_MUX3_IO09, /* GPIO_AD_10 is configured as GPIO_MUX3_IO09 */
@@ -632,6 +633,50 @@ void BOARD_InitENETPins(void)
                      0U); /* Software Input On Field: Input Path is determined by functionality */
     IOMUXC_SetPinMux(IOMUXC_GPIO_EMC_B2_20_ENET_1G_MDIO, /* GPIO_EMC_B2_20 is configured as ENET_1G_MDIO */
                      0U); /* Software Input On Field: Input Path is determined by functionality */
+}
+
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+BOARD_InitI2CPins:
+- options: {callFromInitBoot: 'false', coreID: cm7, enableClock: 'true'}
+- pin_list:
+  - {pin_num: N8, peripheral: LPI2C5, signal: SCL, pin_signal: GPIO_LPSR_05, software_input_on: Enable,
+pull_up_down_config: Pull_Up, pull_keeper_select: Keeper, open_drain: Enable, drive_strength: Normal, slew_rate: Slow}
+  - {pin_num: N7, peripheral: LPI2C5, signal: SDA, pin_signal: GPIO_LPSR_04, software_input_on: Enable,
+pull_up_down_config: Pull_Up, pull_keeper_select: Keeper, open_drain: Enable, drive_strength: Normal, slew_rate: Slow}
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : BOARD_InitI2CPins, assigned for the Cortex-M7F core.
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+void BOARD_InitI2CPins(void)
+{
+    CLOCK_EnableClock(kCLOCK_Iomuxc_Lpsr); /* LPCG on: LPCG is ON. */
+
+    IOMUXC_SetPinMux(IOMUXC_GPIO_LPSR_04_LPI2C5_SDA, /* GPIO_LPSR_04 is configured as LPI2C5_SDA */
+                     1U); /* Software Input On Field: Input Path is determined by functionality */
+    IOMUXC_SetPinMux(IOMUXC_GPIO_LPSR_05_LPI2C5_SCL, /* GPIO_LPSR_05 is configured as LPI2C5_SCL */
+                     1U); /* Software Input On Field: Input Path is determined by functionality */
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_LPSR_04_LPI2C5_SDA, /* GPIO_LPSR_04 PAD functional properties : */
+                        0x0AU);                         /* Slew Rate Field: Slow Slew Rate
+                                                           Drive Strength Field: normal driver
+                                                           Pull / Keep Select Field: Pull Disable
+                                                           Pull Up / Down Config. Field: Weak pull up
+                                                           Open Drain LPSR Field: Enabled
+                                                           Domain write protection: Both cores are allowed
+                                                           Domain write protection lock: Neither of DWP bits is locked */
+    IOMUXC_SetPinConfig(IOMUXC_GPIO_LPSR_05_LPI2C5_SCL, /* GPIO_LPSR_05 PAD functional properties : */
+                        0x0AU);                         /* Slew Rate Field: Slow Slew Rate
+                                                           Drive Strength Field: normal driver
+                                                           Pull / Keep Select Field: Pull Disable
+                                                           Pull Up / Down Config. Field: Weak pull up
+                                                           Open Drain LPSR Field: Enabled
+                                                           Domain write protection: Both cores are allowed
+                                                           Domain write protection lock: Neither of DWP bits is locked */
 }
 /***********************************************************************************************************************
  * EOF

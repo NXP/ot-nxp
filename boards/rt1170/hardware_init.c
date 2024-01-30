@@ -20,7 +20,7 @@ void BOARD_InitHardware(void)
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
 #ifdef BOARD_SPINEL_OVER_SPI
-#ifndef BOARD_USE_M2
+#ifndef WIFI_IW612_BOARD_MURATA_2EL_M2
     BOARD_InitOtSPI1Pins();
 #else
     BOARD_InitOtSPI6Pins();
