@@ -120,6 +120,7 @@ Host part:
 - 1 MIMXRT1060-EVKC
 
   Hardware should be reworked as below:
+
   - populate R93, R96, R2155, R2156, R2157, R2158, R2159 with 0Ohm resistors
   - J76 and J107 jumpers in 2-3 position.
   - J109 and J110 jumpers in 1-2 position.
@@ -131,9 +132,9 @@ Host part:
 
 Transceiver part :
 
-- 1 IW612 ( Firecrest)  2EL M.2 Module (rev A1)
+- 1 IW612 ( Firecrest) 2EL M.2 Module (rev A1)
 
-The Iw612 module should be plugged to the M.2 connector on RT1060-EVKC board. 
+The Iw612 module should be plugged to the M.2 connector on RT1060-EVKC board.
 
 ## Building examples
 
