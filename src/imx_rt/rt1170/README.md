@@ -80,7 +80,8 @@ Transceiver parts :
 To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resistors R404,R406.
 
 #### Board settings (Spinel over SPI)
-- Plug IW612 Firecrest module to M.2 connector on Murata uSD to M2 adapter 
+
+- Plug IW612 Firecrest module to M.2 connector on Murata uSD to M2 adapter
 - Murata uSD to M2 adapter connections description:
 
 ![](../../../doc/img/imxrt1170/murata_usd-m2_connections_1.jpg)
@@ -89,40 +90,40 @@ To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resist
 
 - Jumpers positions on Murata uSD to M2 adapter:
 
-    Use USB-C power supply
+  Use USB-C power supply
 
-    | Jumper | Position|
-    | :----: | :-----: |
-    |   J1   |   1-2   |
-    |  J12   |   1-2   |
-    |  J13   |   1-2   |
-    |  J14   |   2-3   |
-    | JP1.1 (back side)|   ON    |
+  |      Jumper       | Position |
+  | :---------------: | :------: |
+  |        J1         |   1-2    |
+  |        J12        |   1-2    |
+  |        J13        |   1-2    |
+  |        J14        |   2-3    |
+  | JP1.1 (back side) |    ON    |
 
 - I2C connection to program IO-Expander on the IW612 module
 
-    |  MIMXRT1170-EVKB  | uSD-M2 adapter |
-    | :---------------: | :------------: |
-    | I2C_SDA (J10.18)  |       J5.2     |
-    | I2C_SDL (J10.20)  |       J5.4     |
+  | MIMXRT1170-EVKB  | uSD-M2 adapter |
+  | :--------------: | :------------: |
+  | I2C_SDA (J10.18) |      J5.2      |
+  | I2C_SDL (J10.20) |      J5.4      |
 
 - SPI connection between RT1170 and uSD-M2 adapter
 
-    |  MIMXRT1170-EVKB  | uSD-M2 adapter |
-    | :---------------: | :------------: |
-    | SPI_MOSI (J10.8)  |      J5.10     |
-    | SPI_MISO (J10.10) |       J9.7     |
-    | SPI_CLK (J10.12)  |       J9.8     |
-    |  SPI_CS (J10.6)   |       J5.8     |
-    |  SPI_INT (J26.4)  |       J5.6     |
-    |   GND (J10.14)    |      J5.15     |
+  |  MIMXRT1170-EVKB  | uSD-M2 adapter |
+  | :---------------: | :------------: |
+  | SPI_MOSI (J10.8)  |     J5.10      |
+  | SPI_MISO (J10.10) |      J9.7      |
+  | SPI_CLK (J10.12)  |      J9.8      |
+  |  SPI_CS (J10.6)   |      J5.8      |
+  |  SPI_INT (J26.4)  |      J5.6      |
+  |   GND (J10.14)    |     J5.15      |
 
 - Reset line connection between RT1170 and uSD-M2 adapter
 
-    | MIMXRT1170-EVKB | uSD-M2 adapter |
-    | :-------------: | :------------: |
-    |  RESET (J26.2)  |      J9.3      |
-    |   GND (J26.1)   |      J7.6      |
+  | MIMXRT1170-EVKB | uSD-M2 adapter |
+  | :-------------: | :------------: |
+  |  RESET (J26.2)  |      J9.3      |
+  |   GND (J26.1)   |      J7.6      |
 
 ## Building examples
 
