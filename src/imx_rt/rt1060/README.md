@@ -14,7 +14,7 @@ necessarily highlight the platform's full capabilities.
 Here are listed configurations that allow to support Openthread on RT1060:
 
 - RT1060 + K32W0
-- RT1060 + IWX12 (work in progress)
+- **Experimental** RT1060-EVKC + IWX12
 
 ## Prerequisites
 
@@ -111,13 +111,29 @@ After a successful build, application binaries will be generated in
 [k32w061-readme]: ../../k32w0/k32w061/README.md
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
-### RT1060 + IWX12
+### Experimental RT1060-EVKC + IWX12
+
+#### Hardware requirements RT1060-EVKC + IW612
 
 Host part:
 
 - 1 MIMXRT1060-EVKC
 
-TODO
+  Hardware should be reworked as below:
+  - populate R93, R96, R2155, R2156, R2157, R2158, R2159 with 0Ohm resistors
+  - J76 and J107 jumpers in 2-3 position.
+  - J109 and J110 jumpers in 1-2 position.
+  - disconnect pin15 of component U9
+
+![rt1060_evkc_IW612_hw_rework](../../../doc/img/imxrt1060/rt1060_evkc_IW612_hw_rework.jpg)
+
+![rt1060_evkc_IW612_hw_rework_detail](../../../doc/img/imxrt1060/rt1060_evkc_IW612_hw_rework_detail.jpg)
+
+Transceiver part :
+
+- 1 IW612 ( Firecrest)  2EL M.2 Module (rev A1)
+
+The Iw612 module should be plugged to the M.2 connector on RT1060-EVKC board. 
 
 ## Building examples
 
