@@ -66,13 +66,19 @@
 /* -------------------------------------------------------------------------- */
 
 #define ICMP_RA_MINIMUM_SIZE 16
-#define RAW_TX_USING_SOCK 0
+
+struct ndSendContext
+{
+    ip_addr_t    dstIp;
+    ip_addr_t    srcIp;
+    struct pbuf *pktBuffer;
+    uint32_t     infraIfIndex;
+};
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static int             sInfraIfIcmp6Socket = -1;
 static uint8_t         sInfraIfIndex;
 static otInstance     *sInstance = NULL;
 static struct netif   *sNetifPtr;
@@ -92,10 +98,16 @@ static const uint8_t      sValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
-#if RAW_TX_USING_SOCK
-static int CreateIcmp6Socket();
-#endif
+static void    LwipTaskCb(void *context);
+static bool    GetAddrFromRa(const uint8_t *aBuffer,
+                             uint16_t       aBufferLength,
+                             ip6_addr_t    *addr,
+                             uint32_t      *valid_t,
+                             uint32_t      *pref_t);
+static void    SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_t valid_t, uint32_t pref_t);
+static void    RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint16_t aBufferLength);
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
+
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static uint8_t ReceiveIPV4Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
@@ -109,8 +121,7 @@ static void DnsNat64Callback(const char *name, const ip_addr_t *ipaddr, void *ar
 
 void InfraIfInit(otInstance *aInstance, struct netif *netif)
 {
-    struct ifreq ifr = {0};
-    ip6_addr_t   ip6_allrouters_ll;
+    ip6_addr_t ip6_allrouters_ll;
     ip6_addr_set_allrouters_linklocal(&ip6_allrouters_ll);
 
     assert(netif != NULL);
@@ -119,14 +130,6 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
     sNetifPtr = netif;
 
     sInfraIfIndex = netif_get_index(sNetifPtr);
-
-#if RAW_TX_USING_SOCK
-    sInfraIfIcmp6Socket = CreateIcmp6Socket();
-    assert(sInfraIfIcmp6Socket != -1);
-
-    netif_index_to_name(sInfraIfIndex, (char *)&ifr.ifr_name);
-    assert(setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) >= 0);
-#endif
 
     LOCK_TCPIP_CORE();
 
@@ -137,11 +140,9 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
     raw_bind_netif(sIcmp6RawPcb, netif);
     raw_recv(sIcmp6RawPcb, ReceiveIcmp6Message, NULL);
 
-#if !RAW_TX_USING_SOCK
     /* Enable checksum computation for TX and set checksum offset in ICMP packet since we are using RAW send */
     sIcmp6RawPcb->chksum_reqd   = 1;
     sIcmp6RawPcb->chksum_offset = 2;
-#endif
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
@@ -171,13 +172,6 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 
 void InfraIfDeInit()
 {
-#if RAW_TX_USING_SOCK
-    if (sInfraIfIcmp6Socket != -1)
-    {
-        close(sInfraIfIcmp6Socket);
-        sInfraIfIcmp6Socket = -1;
-    }
-#endif
     if (sIcmp6RawPcb != NULL)
     {
         raw_remove(sIcmp6RawPcb);
@@ -200,6 +194,112 @@ void InfraIfDeInit()
         sTcpRawPcb = NULL;
     }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+}
+
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t      *aBuffer,
+                                 uint16_t            aBufferLength)
+{
+    otError           retError = OT_ERROR_NONE;
+    const ip6_addr_t *srcIpPtr = NULL;
+
+    struct ndSendContext *ndSendContexPtr = (struct ndSendContext *)otPlatCAlloc(1, sizeof(struct ndSendContext));
+    VerifyOrExit(NULL != ndSendContexPtr, retError = OT_ERROR_FAILED);
+
+    memcpy(ip_2_ip6(&ndSendContexPtr->dstIp)->addr, aDestAddress->mFields.m8,
+           sizeof(ip_2_ip6(&ndSendContexPtr->dstIp)->addr));
+    ndSendContexPtr->dstIp.type            = IPADDR_TYPE_V6;
+    ndSendContexPtr->dstIp.u_addr.ip6.zone = IP6_NO_ZONE;
+
+    srcIpPtr = netif_ip6_addr(sNetifPtr, 0);
+    memcpy(ip_2_ip6(&ndSendContexPtr->srcIp)->addr, srcIpPtr->addr, sizeof(ip_2_ip6(&ndSendContexPtr->srcIp)->addr));
+    ndSendContexPtr->srcIp.type            = IPADDR_TYPE_V6;
+    ndSendContexPtr->srcIp.u_addr.ip6.zone = IP6_NO_ZONE;
+
+    ndSendContexPtr->pktBuffer = pbuf_alloc(PBUF_TRANSPORT, aBufferLength, PBUF_RAM);
+    VerifyOrExit(ndSendContexPtr->pktBuffer != NULL, retError = OT_ERROR_NO_BUFS);
+    memcpy(ndSendContexPtr->pktBuffer->payload, aBuffer, aBufferLength);
+
+    ndSendContexPtr->infraIfIndex = aInfraIfIndex;
+
+    if (ERR_OK != tcpip_callback(LwipTaskCb, (void *)ndSendContexPtr))
+    {
+        pbuf_free(ndSendContexPtr->pktBuffer);
+        otPlatFree(ndSendContexPtr);
+        retError = OT_ERROR_FAILED;
+    }
+
+exit:
+    return retError;
+}
+
+bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    ip_addr_t searchedAddress = IPADDR6_INIT(0, 0, 0, 0);
+    memcpy(ip_2_ip6(&searchedAddress), &aAddress->mFields.m32, sizeof(aAddress->mFields.m32));
+
+    return (netif_get_ip6_addr_match(sNetifPtr, (const ip6_addr_t *)&searchedAddress) > 0 ? true : false);
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
+{
+    otError    res  = OT_ERROR_FAILED;
+    ip_addr_t *addr = NULL;
+    err_t      error;
+
+    VerifyOrExit(aInfraIfIndex == (uint32_t)sInfraIfIndex);
+
+    addr = (ip_addr_t *)otPlatCAlloc(1, sizeof(ip_addr_t));
+    VerifyOrExit(addr != NULL);
+
+    LOCK_TCPIP_CORE();
+    /* Note it processes just the first address returned by DNS */
+    error = dns_gethostbyname_addrtype(sWellKnownIpv4OnlyName, addr, DnsNat64Callback, (void *)addr,
+                                       LWIP_DNS_ADDRTYPE_IPV6);
+    UNLOCK_TCPIP_CORE();
+
+    if (error == ERR_OK)
+    {
+        /* Address already resolved */
+        DnsNat64Callback(sWellKnownIpv4OnlyName, addr, (void *)addr);
+        addr = NULL; /* Just deallocated by the callback */
+        res  = OT_ERROR_NONE;
+    }
+    else if (error == ERR_INPROGRESS)
+    {
+        addr = NULL; /* Will be deallocated by the callback */
+        res  = OT_ERROR_NONE;
+    } /* else failed */
+
+exit:
+    if (addr != NULL)
+    {
+        otPlatFree(addr);
+    }
+    return res;
+}
+#endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
+
+/* -------------------------------------------------------------------------- */
+/*                              Private functions                             */
+/* -------------------------------------------------------------------------- */
+
+static void LwipTaskCb(void *context)
+{
+    struct ndSendContext *ndSendContexPtr = (struct ndSendContext *)context;
+
+    /* Parse RA and extract prefix form PIO to allow LWIP to configure IP from announced prefix. */
+    /* This must be executed before raw_sendto_if_src because the payload from pktBuffer is modified
+       inside raw_sendto_if_src */
+    RaFromOtToLwip(ndSendContexPtr->infraIfIndex, ndSendContexPtr->pktBuffer->payload, ndSendContexPtr->pktBuffer->len);
+
+    raw_sendto_if_src(sIcmp6RawPcb, ndSendContexPtr->pktBuffer, &ndSendContexPtr->dstIp, sNetifPtr,
+                      &ndSendContexPtr->srcIp);
+
+    pbuf_free(ndSendContexPtr->pktBuffer);
+    otPlatFree(context);
 }
 
 /**
@@ -319,7 +419,6 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
         /* If addr not found - do nothing. */
     }
 }
-
 /**
  *  Parses icmp6 packet and sets ip based on prefix to infra netif if found.
  *
@@ -341,135 +440,6 @@ static void RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint1
         SetOrUpdateAddrFromRa(netif, &addr, valid_t, pref_t);
     }
 }
-
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
-                                 const otIp6Address *aDestAddress,
-                                 const uint8_t      *aBuffer,
-                                 uint16_t            aBufferLength)
-{
-    err_t   sendErr;
-    otError retError;
-#if RAW_TX_USING_SOCK
-    struct sockaddr_in6 dst = {0};
-#else
-    ip_addr_t         dst_ip     = {0};
-    ip_addr_t         src_ip     = {0};
-    const ip6_addr_t *src_ip_ptr = NULL;
-    struct pbuf      *pbuf       = NULL;
-#endif
-
-#if RAW_TX_USING_SOCK
-    dst.sin6_family = AF_INET6;
-    memcpy(&dst.sin6_addr.un.u32_addr, aDestAddress->mFields.m32, sizeof(dst.sin6_addr.un.u32_addr));
-
-    dst.sin6_scope_id = sInfraIfIndex;
-
-    sendErr = lwip_sendto(sInfraIfIcmp6Socket, aBuffer, aBufferLength, 0, (struct sockaddr *)&dst, sizeof(dst));
-#else
-    memcpy(ip_2_ip6(&dst_ip)->addr, aDestAddress->mFields.m8, sizeof(ip_2_ip6(&dst_ip)->addr));
-    dst_ip.type            = IPADDR_TYPE_V6;
-    dst_ip.u_addr.ip6.zone = IP6_NO_ZONE;
-
-    src_ip_ptr = netif_ip6_addr(sNetifPtr, 0);
-    memcpy(ip_2_ip6(&src_ip)->addr, src_ip_ptr->addr, sizeof(ip_2_ip6(&src_ip)->addr));
-    src_ip.type            = IPADDR_TYPE_V6;
-    src_ip.u_addr.ip6.zone = IP6_NO_ZONE;
-
-    pbuf = pbuf_alloc(PBUF_TRANSPORT, aBufferLength, PBUF_RAM);
-    VerifyOrExit(pbuf != NULL, retError = OT_ERROR_NO_BUFS);
-    memcpy(pbuf->payload, aBuffer, aBufferLength);
-
-    LOCK_TCPIP_CORE();
-    sendErr = raw_sendto_if_src(sIcmp6RawPcb, pbuf, &dst_ip, sNetifPtr, &src_ip);
-    UNLOCK_TCPIP_CORE();
-
-    pbuf_free(pbuf);
-#endif
-
-    /* Send RA to lwip stack to allow it to configure IP from announced prefix. */
-    LOCK_TCPIP_CORE();
-    RaFromOtToLwip(aInfraIfIndex, aBuffer, aBufferLength);
-    UNLOCK_TCPIP_CORE();
-
-    retError = sendErr != -1 ? OT_ERROR_NONE : OT_ERROR_FAILED;
-
-exit:
-    return retError;
-}
-
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
-{
-    ip_addr_t searchedAddress = IPADDR6_INIT(0, 0, 0, 0);
-    memcpy(ip_2_ip6(&searchedAddress), &aAddress->mFields.m32, sizeof(aAddress->mFields.m32));
-
-    return (netif_get_ip6_addr_match(sNetifPtr, (const ip6_addr_t *)&searchedAddress) > 0 ? true : false);
-}
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
-{
-    otError    res = OT_ERROR_FAILED;
-    ip_addr_t *addr;
-    err_t      error;
-
-    VerifyOrExit(aInfraIfIndex == (uint32_t)sInfraIfIndex);
-
-    addr = (ip_addr_t *)otPlatCAlloc(1, sizeof(ip_addr_t));
-    VerifyOrExit(addr != NULL);
-
-    LOCK_TCPIP_CORE();
-    /* Note it processes just the first address returned by DNS */
-    error = dns_gethostbyname_addrtype(sWellKnownIpv4OnlyName, addr, DnsNat64Callback, (void *)addr,
-                                       LWIP_DNS_ADDRTYPE_IPV6);
-    UNLOCK_TCPIP_CORE();
-
-    if (error == ERR_OK)
-    {
-        /* Address already resolved */
-        DnsNat64Callback(sWellKnownIpv4OnlyName, addr, (void *)addr);
-        addr = NULL; /* Just deallocated by the callback */
-        res  = OT_ERROR_NONE;
-    }
-    else if (error == ERR_INPROGRESS)
-    {
-        addr = NULL; /* Will be deallocated by the callback */
-        res  = OT_ERROR_NONE;
-    } /* else failed */
-
-exit:
-    if (addr != NULL)
-    {
-        otPlatFree(addr);
-    }
-    return res;
-}
-#endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
-
-/* -------------------------------------------------------------------------- */
-/*                              Private functions                             */
-/* -------------------------------------------------------------------------- */
-#if RAW_TX_USING_SOCK
-static int CreateIcmp6Socket()
-{
-    static struct sockaddr_in6 src      = {0};
-    int                        sockdesc = -1;
-
-    if ((sockdesc = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6)) < 0)
-    {
-        return -1;
-    }
-
-    src.sin6_family = AF_INET6;
-
-    inet_pton(AF_INET6, ip6addr_ntoa(netif_ip6_addr(sNetifPtr, 0)), &src.sin6_addr);
-
-    if (bind(sockdesc, (struct sockaddr *)&src, sizeof(src)) != 0)
-    {
-        return -1;
-    }
-    return sockdesc;
-}
-#endif
 
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr)
 {
