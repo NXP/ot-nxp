@@ -335,6 +335,13 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
     uint8_t       *ptr            = NULL;
 
     otEXPECT_ACTION((NULL != pBuffer), err = RS_ERROR_NO_BUFS);
+    if (pBuffer->header.extendedSearch == FALSE)
+    {
+        // RAM buffers that do not use extended search should be limited to backend region size.
+        // Otherwise, during persistent storage saving, the buffer will be split across multiple
+        // PDM ids, which can cause data corruption.
+        otEXPECT_ACTION(allocSize <= pBuffer->header.backendRegionSize, err = RS_ERROR_NO_BUFS);
+    }
 
     if (allocSize < pBuffer->header.length + newBlockLength)
     {
@@ -342,6 +349,12 @@ rsError ramStorageResize(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint
         {
             /* Need to realocate the memory buffer, increase size by kRamBufferReallocSize until NVM data fits */
             allocSize += kRamBufferReallocSize;
+            /* Limit allocSize to backend region size when extended search is not used */
+            if (pBuffer->header.extendedSearch == FALSE && allocSize > pBuffer->header.backendRegionSize)
+            {
+                allocSize = pBuffer->header.backendRegionSize;
+                break;
+            }
         }
 
         if (allocSize <= kRamBufferMaxAllocSize)
