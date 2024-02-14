@@ -37,8 +37,8 @@
 /* -------------------------------------------------------------------------- */
 
 #include "br_rtos_manager.h"
-#include "border_agent.h"
 #include "infra_if.h"
+#include "mdns_socket.h"
 #include "udp_plat.h"
 
 #include "lwip_hooks.h"
@@ -47,15 +47,17 @@
 
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/border_router.h>
-#include <openthread/border_routing.h>
+#include <openthread/mdns.h>
 #include <openthread/nat64.h>
 #include <openthread/srp_server.h>
+#include <openthread/platform/border_routing.h>
 
 #include <string.h>
 /* -------------------------------------------------------------------------- */
 /*                             Private memory                                 */
 /* -------------------------------------------------------------------------- */
-otInstance *sInstance;
+static otInstance   *sInstance = NULL;
+static struct netif *sExtNetif = NULL;
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -72,30 +74,36 @@ static void Dhcp6PdInit(struct netif *netif);
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void BrInitServices(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif)
+void BrInitServices()
 {
-    sInstance = aInstance;
-
-#if OT_APP_BR_LWIP_HOOKS_EN
-    lwipHooksInit(sInstance, aExtNetif, aThreadNetif);
-#endif
-
-    UdpPlatInit(aInstance, aExtNetif, aThreadNetif);
-    InfraIfInit(aInstance, aExtNetif);
-
-    otBorderRoutingInit(aInstance, netif_get_index(aExtNetif), true);
-    otBorderRoutingSetEnabled(aInstance, true);
-    otBorderRoutingDhcp6PdSetEnabled(aInstance, true);
-    otBackboneRouterSetEnabled(aInstance, true);
-    otBackboneRouterSetMulticastListenerCallback(aInstance, HandleMulticastListenerCallback, aExtNetif);
-    otSrpServerSetAutoEnableMode(aInstance, true);
-
-    BorderAgentInit(aInstance);
-    Dhcp6PdInit(aExtNetif);
+    if ((sInstance != NULL) && (sExtNetif != NULL))
+    {
+        otBorderRoutingInit(sInstance, netif_get_index(sExtNetif), true);
+        otBorderRoutingSetEnabled(sInstance, true);
+        otBorderRoutingDhcp6PdSetEnabled(sInstance, true);
+        otBackboneRouterSetEnabled(sInstance, true);
+        otBackboneRouterSetMulticastListenerCallback(sInstance, HandleMulticastListenerCallback, sExtNetif);
+        otSrpServerSetAutoEnableMode(sInstance, true);
+        otMdnsSetEnabled(sInstance, true, netif_get_index(sExtNetif));
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    otNat64SetEnabled(aInstance, true);
+        otNat64SetEnabled(aInstance, true);
 #endif
+    }
+}
+
+void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif)
+{
+    sInstance = aInstance;
+    sExtNetif = aExtNetif;
+
+#if OT_APP_BR_LWIP_HOOKS_EN
+    lwipHooksInit(sInstance, sExtNetif, aThreadNetif);
+#endif
+    UdpPlatInit(sInstance, sExtNetif, aThreadNetif);
+    InfraIfInit(sInstance, sExtNetif);
+    MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
+    Dhcp6PdInit(sExtNetif);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -117,7 +125,7 @@ static void Dhcp6PrefixChangedCb(struct netif *netif, const struct dhcp6_delegat
         prefixEntry.mPrefix.mLength = 64;
         memcpy(prefixEntry.mPrefix.mPrefix.mFields.m8, prefix->prefix.addr, sizeof(otIp6Address));
 
-        otBorderRoutingDhcp6PdProcessPrefix(sInstance, &prefixEntry);
+        otPlatBorderRoutingProcessDhcp6PdPrefix(sInstance, &prefixEntry);
     }
 }
 

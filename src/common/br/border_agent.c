@@ -45,13 +45,17 @@
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/border_agent.h>
 #include <openthread/border_routing.h>
+#include <openthread/cli.h>
 #include <openthread/dataset.h>
+#include <openthread/dns.h>
 #include <openthread/ip6.h>
-#include <openthread/mdns_server.h>
+#include <openthread/mdns.h>
 #include <openthread/thread.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/memory.h>
 #include <openthread/platform/radio.h>
 
+#include "utils.h"
 #include "common/code_utils.hpp"
 
 /* -------------------------------------------------------------------------- */
@@ -106,36 +110,122 @@ typedef struct MeshCopValues
     uint8_t  mBBRSeqNo;
     uint8_t  mOmrLength;
     uint8_t  mTxtOmrPrefix[sizeof(otIp6Prefix)];
-
 } MeshCopValues;
+
+static otInstance *sInstance;
+static bool        sBorderAgentIsInit;
+
+static otMdnsService sMeshCopService;
+static const char    sMeshCopServiceLabel[] = "_meshcop._udp";
+static char          sServiceInstanceName[] = "MeshcopService#0000";
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+static bool    sEphemeralKeySetPending;
+static uint8_t sEphemeralKey[OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH]; ///< Byte values
+
+static uint32_t sEphemeralKeyTimeout;
+static uint32_t sEphemeralKeyPort;
+static uint16_t sEphemeralKeyLength;
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
 static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues *aMeshCopValues, otInstance *aInstance);
-static void    HandleThreadStateChanged(otChangedFlags flags, void *context);
+static void    HandleThreadStateChanged(otChangedFlags flags, void *aContext);
+static void    HandleBorderAgentEphemeralKeyCallback(void *aContext);
 static void    PublishMeshCopService(otInstance *aInstance);
-static void    UpdateMeshCopService(otInstance *aInstance);
 static StateBitmap GetStateBitmap(otInstance *aInstance);
-
-/* -------------------------------------------------------------------------- */
-/*                              Public functions prototypes                   */
-/* -------------------------------------------------------------------------- */
-
-void BorderAgentInit(otInstance *aInstance);
+static uint32_t    BitmapToUint32(StateBitmap aBitMap);
+static void        HandleMeshCopRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
+static void        BorderAgentSetDefaultEphemeralKeySettings();
+static uint16_t    ToBE16(uint16_t v);
+static uint32_t    ToBE32(uint32_t v);
+static uint64_t    ToBE64(uint64_t v);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                             */
 /* -------------------------------------------------------------------------- */
 
-void BorderAgentInit(otInstance *aInstance)
+void BorderAgentInit(otInstance *aInstance, const char *aHostName)
 {
-    PublishMeshCopService(aInstance);
+    sInstance = aInstance;
 
-    otSetStateChangedCallback(aInstance, HandleThreadStateChanged, aInstance);
+    if (!sBorderAgentIsInit)
+    {
+        sMeshCopService.mHostName        = aHostName;
+        sMeshCopService.mServiceInstance = CreateBaseName(aInstance, sServiceInstanceName);
+        sMeshCopService.mServiceType     = sMeshCopServiceLabel;
+
+        PublishMeshCopService(aInstance);
+
+        otSetStateChangedCallback(aInstance, HandleThreadStateChanged, aInstance);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+        BorderAgentSetDefaultEphemeralKeySettings();
+        otBorderAgentSetEphemeralKeyCallback(aInstance, HandleBorderAgentEphemeralKeyCallback, aInstance);
+#endif
+        sBorderAgentIsInit = true;
+    }
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+otError BorderAgentGenerateAndSetEphemeralKey(void)
+{
+    if (!sBorderAgentIsInit)
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+    memset(sEphemeralKey, 0x00, sizeof(sEphemeralKey));
+    otPlatEntropyGet(sEphemeralKey, sEphemeralKeyLength); // for the moment minimum, TBD
+    if (otBorderAgentGetState(sInstance) != OT_BORDER_AGENT_STATE_STOPPED)
+    {
+        return otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                            otBorderAgentGetUdpPort(sInstance));
+    }
+    else
+    {
+        sEphemeralKeySetPending = true;
+    }
+
+    return OT_ERROR_NONE;
+}
+
+otError BorderAgentClearEphemeralKey(void)
+{
+    if (!sBorderAgentIsInit || !otBorderAgentIsEphemeralKeyActive(sInstance))
+    {
+        return OT_ERROR_INVALID_STATE;
+    }
+
+    otBorderAgentClearEphemeralKey(sInstance);
+
+    return OT_ERROR_NONE;
+}
+
+void BorderAgentSetEphemeralKeyLength(uint16_t aKeyLen)
+{
+    if (aKeyLen >= OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH && aKeyLen <= OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH)
+    {
+        sEphemeralKeyLength = aKeyLen;
+    }
+    else
+    {
+        sEphemeralKeyLength = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;
+    }
+}
+
+void BorderAgentSetEphemeralKeyTimeout(uint32_t aKeyTimeout)
+{
+    sEphemeralKeyTimeout = aKeyTimeout;
+}
+
+void BorderAgentSetEphemeralKeyPort(uint32_t aKeyPort)
+{
+    sEphemeralKeyPort = aKeyPort;
+}
+#endif
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
@@ -145,52 +235,67 @@ static void PublishMeshCopService(otInstance *aInstance)
     otDnsTxtEntry mTxtEntries[MAX_TXT_ENTRIES_NUMBER];
     MeshCopValues mMeshCopValues = {0};
     uint8_t       numTxtEntries  = 0;
-    uint16_t      port           = 0;
 
     numTxtEntries = PopulateMeshCopService(mTxtEntries, &mMeshCopValues, aInstance);
 
+    uint8_t  txtBuffer[255]  = {0};
+    uint32_t txtBufferOffset = 0;
+
+    for (uint32_t i = 0; i < numTxtEntries; i++)
+    {
+        uint32_t keySize = strlen(mTxtEntries[i].mKey);
+        // add TXT entry len + 1 is for '='
+        *(txtBuffer + txtBufferOffset++) = keySize + mTxtEntries[i].mValueLength + 1;
+
+        // add TXT entry key
+        memcpy(txtBuffer + txtBufferOffset, mTxtEntries[i].mKey, keySize);
+        txtBufferOffset += keySize;
+
+        // add TXT entry value if pointer is not null, if pointer is null it means we have bool value
+        if (mTxtEntries[i].mValue)
+        {
+            *(txtBuffer + txtBufferOffset++) = '=';
+            memcpy(txtBuffer + txtBufferOffset, mTxtEntries[i].mValue, mTxtEntries[i].mValueLength);
+            txtBufferOffset += mTxtEntries[i].mValueLength;
+        }
+    }
+    sMeshCopService.mTxtData       = txtBuffer;
+    sMeshCopService.mTxtDataLength = txtBufferOffset;
+
     if (otBorderAgentGetState(aInstance) != OT_BORDER_AGENT_STATE_STOPPED)
     {
-        port = otBorderAgentGetUdpPort(aInstance);
+        sMeshCopService.mPort = otBorderAgentGetUdpPort(aInstance);
     }
     else
     {
-        port = BORDER_AGENT_PORT;
+        sMeshCopService.mPort = BORDER_AGENT_PORT;
     }
 
-    otMdnsServerAddService(aInstance, "nxp-br._meshcop._udp.local.", "_meshcop._udp.local.", NULL, 0, port, mTxtEntries,
-                           numTxtEntries);
+    otMdnsRegisterService(aInstance, &sMeshCopService, 0, HandleMeshCopRegistrationCallback);
 }
 
-static void UpdateMeshCopService(otInstance *aInstance)
-{
-    otDnsTxtEntry mTxtEntries[MAX_TXT_ENTRIES_NUMBER];
-    MeshCopValues mMeshCopValues = {0};
-    uint8_t       numTxtEntries  = 0;
-    uint16_t      port           = 0;
-
-    numTxtEntries = PopulateMeshCopService(mTxtEntries, &mMeshCopValues, aInstance);
-
-    if (otBorderAgentGetState(aInstance) != OT_BORDER_AGENT_STATE_STOPPED)
-    {
-        port = otBorderAgentGetUdpPort(aInstance);
-    }
-    else
-    {
-        port = BORDER_AGENT_PORT;
-    }
-
-    otMdnsServerUpdateService(aInstance, "nxp-br._meshcop._udp.local.", "_meshcop._udp.local.", port, mTxtEntries,
-                              numTxtEntries);
-}
-
-static void HandleThreadStateChanged(otChangedFlags flags, void *context)
+static void HandleThreadStateChanged(otChangedFlags flags, void *aContext)
 {
     if (flags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_THREAD_EXT_PANID | OT_CHANGED_THREAD_NETWORK_NAME |
                  OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE | OT_CHANGED_THREAD_NETDATA))
     {
-        UpdateMeshCopService((otInstance *)context);
+        PublishMeshCopService((otInstance *)aContext);
     }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    if (flags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE))
+    {
+        if (otBorderAgentGetState((otInstance *)aContext) != OT_BORDER_AGENT_STATE_STOPPED)
+        {
+            if (sEphemeralKeySetPending)
+            {
+                otBorderAgentSetEphemeralKey((otInstance *)aContext, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                             otBorderAgentGetUdpPort((otInstance *)aContext));
+                sEphemeralKeySetPending = false;
+            }
+        }
+    }
+#endif
 }
 
 static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues *aMeshCopValues, otInstance *aInstance)
@@ -201,7 +306,7 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     memset(&bitmap, 0x00, sizeof(bitmap));
     bitmap = GetStateBitmap(aInstance);
 
-    aMeshCopValues->mBitmapValue = ToBE32(*(uint32_t *)&bitmap);
+    aMeshCopValues->mBitmapValue = ToBE32(BitmapToUint32(bitmap));
 
     // RV TXT
     aTxtEntries[i].mKey         = "rv";
@@ -354,18 +459,78 @@ static StateBitmap GetStateBitmap(otInstance *aInstance)
     return bitmap;
 }
 
-uint16_t ToBE16(uint16_t v)
+static uint32_t BitmapToUint32(StateBitmap aBitMap)
+{
+    uint32_t bitmap = 0;
+
+    bitmap |= aBitMap.mConnectionMode << 0;
+    bitmap |= aBitMap.mThreadInterfaceStatus << 3;
+    bitmap |= aBitMap.mAvailability << 5;
+    bitmap |= aBitMap.mBBRFunctionStatusIsActive << 7;
+    bitmap |= aBitMap.mBBRFunctionStatusIsPrimary << 8;
+
+    return bitmap;
+}
+
+static void HandleMeshCopRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        sMeshCopService.mServiceInstance = CreateAlternativeBaseName(aInstance, sMeshCopService.mServiceInstance);
+        PublishMeshCopService(aInstance);
+    }
+}
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
+{
+    bool active = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
+
+    if (active)
+    {
+        if (sEphemeralKeySetPending)
+        {
+            otBorderAgentSetEphemeralKey((otInstance *)aContext, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                         otBorderAgentGetUdpPort((otInstance *)aContext));
+            sEphemeralKeySetPending = false;
+        }
+        else
+        {
+            otCliOutputFormat("\r\nEphemeral Key = ");
+            for (uint16_t i = 0; i < OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH; i++)
+            {
+                otCliOutputFormat("%02x", sEphemeralKey[i]);
+            }
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Valid for %lu seconds.\r\n%s", (uint32_t)(sEphemeralKeyTimeout / 1000UL), "> ");
+        }
+    }
+    else
+    {
+        otCliOutputFormat("\r\nEphemeral Key disabled, PSKc is now in use.\r\n%s", "> ");
+    }
+}
+
+static void BorderAgentSetDefaultEphemeralKeySettings()
+{
+    sEphemeralKeyLength  = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;
+    sEphemeralKeyTimeout = OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT;
+    sEphemeralKeyPort    = BORDER_AGENT_PORT;
+}
+#endif
+
+static uint16_t ToBE16(uint16_t v)
 {
     return (((v & 0x00ffU) << 8) & 0xff00) | (((v & 0xff00U) >> 8) & 0x00ff);
 }
 
-uint32_t ToBE32(uint32_t v)
+static uint32_t ToBE32(uint32_t v)
 {
     return ((v & (uint32_t)(0x000000ffUL)) << 24) | ((v & (uint32_t)(0x0000ff00UL)) << 8) |
            ((v & (uint32_t)(0x00ff0000UL)) >> 8) | ((v & (uint32_t)(0xff000000UL)) >> 24);
 }
 
-uint64_t ToBE64(uint64_t v)
+static uint64_t ToBE64(uint64_t v)
 {
     return ((v & (uint64_t)(0x00000000000000ffULL)) << 56) | ((v & (uint64_t)(0x000000000000ff00ULL)) << 40) |
            ((v & (uint64_t)(0x0000000000ff0000ULL)) << 24) | ((v & (uint64_t)(0x00000000ff000000ULL)) << 8) |

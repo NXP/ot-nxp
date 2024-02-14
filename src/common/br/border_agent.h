@@ -35,12 +35,14 @@
 extern "C" {
 #endif
 
-void BorderAgentInit(otInstance *aInstance);
-
-uint16_t ToBE16(uint16_t v);
-uint32_t ToBE32(uint32_t v);
-uint64_t ToBE64(uint64_t v);
-
+void BorderAgentInit(otInstance *aInstance, const char *aHostName);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+otError BorderAgentGenerateAndSetEphemeralKey(void);
+otError BorderAgentClearEphemeralKey(void);
+void    BorderAgentSetEphemeralKeyLength(uint16_t aKeyLen);
+void    BorderAgentSetEphemeralKeyTimeout(uint32_t aKeyTimeout);
+void    BorderAgentSetEphemeralKeyPort(uint32_t aKeyPort);
+#endif
 #ifdef __cplusplus
 }
 #endif

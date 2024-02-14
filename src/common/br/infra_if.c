@@ -79,8 +79,8 @@ struct ndSendContext
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static uint8_t         sInfraIfIndex;
-static otInstance     *sInstance = NULL;
+static uint8_t         sInfraIfIndex = 0;
+static otInstance     *sInstance     = NULL;
 static struct netif   *sNetifPtr;
 static struct raw_pcb *sIcmp6RawPcb;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -172,6 +172,10 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 
 void InfraIfDeInit()
 {
+    sInstance     = NULL;
+    sNetifPtr     = NULL;
+    sInfraIfIndex = 0;
+
     if (sIcmp6RawPcb != NULL)
     {
         raw_remove(sIcmp6RawPcb);
@@ -194,6 +198,14 @@ void InfraIfDeInit()
         sTcpRawPcb = NULL;
     }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+}
+
+void InfraIfLinkState(bool bUp)
+{
+    if ((sInstance != NULL) && (sInfraIfIndex != 0))
+    {
+        otPlatInfraIfStateChanged(sInstance, sInfraIfIndex, bUp);
+    }
 }
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,

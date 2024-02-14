@@ -189,7 +189,27 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
         addr.type            = IPADDR_TYPE_V6;
         addr.u_addr.ip6.zone = IP6_NO_ZONE;
 
+        if (pcb->netif_idx == NETIF_NO_INDEX)
+        {
+            if (ip6_addr_islinklocal(ip_2_ip6(&addr)))
+            {
+                ip6_addr_assign_zone(ip_2_ip6(&addr), IP6_UNICAST, sBackboneNetifPtr);
+            }
+        }
+        else
+        {
+            ip6_addr_assign_zone(ip_2_ip6(&addr), IP6_UNICAST, netif_get_by_index(pcb->netif_idx));
+        }
         VerifyOrExit(ERR_OK == udp_connect(pcb, &addr, port), error = OT_ERROR_FAILED);
+    }
+    else
+    {
+        uint8_t oldIfIndex = pcb->netif_idx;
+        udp_disconnect(pcb);
+        if (oldIfIndex != NETIF_NO_INDEX)
+        {
+            udp_bind_netif(pcb, netif_get_by_index(oldIfIndex));
+        }
     }
 exit:
     return error;
@@ -422,6 +442,5 @@ static void otTaskCb(void *context)
     udpReceiveContextPtr->socket->mHandler(udpReceiveContextPtr->socket->mContext, udpReceiveContextPtr->message,
                                            &udpReceiveContextPtr->message_info);
 
-    otMessageFree(udpReceiveContextPtr->message);
     otPlatFree(context);
 }

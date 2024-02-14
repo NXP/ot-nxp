@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __OT_UTILS_H__
+#define __OT_UTILS_H__
 
+#include <stdio.h>
+#include <string.h>
 #include <openthread/instance.h>
-
-#include "lwip/netif.h"
+#include <openthread/link.h>
+#include <openthread/platform/entropy.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-void InfraIfLinkState(bool bUp);
+char       *CreateBaseName(otInstance *aInstance, char *aBaseName);
+const char *CreateAlternativeBaseName(otInstance *aInstance, const char *aBaseName);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __OT_UTILS_H__ */

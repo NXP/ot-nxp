@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+/**
+ * @file
+ *   This file implements utility functions for the border router application.
+ *
+ */
 
-#include <openthread/instance.h>
+#include "utils.h"
 
-#include "lwip/netif.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-void InfraIfLinkState(bool bUp);
-
-#ifdef __cplusplus
+char *CreateBaseName(otInstance *aInstance, char *aBaseName)
+{
+    char *replace = strstr(aBaseName, "#");
+    if (replace != NULL)
+    {
+        replace++; // skip #
+    }
+    else
+    {
+        return NULL;
+    }
+    const otExtAddress *extAddress = otLinkGetExtendedAddress(aInstance);
+    sprintf(replace, "%02x%02x", extAddress->m8[6], extAddress->m8[7]);
+    return aBaseName;
 }
-#endif
-#endif /* __OT_INFRA_IF_H__ */
+
+const char *CreateAlternativeBaseName(otInstance *aInstance, const char *aBaseName)
+{
+    char *replace = strstr(aBaseName, "#");
+    if (replace != NULL)
+    {
+        replace++; // skip #
+    }
+    else
+    {
+        return NULL;
+    }
+    uint8_t random[2] = {0};
+    otPlatEntropyGet(random, sizeof(random));
+    sprintf(replace, "%02x%02x", random[0], random[1]);
+    return aBaseName;
+}

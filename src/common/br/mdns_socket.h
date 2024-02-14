@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OT_INFRA_IF_H__
-#define __OT_INFRA_IF_H__
+#ifndef __OT_MDNS_SOCKET_H__
+#define __OT_MDNS_SOCKET_H__
 
+#include <string.h>
 #include <openthread/instance.h>
-
-#include "lwip/netif.h"
+#include <openthread/udp.h>
+#include "common/code_utils.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InfraIfInit(otInstance *aInstance, struct netif *netif);
-void InfraIfDeInit();
-void InfraIfLinkState(bool bUp);
+void MdnsSocketInit(otInstance *aInstance, uint32_t aInfraIfIndex);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __OT_INFRA_IF_H__ */
+#endif /* __OT_MDNS_SOCKET_H__ */

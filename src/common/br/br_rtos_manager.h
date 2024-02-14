@@ -37,7 +37,10 @@
 extern "C" {
 #endif
 
-void BrInitServices(otInstance *aInstance, struct netif *aNetif, struct netif *aThreadNetif);
+/* Must be called before BrInitServices*/
+void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif);
+/* Must be called after BrInitPlatform */
+void BrInitServices();
 
 #ifdef __cplusplus
 }
