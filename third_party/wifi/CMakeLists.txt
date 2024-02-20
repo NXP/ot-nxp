@@ -26,16 +26,24 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(${SDK_TYPE} STREQUAL "GITHUB")
+    set(COMPONENTS_PATH ${NXP_SDK_ROOT}/core/components)
+else()
+    set(COMPONENTS_PATH ${NXP_SDK_ROOT}/components)
+endif()
+
+set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
+
 if(NOT WIFI_PATH)
-    set(WIFI_PATH ${NXP_SDK_ROOT}/middleware/wifi_nxp)
+    set(WIFI_PATH ${MIDDLEWARE_PATH}/wifi_nxp)
 endif()
 
 if(NOT EDGEFAST_WIFI_PATH)
-    set(EDGEFAST_WIFI_PATH ${NXP_SDK_ROOT}/components/edgefast_wifi)
+    set(EDGEFAST_WIFI_PATH ${COMPONENTS_PATH}/edgefast_wifi)
 endif()
 
 if(NOT WIFI_BT_MODULE_PATH)
-    set(WIFI_BT_MODULE_PATH ${NXP_SDK_ROOT}/components/wifi_bt_module)
+    set(WIFI_BT_MODULE_PATH ${COMPONENTS_PATH}/wifi_bt_module)
 endif()
 
 set(WIFI_COMMON_SOURCES

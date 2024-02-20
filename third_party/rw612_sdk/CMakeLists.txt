@@ -29,8 +29,27 @@
 cmake_policy(SET CMP0079 NEW)
 
 if(${SDK_TYPE} STREQUAL "GITHUB")
-    message(FATAL_ERROR "GITHUB SDK is not supported for this platform")
+    message("SDK_GITHUB driver path chosen")
+    set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
+    set(NXP_SDK_ROOT ${NXP_SDK_ROOT}/core)
+    set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/drivers/cache/cache64)
+    set(DRIVER_FLEXCOMM_FILES_PATH ${NXP_SDK_ROOT}/drivers/flexcomm)
+    set(DRIVER_USART_FILES_PATH ${DRIVER_FLEXCOMM_FILES_PATH}/usart)
+    set(DRIVER_FLEXSPI_FILES_PATH ${NXP_SDK_ROOT}/drivers/flexspi)
+    set(DRIVER_LPC_GPIO_FILES_PATH ${NXP_SDK_ROOT}/drivers/lpc_gpio)
+    set(DRIVER_IMU_FILES_PATH ${NXP_SDK_ROOT}/drivers/imu)
+    set(DRIVER_GDMA_FILES_PATH ${NXP_SDK_ROOT}/drivers/gdma)
+    set(DRIVER_TRNG_FILES_PATH ${NXP_SDK_ROOT}/drivers/trng)
+    set(DRIVER_COMMON_FILES_PATH ${NXP_SDK_ROOT}/drivers/common)
+    set(DRIVER_CTIMER_FILES_PATH ${NXP_SDK_ROOT}/drivers/ostimer)
+    set(DRIVER_RTC_FILES_PATH ${NXP_SDK_ROOT}/drivers/lpc_rtc)
+    set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
+    set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/drivers/enet)
+    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/utilities/debug_console)
+    set(STR_FILES_PATH ${NXP_SDK_ROOT}/utilities/str)
+    set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/utilities/misc_utilities)
 elseif(${SDK_TYPE} STREQUAL "PACKAGE")
+    set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/drivers)
     set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_FLEXCOMM_FILES_PATH ${DRIVER_FILES_PATH})
@@ -50,6 +69,7 @@ elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/format)
 elseif(${SDK_TYPE} STREQUAL "INTERNAL")
+    set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/cache64)
     set(DRIVER_FLEXCOMM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexcomm)
     set(DRIVER_USART_FILES_PATH ${DRIVER_FLEXCOMM_FILES_PATH}/usart)
@@ -113,8 +133,8 @@ set(RW612_SDK_SOURCES
     ${DRIVER_CTIMER_FILES_PATH}/fsl_ostimer.c
 
     # LittleFS
-    ${NXP_SDK_ROOT}/middleware/littlefs/lfs.c
-    ${NXP_SDK_ROOT}/middleware/littlefs/lfs_util.c
+    ${MIDDLEWARE_PATH}/littlefs/lfs.c
+    ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
 
     # Loader files
     ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader.c
@@ -357,6 +377,7 @@ set(RW612_SDK_INCLUDES
     ${STR_FILES_PATH}
     ${FORMAT_FILES_PATH}
     ${DRIVER_ENET_FILES_PATH}
+    ${DRIVER_CTIMER_FILES_PATH}
 
     # SDK components
     ${NXP_SDK_ROOT}/components/uart
@@ -374,7 +395,7 @@ set(RW612_SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/gpio/
 
     # LittleFS
-    ${NXP_SDK_ROOT}/middleware/littlefs
+    ${MIDDLEWARE_PATH}/littlefs
 
     # Loader files
     ${NXP_SDK_ROOT}/components/conn_fwloader/include
@@ -458,7 +479,7 @@ endif()
 if(OT_NXP_BUILD_APP_AS_LIB)
     # ethermind/coex_app_cli include
     list(APPEND RW612_SDK_INCLUDES
-        ${NXP_SDK_ROOT}/middleware/wireless/wpa_supplicant-rtos/port/mbedtls
+        ${MIDDLEWARE_PATH}/wireless/wpa_supplicant-rtos/port/mbedtls
     )
 endif()
 
