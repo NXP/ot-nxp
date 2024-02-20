@@ -47,25 +47,20 @@ Make sure that the paths of all these tools are set into the `Path` system varia
 
 ## Downloading the SDK
 
-Download [the latest SDK from the link.](https://mcuxpresso.nxp.com/). Creating an nxp.com account is required before being able to download the SDK. Select the RD-RW612-BGA (RW612) board. The SDK Builder UI selection should be similar with the one from the image below.
+Download the NXP MCUXpresso git SDK and associated middleware from GitHub using the west tool:
 
-Click on "Build MCUXpresso SDK" button. On the next page select the desired Host OS and ALL for Toolchain/IDE. Additionaly `SELECT ALL` components and then press `DOWNLOAD SDK` button.
-Once the SDK zip archive is downloaded, unzip it, and access the contents.
-
-> **_NOTE:_** When using the SDK version 2.13.1 in order to build the OpenThread RW612 configurations the 2 additional files `fwk_lfs_config.h` and `fwk_lfs_config.c` must be downloaded from [SDK_2_13_1_RW61X_OT_LFS_Config](https://mcuxpresso.nxp.com/en/dashboard?download=60c36b53bf8c1ba245bc757a1a69cdbc) and copied to SDK location `.../middleware/wireless/framework/platform/rw61x/configs/` .
-
-![Board Selection](../../../doc/img/rw612/sdk-build.jpg)
+```bash
+$ cd <path-to-ot-nxp>/third_party/github_sdk
+$ west init -l manifest --mf west_rw612.yml
+$ west update
+```
 
 ## Building the examples
-
-### Linux-like environment
 
 - OT CLI application :
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
-$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ git submodule update --init
 $ ./script/build_rw612 ot_cli
 ```
@@ -74,7 +69,6 @@ $ ./script/build_rw612 ot_cli
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ git submodule update --init
 $ ./script/build_rw612 ot_br_wifi
 ```
@@ -83,7 +77,6 @@ $ ./script/build_rw612 ot_br_wifi
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ git submodule update --init
 $ ./script/build_rw612 ot_br_eth
 ```
@@ -92,7 +85,6 @@ To build for a specific device revision such as A0:
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_RW612_SDK_ROOT=/path/to/previously/downloaded/SDK
 $ git submodule update --init
 $ ./script/build_rw612 ot_cli -DOT_NXP_DEVICE_REVISION=A0
 ```
