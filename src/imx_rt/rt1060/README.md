@@ -190,11 +190,23 @@ After a successful build, the generated binary can be found in
 
 Supported application(s):
 
-1.
+1. OT CLI application
 
 - app_name: `iwx12_spi`
 - Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the IWX12 transceiver will exchange message over a SPI interface.
-- Status: WORK IN PROGESS
+- Status: Fully supported
+
+2. Border Router application with Wi-Fi:
+
+- app_name: `iwx12_spi_br_wifi`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. It also supports Border Rouder role over Wi-Fi.
+- Status: Fully supported
+
+3. Border Router application with Ethernet:
+
+- app_name: `iwx12_spi_br_ethernet`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. It also supports Border Rouder role over Ethernet.
+- Status: Fully supported
 
 How to build them ?
 
