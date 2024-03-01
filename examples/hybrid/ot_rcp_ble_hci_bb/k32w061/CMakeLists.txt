@@ -59,6 +59,14 @@ if (OT_APP_RCP_BLE_HCI_BB_SINGLE_UART)
             gHcitSerialManagerSupport_d=0 # Disable serial manager on hci
             OT_PLAT_APP_UART_INSTANCE=0 # UART 0 with flow control would be used to transfert HCI and spinel packet
     )
+
+    if (OT_RCP_UART_DMA)
+        target_compile_definitions(${NXP_DRIVER_LIB}
+            PUBLIC
+                gUartHwFlowControl_d=0
+                USE_SDK_OSA=0
+        )
+    endif()
     target_link_libraries(ot-rcp-ble-hci-bb-${OT_NXP_PLATFORM} PUBLIC
         -Wl,--wrap=otNcpHdlcReceive
         -Wl,--wrap=Hcit_SendPacket

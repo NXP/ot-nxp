@@ -127,7 +127,9 @@
 #define gSerialMgrRxBufSize_c 320
 
 /* Defines Tx Queue Size for Serial Manager */
+#ifndef gSerialMgrTxQueueSize_c
 #define gSerialMgrTxQueueSize_c 5
+#endif
 
 /* Defines Size for Serial Manager Task*/
 #define gSerialTaskStackSize_c 700
@@ -148,7 +150,9 @@
 #endif
 
 /* Enable the SDK OSA component */
+#ifndef USE_SDK_OSA
 #define USE_SDK_OSA 1
+#endif
 
 /* Enable output on USART1 on pins connected to on-board FTDI */
 #define USART1_FTDI
