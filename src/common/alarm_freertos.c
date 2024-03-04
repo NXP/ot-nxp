@@ -40,10 +40,11 @@
 #define ALARM_TIMER_MS_2_TICKS(ms) ((ms) / portTICK_PERIOD_MS)
 #define ALARM_TIMER_TICKS_2_MS(ticks) (((uint64_t)ticks) * portTICK_PERIOD_MS)
 
-static bool              alarmFired  = false;
-static TimerHandle_t     alarmTimer  = NULL;
-static uint32_t          timerId     = 0;
-static SemaphoreHandle_t mutexHandle = NULL;
+static bool              alarmFired     = false;
+static TimerHandle_t     alarmTimer     = NULL;
+static uint32_t          timerId        = 0;
+static SemaphoreHandle_t mutexHandle    = NULL;
+static bool              is_initialized = false;
 
 static void alarmTimerCallback(TimerHandle_t pxTimer)
 {
@@ -57,10 +58,14 @@ static void alarmTimerCallback(TimerHandle_t pxTimer)
 
 void otPlatAlarmInit(void)
 {
-    mutexHandle = xSemaphoreCreateMutex();
-    assert(mutexHandle != NULL);
-    alarmTimer = xTimerCreate("otAlarm", 100, pdFALSE, &timerId, alarmTimerCallback);
-    assert(alarmTimer != NULL);
+    if (!is_initialized)
+    {
+        mutexHandle = xSemaphoreCreateMutex();
+        assert(mutexHandle != NULL);
+        alarmTimer = xTimerCreate("otAlarm", 100, pdFALSE, &timerId, alarmTimerCallback);
+        assert(alarmTimer != NULL);
+        is_initialized = true;
+    }
 }
 
 void otPlatAlarmDeinit(void)
@@ -68,6 +73,7 @@ void otPlatAlarmDeinit(void)
     otPlatAlarmMilliStop(NULL);
     xTimerDelete(alarmTimer, 0);
     vSemaphoreDelete(mutexHandle);
+    is_initialized = false;
 }
 
 void otPlatAlarmProcess(otInstance *aInstance)
@@ -104,6 +110,10 @@ uint64_t otPlatTimeGet(void)
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
+    if (!is_initialized)
+    {
+        otPlatAlarmInit();
+    }
     OT_UNUSED_VARIABLE(aInstance);
     uint32_t now;
     uint32_t nextExpiryTime = 0;
@@ -142,6 +152,10 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
+    if (!is_initialized)
+    {
+        otPlatAlarmInit();
+    }
     OT_UNUSED_VARIABLE(aInstance);
     xSemaphoreTake(mutexHandle, portMAX_DELAY);
     if (xTimerIsTimerActive(alarmTimer))
