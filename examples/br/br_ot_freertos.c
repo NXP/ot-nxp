@@ -188,7 +188,6 @@ static void     appConfigEnetIf();
 #ifdef OT_APP_BR_WIFI_EN
 static void wifiLinkCB(bool up);
 static void appConfigWifiIf();
-static void appConfigWifiHw();
 #endif
 
 static void appOtInit();
@@ -396,14 +395,6 @@ exit:
     return;
 }
 
-static void appConfigWifiHw()
-{
-#ifdef OT_NXP_PLATFORM_RT1060
-    /* Configure SDHC slot pins used for Wi-Fi */
-    BOARD_InitUSDHCPins();
-    BOARD_InitMurataModulePins();
-#endif
-}
 #endif
 
 static void appOtInit()
@@ -441,10 +432,6 @@ static void appBrInit()
 {
 #ifdef OT_APP_BR_ETH_EN
     appConfigEnetHw();
-#endif
-
-#ifdef OT_APP_BR_WIFI_EN
-    appConfigWifiHw();
 #endif
 
     otPlatLwipInit(sInstance, appOtLockOtTask);
