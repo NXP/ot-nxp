@@ -299,6 +299,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/mlan_sdio.c
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/sdio.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/wifi-sdio.c
         ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
         ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
     )
