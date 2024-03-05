@@ -418,32 +418,6 @@ exit:
 #endif
 
 #if PDM_SAVE_IDLE
-/* Overwrite the weak implementation from ram_storage.c */
-rsError ramStorageEnsureBlockConsistency(ramBufferDescriptor *pBuffer, uint16_t aValueLength)
-{
-    rsError        error     = RS_ERROR_NONE;
-    const uint16_t newLength = pBuffer->header.length + sizeof(struct settingsBlock) + aValueLength;
-    if (newLength / PDM_SEGMENT_SIZE != pBuffer->header.length / PDM_SEGMENT_SIZE)
-    {
-        // This means the current block will span across two PDM id regions, which can
-        // lead to corrupted data in some corner cases. Add a dummy value and shift the
-        // current block such that it falls in the next PDM id region.
-        uint16_t dummyLength =
-            PDM_SEGMENT_SIZE - ((pBuffer->header.length % PDM_SEGMENT_SIZE) + sizeof(struct settingsBlock));
-        if (dummyLength >= PDM_SEGMENT_SIZE)
-        {
-            dummyLength = 0;
-        }
-        struct settingsBlock dummyBlock = {.key = kRamBufferDummyKey, .length = dummyLength};
-
-        memcpy(&pBuffer->buffer[pBuffer->header.length], &dummyBlock, sizeof(dummyBlock));
-        memset(&pBuffer->buffer[pBuffer->header.length + sizeof(dummyBlock)], 0, dummyBlock.length);
-        pBuffer->header.length += sizeof(dummyBlock) + dummyBlock.length;
-    }
-
-exit:
-    return error;
-}
 
 uint8_t u8IncrementQueuePtr(uint8_t u8CurrentValue)
 {
