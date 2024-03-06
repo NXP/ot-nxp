@@ -143,6 +143,29 @@ int subtree_cb_count_values(const char *key, size_t len, settings_read_cb read_c
     return 0;
 }
 
+/*
+ * Zephyr settings subtree callback function used to wipe out all the keys
+ * available in the subtree
+ */
+int subtree_cb_wipe_all(const char *key, size_t len, settings_read_cb read_cb, void *cb_arg, void *param)
+{
+    int  err;
+    char key_name[KEY_NAME_SIZE];
+
+    /* Generate the full name of the key */
+    sprintf(key_name, "OT/%s", key);
+    err = settings_delete(key_name);
+    if (err != 0)
+    {
+        /* An error has occurred hence abort this operation */
+        otLogWarnPlat("WARNING: Failed wipe out settings subtree! (err=%d)", err);
+        return 1;
+    }
+
+    /* Continue browsing and removing the rest of the keys in this subtree */
+    return 0;
+}
+
 void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
 {
     const struct flash_area *fa;
@@ -262,7 +285,13 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-    /* TODO: Add support for the "factory reset" feature. */
+    int err;
+
+    err = settings_load_subtree_direct("OT", subtree_cb_wipe_all, NULL);
+    if (err != 0)
+    {
+        otLogWarnPlat("WARNING: Failed to wipe out OT settings keys (err=%d)!", err);
+    }
 }
 
 void otPlatSaveSettingsIdle(void)
