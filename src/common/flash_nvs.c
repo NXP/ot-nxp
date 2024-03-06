@@ -42,8 +42,11 @@
 #define KEY_BUFFER_OVERFLOW 0x0002
 #define KEY_READ_FAILED 0x0004
 
+/* NVS settings prefix for OT keys */
+#define OT_KEY_PREFIX "ot"
+
 /*
- * The format of the OpenThread key names is "OT/xxxx/y", where <x> are hex
+ * The format of the OpenThread key names is "ot/xxxx/y", where <x> are hex
  * digits which form the key id, and <y> is a decimal digit which designates
  * the key index. This is to say that, at this time, we can store a maximum
  * of 10 values for the same key.
@@ -153,7 +156,7 @@ int subtree_cb_wipe_all(const char *key, size_t len, settings_read_cb read_cb, v
     char key_name[KEY_NAME_SIZE];
 
     /* Generate the full name of the key */
-    sprintf(key_name, "OT/%s", key);
+    sprintf(key_name, OT_KEY_PREFIX "/%s", key);
     err = settings_delete(key_name);
     if (err != 0)
     {
@@ -206,7 +209,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
     struct key_data k   = {.index = aIndex, .flags = KEY_NOT_FOUND, .len = *aValueLength, .data = aValue};
 
     /* Generate the name of the key, as known by the NVS/Settings module */
-    sprintf(k.name, "OT/%x", aKey);
+    sprintf(k.name, OT_KEY_PREFIX "/%x", aKey);
     err = settings_load_subtree_direct(k.name, subtree_cb_read_value, &k);
     if ((err != 0) || ((k.flags & KEY_NOT_FOUND) != 0) || ((k.flags & KEY_READ_FAILED) != 0))
     {
@@ -229,7 +232,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     unsigned cnt = 0;
 
     /* Count the number of values already available for this key */
-    sprintf(key_name, "OT/%x", aKey);
+    sprintf(key_name, OT_KEY_PREFIX "/%x", aKey);
     err = settings_load_subtree_direct(key_name, subtree_cb_count_values, &cnt);
     if (err != 0)
     {
@@ -237,7 +240,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     }
 
     /* Generate the name of the key, as known by the NVS/Settings module */
-    sprintf(key_name, "OT/%x/%u", aKey, cnt);
+    sprintf(key_name, OT_KEY_PREFIX "/%x/%u", aKey, cnt);
     err = settings_save_one(key_name, aValue, aValueLength);
     if (err != 0)
     {
@@ -254,7 +257,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
     char    key_name[KEY_NAME_SIZE];
 
     /* Generate the name of the key, as known by the NVS/Settings module */
-    sprintf(key_name, "OT/%x/0", aKey);
+    sprintf(key_name, OT_KEY_PREFIX "/%x/0", aKey);
     err = settings_save_one(key_name, aValue, aValueLength);
     if (err != 0)
     {
@@ -272,7 +275,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     char    key_name[KEY_NAME_SIZE];
 
     /* Generate the name of the key, as known by the NVS/Settings module */
-    sprintf(key_name, "OT/%x/%d", aKey, aIndex);
+    sprintf(key_name, OT_KEY_PREFIX "/%x/%d", aKey, aIndex);
     err = settings_delete(key_name);
     if (err != 0)
     {
@@ -287,7 +290,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
 {
     int err;
 
-    err = settings_load_subtree_direct("OT", subtree_cb_wipe_all, NULL);
+    err = settings_load_subtree_direct(OT_KEY_PREFIX, subtree_cb_wipe_all, NULL);
     if (err != 0)
     {
         otLogWarnPlat("WARNING: Failed to wipe out OT settings keys (err=%d)!", err);
