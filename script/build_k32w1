@@ -240,18 +240,14 @@ create_directory_and_build()
 main()
 {
 
-    # check if environmental variable NXP_K32W1_SDK_ROOT is set
-    #     if not, then use "../../../" as a possible path
-    # then  check if NXP_K32W1_SDK_ROOT contains a valid SDK
-    #     if SW-Content-Register.txt is found
-    #         then NXP_K32W1_SDK_ROOT points to a released SDK
-    #     else if .gitignore is found
-    #         then NXP_K32W1_SDK_ROOT points to a cloned repository
+    # Check if NXP_K32W1_SDK_ROOT contains a valid SDK
+    #    if NXP_K32W1_SDK_ROOT is not defined
+    #         We are using a github SDK
 
     SDK_GH=OFF
 
     if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
-        NXP_K32W1_SDK_ROOT="../../../"
+        export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/k32w1_sdk/repo/core"
     fi
 
     if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
@@ -264,7 +260,7 @@ main()
     elif [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
         SDK_RELEASE=ON
     else
-        echo "Could not found a valid SDK package!"
+        echo "Could not find a valid SDK package!"
         return
     fi
 

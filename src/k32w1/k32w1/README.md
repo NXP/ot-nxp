@@ -23,19 +23,34 @@ $ ./script/bootstrap
 
 ## Tools
 
-- Download [the latest SDK from the link.](https://mcuxpresso.nxp.com/).
-  Creating an nxp.com account is required before being able to download the
-  SDK. Once the account is created, login and follow the steps for downloading
-  the SDK. The SDK Builder UI selection should be similar with the one from the
-  image below.
-  ![MCUXpresso SDK Download](../../../doc/img/k32w1/mcux-sdk-download.jpg)
+Download the K32W1 SDK using the west tool.
+
+```bash
+$ cd third_party/k32w1_sdk/repo
+$ west init -l manifest --mf west.yml
+$ west update
+```
+
+In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
+
+```bash
+$ cd third_party/k32w1_sdk/repo
+$ west forall -c "git reset --hard && git clean -xdf" -a
+```
+
+Some files permission need to be changed to executable :
+
+```bash
+$ chmod +x <path-to-ot-nxp>/third_party/k32w1_sdk/repo/core/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
+$ chmod +x <path-to-ot-nxp>/third_party/k32w1_sdk/repo/core/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
+
+```
 
 ## Building the examples
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ export NXP_K32W1_SDK_ROOT=/path/to/previously/downloaded/SDK
-$ ./script/build_K32W1
+$ ./script/build_k32w1
 ```
 
 After a successful build, the `elf` and `srec` files are found in `build_k32w1/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications.
