@@ -119,7 +119,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    cmake -GNinja -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\" ${cmakeArgs[@]} "${OT_SRCDIR}"
+    cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\" ${cmakeArgs[@]} "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
@@ -248,12 +248,19 @@ main()
     #     else if .gitignore is found
     #         then NXP_K32W1_SDK_ROOT points to a cloned repository
 
+    SDK_GH=OFF
+
     if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
         NXP_K32W1_SDK_ROOT="../../../"
     fi
 
     if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
         SDK_RELEASE=OFF
+
+        if [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
+            SDK_GH=ON
+        fi
+
     elif [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
         SDK_RELEASE=ON
     else

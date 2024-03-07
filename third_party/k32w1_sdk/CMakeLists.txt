@@ -26,6 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if (SDK_RELEASE)
+    set(DRV_DIR "devices/K32W1480/drivers" CACHE STRING "")
+    set(UTL_DIR "devices/K32W1480/utilities" CACHE STRING "")
+else()
+    if (SDK_GH)
+        set(DRV_DIR "drivers" CACHE STRING "")
+        set(UTL_DIR "utilities" CACHE STRING "")
+    else()
+        set(DRV_DIR "platform/drivers" CACHE STRING "")
+        set(UTL_DIR "platform/utilities" CACHE STRING "")
+    endif()
+endif()
+
 set(UART_BAUD_RATE "115200" CACHE STRING "Uart baud rate")
 set(UART_INSTANCE "1" CACHE STRING "Uart instance for RCP comms")
 
@@ -115,16 +128,6 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core/fsl_pm_core.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_nor_flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_mem_adapter.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/dbg_ram_capture.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/mathfp.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/rfmc_ctrl.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/nxp2p4_xcvr.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/nxp_xcvr_trim.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_coding_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_common_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_mode_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_msk_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_oqpsk_802p15p4_config.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/mbedtls/port/sssapi/entropy_poll_alt.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/mbedtls/port/sssapi/sssapi_mbedtls.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/secure-subsystem/src/sscp/fsl_sscp_mu.c
@@ -136,20 +139,14 @@ set(K32W1_SDK_SOURCES
     ${PROJECT_SOURCE_DIR}/third_party/k32w1_sdk/board_lp.c
 )
 
-if (NOT SDK_RELEASE)
-    list(APPEND K32W1_SDK_SOURCES
-        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/dbg_io.c
-    )
-endif()
-
 if (USE_NBU)
     if (SDK_RELEASE)
         list(APPEND K32W1_SDK_SOURCES
-            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_imu.c
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_imu.c
         )
     else()
         list(APPEND K32W1_SDK_SOURCES
-            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/imu/fsl_imu.c
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/imu/fsl_imu.c
         )
     endif()
 
@@ -177,6 +174,16 @@ if (USE_NBU)
 
 else()
      list(APPEND K32W1_SDK_SOURCES
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/dbg_ram_capture.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/mathfp.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/rfmc_ctrl.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/nxp2p4_xcvr.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/nxp_xcvr_trim.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_coding_config.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_common_config.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_mode_config.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_msk_config.c
+       $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45/nxp_xcvr_oqpsk_802p15p4_config.c
        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/gcc/startup_K32W1480.S
        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPacket.c
        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/ASP.c
@@ -192,49 +199,51 @@ endif()
 
 if (SDK_RELEASE)
     list(APPEND K32W1_SDK_SOURCES
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_k4_flash.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_k4_controller.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_clock.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_gpio.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lpuart.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lpspi.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_ltc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lptmr.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_elemu.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_spc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_cmc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_ccm32k.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_crc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_wuu.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_edma.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers/fsl_lpuart_edma.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/fsl_assert.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/debug_console/fsl_debug_console.c
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/str/fsl_str.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_k4_flash.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_k4_controller.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_clock.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_gpio.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpuart.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpspi.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lptmr.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_elemu.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_spc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_cmc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_ccm32k.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_crc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_wuu.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_edma.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpuart_edma.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/fsl_assert.c
 )
 else()
     list(APPEND K32W1_SDK_SOURCES
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/dbg_io.c
         $ENV{NXP_K32W1_SDK_ROOT}/devices/KW45B41Z83/drivers/fsl_clock.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/flash_k4/fsl_k4_flash.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/flash_k4/fsl_k4_controller.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/gpio/fsl_gpio.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart/fsl_lpuart.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ltc/fsl_ltc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lptmr/fsl_lptmr.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpspi/fsl_lpspi.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/assert/fsl_assert.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console/fsl_debug_console.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/str/fsl_str.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/elemu/fsl_elemu.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/spc/fsl_spc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/cmc/fsl_cmc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ccm32k/fsl_ccm32k.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/crc/fsl_crc.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/wuu/fsl_wuu.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/dma3/fsl_edma.c
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart/fsl_lpuart_edma.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/flash_k4/fsl_k4_flash.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/flash_k4/fsl_k4_controller.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio/fsl_gpio.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr/fsl_lptmr.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi/fsl_lpspi.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/elemu/fsl_elemu.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/spc/fsl_spc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/cmc/fsl_cmc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ccm32k/fsl_ccm32k.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/crc/fsl_crc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/wuu/fsl_wuu.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/dma3/fsl_edma.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart_edma.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/assert/fsl_assert.c
 )
 endif()
+
+list(APPEND K32W1_SDK_SOURCES
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console/fsl_debug_console.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/str/fsl_str.c
+)
 
 add_library(${NXP_DRIVER_LIB}
     ${K32W1_SDK_SOURCES}
@@ -313,10 +322,6 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/platform/k32w1
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/include/environment/bm
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/mcmgr/src
-    $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/elemu
-    $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/spc
-    $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpspi
-    $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ccm32k
     $ENV{NXP_K32W1_SDK_ROOT}/components/osa
     $ENV{NXP_K32W1_SDK_ROOT}/components/lists
     $ENV{NXP_K32W1_SDK_ROOT}/components/messaging
@@ -340,32 +345,37 @@ set(K32W1_SDK_INCLUDES
 
 if (SDK_RELEASE)
     list(APPEND K32W1_SDK_INCLUDES
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/debug_console
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/str
-        $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/format
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/format
 )
 else()
     list(APPEND K32W1_SDK_INCLUDES
         $ENV{NXP_K32W1_SDK_ROOT}/devices/KW45B41Z83/drivers
         $ENV{NXP_K32W1_SDK_ROOT}/devices/KW45B41Z83/drivers/romapi
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/common
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/flash_k4
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/gpio
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/ltc
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/port
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lptmr
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpspi
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/imu
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/wuu
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/dma3
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/misc_utilities
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console
-        $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/str
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/common
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/flash_k4
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/port
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/imu
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/wuu
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/dma3
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/elemu
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/spc
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ccm32k
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/misc_utilities
 )
 endif()
+
+list(APPEND K32W1_SDK_INCLUDES
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/str
+)
 
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC

@@ -311,14 +311,14 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/components/uart
 
             $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480
-            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/drivers
-            $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/utilities/debug_console
+
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/common
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio
+            $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart
             $ENV{NXP_K32W1_SDK_ROOT}/devices/KW45B41Z83/drivers
 
-            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/common
-            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/gpio
-            $ENV{NXP_K32W1_SDK_ROOT}/platform/drivers/lpuart
-            $ENV{NXP_K32W1_SDK_ROOT}/platform/utilities/debug_console
+            $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console
 
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1/K32W1480
