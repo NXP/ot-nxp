@@ -107,7 +107,6 @@ void main_task(uint32_t param)
 
         /* RNG software initialization and PRNG initial seeding (from hardware) */
         RNG_Init();
-        RNG_SetPseudoRandomNoSeed(NULL);
 
         otAppNcpInit(gpOpenThreadInstance);
 
