@@ -218,7 +218,7 @@ create_directory_and_build()
         build_ot_rcp_only_uart_dma "$@"
         build_ot_without_rcp_image "$@"
         build_ot_cli_ftd_zc "$@"
-        build_ot_rcp_uart_dma_zb_coprocessor "$@"
+        # build_ot_rcp_uart_dma_zb_coprocessor "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
         build_ot_rcp_only_uart_flow_control "$@"
