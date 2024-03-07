@@ -277,6 +277,7 @@ target_compile_definitions(nxp-k32w1-zigbee-plat
         JENNIC_CHIP_FAMILY_NAME=_JN518x
         JN518x
         FSL_OSA_BM_TIMER_CONFIG=FSL_OSA_BM_TIMER_SYSTICK
+        FWK_RNG_DEPRECATED_API
 )
 if (OT_ZB_SUPPORT)
     target_compile_definitions(nxp-k32w1-zigbee-plat
@@ -303,7 +304,7 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/components/osa
             $ENV{NXP_K32W1_SDK_ROOT}/components/led
             $ENV{NXP_K32W1_SDK_ROOT}/components/lists
-            $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/boards/K32W148-EVK
+            $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480
             $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core
             $ENV{NXP_K32W1_SDK_ROOT}/components/serial_manager
             $ENV{NXP_K32W1_SDK_ROOT}/components/timer_manager
@@ -328,7 +329,7 @@ target_include_directories(nxp-k32w1-zigbee-plat
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/OtaSupport/Interface
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDM/Include
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDUM/Include
-            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1
+            $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
             $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG
 )

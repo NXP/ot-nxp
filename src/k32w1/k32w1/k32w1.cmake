@@ -74,7 +74,7 @@ endif()
 
 if (USE_NBU)
     SET (NBU_BINARY_IMAGE_PATH
-         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/bin/k32w1/
+         $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/bin/k32w1
 
 )
 endif()
@@ -88,10 +88,11 @@ if (USE_NBU)
 target_link_libraries(openthread-k32w1
     PUBLIC
         ${OT_MBEDTLS}
+        -L${PROJECT_SOURCE_DIR}/src/k32w1/k32w1
+        -L${NBU_BINARY_IMAGE_PATH}
+        -L$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Common/devices/kw45_k32w1/gcc
         ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
-        -L${NBU_BINARY_IMAGE_PATH}
-        -Wl,-rpath=${NBU_BINARY_IMAGE_PATH}
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map
     PRIVATE
         ${NXP_DRIVER_LIB}

@@ -53,6 +53,8 @@ list(APPEND OT_PLATFORM_DEFINES
     "SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\""
     "SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\""
     "DBG_IO_ENABLE"
+    "FWK_RNG_DEPRECATED_API"
+    "gHwParamsProdDataPlacement_c=gHwParamsProdDataPlacementLegacyMode_c"
 )
 
 if (USE_NBU)
@@ -74,12 +76,12 @@ endif()
 set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/HWParameter/HWParameter.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_lowpower.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_lowpower_timer.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_ics.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_ot.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/fwk_platform_extflash.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform_lowpower.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform_lowpower_timer.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform_ics.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform_ot.c
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/fwk_platform_extflash.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/NVM/Source/NV_Flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/LowPower/PWR.c
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG/RNG.c
@@ -109,7 +111,7 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/components/timer/fsl_adapter_lptmr.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/time_stamp/fsl_adapter_lptmr_time_stamp.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/internal_flash/fsl_adapter_k4_flash.c
-    $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/boards/K32W148-EVK/fsl_pm_board.c
+    $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480/fsl_pm_device.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core/fsl_pm_core.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_nor_flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_mem_adapter.c
@@ -159,6 +161,7 @@ if (USE_NBU)
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/rpmsg_lite.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/environment/rpmsg_env_bm.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/k32w1/rpmsg_platform.c
+        $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/rpmsg_lite/porting/platform/k32w1/rpmsg_platform_ext.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/common/llist.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/rpmsg_lite/lib/virtio/virtqueue.c
         $ENV{NXP_K32W1_SDK_ROOT}/middleware/multicore/mcmgr/src/mcmgr_imu_internal.c
@@ -299,8 +302,8 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1/K32W1480
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/kw45_k32w1/configs
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu
+    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu/configs
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/utils/
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv
     $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz
@@ -331,7 +334,7 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/components/internal_flash
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor
-    $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/boards/K32W148-EVK
+    $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core
 )
 

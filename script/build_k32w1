@@ -252,7 +252,7 @@ main()
         NXP_K32W1_SDK_ROOT="../../../"
     fi
 
-    if [ -f $NXP_K32W1_SDK_ROOT/.gitmodules ]; then
+    if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
         SDK_RELEASE=OFF
     elif [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
         SDK_RELEASE=ON
