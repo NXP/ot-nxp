@@ -572,4 +572,5 @@ target_link_libraries(${NXP_DRIVER_LIB}
     # Dependencies to LFS_CONFIG
     connfwk-config
     connfwk-platform-${CONNFWK_PLATFORM}
+    ${OT_EXTERNAL_MBEDTLS}
 )
