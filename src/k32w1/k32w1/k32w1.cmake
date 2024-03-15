@@ -93,7 +93,7 @@ target_link_libraries(openthread-k32w1
         -L$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Common/devices/kw45_k32w1/gcc
         ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
-        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ${NXP_DRIVER_LIB}
         ot-config
@@ -104,7 +104,7 @@ target_link_libraries(openthread-k32w1
         ${OT_MBEDTLS}
         ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
-        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ${NXP_DRIVER_LIB}
         ot-config
