@@ -34,22 +34,13 @@
 
 manifest:
   projects:
-  - name: core-sdk
+  - name: sdk-release
     url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
     revision: develop/2.15.000_connectivity
     import:
-      file: west_2.15.000_RW612_RC1.2.yml
       name-allowlist:
         - mcux-sdk
         - CMSIS_5
-
-  - name: extra-sdk
-    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
-    revision: develop/2.15.000_connectivity
-    import:
-      file: west_2.15.000_RW612_RC1.2.yml
-      name-allowlist:
-        - FreeRTOS-Kernel
         - mbedtls
         - secure-subsystem
         - mcux-sdk-middleware-multicore
@@ -57,4 +48,4 @@ manifest:
         - mcux-sdk-middleware-ieee_802.15.4
         - mcux-sdk-middleware-zigbee
         - rpmsg-lite
-      path-prefix: core
+        - mcux-sdk-examples

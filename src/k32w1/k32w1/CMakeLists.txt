@@ -70,22 +70,22 @@ list(APPEND OT_PUBLIC_INCLUDES
         "$ENV{NXP_K32W1_SDK_ROOT}/components/timer"
         "$ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480"
         "$ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Common"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/connected_mcu"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/platform/include"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/DBG"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/FunctionLib"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/HWParameter"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/RNG"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Sensors"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/LowPower"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/boards/kw45_k32w1"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/XCVR/drv/nb2p4ghz/configs/gen45"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/source"
-        "$ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/ieee_802_15_4/phy/interface"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/DBG"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/FunctionLib"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/HWParameter"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Sensors"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen45"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/interface"
 )
 
 set(K32W1_SOURCES
@@ -108,7 +108,7 @@ if (NOT NO_THREAD_1_3_FLAGS)
 endif()
 
 set(K32W1_LIBS
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib/lib_crypto_m33.a
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/lib_crypto_m33.a
 )
 
 if (NOT OT_MAC_CSL_RECEIVER_ENABLE)

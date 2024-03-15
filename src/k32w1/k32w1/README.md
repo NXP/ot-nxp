@@ -26,7 +26,7 @@ $ ./script/bootstrap
 Download the K32W1 SDK using the west tool.
 
 ```bash
-$ cd third_party/k32w1_sdk/repo
+$ cd third_party/github_sdk/sdk_2.15.0
 $ west init -l manifest --mf west.yml
 $ west update
 ```
@@ -34,15 +34,15 @@ $ west update
 In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
 ```bash
-$ cd third_party/k32w1_sdk/repo
+$ cd third_party/github_sdk/sdk_2.15.0
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
 Some files permission need to be changed to executable :
 
 ```bash
-$ chmod +x <path-to-ot-nxp>/third_party/k32w1_sdk/repo/core/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
-$ chmod +x <path-to-ot-nxp>/third_party/k32w1_sdk/repo/core/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
+$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/sdk_2.15.0/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
+$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/sdk_2.15.0/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
 
 ```
 
@@ -70,7 +70,7 @@ $ arm-none-eabi-objcopy -O srec ot-cli-ftd ot-cli-ftd.srec
 
 Two images must be written to the board: one for the host (CM33) and one for the NBU (CM3).
 
-The image needed on the host side is the one generated in `build_k32w1/bin` while the one needed on the NBU side can be found in the downloaded NXP-SDK package at path - `middleware\wireless\ieee-802.15.4\bin\k32w1\k32w1_nbu_ble_15_4_dyn_a1.sb3`.
+The image needed on the host side is the one generated in `build_k32w1/bin` while the one needed on the NBU side can be found in the NXP-SDK at path - `middleware/wireless/ieee-802.15.4/bin/k32w1/k32w1_nbu_ble_15_4_dyn.sb3`.
 
 ### Flashing the NBU image
 
