@@ -29,7 +29,11 @@
 if (SDK_RELEASE)
     set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/coordinator/bm)
 else()
-    set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/zigbee_coordinator/src)
+    if (SDK_GH)
+        set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/coordinator/bm)
+    else()
+        set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/zigbee_coordinator/src)
+    endif()
 endif()
 
 set(ZPSCFG "${EXAMPLE_BASE_DIR}/coordinator.zpscfg")
