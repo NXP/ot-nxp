@@ -27,9 +27,9 @@
 #
 
 if (SDK_RELEASE)
-    set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/boards/k32w148evk/wireless_examples/zigbee/coprocessor/bm)
+    set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/coprocessor/bm)
 else()
-    set(EXAMPLE_BASE_DIR $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zigbee_coprocessor/src)
+    set(EXAMPLE_BASE_DIR ${ZB_EXMPL_DIR}/zigbee_coprocessor/src)
 endif()
 
 set(ZPSCFG "${EXAMPLE_BASE_DIR}/coordinator.zpscfg")
@@ -49,16 +49,16 @@ add_executable(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM}
     ${EXAMPLE_BASE_DIR}/app_serial_commands.c
     ${EXAMPLE_BASE_DIR}/app_zb_stack_utils.c
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/serial_link_wkr.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/serial_link_cmds_wkr.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/serial_link_wkr.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/serial_link_cmds_wkr.c
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_zigbee_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_uart.c
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_crypto.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/app_zigbee_config.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/app_uart.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/app_crypto.c
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZigbeeCommon/Source/port_JN518x.c
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common/app_leds.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common/app_leds.c
 )
 
 add_library(nxp-k32w1-zigbee-gen
@@ -80,19 +80,19 @@ target_include_directories(nxp-k32w1-zigbee-gen
 
     $ENV{NXP_K32W1_SDK_ROOT}/CMSIS/Core/Include
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/SecLib
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/Common
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/framework/PDUM/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/PDUM/Include
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/Include
 
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/Common
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform/K32W1/framework/SecLib
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZigbeeCommon/Include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSAPL/Include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSNWK/Include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSMAC/Include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/ZPSTSV/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform/K32W1/framework/Common
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform/K32W1/framework/SecLib
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZigbeeCommon/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZPSAPL/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZPSNWK/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZPSMAC/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZPSTSV/Include
 )
 
 target_compile_definitions(nxp-k32w1-zigbee-gen
@@ -124,9 +124,9 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/zps_gen.c" "${CMAKE_CURRE
 
 target_include_directories(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM} PRIVATE
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/examples/zb_common
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/ieee-802.15.4/Include
-    $ENV{NXP_K32W1_SDK_ROOT}/middleware/wireless/zigbee/platform
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples/zb_common
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/Include
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform
 #    ${PROJECT_SOURCE_DIR}/examples/hybrid/zb_common
 )
 
