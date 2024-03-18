@@ -97,8 +97,14 @@ To support SPI on the EVKB-MIMXRT1170 board, it is required to remove 0Ω resist
   |        J1         |   1-2    |
   |        J12        |   1-2    |
   |        J13        |   1-2    |
-  |        J14        |   2-3    |
+  |        J14        |   1-2    |
   | JP1.1 (back side) |    ON    |
+
+- Jumpers positions on MIMXRT1170-EVKB:
+
+  | Jumper | Position |
+  | :----: | :------: |
+  |  J56   |   2-3    |
 
 - I2C connection to program IO-Expander on the IW612 module
 
@@ -154,7 +160,7 @@ $ ./script/build_rt1170
 3. Border Router application with Ethernet:
 
 - app_name: `iwx12_spi_br_ethernet`
-- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. It also supports Border Rouder role over Ethernet.
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. It also supports Border Rouder role over Ethernet ( use J4 ETH connector ).
 - Status: Fully supported
 
 How to build them ?
@@ -167,7 +173,7 @@ $ ./script/build_rt1170 <app_name> #example: ./script/build_rt1170 iwx12_spi
 After a successful build, the generated binary can be found in
 `build_rt1170/<app_name>/bin`.
 
-## Example: Flashing the IMXRT Openthread rt1060 image using MCUXpresso IDE
+## Example: Flashing the IMXRT Openthread rt1170 image using MCUXpresso IDE
 
 In order to flash the application for debugging we recommend using [MCUXpresso IDE (version >= 11.3.1)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
 
