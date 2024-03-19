@@ -46,7 +46,10 @@ $ pip3 install pycryptodome
   account is created, login and follow the steps for downloading
   SDK_2.6.3_JN5189DK6. The SDK Builder UI selection should be similar with the
   one from the image below.
-  ![MCUXpresso SDK Download](../../../doc/img/k32w/sdk_builder_jn5189.JPG)
+
+![MCUXpresso SDK Download](../../../doc/img/k32w/sdk_builder_jn5189.JPG)
+
+> **_Note:_** JN5189 is no longer supported on latest ot-nxp releases. 
 
 ## Building the examples
 
@@ -201,7 +204,17 @@ Right click on the Project -> Utilities -> Open Directory Browser here -> edit *
 3. Open a terminal connection on the first board and start a new Thread network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset init new
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done
@@ -220,7 +233,15 @@ Leader
    network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done
