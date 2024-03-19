@@ -81,15 +81,17 @@ also debugging capabilities are needed then MCUXpresso IDE should be used.
 ### Using DK6Programmer
 
 Connect to the DK6 board by plugging a mini-USB cable to the connector marked
-with _FTDI USB_. Also, make sure that jumpers jp4/JP7 are situated in the middle
+with _FTDI USB_. Also, make sure that jumpers JP4/JP7 are situated in the middle
 position (_JN UART0 - FTDI_).
 
 ![DK6_FTDI](../../../doc/img/k32w/dk6_ftdi.jpg)
 
-DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] at path
-`tools/JN-SW-4407-DK6-Flash-Programmer`. This is a Windows application that can
-be installed using the .exe file. Once the application is installed, the COM
-port for K32W061 must be identified:
+There are two available versions of the DK6Programmer tool.
+
+The legacy version consists of a Windows executable found inside the
+[SDK][sdk_mcux] at path `tools/JN-SW-4407-DK6-Flash-Programmer`. This is a
+Windows application that can be installed using the .exe file. Once the
+application is installed, the COM port for K32W061 must be identified:
 
 ```
 C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe  --list
@@ -103,7 +105,90 @@ Once the COM port is identified, the required binary can be flashed:
 C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe -s COM29 -p ot-rcp.bin
 ```
 
+DK6 Flash Programmer tool has also been integrated part of
+[NXP Secure Provisioning SDK (SPSDK)][spsdk_git]. This tool is supported by
+environments like Windows, Linux or Mac.
+
+SPSDK can be installed and run from a Python environment using [these instructions][spsdk_instructions].
+This enables the user to have transparent access to the dk6 programming tool through SPSDK.
+
+```
+# after specific environment installation steps
+$ spsdk --help
+...
+  ├── dk6prog                             Tool for reading and programming flash memory of DK6 target devices.
+  │   ├── erase                           Erase the memory.
+  │   ├── info                            Prints the information about the connected device.
+  │   ├── isp                             Issues ISP sequence as defined in Driver interface.
+  │   ├── listdev                         Prints the information about the connected devices.
+  │   ├── read                            Reads the memory and writes it to the file or stdout.
+  │   └── write                           Write the memory.
+...
+```
+
+Dependencies for the dk6prog module can be installed using the following command, more details [here][dk6_spsdk]:
+
+```
+$ pip install spsdk[dk6]
+```
+The SPSDK installation adds dk6prog as executable to system path, so user can use directly `dk6prog` from terminal.
+The following commands are to be used to write the ot-rcp binary to the board.
+
+```
+$ dk6prog listdev
+This is an experimental utility. Use with caution!
+
+List of available devices:
+DEVICE ID: DN038ZH3, VID: 0x403, PID: 0x6015, Serial number: DN038ZH3, Description: DK6 Carrier Board, Address: 9, Backend: Backend.PYFTDI
+$ dk6prog -d DN038ZH3 erase 0 0x9de00
+
+This is an experimental utility. Use with caution!
+
+Erasing memory  [####################################]  100%
+$ dk6prog -d DN038ZH3 write 0 ~/path/to/bin/ot-rcp.bin
+
+This is an experimental utility. Use with caution!
+
+Writing memory  [####################################]  100%
+Writen 175856 bytes to memory ID 0 at address 0x0
+```
+
+> **_Note:_** Running `dk6prog` from Windows OS command line requires an integer value for DEVICE ID.
+
+```
+C:\nxp\spsdk>dk6prog listdev
+
+This is an experimental utility. Use with caution!
+
+List of available devices:
+DEVICE ID: 0, VID: 0x0, PID: 0x0, Serial number: b'DN038ZH3', Description: b'DK6 Carrier Board', Address: 67330069, Backend: Backend.FTD2xx
+
+C:\nxp\spsdk>dk6prog -d 0 info
+
+This is an experimental utility. Use with caution!
+
+Chip ID: 0x88888888
+ROM Version: 0x140000cc
+MAC Address: A8:2B:1F:03:00:8D:15:00
+
+Detected DEVICE: UNKNOWN
+
+  Memory   Memory ID   Base Address   Length    Sector Size   Memory Type   Access
+----------------------------------------------------------------------------------------------
+  FLASH    0           0x0            0x9de00   0x200         FLASH         All is available
+  PSECT    1           0x0            0x1e0     0x10          FLASH         All is available
+  pFLASH   2           0x0            0x1e0     0x10          FLASH         All is available
+  Config   3           0x9fc00        0x200     0x200         FLASH         All is available
+  EFUSE    4           0x0            0x80      0x2           EFUSE (OTP)   Write Enabled
+  ROM      5           0x3000000      0x20000   0x1           ROM           Write Enabled
+  RAM0     6           0x4000000      0x16000   0x1           RAM           Write Enabled
+  RAM1     7           0x4020000      0x10000   0x1           RAM           Write Enabled
+```
+
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
+[spsdk_git]: https://github.com/nxp-mcuxpresso/spsdk
+[spsdk_instructions]: https://spsdk.readthedocs.io/en/latest/usage/installation.html
+[dk6_spsdk]: https://spsdk.readthedocs.io/en/latest/usage/installation.html#dk6-tools
 
 ### Using MCUXpresso IDE
 
@@ -213,7 +298,17 @@ Right click on the Project -> Utilities -> Open Directory Browser here -> edit *
 3. Open a terminal connection on the first board and start a new Thread network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset init new
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done
@@ -232,7 +327,15 @@ Leader
    network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done
