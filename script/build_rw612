@@ -135,7 +135,7 @@ main()
     # check if environmental variable NXP_RW612_SDK_ROOT is set
     #     if not, then use "../../../" as a possible path
     if [ -z "$NXP_RW612_SDK_ROOT" ]; then
-        export NXP_RW612_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/repo"
+        export NXP_RW612_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/sdk_2.15.0/"
     fi
 
     echo "NXP_RW612_SDK_ROOT set to " $NXP_RW612_SDK_ROOT
