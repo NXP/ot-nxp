@@ -20,6 +20,3 @@ manifest:
         - lwip
         - wifi_nxp
         - mcux-sdk-middleware-connectivity-framework
-      path-prefix: repo
-
-

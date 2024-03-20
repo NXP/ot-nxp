@@ -40,8 +40,13 @@ manifest:
     import:
       name-allowlist:
         - mcux-sdk
+        - FreeRTOS-Kernel
+        - mcux-sdk-middleware-sdmmc
         - CMSIS_5
         - mbedtls
+        - littlefs
+        - lwip
+        - wifi_nxp
         - secure-subsystem
         - mcux-sdk-middleware-multicore
         - mcux-sdk-middleware-connectivity-framework
