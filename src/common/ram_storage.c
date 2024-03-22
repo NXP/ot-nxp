@@ -153,7 +153,6 @@ rsError ramStorageSet(ramBufferDescriptor *pBuffer, uint16_t aKey, const uint8_t
 {
     uint16_t             i                  = 0;
     uint16_t             currentBlockLength = 0;
-    uint16_t             nextBlockStart     = 0;
     struct settingsBlock currentBlock       = {0};
     bool_t               alreadyExists      = FALSE;
     rsError              error              = RS_ERROR_NONE;
