@@ -65,7 +65,6 @@ otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, 
 {
     memcpy(aPublicKey->m8, aKeyPair->mDerBytes, 2 * SEC_ECP256_COORDINATE_LEN);
 
-exit:
     return kErrorNone;
 }
 
