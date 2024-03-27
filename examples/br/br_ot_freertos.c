@@ -69,6 +69,10 @@
 #include <openthread/udp.h>
 #include "common/code_utils.hpp"
 
+#if defined(OT_APP_BR_ETH_EN) && defined(OT_NXP_PLATFORM_RW612)
+#include <openthread/platform/entropy.h>
+#endif
+
 #ifdef OT_APP_BR_ETH_EN
 #include "ethernetif.h"
 #include "fsl_enet.h"
@@ -142,16 +146,13 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #define EXAMPLE_NETIF_INIT_FN ethernetif0_init
 #define EXAMPLE_PHY_ADDRESS BOARD_ENET0_PHY_ADDRESS
 #define EXAMPLE_ENET ENET
+#define MAC_HW_ADDR_LEN 6
+#define NXP_OUI_LEN 3
 #endif
 
 #if defined(WIFI_SSID) && (!defined(WIFI_PASSWORD))
 #define WIFI_PASSWORD ""
 #endif
-
-#define configMAC_ADDR                     \
-    {                                      \
-        0xd6, 0xd1, 0x71, 0xc8, 0x6b, 0x42 \
-    }
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -183,6 +184,9 @@ static status_t MDIO_Write(uint8_t phyAddr, uint8_t regAddr, uint16_t data);
 static status_t MDIO_Read(uint8_t phyAddr, uint8_t regAddr, uint16_t *pData);
 static void     appConfigEnetHw();
 static void     appConfigEnetIf();
+#if defined(OT_NXP_PLATFORM_RW612)
+static void appGenerateMacAddr(uint8_t (*macAddr)[MAC_HW_ADDR_LEN]);
+#endif
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
@@ -300,17 +304,16 @@ static void appConfigEnetIf()
                                        .phyAddr     = EXAMPLE_PHY_ADDRESS,
                                        .phyOps      = EXAMPLE_PHY_OPS,
                                        .phyResource = &g_phy_resource,
-                                       .srcClockHz  = EXAMPLE_CLOCK_FREQ,
-#ifdef configMAC_ADDR
-                                       .macAddress = configMAC_ADDR
-#endif
-    };
+                                       .srcClockHz  = EXAMPLE_CLOCK_FREQ};
 
     sExtNetifPtr = &sExtNetif;
 
-#ifndef configMAC_ADDR
+#ifndef OT_NXP_PLATFORM_RW612
     /* Set MAC address. */
     SILICONID_ConvertToMacAddr(&enet_config.macAddress);
+#else
+    /* Set random generated MAC address. */
+    appGenerateMacAddr(&enet_config.macAddress);
 #endif
 
     netifapi_netif_add(sExtNetifPtr, NULL, NULL, NULL, &enet_config, EXAMPLE_NETIF_INIT_FN, tcpip_input);
@@ -323,6 +326,22 @@ static void appConfigEnetIf()
 
     netifapi_dhcp_start(sExtNetifPtr);
 }
+#if defined(OT_NXP_PLATFORM_RW612)
+static void appGenerateMacAddr(uint8_t (*macAddr)[MAC_HW_ADDR_LEN])
+{
+    uint8_t randGenId[MAC_HW_ADDR_LEN - NXP_OUI_LEN];
+    (void)otPlatEntropyGet(randGenId, sizeof(randGenId));
+    /* Set NXP OUI. */
+    macAddr[0][0] = 0x54;
+    macAddr[0][1] = 0x27;
+    macAddr[0][2] = 0x8d;
+
+    /* Set with random generated id. */
+    macAddr[0][3] = randGenId[0];
+    macAddr[0][4] = randGenId[1];
+    macAddr[0][5] = randGenId[2];
+}
+#endif // #if defined(OT_NXP_PLATFORM_RW612)
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
