@@ -47,6 +47,22 @@ readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL=(
     "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
+readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL_BR_ETHERNET=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_PLATFORM=rt1060"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DOT_NXP_BOARD=rt1060"
+    "-DSPINEL_INTERFACE_TYPE=UART"
+    "-DOT_NXP_TRANSCEIVER=k32w0"
+    "-DOT_APP_BR_FREERTOS=ON"
+    # FREERTOS CLI is disabled in this target build as it will be available in the BR app
+    "-DOT_APP_CLI_FREERTOS=OFF"
+    "-DOT_NXP_LWIP_ETH=ON"
+    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
+    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
+)
+
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
@@ -140,6 +156,10 @@ create_directory_and_build()
         build k32w0_uart_flow_control "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${@:2}")
+        options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL_BR_ETHERNET[@]}")
+        build k32w0_uart_flow_control_br_ethernet "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${@:2}")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
@@ -152,6 +172,9 @@ create_directory_and_build()
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
         build k32w0_uart_flow_control "${options[@]}"
+    elif [ "$1" == 'k32w0_uart_flow_control_br_ethernet' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL_BR_ETHERNET[@]}")
+        build k32w0_uart_flow_control_br_ethernet "${options[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
@@ -165,7 +188,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
         build rw612_ncp_host "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet,  iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host"
         # 128 for Invalid arguments
         exit 128
     fi
