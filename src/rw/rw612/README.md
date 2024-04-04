@@ -57,6 +57,8 @@ $ west update
 
 ## Building the examples
 
+### To build for RW612_RD board:
+
 - OT CLI application :
 
 ```bash
@@ -87,6 +89,32 @@ To build for a specific device revision such as A0:
 $ cd <path-to-ot-nxp>
 $ git submodule update --init
 $ ./script/build_rw612 ot_cli -DOT_NXP_DEVICE_REVISION=A0
+```
+
+### To build for RW612_FRDM board:
+
+- OT CLI application :
+
+```bash
+$ cd <path-to-ot-nxp>
+$ git submodule update --init
+$ ./script/build_rw612 ot_cli -DOT_NXP_BOARD_NAME=rw612_frdm
+```
+
+- Border Router application with Wi-Fi:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ git submodule update --init
+$ ./script/build_rw612 ot_br_wifi -DOT_NXP_BOARD_NAME=rw612_frdm
+```
+
+- Border Router application with Ethernet:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ git submodule update --init
+$ ./script/build_rw612 ot_br_eth -DOT_NXP_BOARD_NAME=rw612_frdm
 ```
 
 After a successful ot-cli build, the `elf` and `binary` files are found in `build_rw612/rw612_ot_cli/bin`:

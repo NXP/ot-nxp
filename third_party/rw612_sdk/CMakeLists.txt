@@ -349,6 +349,16 @@ if(OT_NXP_LWIP_ETH)
     )
 endif()
 
+if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
+    list(APPEND RW612_SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/flash/mflash/frdmrw612/mflash_drv.c
+    )
+
+    list(REMOVE_ITEM RW612_SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga/mflash_drv.c
+    )
+endif()
+
 add_library(${NXP_DRIVER_LIB}
     ${RW612_SDK_SOURCES}
 )
@@ -486,6 +496,16 @@ if(OT_NXP_BUILD_APP_AS_LIB)
     )
 endif()
 
+if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
+    list(APPEND RW612_SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/flash/mflash/frdmrw612
+    )
+
+    list(REMOVE_ITEM RW612_SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga
+    )
+endif()
+
 # freertos
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
@@ -545,6 +565,14 @@ if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DCONFIG_WPA_SUPP_MBEDTLS # Enable wpa_supplicant mbedtls extend config
+    )
+endif()
+
+if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+            -DgBoardUseFro32k_d=1
+            -DFSL_OSA_ALLOCATED_HEAP=0
     )
 endif()
 

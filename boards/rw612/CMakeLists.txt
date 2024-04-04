@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(${NXP_BOARD_LIB}
+set(RW612_BOARD_SOURCES
     app_services_init.c
     board.c
     board_lp.c
@@ -34,7 +34,24 @@ add_library(${NXP_BOARD_LIB}
     clock_config.c
     hardware_init.c
     peripherals.c
-    flash_config.c
+)
+
+if(OT_NXP_BOARD_NAME MATCHES "rw612_rd")
+    message( VERBOSE "rw612_rd board is selected")
+    list(APPEND RW612_BOARD_SOURCES
+        rw612_rd/flash_config.c
+    )
+elseif (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
+    message( VERBOSE "rw612_frdm board is selected")
+    list(APPEND RW612_BOARD_SOURCES
+        rw612_frdm/flash_config.c
+    )
+else()
+    message (FATAL_ERROR "No board is specified!")
+endif()
+
+add_library(${NXP_BOARD_LIB}
+    ${RW612_BOARD_SOURCES}
 )
 
 target_include_directories(${NXP_BOARD_LIB}

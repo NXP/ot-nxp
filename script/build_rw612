@@ -32,7 +32,7 @@ set -exo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
-readonly OT_BR_RTOS_CONFIG_PATH='boards/rdrw612bga/freertos/br'
+readonly OT_BR_RTOS_CONFIG_PATH='boards/rw612/freertos/br'
 readonly OT_OPTIONS=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
