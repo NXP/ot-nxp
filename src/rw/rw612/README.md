@@ -83,6 +83,14 @@ $ git submodule update --init
 $ ./script/build_rw612 ot_br_eth
 ```
 
+To build ot-cli-ncp application with UART interface, if use USB or SPI interface, the _OT_NXP_NCP_UART_INTERFACE_ should be replaced by _OT_NXP_NCP_USB_INTERFACE_ or _OT_NXP_NCP_SPI_INTERFACE_:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ git submodule update --init
+$ ./script/build_rw612 ot_cli -DOT_APP_NCP_ADAPTER=ON -DOT_NXP_NCP_UART_INTERFACE=ON
+```
+
 To build for a specific device revision such as A0:
 
 ```bash

@@ -41,6 +41,8 @@ void BOARD_InitQuadSpiFlashPins(void);
 
 void BOARD_InitENETPins(void);
 
+void BOARD_InitSPISPins(void);
+
 #if defined(__cplusplus)
 }
 #endif

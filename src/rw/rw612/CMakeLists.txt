@@ -55,10 +55,44 @@ if(OT_APP_BR_FREERTOS)
     )
 endif()
 
+if(OT_APP_NCP_ADAPTER)
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/ncp/ncp_glue_ot.c
+        ${PROJECT_SOURCE_DIR}/src/ncp/ncp_ot.c
+    )
+
+    set(OT_NCP_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/ncp
+        ${PROJECT_SOURCE_DIR}/src/ncp/ot_opcode
+        ${PROJECT_SOURCE_DIR}/examples/common/includes
+    )
+endif()
+
 if(OT_RCP_RESTORATION_MAX_COUNT GREATER 0)
     target_compile_definitions(ot-config INTERFACE
         -DOPENTHREAD_RADIO_RESET_ENABLE=1
     )
+endif()
+
+if(OT_APP_NCP_ADAPTER MATCHES "ON")
+    if(OT_NXP_NCP_UART_INTERFACE MATCHES "ON")
+        target_compile_definitions(ot-config INTERFACE
+            -DOT_APP_NCP_ADAPTER=1
+            -DCONFIG_NCP_UART=1
+        )
+    elseif(OT_NXP_NCP_USB_INTERFACE MATCHES "ON")
+        target_compile_definitions(ot-config INTERFACE
+            -DOT_APP_NCP_ADAPTER=1
+            -DCONFIG_NCP_USB=1
+        )
+    elseif(OT_NXP_NCP_SPI_INTERFACE MATCHES "ON")
+        target_compile_definitions(ot-config INTERFACE
+            -DOT_APP_NCP_ADAPTER=1
+            -DCONFIG_NCP_SPI=1
+        )
+    else()
+        message(FATAL_ERROR "Please select one NCP interface.")
+    endif()
 endif()
 
 add_library(${OT_PLATFORM_LIB}
@@ -167,6 +201,7 @@ target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_LWIP_INCLUDES}
         ${OT_BR_INCLUDES}
+        ${OT_NCP_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/common
         ${PROJECT_SOURCE_DIR}/src/common/spinel
     PRIVATE
