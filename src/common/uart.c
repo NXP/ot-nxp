@@ -46,6 +46,10 @@
 #include <utils/uart.h>
 #include <openthread/tasklet.h>
 
+#ifdef OT_NCP_RADIO
+#include "ncp_ot.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                               Private macros                               */
 /* -------------------------------------------------------------------------- */
@@ -182,6 +186,10 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     {
         error = OT_ERROR_NOT_CAPABLE;
     }
+
+#ifdef OT_NCP_RADIO
+    Copy_to_NCP_buff(aBuf, aBufLength);
+#endif
 
     return error;
 }

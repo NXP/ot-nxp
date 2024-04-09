@@ -26,19 +26,30 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(OT_CLI_PLATFORM_SOURCES
+    libc_hook.cpp
+    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+)
+
+if(OT_NCP_RADIO)
+    list(APPEND OT_CLI_PLATFORM_SOURCES
+        ncp_ot_freertos.c
+    )
+else()
+    list(APPEND OT_CLI_PLATFORM_SOURCES
+        app_ot_freertos.c
+    )
+endif()
+
 if(OT_NXP_BUILD_APP_AS_LIB)
     add_library(ot-cli-${OT_NXP_PLATFORM}
-        app_ot_freertos.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+        ${OT_CLI_PLATFORM_SOURCES}
     )
 else()
     add_executable(ot-cli-${OT_NXP_PLATFORM}
         main.c
-        app_ot_freertos.c
         app_freertos_hooks.c
-        libc_hook.cpp
-        ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+        ${OT_CLI_PLATFORM_SOURCES}
     )
 endif()
 
