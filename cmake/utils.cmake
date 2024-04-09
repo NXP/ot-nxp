@@ -113,19 +113,9 @@ function(otnxp_git_version git_version)
         ERROR_QUIET
     )
 
-    if(OT_APP_BR_FREERTOS)
-        set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread-br)
-    else()
-        if (OT_NXP_PLATFORM STREQUAL "k32w1")
-            set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread-k32w1)
-        else()
-            set(WORKING_DIRECTORY_PATH ${PROJECT_SOURCE_DIR}/openthread)
-        endif()
-    endif()
-
     execute_process(
         COMMAND git describe --dirty --always --exclude "*"
-        WORKING_DIRECTORY ${WORKING_DIRECTORY_PATH}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/openthread
         OUTPUT_VARIABLE GIT_REV_OT OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(${git_version} "${GIT_REV_OT} OT-NXP/${GIT_REV_OTNXP}" PARENT_SCOPE)
