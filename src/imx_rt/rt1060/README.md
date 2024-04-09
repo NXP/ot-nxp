@@ -157,17 +157,23 @@ $ ./script/build_rt1060
 
 Supported application(s):
 
-1.
+1. OT CLI application
 
 - app_name: `k32w0_uart_flow_control`
 - Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the K32W0 transceiver will exchange message over a UART interface with flow control.
 - Status: fully supported
 
+2. Border Router application with Ethernet:
+
+- app_name: `k32w0_uart_flow_control_br_ethernet`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. It also supports Border Rouder role over Ethernet.
+- Status: Fully supported
+
 How to build them ?
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060 k32w0_uart_flow_control
+$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060
 ```
 
 Note : The option `-DOT_NXP_TRANSCEIVER_BIN_PATH=/home/k32w0_rcp.h` could be added to indicate the path of the k32w0 transceiver to use. If not set, the binary file located in "<ot_nxp>/build_k32w061/rcp_only_uart_flow_control/bin/ot-rcp.elf.bin.h" will be used.
@@ -212,7 +218,7 @@ How to build them ?
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060 iwx12_spi
+$ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060
 ```
 
 After a successful build, the generated binary can be found in
