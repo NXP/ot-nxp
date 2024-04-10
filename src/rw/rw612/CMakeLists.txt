@@ -55,15 +55,15 @@ if(OT_APP_BR_FREERTOS)
     )
 endif()
 
-if(OT_APP_NCP_ADAPTER)
+if(OT_NCP_RADIO)
     list(APPEND PLATFORM_FILES
-        ${PROJECT_SOURCE_DIR}/src/ncp/ncp_glue_ot.c
-        ${PROJECT_SOURCE_DIR}/src/ncp/ncp_ot.c
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_glue_ot.c
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_ot.c
     )
 
     set(OT_NCP_INCLUDES
-        ${PROJECT_SOURCE_DIR}/src/ncp
-        ${PROJECT_SOURCE_DIR}/src/ncp/ot_opcode
+        ${PROJECT_SOURCE_DIR}/src/common/ncp
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ot_opcode
         ${PROJECT_SOURCE_DIR}/examples/common/includes
     )
 endif()
@@ -74,21 +74,26 @@ if(OT_RCP_RESTORATION_MAX_COUNT GREATER 0)
     )
 endif()
 
-if(OT_APP_NCP_ADAPTER MATCHES "ON")
+if(OT_NCP_RADIO MATCHES "ON")
     if(OT_NXP_NCP_UART_INTERFACE MATCHES "ON")
         target_compile_definitions(ot-config INTERFACE
-            -DOT_APP_NCP_ADAPTER=1
+            -DOT_NCP_RADIO=1
             -DCONFIG_NCP_UART=1
         )
     elseif(OT_NXP_NCP_USB_INTERFACE MATCHES "ON")
         target_compile_definitions(ot-config INTERFACE
-            -DOT_APP_NCP_ADAPTER=1
+            -DOT_NCP_RADIO=1
             -DCONFIG_NCP_USB=1
         )
     elseif(OT_NXP_NCP_SPI_INTERFACE MATCHES "ON")
         target_compile_definitions(ot-config INTERFACE
-            -DOT_APP_NCP_ADAPTER=1
+            -DOT_NCP_RADIO=1
             -DCONFIG_NCP_SPI=1
+        )
+    elseif(OT_NXP_NCP_SDIO_INTERFACE MATCHES "ON")
+        target_compile_definitions(ot-config INTERFACE
+            -DOT_NCP_RADIO=1
+            -DCONFIG_NCP_SDIO=1
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")

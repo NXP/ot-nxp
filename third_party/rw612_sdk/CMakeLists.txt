@@ -91,6 +91,7 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
     set(DRIVER_MRTIMER_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mrt)
     set(NCP_COMMON_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples/common)
+    set(DRIVER_SDIOSLV_PATH ${NXP_SDK_ROOT}/platform/drivers/sdu)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -364,7 +365,7 @@ if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
     )
 endif()
 
-if(OT_APP_NCP_ADAPTER)
+if(OT_NCP_RADIO)
     list(APPEND RW612_SDK_SOURCES
         ${DRIVER_CRC_FILES_PATH}/fsl_crc.c
         ${NCP_COMMON_FILES_PATH}/crc/crc.c
@@ -398,6 +399,13 @@ if(OT_APP_NCP_ADAPTER)
             ${DIRVER_SPI_FILES_PATH}/fsl_spi.c
             ${DIRVER_SPI_FILES_PATH}/fsl_spi_dma.c
             ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave/ncp_intf_spi_slave.c
+        )
+    elseif(OT_NXP_NCP_SDIO_INTERFACE)
+        list(APPEND RW612_SDK_SOURCES
+            ${DRIVER_SDIOSLV_PATH}/fsl_sdioslv_sdu.c
+            ${DRIVER_SDIOSLV_PATH}/cis_table.c
+            ${NXP_SDK_ROOT}/components/sdu/fsl_adapter_sdu.c
+            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device/ncp_intf_sdio.c
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
@@ -466,7 +474,7 @@ if(OT_NXP_LWIP_ETH)
     )
 endif()
 
-if(OT_APP_NCP_ADAPTER)
+if(OT_NCP_RADIO)
     list(APPEND RW612_SDK_INCLUDES
         ${DRIVER_CRC_FILES_PATH}
         ${NCP_COMMON_FILES_PATH}
@@ -496,6 +504,12 @@ if(OT_APP_NCP_ADAPTER)
             ${DIRVER_SPI_FILES_PATH}
             ${DRIVER_DMA_FILES_PATH}
             ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave
+        )
+    elseif(OT_NXP_NCP_SDIO_INTERFACE)
+        list(APPEND RW612_SDK_INCLUDES
+            ${NXP_SDK_ROOT}/components/sdu
+            ${DRIVER_SDIOSLV_PATH}
+            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
@@ -635,7 +649,7 @@ if(OT_NXP_LWIP_ETH)
     )
 endif()
 
-if(OT_APP_NCP_ADAPTER)
+if(OT_NCP_RADIO)
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DCONFIG_CRC32_HW_ACCELERATE
@@ -658,6 +672,11 @@ if(OT_APP_NCP_ADAPTER)
         target_compile_definitions(${NXP_DRIVER_LIB}
             PUBLIC
             -DCONFIG_NCP_SPI
+        )
+    elseif(OT_NXP_NCP_SDIO_INTERFACE)
+        target_compile_definitions(${NXP_DRIVER_LIB}
+            PUBLIC
+            -DCONFIG_NCP_SDIO
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
