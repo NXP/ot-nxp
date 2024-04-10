@@ -47,6 +47,14 @@
 #define OT_NXP_PLAT_TX_PWR_HALF_DBM 0
 #endif
 
+#ifndef OT_NXP_PLAT_MFG_FIRST_ANNEX_ID
+#define OT_NXP_PLAT_MFG_FIRST_ANNEX_ID 55
+#endif
+
+#ifndef OT_NXP_PLAT_MFG_LAST_ANNEX_ID
+#define OT_NXP_PLAT_MFG_LAST_ANNEX_ID 108
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                              Public prototypes                             */
 /* -------------------------------------------------------------------------- */

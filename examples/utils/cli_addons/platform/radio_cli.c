@@ -68,6 +68,7 @@
 #define MFG_CMD_GET_SET_LATENCY 0x3C       // 60
 #define MFG_CMD_BRIC_ENCRYPT 0x46          // 70
 #define MFG_CMD_BRIC_DECRYPT 0x47          // 71
+#define MFG_CMD_GENERIC 0xFF               // 255
 #define MAX_VERSION_STRING_SIZE 128        //< Max size of version string.
 
 // NXP Spinel commands
@@ -156,6 +157,7 @@ static otError ProcessGetSetCcaCfg(void *aContext, uint8_t aArgsLength, char *aA
 static otError ProcessGetFwVersion(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessAES128CCMEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessAES128CCMDecrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+static otError mfgGenericCommand(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -665,6 +667,10 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                         error = OT_ERROR_FAILED;
                     }
                 }
+            }
+            case MFG_CMD_GENERIC:
+            {
+                error = mfgGenericCommand(aContext, aArgsLength, aArgs);
             }
             break;
 
@@ -1376,6 +1382,144 @@ static otError ProcessAES128CCMDecrypt(void *aContext, uint8_t aArgsLength, char
         }
 
         error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+
+static otError mfgGenericCommand(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    /*
+    ** Annex management FFU 15.4 :
+    ** ---------------------------
+    */
+
+    /*
+    ** CMD Syntax: radio_nxp annex <Annex Type> <data>
+    */
+
+    otError error = OT_ERROR_INVALID_ARGS;
+    uint8_t cmdId = MFG_CMD_GENERIC;
+
+    uint8_t payload[256 - 4] = {6};
+    uint8_t payloadLen       = 0;
+    uint8_t outputLen        = 0;
+
+    // INPUT variables:    <cmdType> <cmdData>
+    uint8_t cmdType = 0;
+    char   *cmdData = NULL;
+    uint8_t dataLen = 0;
+
+    // uint8_t CTlen = 0;
+
+    // local var.
+    uint8_t *ptr;
+
+    /*
+    **
+    ** Message format exchanged between CPU3_APP and CPU2_NBU:
+    ** ------------------------------------------------------
+    **
+    **       --1B--   --1B--   --1B--   -----1B----   ---n*1B---
+    **       length | cmd_id | action | return_code | body[256-4]
+    **
+    **
+    ** INPUT payload body format:
+    ** -------------------------
+    **                      --1B--             --1B--           --n*1B--
+    **       body format: Command Type | Command Length Data | Command Data
+    **
+    **                    Command Type        : 1 Byte (55 to 108, see ManufactureDataStructure_x.x.x.doc)
+    **                    Command Length Data : 1 Byte
+    **                    Command Data        : n Bytes
+    */
+
+    if ((aArgsLength == 0) || (aArgsLength < 3) || (aArgsLength > 3))
+    {
+        if (strcmp(aArgs[0], "help") == 0)
+        {
+            otCliOutputFormat("Usage: radio_nxp mfgcmd 255 <Type> <Data>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Description: This function sends a generic command with its type and data\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("Arguments:\r\n");
+            otCliOutputFormat("    Type (size: 1 Bytes)\r\n");
+            otCliOutputFormat("    Data (size: n*1 Bytes)\r\n");
+
+            error = OT_ERROR_NONE;
+        }
+        else
+        {
+            otCliOutputFormat("Description: This function sends a generic command with its type and data \r\n");
+            otCliOutputFormat("Usage:       radio_nxp mfgcmd 255 <Command Type> <Command Data>\r\n");
+            otCliOutputFormat("Please type 'radio_nxp mfgcmd 255 help' to see the arguments in detail\r\n");
+        }
+    }
+    else
+    {
+        // Prepare Payload message to CPU2_NBU
+        ptr = payload;
+        ++ptr;                       // payload[0] = {7}
+        *ptr++ = cmdId;              // payload[1] = MFG_CMD_ADVANCE=255
+        *ptr++ = MFG_CMD_ACTION_SET; // payload[2] = MFG_CMD_ACTION_SET
+        *ptr++ = OT_ERROR_NONE;      // payload[4] = return_code (set to OT_ERROR_NONE=0)
+
+        cmdType = (uint8_t)atoi(aArgs[1]);
+        if ((cmdType >= OT_NXP_PLAT_MFG_FIRST_ANNEX_ID) && (cmdType <= OT_NXP_PLAT_MFG_LAST_ANNEX_ID))
+        {
+            *ptr++ = cmdType; // payload[5] = Annex Type
+            otLogInfoPlat("Set Annex: %d", cmdType);
+
+            // cmdData input format allowed Hexadecimal
+            cmdData = aArgs[2];
+            dataLen = strlen(aArgs[2]);
+
+            error = OT_ERROR_NONE;
+        }
+        else
+        {
+            otLogInfoPlat("The Annex Type limit set is out of range");
+        }
+
+        if (error == OT_ERROR_NONE)
+        {
+            if (cmdData[0] == '0' && cmdData[1] == 'x')
+            {
+                cmdData += 2;
+                dataLen -= 2;
+                *ptr++ = dataLen / 2;
+                M_AHTOH(cmdData, dataLen, ptr);
+                dataLen = dataLen / 2;
+
+                error = OT_ERROR_NONE;
+            }
+            else
+            {
+                otLogInfoPlat("The Annex Data input format allows only Hexadecimal");
+            }
+        }
+
+        if (error == OT_ERROR_NONE)
+        {
+            // lengths sent to CPU2_NBU
+            payloadLen = 4 + 1 + 1 + dataLen; // 4 + cmdType + dataLen field + dataLen
+            outputLen  = dataLen;
+
+            otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen, &outputLen);
+            if (payload[3] == 0)
+            {
+                error = OT_ERROR_NONE;
+            }
+            else if (payload[3] == 0xff)
+            {
+                // ERROR returned by CPU2_NBU: Invalid Input arguments!
+                error = OT_ERROR_INVALID_ARGS;
+            }
+            else
+            {
+                error = OT_ERROR_FAILED;
+            }
+        }
     }
 
     return error;
