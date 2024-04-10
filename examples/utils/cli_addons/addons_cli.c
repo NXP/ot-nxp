@@ -59,6 +59,10 @@
 #include "lowpower_cli.h"
 #endif
 
+#ifdef OT_APP_CLI_EPHEMERAL_KEY_ADDON
+#include "ephemeral_key_cli.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
@@ -81,6 +85,9 @@ static const otCliCommand addonsCommands[] = {
 #endif
 #ifdef OT_APP_CLI_WIFI_ADDON
     {"wifi", ProcessWifi},
+#endif
+#ifdef OT_APP_CLI_EPHEMERAL_KEY_ADDON
+    {"ephkey", ProcessEphemeralKey},
 #endif
 };
 
