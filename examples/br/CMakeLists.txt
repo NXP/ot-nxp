@@ -26,9 +26,19 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(OT_NCP_RADIO)
+    set(OTBR_FREERTOS_SOURCES
+        ncp_otbr_freertos.c
+    )
+else()
+    set(OTBR_FREERTOS_SOURCES
+        br_ot_freertos.c
+    )
+endif()
+
 add_executable(ot-br-${OT_NXP_PLATFORM}
-    br_ot_freertos.c
     main.c
+    ${OTBR_FREERTOS_SOURCES}
     ${PROJECT_SOURCE_DIR}/examples/cli/libc_hook.cpp
     ${PROJECT_SOURCE_DIR}/examples/cli/app_freertos_hooks.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
