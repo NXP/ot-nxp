@@ -654,8 +654,14 @@ if(OT_NCP_RADIO)
         PUBLIC
         -DCONFIG_CRC32_HW_ACCELERATE
         -DNCP_TLV_TX_TASK_PRIORITY=3
-        -DRW610
     )
+
+    if(NOT OT_NXP_LWIP_WIFI)
+        target_compile_definitions(${NXP_DRIVER_LIB}
+            PUBLIC
+            -DRW610
+        )
+    endif()
 
     if(OT_NXP_NCP_UART_INTERFACE)
         target_compile_definitions(${NXP_DRIVER_LIB}
