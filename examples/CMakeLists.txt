@@ -26,7 +26,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(utils)
+if(NOT OT_NCP_RTOS_HOST)
+    add_subdirectory(utils)
+endif()
 
 if(OT_APP_CLI_FREERTOS)
     add_subdirectory(cli)

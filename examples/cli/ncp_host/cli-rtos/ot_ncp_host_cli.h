@@ -1,12 +1,12 @@
 /*
- * Copyright 2024 NXP
- * All rights reserved.
+ *  Copyright 2024 NXP
+ *  All rights reserved.
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ *  SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef __OT_OPCODE_H__
-#define __OT_OPCODE_H__
+#ifndef __OT_NCP_HOST_CLI_H__
+#define __OT_NCP_HOST_CLI_H__
 
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
@@ -15,9 +15,9 @@
 #include <stdint.h>
 
 /* -------------------------------------------------------------------------- */
-/*                                  Function prototypes                       */
+/*                             Function prototypes                            */
 /* -------------------------------------------------------------------------- */
 
-int8_t ot_get_opcode(uint8_t *userinputcmd, uint8_t otcmdlen);
+uint32_t ot_ncp_host_cli_init(void);
 
-#endif /* __OT_OPCODE_H__ */
+#endif /* __OT_NCP_HOST_CLI_H__ */

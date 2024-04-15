@@ -45,6 +45,13 @@ if(OT_NXP_BUILD_APP_AS_LIB)
     add_library(ot-cli-${OT_NXP_PLATFORM}
         ${OT_CLI_PLATFORM_SOURCES}
     )
+elseif(OT_NCP_RTOS_HOST)
+    add_executable(ot-cli-${OT_NXP_PLATFORM}
+        main.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_freertos.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_cli.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_app.c
+    )
 else()
     add_executable(ot-cli-${OT_NXP_PLATFORM}
         main.c
