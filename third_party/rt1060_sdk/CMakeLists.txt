@@ -78,6 +78,7 @@ elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1062/xip)
 elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     message("SDK_DEV driver path chosen")
+    set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
     set(DRIVER_LPUART_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpuart)
     set(DRIVER_PIT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/pit)
     set(DRIVER_TRNG_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/trng)
@@ -91,10 +92,13 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_DMAMUX_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/dmamux)
     set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/enet)
     set(DRIVER_USDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/usdhc)
+    set(DRIVER_LPSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpspi)
+    set(DRIVER_LPI2C_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpi2c)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
     set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/assert)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1052/xip)
+    set(NCP_ADAPTER_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples/common)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -249,7 +253,6 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DFSL_SDK_ENABLE_DRIVER_CACHE_CONTROL=1
     -DSDK_COMPONENT_INTEGRATION=1
     -DFSL_DRIVER_TRANSFER_DOUBLE_WEAK_IRQ=0
-    -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING
     -DHAL_UART_ADAPTER_FIFO=1
     -DSDK_DEBUGCONSOLE_UART=1
     -DSERIAL_PORT_TYPE_UART=1
@@ -262,6 +265,12 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     LFS_THREADSAFE=1
     -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
 )
+
+if(NOT OT_NCP_RTOS_HOST)
+    list(APPEND SDK_COMPILE_DEFINITIONS
+        -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING
+    )
+endif()
 
 if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     if(OT_NXP_LWIP_WIFI)
@@ -311,6 +320,92 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
     )
+elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
+    list(APPEND SDK_COMPILE_DEFINITIONS
+        -DCONFIG_NCP_BRIDGE
+        -DCONFIG_NCP_OT
+    )
+    list(APPEND SDK_SOURCES
+        ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
+        ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart_freertos.c
+        ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
+        ${NCP_ADAPTER_FILES_PATH}/crc/crc.c
+        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
+        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
+    )
+    if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
+        list(APPEND SDK_SOURCES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/uart/ncp_intf_uart.c
+        )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "USB")
+        list(APPEND SDK_SOURCES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/ncp_intf_usb_host_cdc.c
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/ncp_usb_host_cdc.c
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/usb_host_cdc_app.c
+            ${MIDDLEWARE_PATH}/usb/host/class/usb_host_cdc.c
+            ${MIDDLEWARE_PATH}/usb/host/class/usb_host_hub_app.c
+            ${MIDDLEWARE_PATH}/usb/host/class/usb_host_hub.c
+            ${MIDDLEWARE_PATH}/usb/host/usb_host_ehci.c
+            ${MIDDLEWARE_PATH}/usb/host/usb_host_hci.c
+            ${MIDDLEWARE_PATH}/usb/host/usb_host_devices.c
+            ${MIDDLEWARE_PATH}/usb/host/usb_host_framework.c
+            ${MIDDLEWARE_PATH}/usb/phy/usb_phy.c
+    )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SPI")
+        list(APPEND SDK_SOURCES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master/ncp_intf_spi_master.c
+    )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SDIO")
+        list(APPEND SDK_SOURCES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host/ncp_intf_sdio_host.c
+    )
+    else()
+        message(FATAL_ERROR "must select one ncp interface.")
+    endif()
+    list(APPEND SDK_INCLUDES
+        ${DRIVER_DEVICE_FILES_PATH}
+        ${NCP_ADAPTER_FILES_PATH}/crc
+        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf
+        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_tlv
+        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter
+        ${NCP_ADAPTER_FILES_PATH}/ncp_debug
+        ${NCP_ADAPTER_FILES_PATH}
+    )
+    if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
+        list(APPEND SDK_INCLUDES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/uart
+        )
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            -DCONFIG_NCP_UART
+        )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "USB")
+        list(APPEND SDK_INCLUDES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc
+            ${MIDDLEWARE_PATH}/usb/host
+            ${MIDDLEWARE_PATH}/usb/include
+            ${MIDDLEWARE_PATH}/usb/host/class
+            ${MIDDLEWARE_PATH}/usb/phy
+        )
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            -DCONFIG_NCP_USB
+        )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SPI")
+        list(APPEND SDK_INCLUDES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master
+        )
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            -DCONFIG_NCP_SPI
+        )
+    elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SDIO")
+        list(APPEND SDK_INCLUDES
+            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host
+        )
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            -DCONFIG_NCP_SDIO
+        )
+    else()
+        message(FATAL_ERROR "must select one ncp interface.")
+    endif()
 endif()
 
 add_library(${NXP_DRIVER_LIB}

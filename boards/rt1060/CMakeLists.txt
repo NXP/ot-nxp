@@ -58,6 +58,15 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
     list(APPEND BOARD_COMPILE_DEFINITIONS_PRIVATE
         -DBOARD_OTW_K32W0_PIN_INIT
     )
+elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
+    if("${OT_NCP_RW612_INTERFACE}" STREQUAL "SDIO")
+        list(APPEND BOARD_SOURCES
+            sdmmc_config.c
+        )
+        list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
+            -DSDIO_ENABLED
+        )
+    endif()
 endif()
 
 if("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")

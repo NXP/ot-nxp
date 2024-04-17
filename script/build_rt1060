@@ -89,6 +89,19 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
 )
 
+readonly OT_OPTIONS_TRANSCEIVER_RW612=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1060"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_TRANSCEIVER=rw612"
+    "-DOT_NCP_RTOS_HOST=ON"
+    "-DOT_NXP_LWIP=OFF"
+    "-DBOARD_APP_UART_INSTANCE=2"
+    "-DEVK_RT1060_BOARD=evkbmimxrt1060"
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY=${OT_SRCDIR}/boards/rt1060/freertos/ncp_host"
+)
+
 build()
 {
     local builddir="${OT_CMAKE_BUILD_DIR:-build_rt1060}"
@@ -132,6 +145,8 @@ create_directory_and_build()
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
+        build rw612_ncp_host "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
@@ -145,6 +160,9 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi_br_wifi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
+    elif [ "$1" == 'rw612_ncp_host' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
+        build rw612_ncp_host "${options[@]}"
     else
         echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
         # 128 for Invalid arguments

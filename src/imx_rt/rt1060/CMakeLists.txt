@@ -54,6 +54,16 @@ if(OT_APP_BR_FREERTOS)
     )
 endif()
 
+if(OT_NCP_RTOS_HOST)
+    set(OT_NCP_RTOS_HOST_SRC
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ot_opcode/otopcode.c
+    )
+
+    set(OT_NCP_RTOS_HOST_INCLUDES
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ot_opcode
+    )
+endif()
+
 if("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
     # UART support
     list(APPEND OT_PLAT_SPINEL_FLAGS
@@ -62,7 +72,7 @@ if("${SPINEL_INTERFACE_TYPE}" STREQUAL "UART")
     list(APPEND OT_PLATFORM_SPINEL_SOURCES
         ../../common/spinel/spinel_hdlc.cpp
     )
-else()
+elseif("${SPINEL_INTERFACE_TYPE}" STREQUAL "SPI")
     # Assuming SPI support
     list(APPEND OT_PLAT_SPINEL_FLAGS
         -DOT_PLAT_SPINEL_OVER_SPI
@@ -76,21 +86,27 @@ else()
     )
 endif()
 
-add_library(${OT_PLATFORM_LIB}
-    ../../common/alarm_freertos.c
-    ../../common/diag.c
+if(OT_NCP_RTOS_HOST)
+    add_library(${OT_PLATFORM_LIB}
+        ${OT_NCP_RTOS_HOST_SRC}
+    )
+else()
+    add_library(${OT_PLATFORM_LIB}
+        ../../common/alarm_freertos.c
+        ../../common/diag.c
 
-    # ../../common/entropy.c
-    ../../common/flash_littlefs.c
-    ../../common/logging.c
-    ../../common/spinel/misc.c
-    ../../common/spinel/radio.cpp
-    ../../common/spinel/system.c
-    ../../common/uart.c
-    ${OT_PLATFORM_SPINEL_SOURCES}
-    ${LWIP_SRC_FILE}
-    ${INFRA_IF_SRC_FILE}
-)
+        # ../../common/entropy.c
+        ../../common/flash_littlefs.c
+        ../../common/logging.c
+        ../../common/spinel/misc.c
+        ../../common/spinel/radio.cpp
+        ../../common/spinel/system.c
+        ../../common/uart.c
+        ${OT_PLATFORM_SPINEL_SOURCES}
+        ${LWIP_SRC_FILE}
+        ${INFRA_IF_SRC_FILE}
+    )
+endif()
 
 set_target_properties(
     ${OT_PLATFORM_LIB}
@@ -99,23 +115,32 @@ set_target_properties(
     CXX_STANDARD 11
 )
 
-target_link_libraries(${OT_PLATFORM_LIB}
-    PRIVATE
-    ot-config
-    openthread-hdlc
-    openthread-spinel-rcp
-    openthread-platform
-    connfwk-FunctionLib
-    connfwk-FileSystem
-    connfwk-platform-${OT_NXP_PLATFORM}
-    connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
-    PUBLIC
-    connfwk-config
-    ${OT_LWIP_LIBS}
-    ${NXP_DRIVER_LIB}
-    -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
-    -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
-)
+if(OT_NCP_RTOS_HOST)
+    target_link_libraries(${OT_PLATFORM_LIB}
+        PUBLIC
+        ${NXP_DRIVER_LIB}
+        -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060_ncp_host.ld
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+    )
+else()
+    target_link_libraries(${OT_PLATFORM_LIB}
+        PRIVATE
+        ot-config
+        openthread-hdlc
+        openthread-spinel-rcp
+        openthread-platform
+        connfwk-FunctionLib
+        connfwk-FileSystem
+        connfwk-platform-${OT_NXP_PLATFORM}
+        connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
+        PUBLIC
+        connfwk-config
+        ${OT_LWIP_LIBS}
+        ${NXP_DRIVER_LIB}
+        -T${PROJECT_SOURCE_DIR}/src/imx_rt/rt1060/RT1060.ld
+        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
+    )
+endif()
 
 # OT needs freeRTOS config dependency
 target_link_libraries(ot-config
@@ -152,6 +177,7 @@ target_include_directories(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common
     ${OT_LWIP_INCLUDES}
     ${OT_BR_INCLUDES}
+    ${OT_NCP_RTOS_HOST_INCLUDES}
     PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
