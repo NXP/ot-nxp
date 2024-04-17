@@ -39,6 +39,7 @@ extern "C" {
 
 void InfraIfInit(otInstance *aInstance, struct netif *netif);
 void InfraIfDeInit();
+void InfraIfLinkState(bool bUp);
 
 #ifdef __cplusplus
 }
