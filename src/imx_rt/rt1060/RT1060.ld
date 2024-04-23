@@ -65,10 +65,9 @@ MEMORY
   m_interrupts          (RX)  : ORIGIN = 0x60002000, LENGTH = 0x00000400
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
-  m_qacode              (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00020000 /* ITCM 128 KB */
-  m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
-  m_ncache              (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00008000 /* OCRAM2 32 KB */
-  m_data2               (RW)  : ORIGIN = 0x20208000, LENGTH = 0x000B8000 /* OCRAM2 480 KB + OCRAM-FlexRAM 256 KB */
+  m_qacode              (RX)  : ORIGIN = 0x00010000, LENGTH = 0x00010000 /* ITCM 64 KB */
+  m_ncache              (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
+  m_data                (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00090000 /* OCRAM1 512 KB + OCRAM-FlexRAM 64 KB */
 }
 
 /* Define output sections */
@@ -85,7 +84,7 @@ SECTIONS
     . = ALIGN(4);
   } > m_flash_config
 
-  ivt_begin= ORIGIN(m_flash_config) + LENGTH(m_flash_config);
+  ivt_begin = ORIGIN(m_flash_config) + LENGTH(m_flash_config);
 
   .ivt : AT(ivt_begin)
   {
@@ -223,7 +222,7 @@ SECTIONS
     . += VECTOR_RAM_SIZE;
     . = ALIGN(4);
     __interrupts_ram_end__ = .; /* Define a global symbol at data end */
-  } > m_data2
+  } > m_data
 
   __VECTOR_RAM = DEFINED(__ram_vector_table__) ? __VECTOR_RAM__ : ORIGIN(m_interrupts);
   __RAM_VECTOR_TABLE_SIZE_BYTES = DEFINED(__ram_vector_table__) ? (__interrupts_ram_end__ - __interrupts_ram_start__) : 0x0;
@@ -240,7 +239,7 @@ SECTIONS
     KEEP(*(.jcr*))
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
-  } > m_data2
+  } > m_data
 
   __ram_function_flash_start = __DATA_ROM + (__data_end__ - __data_start__); /* Symbol is used by startup for TCM data initialization */
 
@@ -308,7 +307,7 @@ SECTIONS
     . = ALIGN(4);
     __bss_end__ = .;
     __END_BSS = .;
-  } > m_data2
+  } > m_data
 
   .heap (NOLOAD) :
   {
