@@ -68,12 +68,6 @@ if(OT_NCP_RADIO)
     )
 endif()
 
-if(OT_RCP_RESTORATION_MAX_COUNT GREATER 0)
-    target_compile_definitions(ot-config INTERFACE
-        -DOPENTHREAD_RADIO_RESET_ENABLE=1
-    )
-endif()
-
 if(OT_NCP_RADIO MATCHES "ON")
     if(OT_NXP_NCP_UART_INTERFACE MATCHES "ON")
         target_compile_definitions(ot-config INTERFACE
@@ -128,6 +122,8 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-platform
         openthread-platform-utils-static
         openthread-hdlc
+        openthread-radio-spinel
+        openthread-url
         openthread-spinel-rcp
         connfwk-FunctionLib
         connfwk-FSAbstraction
