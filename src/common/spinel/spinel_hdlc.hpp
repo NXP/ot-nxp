@@ -42,6 +42,7 @@
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
+#include "lib/url/url.hpp"
 
 namespace ot {
 
@@ -53,20 +54,16 @@ typedef uint8_t HdlcSpinelContext;
  * This class defines an HDLC spinel interface to the Radio Co-processor (RCP).
  *
  */
-class HdlcInterface
+class HdlcInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback         Callback on frame received
-     * @param[in] aCallbackContext  Callback context
-     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
+     * @param[in] aRadioUrl  RadioUrl parsed from radio url.
      *
      */
-    HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void                                             *aCallbackContext,
-                  ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
+    HdlcInterface(const Url::Url &aRadioUrl);
 
     /**
      * This destructor deinitializes the object.
@@ -78,7 +75,7 @@ public:
      * This method initializes the HDLC interface.
      *
      */
-    void Init(void);
+    otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * This method deinitializes the HDLC interface.
@@ -168,7 +165,7 @@ private:
     ot::Spinel::FrameBuffer<kEncoderBufferSize>       mEncoderBuffer;
     ot::Hdlc::Encoder                                 mHdlcEncoder;
     platform_hdlc_rx_callback_t                       mHdlcRxCallbackField;
-    ot::Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
+    ot::Spinel::SpinelInterface::RxFrameBuffer       *mReceiveFrameBuffer;
     ot::Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
     void                                             *mReceiveFrameContext;
     ot::Spinel::MultiFrameBuffer<kMaxMultiFrameSize>  mRxSpinelFrameBuffer;
@@ -181,12 +178,17 @@ private:
     SemaphoreHandle_t                                 mReadMutexHandle;
     QueueHandle_t                                     mMsqQueue;
     EventGroupHandle_t                                mSpinelHdlcEventGroup;
+    const Url::Url                                   &mRadioUrl;
 
     otError     Write(const uint8_t *aFrame, uint16_t aLength);
     uint32_t    TryReadAndDecode(bool fullRead);
     void        HandleHdlcFrame(otError aError);
     static void HandleHdlcFrame(void *aContext, otError aError);
     static void HdlcRxCallback(uint8_t *data, uint16_t len, void *param);
+
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return nullptr; }
+    uint32_t                     GetBusSpeed(void) const { return 0; }
+    void                         UpdateFdSet(void *aMainloopContext) { (void)aMainloopContext; }
 
 protected:
     virtual void HandleUnknownHdlcContent(uint8_t *buffer, uint16_t len);

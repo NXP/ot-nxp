@@ -76,12 +76,11 @@ static void SpiIntGpioCallback(void *pData)
 namespace ot {
 namespace NXP {
 
-SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void                                 *aCallbackContext,
-                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mRxFrameBuffer(aFrameBuffer)
+SpiInterface::SpiInterface(const Url::Url &aRadioUrl)
+    : mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mRxFrameBuffer(nullptr)
+    , mRadioUrl(aRadioUrl)
     , mSlaveResetCount(0)
     , mSpiFrameCount(0)
     , mSpiValidFrameCount(0)
@@ -108,7 +107,7 @@ void SpiInterface::OnRcpReset(void)
 {
 }
 
-void SpiInterface::Init(void)
+otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
     hal_gpio_status_t status;
 
@@ -134,10 +133,15 @@ void SpiInterface::Init(void)
         status = HAL_GpioSetTriggerMode((hal_gpio_handle_t)otGpioSpiIntHandle, kHAL_GpioInterruptFallingEdge);
         assert(status == kStatus_HAL_GpioSuccess);
 
+        mReceiveFrameCallback = aCallback;
+        mReceiveFrameContext  = aCallbackContext;
+        mRxFrameBuffer        = &aFrameBuffer;
+
         isInitialized = true;
     }
 
     OT_UNUSED_VARIABLE(status);
+    return OT_ERROR_NONE;
 }
 
 void SpiInterface::InitSpi(void)
@@ -180,6 +184,9 @@ SpiInterface::~SpiInterface(void)
 void SpiInterface::Deinit(void)
 {
     DeinitSpi();
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mRxFrameBuffer        = nullptr;
 }
 
 void SpiInterface::IncreasePendingSpiRxDataCounter(void)
@@ -203,6 +210,8 @@ otError SpiInterface::PushPullSpi(void)
     bool             decreaseSpiRxDataCounter = false;
     bool             needRetry                = false;
     uint32_t         intMask;
+
+    VerifyOrExit((mReceiveFrameCallback != nullptr) && (mRxFrameBuffer != nullptr), error = OT_ERROR_INVALID_STATE);
 
     /* Do we need to do a SPI push pull */
     if (pendingSpiRxDataCounter == 0 && !mSpiTxIsReady)
@@ -270,10 +279,10 @@ otError SpiInterface::PushPullSpi(void)
     txFrame.SetHeaderAcceptLen(spiTransferBytes);
 
     // Set skip length to make MultiFrameBuffer to reserve a space in front of the frame buffer.
-    SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
+    SuccessOrExit(error = mRxFrameBuffer->SetSkipLength(kSpiFrameHeaderSize));
 
     // Check whether the remaining frame buffer has enough space to store the data to be received.
-    if (mRxFrameBuffer.GetFrameMaxLength() < spiTransferBytes + mSpiAlignAllowance)
+    if (mRxFrameBuffer->GetFrameMaxLength() < spiTransferBytes + mSpiAlignAllowance)
     {
         error = OT_ERROR_NO_BUFS;
         otLogCritPlat("RX buffer is full");
@@ -281,7 +290,7 @@ otError SpiInterface::PushPullSpi(void)
     }
 
     // Point to the start of the reserved buffer.
-    spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
+    spiRxFrameBuffer = mRxFrameBuffer->GetFrame() - kSpiFrameHeaderSize;
 
     // Set the total number of bytes to be transmitted.
     spiTransferBytes += kSpiFrameHeaderSize + mSpiAlignAllowance;
@@ -394,9 +403,10 @@ otError SpiInterface::PushPullSpi(void)
                     mSpiRxDiscard = 0;
 
                     // Set the skip length to skip align bytes and SPI frame header.
-                    SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
+                    SuccessOrExit(error =
+                                      mRxFrameBuffer->SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
                     // Set the received frame length.
-                    SuccessOrExit(error = mRxFrameBuffer.SetLength(rxFrame.GetHeaderDataLen()));
+                    SuccessOrExit(error = mRxFrameBuffer->SetLength(rxFrame.GetHeaderDataLen()));
 
                     // Upper layer will free the frame buffer.
                     discardRxFrame = false;
@@ -438,6 +448,8 @@ otError SpiInterface::PushPullSpi(void)
             mSpiTxFrameCount++;
             mSpiTxFrameByteCount += mSpiTxPayloadSize;
 
+            // Clear tx buffer after usage
+            memset(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], 0, mSpiTxPayloadSize);
             mSpiTxIsReady      = false;
             mSpiTxPayloadSize  = 0;
             mSpiTxRefusedCount = 0;
@@ -483,7 +495,7 @@ exit:
 
     if (discardRxFrame)
     {
-        mRxFrameBuffer.DiscardFrame();
+        mRxFrameBuffer->DiscardFrame();
     }
 
     return error;

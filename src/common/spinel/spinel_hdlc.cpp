@@ -45,20 +45,19 @@ namespace ot {
 
 namespace NXP {
 
-HdlcInterface::HdlcInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                             void                                             *aCallbackContext,
-                             ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+HdlcInterface::HdlcInterface(const Url::Url &aRadioUrl)
     : mEncoderBuffer()
     , mHdlcEncoder(mEncoderBuffer)
     , mHdlcRxCallbackField(nullptr)
-    , mReceiveFrameBuffer(aFrameBuffer)
-    , mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mHdlcSpinelDecoder(mRxSpinelFrameBuffer, HandleHdlcFrame, this)
+    , mReceiveFrameBuffer(nullptr)
+    , mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mHdlcSpinelDecoder()
     , mIsInitialized(false)
     , mSavedFrame(nullptr)
     , mSavedFrameLen(0)
     , mIsSpinelBufferFull(false)
+    , mRadioUrl(aRadioUrl)
 {
     mHdlcRxCallbackField = HdlcRxCallback;
 }
@@ -67,9 +66,10 @@ HdlcInterface::~HdlcInterface(void)
 {
 }
 
-void HdlcInterface::Init(void)
+otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
-    int status;
+    int     status;
+    otError error = OT_ERROR_NONE;
 
     if (!mIsInitialized)
     {
@@ -81,6 +81,11 @@ void HdlcInterface::Init(void)
         assert((mWriteMutexHandle != NULL) && (mReadMutexHandle != NULL) && (mMsqQueue != NULL) &&
                (mSpinelHdlcEventGroup != NULL));
 
+        mHdlcSpinelDecoder.Init(mRxSpinelFrameBuffer, HandleHdlcFrame, this);
+        mReceiveFrameCallback = aCallback;
+        mReceiveFrameContext  = aCallbackContext;
+        mReceiveFrameBuffer   = &aFrameBuffer;
+
         /* Initialize the HDLC interface */
         status = PLATFORM_InitHdlcInterface(mHdlcRxCallbackField, this);
         if (status == 0)
@@ -90,8 +95,11 @@ void HdlcInterface::Init(void)
         else
         {
             otLogDebgPlat("Failed to initialize HDLC interface %d", status);
+            error = OT_ERROR_FAILED;
         }
     }
+
+    return error;
 }
 
 void HdlcInterface::Deinit(void)
@@ -107,6 +115,10 @@ void HdlcInterface::Deinit(void)
     {
         otLogDebgPlat("Failed to terminate HDLC interface %d", status);
     }
+
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mReceiveFrameBuffer   = nullptr;
 }
 
 void HdlcInterface::Process(const void *aInstance)
@@ -275,9 +287,9 @@ uint32_t HdlcInterface::TryReadAndDecode(bool fullRead)
         /* Copy the data to the ot frame buffer */
         for (i = 0; i < mSavedFrameLen; i++)
         {
-            if (mReceiveFrameBuffer.WriteByte(mSavedFrame[i]) != OT_ERROR_NONE)
+            if (mReceiveFrameBuffer->WriteByte(mSavedFrame[i]) != OT_ERROR_NONE)
             {
-                mReceiveFrameBuffer.UndoLastWrites(i);
+                mReceiveFrameBuffer->UndoLastWrites(i);
                 /* No more space restore the mSavedFrame to the previous frame */
                 mSavedFrame    = oldFrame;
                 mSavedFrameLen = oldLen;

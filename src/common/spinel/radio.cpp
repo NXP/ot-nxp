@@ -38,17 +38,22 @@
 
 #include <openthread/platform/radio.h>
 
+#include <lib/platform/exit_code.h>
 #include <lib/spinel/radio_spinel.hpp> // nogncheck
 
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
-static ot::Spinel::RadioSpinel<ot::NXP::SpiInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel sRadioSpinel;
+static ot::Url::Url            sRadioUrl;
+static ot::NXP::SpiInterface   sSpinelInterface(sRadioUrl);
 #elif defined(OT_PLAT_SPINEL_OVER_HDLC)
 #include "spinel_hdlc.hpp"
-static ot::Spinel::RadioSpinel<ot::NXP::HdlcInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel sRadioSpinel;
+static ot::Url::Url            sRadioUrl;
+static ot::NXP::HdlcInterface  sSpinelInterface(sRadioUrl);
 #elif defined(OT_PLAT_SPINEL_HCI_OVER_HDLC)
 #include "spinel_hci_hdlc.hpp"
-static ot::Spinel::RadioSpinel<ot::NXP::HdlcSpinelHciInterface> sRadioSpinel;
+static ot::Spinel::RadioSpinel sRadioSpinel;
 #endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
@@ -489,20 +494,21 @@ otError otPlatRadioCcaConfigValue(uint32_t aKey, otCCAModeConfig *aCcaConfig, ui
     return error;
 }
 
-void otPlatRadioInitSpinelInterface(void)
-{
-    sRadioSpinel.GetSpinelInterface().Init();
-}
-
 void otPlatRadioInit(void)
 {
-#if OPENTHREAD_RADIO_RESET_ENABLE
-    bool resetRadio = true;
-#else
-    bool resetRadio = false;
-#endif
-
-    sRadioSpinel.Init(resetRadio, false);
+    uint8_t                                 i = 0;
+    struct ot::Spinel::RadioSpinelCallbacks callbacks;
+    memset(&callbacks, 0, sizeof(callbacks));
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    callbacks.mDiagReceiveDone  = otPlatDiagRadioReceiveDone;
+    callbacks.mDiagTransmitDone = otPlatDiagRadioTransmitDone;
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
+    callbacks.mEnergyScanDone = otPlatRadioEnergyScanDone;
+    callbacks.mReceiveDone    = otPlatRadioReceiveDone;
+    callbacks.mTransmitDone   = otPlatRadioTxDone;
+    callbacks.mTxStarted      = otPlatRadioTxStarted;
+    sRadioSpinel.SetCallbacks(callbacks);
+    sRadioSpinel.Init(sSpinelInterface, true, false, &i, sizeof(uint8_t));
 }
 
 void otPlatRadioDeinit(void)
@@ -513,12 +519,11 @@ void otPlatRadioDeinit(void)
 void otPlatRadioProcess(const otInstance *aInstance)
 {
     sRadioSpinel.Process(aInstance);
-    // sRadioSpinel.GetSpinelInterface().Process(aInstance);
 }
 
 void otPlatRadioSendFrameToSpinelInterface(uint8_t *buf, uint16_t length)
 {
-    sRadioSpinel.GetSpinelInterface().SendFrame(buf, length);
+    sSpinelInterface.SendFrame(buf, length);
 }
 
 otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value)
@@ -581,6 +586,6 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 void otPlatRadioSpiDiag(void)
 {
-    sRadioSpinel.GetSpinelInterface().DiagLogStats();
+    sSpinelInterface.DiagLogStats();
 }
 #endif

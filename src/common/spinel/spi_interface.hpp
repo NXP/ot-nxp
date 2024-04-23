@@ -38,8 +38,9 @@
 #include "fsl_adapter_spi.h"
 #include "fsl_common.h"
 #include "ot_platform_common.h"
+#include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
-
+#include "lib/url/url.hpp"
 #include "ncp/ncp_spi.hpp"
 
 namespace ot {
@@ -49,20 +50,16 @@ namespace NXP {
  * This class defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
-class SpiInterface
+class SpiInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in] aCallback         A reference to a `Callback` object.
-     * @param[in] aCallbackContext  The context pointer passed to the callback.
-     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
+     * @param[in] aRadioUrl  RadioUrl parsed from radio url.
      *
      */
-    SpiInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                 void                                         *aCallbackContext,
-                 Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
+    SpiInterface(const Url::Url &aRadioUrl);
 
     /**
      * This destructor deinitializes the object.
@@ -71,10 +68,16 @@ public:
     ~SpiInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP).
+     * Initializes the interface to the Radio Co-processor (RCP).
+     *
+     * @note This method should be called before reading and sending spinel frames to the interface.
+     *
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    void Init(void);
+    otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * This method deinitializes the interface to the RCP.
@@ -165,7 +168,8 @@ private:
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
     void                                         *mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
+    Spinel::SpinelInterface::RxFrameBuffer       *mRxFrameBuffer;
+    const Url::Url                               &mRadioUrl;
 
     uint8_t  mSpiAlignAllowance;
     uint32_t mResetDelay;
@@ -209,6 +213,9 @@ private:
     otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
 
     // Non-copyable, intentionally not implemented.
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return nullptr; }
+    uint32_t                     GetBusSpeed(void) const { return 0; }
+    void                         UpdateFdSet(void *aMainloopContext) { (void)aMainloopContext; }
     SpiInterface(const SpiInterface &);
     SpiInterface &operator=(const SpiInterface &);
 };

@@ -93,7 +93,6 @@ void otSysInit(int argc, char *argv[])
     /* Must be initialized before spinel interface in case it deschedules and calls timestamp API */
     PLATFORM_InitTimeStamp();
 
-    otPlatRadioInitSpinelInterface();
 #ifdef OT_PLAT_SYS_WIFI_INIT
     PLATFORM_InitControllers((uint8_t)conn802_15_4_c | (uint8_t)connWlan_c);
 #endif

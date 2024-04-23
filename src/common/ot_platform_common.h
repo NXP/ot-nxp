@@ -132,13 +132,6 @@ void otPlatAlarmProcess(otInstance *aInstance);
 void otPlatRadioInit(void);
 
 /**
- * Allows to initialize the platform spinel interface
- * Only used in HOST+RCP configurations
- *
- */
-void otPlatRadioInitSpinelInterface(void);
-
-/**
  * This function deinitializes the radio service used by OpenThread.
  *
  */
