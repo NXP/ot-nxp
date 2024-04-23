@@ -1,5 +1,3 @@
----
-
 # NXP OpenThread Border Router
 
 A Thread Border Router connects a Thread network to other IP-based networks, such as Wi-Fi or Ethernet. A Thread network requires a Border Router to connect to other networks.
@@ -30,19 +28,20 @@ To learn more about building and running the examples please check:
 [rt1060-page]: ../../src/imx_rt/rt1060/README.md
 [rw612-page]: ../..src/rw/rw612/README.md
 
-Current border router example supports wifi or ethernet. The default is WIFI. To use ethernet, add the following options to the build command:
+Current border router example supports wifi or ethernet. Build commands are listed below:
 
 ```bash
-$ ./script/build_rw612 -DOT_NXP_LWIP_ETH=ON -DOT_NXP_LWIP_WIFI=OFF
+$ ./script/build_rw612 ot_br_wifi
+$ ./script/build_rw612 ot_br_eth
 ```
 
 ## How to run the OTBR application
 
 In order to run the OTBR example, a minimum of devices is required: - NXP OTBR - A Thread CLI capable device - A windows/linux PC to run an mDNS client.
 
-Note: For this demonstration, Ubuntu 21.10 with mDNSResponder was tested. Avahi can also be used, but it has some limitations of the mDNS standard.
+Note: For this demonstration, Ubuntu 21.10 with mDNSResponder was tested.
 
-It is important that the Border Router and the PC to reside on the same Wi-Fi network
+It is important that the Border Router and the PC to reside on the same adjacent network
 
 To connect to the wifi network we can use the follwing cli command:
 
@@ -174,41 +173,72 @@ DATE: ---Fri 12 May 2023---
 
 Obtain Border Router's MLEID ip address, `ipaddr mleid` and then on the Thread device execute `dns config <IPaddr>`
 
-Obtaining information about `WifiTestService` can be done by executing this command on the Thread device:
-
+Obtaining information about ```WifiTestService``` can be done by executing this command on the Thread device:
 ```
 dns service WifiTestService _http._tcp.default.service.arpa.
-```
+ ```
 
 The console output on the Thread device is shown below:
-
 ```
 DNS service resolution response for WifiTestService for service _http._tcp.default.service.arpa.
 Port:80, Priority:0, Weight:0, TTL:120
 Host:ubuntu.default.service.arpa.
 HostAddress:2a02:2f01:7b11:6a00:e65f:1ff:fef5:ff11 TTL:120
-TXT:[] TTL:120
+TXT:[] TTL:4500
 ```
 
 A browse resolution query can be send executing the following command:
 `dns browse _http._tcp.default.service.arpa.`
 
 This command will return all instances with the "\_http.\_tcp" service type:
-
 ```
 DNS browse response for _http._tcp.default.service.arpa.
 WifiTestService
     Port:80, Priority:0, Weight:0, TTL:120
     Host:ubuntu.default.service.arpa.
     HostAddress:2a02:2f01:7b11:6a00:e65f:1ff:fef5:ff11 TTL:120
-    TXT:[] TTL:120
+    TXT:[] TTL:4500
 ```
 
 To obtain the IPV6 address of a host name, an AAAA query is sent by executing the following command:
-`dns resolve ubuntu.default.service.arpa.`
+` dns resolve ubuntu.default.service.arpa.`
 
 The console output on the Thread device is shown below:
-
 ```
 DNS response for ubuntu.default.service.arpa. - 2a02:2f01:7b11:6a00:e65f:1ff:fef5:ff11 TTL:120 fdde:ad00:beef:cafe:e65f:1ff:fef5:ff11 TTL:120
+```
+
+### Ephemeral Key functionality :
+
+The ephemeral key is used instead of PSKc from Operation Dataset for a given timeout duration.
+This can be used to create a secure DTLS session between an external commissioner and a Thread Border Router.
+
+CLI commands are exposed for Ephemeral Key functionality:
+
+```
+> ephkey help
+ephkey generate
+ephkey length <key_length>
+ephkey timeout <timeout> (msec)
+ephkey port <port>
+```
+`length`: indicates the key size; it takes values between 6 and 32 bytes inclusive.
+
+`timeout`: While the timeout interval is in effect, the ephemeral key can be used only once by an external
+commissioner to connect. Once the commissioner disconnects, the
+ephemeral key is cleared, and Border Agent reverts to using PSKc.
+
+`port`: The UDP port to use with ephemeral key. If zero, an ephemeral port will be used.
+
+Border Router application sets default values for these parameters at start-up:
+`length` is set to 6 bytes, `timeout` is set to 120 seconds, and `port` is set to 49152.
+
+```
+> ephkey generate
+Done
+>
+Ephemeral Key = 1115c0c85092
+Valid for 120 seconds.
+>
+Ephemeral Key disabled, PSKc is now in use.
 ```
