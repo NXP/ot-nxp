@@ -127,6 +127,8 @@ else()
         PRIVATE
         ot-config
         openthread-hdlc
+        openthread-radio-spinel
+        openthread-url
         openthread-spinel-rcp
         openthread-platform
         connfwk-FunctionLib
