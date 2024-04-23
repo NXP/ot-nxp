@@ -56,6 +56,7 @@ elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_USART_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_FLEXSPI_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_LPC_GPIO_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_LPC_DMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_IMU_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_GDMA_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_TRNG_FILES_PATH ${DRIVER_FILES_PATH})
@@ -65,9 +66,19 @@ elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     set(DRIVER_CTIMER_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_RTC_FILES_PATH ${DRIVER_FILES_PATH})
     set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_CRC_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DIRVER_SPI_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_MRTIMER_FILES_PATH ${DRIVER_FILES_PATH})
+    set(DRIVER_SDIOSLV_PATH ${DRIVER_FILES_PATH})
+    set(DEVICE_USB_FILES_PATH ${MIDDLEWARE_PATH}/usb/output/source/device)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/devices/RW612/utilities/format)
+    set(NCP_COMMON_FILES_PATH ${NXP_SDK_ROOT}/boards/rdrw612bga/ncp_examples/common)
+    set(NCP_INTF_SDIO_FILES_PATH ${NCP_COMMON_FILES_PATH}/sdio/sdio_device)
+    set(NCP_INTF_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/spi/spi_slave)
+    set(NCP_INTF_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
+    set(NCP_INTF_USB_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc)
 elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
     set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/cache64)
@@ -86,12 +97,17 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/enet)
     set(DRIVER_CRC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpc_crc)
     set(DIRVER_SPI_FILES_PATH ${DRIVER_FLEXCOMM_FILES_PATH}/spi)
+    set(DRIVER_MRTIMER_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mrt)
+    set(DRIVER_SDIOSLV_PATH ${NXP_SDK_ROOT}/platform/drivers/sdu)
+    set(DEVICE_USB_FILES_PATH ${MIDDLEWARE_PATH}/usb/device)
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
-    set(DRIVER_MRTIMER_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mrt)
     set(NCP_COMMON_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples/common)
-    set(DRIVER_SDIOSLV_PATH ${NXP_SDK_ROOT}/platform/drivers/sdu)
+    set(NCP_INTF_SDIO_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device)
+    set(NCP_INTF_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave)
+    set(NCP_INTF_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
+    set(NCP_INTF_USB_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -377,35 +393,35 @@ if(OT_NCP_RADIO)
     if(OT_NXP_NCP_UART_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
             ${DRIVER_USART_FILES_PATH}/fsl_usart_freertos.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart/ncp_intf_uart.c
+            ${NCP_INTF_UART_FILES_PATH}/ncp_intf_uart.c
         )
     elseif(OT_NXP_NCP_USB_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
             ${DRIVER_MRTIMER_FILES_PATH}/fsl_mrt.c
             ${NXP_SDK_ROOT}/components/timer/fsl_adapter_mrt.c
-            ${MIDDLEWARE_PATH}/usb/device/class/usb_device_cdc_acm.c
-            ${MIDDLEWARE_PATH}/usb/device/class/usb_device_class.c
+            ${DEVICE_USB_FILES_PATH}/class/usb_device_cdc_acm.c
+            ${DEVICE_USB_FILES_PATH}/class/usb_device_class.c
             ${MIDDLEWARE_PATH}/usb/device/usb_device_dci.c
             ${MIDDLEWARE_PATH}/usb/device/usb_device_ehci.c
-            ${MIDDLEWARE_PATH}/usb/device/usb_device_ch9.c
+            ${DEVICE_USB_FILES_PATH}/usb_device_ch9.c
             ${NCP_COMMON_FILES_PATH}/lpm/host_sleep.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc/ncp_intf_usb_device_cdc.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc/usb_device_cdc_app.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc/usb_device_descriptor.c
+            ${NCP_INTF_USB_FILES_PATH}/ncp_intf_usb_device_cdc.c
+            ${NCP_INTF_USB_FILES_PATH}/usb_device_cdc_app.c
+            ${NCP_INTF_USB_FILES_PATH}/usb_device_descriptor.c
         )
     elseif(OT_NXP_NCP_SPI_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
             ${DRIVER_LPC_DMA_FILES_PATH}/fsl_dma.c
             ${DIRVER_SPI_FILES_PATH}/fsl_spi.c
             ${DIRVER_SPI_FILES_PATH}/fsl_spi_dma.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave/ncp_intf_spi_slave.c
+            ${NCP_INTF_SPI_FILES_PATH}/ncp_intf_spi_slave.c
         )
     elseif(OT_NXP_NCP_SDIO_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
             ${DRIVER_SDIOSLV_PATH}/fsl_sdioslv_sdu.c
             ${DRIVER_SDIOSLV_PATH}/cis_table.c
             ${NXP_SDK_ROOT}/components/sdu/fsl_adapter_sdu.c
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device/ncp_intf_sdio.c
+            ${NCP_INTF_SDIO_FILES_PATH}/ncp_intf_sdio.c
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
@@ -487,29 +503,30 @@ if(OT_NCP_RADIO)
 
     if(OT_NXP_NCP_UART_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart
+            ${NCP_INTF_UART_FILES_PATH}
         )
     elseif(OT_NXP_NCP_USB_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
             ${NXP_SDK_ROOT}/middleware/usb/include
             ${NXP_SDK_ROOT}/middleware/usb/device
-            ${NXP_SDK_ROOT}/middleware/usb/device/class
+            ${DEVICE_USB_FILES_PATH}/class
+            ${DEVICE_USB_FILES_PATH}
             ${DRIVER_MRTIMER_FILES_PATH}
             ${NCP_COMMON_FILES_PATH}/lpm
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_device_cdc
+            ${NCP_INTF_USB_FILES_PATH}
         )
     elseif(OT_NXP_NCP_SPI_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
             ${DRIVER_LPC_DMA_FILES_PATH}
             ${DIRVER_SPI_FILES_PATH}
             ${DRIVER_DMA_FILES_PATH}
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave
+            ${NCP_INTF_SPI_FILES_PATH}
         )
     elseif(OT_NXP_NCP_SDIO_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
             ${NXP_SDK_ROOT}/components/sdu
             ${DRIVER_SDIOSLV_PATH}
-            ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device
+            ${NCP_INTF_SDIO_FILES_PATH}
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
