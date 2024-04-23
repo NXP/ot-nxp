@@ -71,7 +71,7 @@ static const otCliCommand addonsCommands[] = {
     {"radio_nxp", ProcessRadio},
 #endif
 #ifdef OT_APP_CLI_DEBUG_ADDON
-    {"debug", ProcessDebug},
+    {"debug_nxp", ProcessDebug},
 #endif
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
     {"lp", ProcessLowPower},
