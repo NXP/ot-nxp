@@ -508,15 +508,15 @@
 #define PACKAGE_URL "TODO: replace it with a link to the public GIthub repo"
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
  *
  * This setting configures the interval (in units of microseconds) for host-rcp
  * time sync. The host will recalculate the time offset between host and RCP
  * every interval.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
-#define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (10 * 1000 * 1000)
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
+#define OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL (10 * 1000 * 1000)
 #endif
 
 /**
