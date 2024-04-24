@@ -48,6 +48,8 @@ if(OT_APP_BR_FREERTOS)
         ${PROJECT_SOURCE_DIR}/src/common/br/lwip_mcast.c
         ${PROJECT_SOURCE_DIR}/src/common/br/border_agent.c
         ${PROJECT_SOURCE_DIR}/src/common/br/br_rtos_manager.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/mdns_socket.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/utils.c
     )
 
     set(OT_BR_INCLUDES
