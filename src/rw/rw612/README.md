@@ -50,7 +50,7 @@ Make sure that the paths of all these tools are set into the `Path` system varia
 Download the NXP MCUXpresso git SDK and associated middleware from GitHub using the west tool:
 
 ```bash
-$ cd <path-to-ot-nxp>/third_party/github_sdk/sdk_2.15.0
+$ cd <path-to-ot-nxp>/third_party/github_sdk/
 $ west init -l manifest --mf west.yml
 $ west update
 ```

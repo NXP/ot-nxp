@@ -144,7 +144,7 @@ set(RW612_SDK_SOURCES
     ${NXP_SDK_ROOT}/components/lists/fsl_component_generic_list.c
     ${NXP_SDK_ROOT}/components/osa/fsl_os_abstraction_free_rtos.c
     ${NXP_SDK_ROOT}/components/uart/fsl_adapter_usart.c
-    ${NXP_SDK_ROOT}/components/rpmsg/fsl_adapter_rfimu.c
+    ${NXP_SDK_ROOT}/components/imu_adapter/fsl_adapter_imu.c
 
     # ${NXP_SDK_ROOT}/components/rng/fsl_adapter_software_rng.c
     ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga/mflash_drv.c
@@ -463,12 +463,13 @@ set(RW612_SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/serial_manager
     ${NXP_SDK_ROOT}/components/lists
     ${NXP_SDK_ROOT}/components/osa
-    ${NXP_SDK_ROOT}/components/rpmsg
+    ${NXP_SDK_ROOT}/components/imu_adapter
     ${NXP_SDK_ROOT}/components/rng
     ${NXP_SDK_ROOT}/components/flash/mflash
     ${NXP_SDK_ROOT}/components/flash/mflash/rdrw612bga
     ${NXP_SDK_ROOT}/components/timer
     ${NXP_SDK_ROOT}/components/time_stamp
+    ${NXP_SDK_ROOT}/components/timer_manager
     ${NXP_SDK_ROOT}/components/power_manager/devices/RW612
     ${NXP_SDK_ROOT}/components/power_manager/core/
     ${NXP_SDK_ROOT}/components/gpio/
@@ -647,6 +648,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DgNvStorageIncluded_d=1
     -DAPP_FLEXSPI_AMBA_BASE=0x08000000
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
+    -DFSL_OSA_ALLOCATED_HEAP=0
     -DgAspCapability_d=1
     -DFFU_CNS_TX_PWR_TABLE_CALIBRATION=1
     -DIMU_TASK_PRIORITY=2 # OSA priority: configMAX_PRIORITIES - (osa_prio) - 2 = FreeRTOS priority
@@ -724,7 +726,6 @@ if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
             -DgBoardUseFro32k_d=1
-            -DFSL_OSA_ALLOCATED_HEAP=0
     )
 endif()
 
