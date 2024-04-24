@@ -36,7 +36,7 @@ manifest:
   projects:
   - name: sdk-release
     url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
-    revision: develop/2.15.000_connectivity
+    revision: release/2.16.000_major_rfp
     import:
       name-allowlist:
         - mcux-sdk
