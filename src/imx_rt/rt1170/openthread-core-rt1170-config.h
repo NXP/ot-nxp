@@ -425,7 +425,7 @@
 #endif
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
  *
  * This setting configures the interval (in units of microseconds) for host-rcp
  * time sync. The host will recalculate the time offset between host and RCP
@@ -435,8 +435,8 @@
  * the freeRTOS time drift that may happen when flash operations are done.
  *
  */
-#ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
-#define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (1 * US_PER_S)
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
+#define OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL (1 * US_PER_S)
 #endif
 
 /**
