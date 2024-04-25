@@ -253,6 +253,7 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DSERIAL_PORT_TYPE_UART=1
     -DCONFIG_ARM=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
+    -DFSL_OSA_ALLOCATED_HEAP=0
 
     # LittleFS configs
     LFS_CONFIG=fwk_lfs_config.h
@@ -286,7 +287,8 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/wifi_nxp/incl/wifidriver
         ${MIDDLEWARE_PATH}/wifi_nxp/incl
         ${MIDDLEWARE_PATH}/wifi_nxp/incl/wlcmgr
-        ${MIDDLEWARE_PATH}/wifi_nxp/incl/port/os
+        ${MIDDLEWARE_PATH}/wifi_nxp/port/osa
+        ${MIDDLEWARE_PATH}/wifi_nxp/incl/port/osa
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/incl
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/incl
@@ -301,6 +303,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
         ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x/nw61x_cpu12_se.c
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c

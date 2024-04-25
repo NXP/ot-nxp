@@ -39,7 +39,7 @@ $ ./script/bootstrap
 
 ```
 bash
-$ cd third_party/github_sdk/sdk_2.15.1
+$ cd third_party/github_sdk
 $ west init -l manifest --mf west.yml
 $ west update
 ```
@@ -48,7 +48,7 @@ In case there are local modifications to the already installed git NXP SDK. Use 
 
 ```
 bash
-$ cd third_party/github_sdk/sdk_2.15.1
+$ cd third_party/github_sdk
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
