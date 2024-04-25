@@ -52,5 +52,6 @@ manifest:
         - mcux-sdk-middleware-connectivity-framework
         - mcux-sdk-middleware-ieee_802.15.4
         - mcux-sdk-middleware-zigbee
+        - mcux-sdk-middleware-usb
         - rpmsg-lite
         - mcux-sdk-examples
