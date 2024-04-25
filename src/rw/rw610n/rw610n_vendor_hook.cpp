@@ -263,7 +263,7 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
         uint64_t     u64;
 
         SuccessOrExit(error = mDecoder.ReadUint64(u64));
-        ot::Encoding::BigEndian::WriteUint64(u64, addr.m8);
+        ot::BigEndian::WriteUint64(u64, addr.m8);
         SuccessOrExit(error = otIwx12SetEui64(addr.m8));
     }
     break;
