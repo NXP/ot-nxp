@@ -26,7 +26,7 @@ $ ./script/bootstrap
 Download the K32W1 SDK using the west tool.
 
 ```bash
-$ cd third_party/github_sdk/sdk_2.15.0
+$ cd third_party/github_sdk
 $ west init -l manifest --mf west.yml
 $ west update
 ```
@@ -34,15 +34,15 @@ $ west update
 In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
 ```bash
-$ cd third_party/github_sdk/sdk_2.15.0
+$ cd third_party/github_sdk
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
 Some files permission need to be changed to executable :
 
 ```bash
-$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/sdk_2.15.0/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
-$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/sdk_2.15.0/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
+$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
+$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
 
 ```
 
@@ -77,7 +77,7 @@ The image needed on the host side is the one generated in `build_k32w1/bin` whil
 NBU image should be written only when a new NXP-SDK is released. [blhost tool](https://cache.nxp.com/secured/assets/downloads/en/device-drivers/blhost_2.6.7.zip?fileExt=.zip) can be used for flashing. Before writing the image, please make sure that K32W1 is in bootloader mode by keeping the SW4 button pressed while connecting the K32W1 board to an USB port (unplug the board if already connected to an USB port):
 
 ```bash
-C:\nxp\blhost_2.6.7> blhost.exe -p COM50 -- receive-sb-file .\k32w1_nbu_ble_15_4_dyn_a1.sb3
+C:\nxp\blhost_2.6.7> blhost.exe -p COM50 -- receive-sb-file .\k32w1_nbu_ble_15_4_dyn.sb3
 ```
 
 Please note that COM50 should be replaced with the COM port that corresponds to the K32W1 device.
@@ -165,7 +165,17 @@ Run -> Debug Configurations... -> C/C++ Application
 3. Open a terminal connection on the first board and start a new Thread network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset init new
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done
@@ -183,7 +193,15 @@ Leader
 5. Open a terminal connection on the second board and attach a node to the network.
 
 ```bash
-> panid 0xabcd
+> factoryreset
+Done
+> dataset channel 17
+Done
+> dataset networkkey 00112233445566778899aabbccddeeff
+Done
+> dataset panid 0xabcd
+Done
+> dataset commit active
 Done
 > ifconfig up
 Done

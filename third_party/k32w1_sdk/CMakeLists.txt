@@ -101,6 +101,7 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ics.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ot.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_extflash.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_rng.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Source/NV_Flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower/PWR.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG/RNG.c

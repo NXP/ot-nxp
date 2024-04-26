@@ -247,7 +247,7 @@ main()
     SDK_GH=OFF
 
     if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
-        export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/sdk_2.15.0/core"
+        export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/core"
     fi
 
     if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
