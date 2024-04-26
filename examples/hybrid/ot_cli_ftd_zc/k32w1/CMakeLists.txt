@@ -88,6 +88,7 @@ target_include_directories(nxp-k32w1-zigbee-gen
 
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/Include
 
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform/K32W1/framework/Common
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/platform/K32W1/framework/SecLib
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/ZigbeeCommon/Include
