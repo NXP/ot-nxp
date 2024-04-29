@@ -54,6 +54,7 @@ list(APPEND OT_PLAT_SOURCES
     ../../common/diag.c
     ../../common/flash_littlefs.c
     ../../common/logging.c
+    ../../common/entropy.c
     misc.c
     ../../common/spinel/radio.cpp
     ${SPINEL_FILES}
@@ -71,7 +72,6 @@ list(APPEND OT_PLAT_FLAGS
     -DOT_PLAT_SYS_CRYPTO_INIT
     -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
     -DOT_PLAT_SYS_LOG_MANAGEMENT
-    -DOT_PLAT_SYS_RANDOM_DISABLE
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE
     -DOPENTHREAD_FTD=1
     -DOT_APP_THREAD_RATE_LIMIT=${OT_APP_THREAD_RATE_LIMIT}

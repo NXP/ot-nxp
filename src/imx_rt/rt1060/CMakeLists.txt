@@ -96,8 +96,7 @@ else()
     add_library(${OT_PLATFORM_LIB}
         ../../common/alarm_freertos.c
         ../../common/diag.c
-
-        # ../../common/entropy.c
+        ../../common/entropy.c
         ../../common/flash_littlefs.c
         ../../common/logging.c
         ../../common/spinel/misc.c
@@ -164,7 +163,6 @@ target_compile_options(${OT_PLATFORM_LIB}
     -DOT_PLAT_SYS_CRYPTO_INIT
     -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
     -DOT_PLAT_SYS_LOG_MANAGEMENT
-    -DOT_PLAT_SYS_RANDOM_DISABLE
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
     -DOPENTHREAD_FTD=1
     -Wno-unknown-pragmas

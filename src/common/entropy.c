@@ -32,35 +32,19 @@
  *
  */
 
-#include <openthread/platform/entropy.h>
-
-#include "fsl_adapter_rng.h"
-#include <utils/code_utils.h>
+#include <openthread/platform/crypto.h>
 
 void otPlatRandomInit(void)
 {
-    hal_rng_status_t status = HAL_RngInit();
-    assert(status == kStatus_HAL_RngSuccess || status == KStatus_HAL_RngNotSupport);
-    OT_UNUSED_VARIABLE(status);
+    otPlatCryptoRandomInit();
 }
 
 void otPlatRandomDeinit(void)
 {
-    HAL_RngDeinit();
+    otPlatCryptoRandomDeinit();
 }
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    otError status = OT_ERROR_NONE;
-
-    if (aOutput == NULL)
-    {
-        status = OT_ERROR_INVALID_ARGS;
-    }
-    else if (HAL_RngHwGetData(aOutput, aOutputLength) != kStatus_HAL_RngSuccess)
-    {
-        status = OT_ERROR_FAILED;
-    }
-
-    return status;
+    return otPlatCryptoRandomGet(aOutput, aOutputLength);
 }

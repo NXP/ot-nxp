@@ -104,9 +104,7 @@ void otSysInit(int argc, char *argv[])
 
     otPlatRadioInit();
     otPlatAlarmInit();
-#ifndef OT_PLAT_SYS_RANDOM_DISABLE
     otPlatRandomInit();
-#endif
 
     atexit(otPlatExitFunction);
 }
@@ -115,9 +113,7 @@ void otSysDeinit(void)
 {
     otPlatRadioDeinit();
     otPlatAlarmDeinit();
-#ifndef OT_PLAT_SYS_RANDOM_DISABLE
     otPlatRandomDeinit();
-#endif
 }
 
 bool otSysPseudoResetWasRequested(void)

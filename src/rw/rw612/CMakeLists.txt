@@ -107,8 +107,8 @@ add_library(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common/uart.c
     ${PROJECT_SOURCE_DIR}/src/common/flash_fsa.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
-    platform/entropy.c
-    platform/diag.c
+    ${PROJECT_SOURCE_DIR}/src/common/entropy.c
+    ${PROJECT_SOURCE_DIR}/src/common/diag.c
 )
 
 set_target_properties(
