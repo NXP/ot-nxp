@@ -49,7 +49,8 @@ endif()
 set(WIFI_COMMON_SOURCES
     ${WIFI_PATH}/port/net/net.c
     ${WIFI_PATH}/port/net/wifi_netif.c
-    ${WIFI_PATH}/port/os/os.c
+    ${WIFI_PATH}/port/osa/osa.c
+    ${WIFI_PATH}/port/osa/osa_freertos.c
     ${WIFI_PATH}/wifidriver/mlan_11ac.c
     ${WIFI_PATH}/wifidriver/mlan_11ax.c
     ${WIFI_PATH}/wifidriver/mlan_11k.c
@@ -107,11 +108,11 @@ target_compile_definitions(wifi
 
 target_include_directories(wifi
     PUBLIC
-    ${WIFI_PATH}/port/os
+    ${WIFI_PATH}/port/osa
     ${WIFI_PATH}/port/net
     ${WIFI_PATH}/port/arch
     ${WIFI_PATH}/incl
-    ${WIFI_PATH}/incl/port/os
+    ${WIFI_PATH}/incl/port/osa
     ${WIFI_PATH}/incl/port/net
     ${WIFI_PATH}/incl/wifidriver
     ${WIFI_PATH}/incl/wlcmgr
@@ -121,6 +122,7 @@ target_include_directories(wifi
     ${PROJECT_SOURCE_DIR}/third_party/wifi
     ${EDGEFAST_WIFI_PATH}/include
     ${WIFI_BT_MODULE_PATH}/template
+    ${WIFI_BT_MODULE_PATH}/incl
     PRIVATE
     ${WIFI_BT_MODULE_PATH}/AzureWave/tx_pwr_limits
     ${WIFI_BT_MODULE_PATH}/Murata/tx_pwr_limits
