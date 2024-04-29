@@ -1,48 +1,65 @@
+#
+#  Copyright (c) 2024, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
 
 # The west manifest file (west.yml) for MCUXpresso SDK delivery.
 #
 # See the west documentation for more information:
 #
 # https://docs.zephyrproject.org/latest/guides/west/index.html
+
 manifest:
-  remotes:
-  - name: nxpmicro
-    url-base: https://github.com/NXPmicro
-  defaults:
-    remote: nxpmicro
   projects:
-  - name: mcux-sdk
-    revision: 7219c54f5dbd5a8636242f9f1771ddb70be146c9
-    path: core
-  - name: amazon-freertos
-    url: https://github.com/NXP/amazon-freertos.git
-    path: core/rtos/amazon-freertos
-    revision: fb74168634e716fb5f0a61714e5c0d1ac6246ba
-  - name: mbedtls
-    url: https://github.com/nxp-mcuxpresso/mbedtls.git
-    path: core/middleware/mbedtls
-    revision: 15458495823165de372f62c3dad621a8da6c86e3
-  - name: framework
-    url: https://github.com/NXP/mcux-sdk-middleware-connectivity-framework.git
-    revision: 2ccc3df70ee5b73c451fceee13e6172518412518
-    path: core/middleware/wireless/framework   
-  - name: ble_controller
-    url: https://github.com/NXP/mcux-sdk-middleware-bluetooth-controller.git
-    revision: 0e4effc707a0d5569160b9335bc2e57c17255f01
-    path: core/middleware/wireless/ble_controller
-  - name: bluetooth
-    url: https://github.com/NXP/mcux-sdk-middleware-bluetooth-host.git
-    revision: e5a1b7b9e3b44b49c6c0318edfc3acac74b342d8
-    path: core/middleware/wireless/bluetooth
-  - name: ieee-802.15.4
-    url: https://github.com/NXP/mcux-sdk-middleware-ieee_802.15.4.git
-    revision: e8c96197346a7e37ce3a872096a22bf4aee47e3d
-    path: core/middleware/wireless/ieee-802.15.4
-  - name: zigbee
-    url: https://github.com/nxp-mcuxpresso/mcux-sdk-middleware-zigbee.git
-    revision: d4b5448f8da76f820ea9308f87d27ef4a2dd318b
-    path: core/middleware/wireless/zigbee
-  - name: examples
-    url: https://github.com/nxp-mcuxpresso/mcux-sdk-examples.git
-    revision: 6735550f5a41dfb997d4dd3ce6eebfe1f1d41054
+  - name: sdk-release
+    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
+    revision: release/2.6.x_k32w0
+    import:
+      file: west.yml
+      name-allowlist:
+        - mcux-sdk
+
+  - name: extra-sdk
+    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
+    revision: release/2.6.x_k32w0
+    import:
+      file: west.yml
+      name-allowlist:
+        - amazon-freertos
+        - mbedtls
+
+        - mcux-sdk-middleware-connectivity-framework
+        - mcux-sdk-middleware-bluetooth-controller
+        - mcux-sdk-middleware-bluetooth-host
+        - mcux-sdk-middleware-ieee_802.15.4
+        - mcux-sdk-middleware-zigbee
+      path-prefix: core
+
+# it can't be put into the right folder with 'path-prefix' if imported
+  - name: mcux-sdk-examples
+    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcux-sdk-examples-github.git
+    revision: release/2.6.x_k32w0_gh_prep
     path: core/boards
