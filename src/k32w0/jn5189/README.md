@@ -49,7 +49,7 @@ $ pip3 install pycryptodome
 
 ![MCUXpresso SDK Download](../../../doc/img/k32w/sdk_builder_jn5189.JPG)
 
-> **_Note:_** JN5189 is no longer supported on latest ot-nxp releases. 
+> **_Note:_** JN5189 is no longer supported on latest ot-nxp releases.
 
 ## Building the examples
 

@@ -131,6 +131,7 @@ Dependencies for the dk6prog module can be installed using the following command
 ```
 $ pip install spsdk[dk6]
 ```
+
 The SPSDK installation adds dk6prog as executable to system path, so user can use directly `dk6prog` from terminal.
 The following commands are to be used to write the ot-rcp binary to the board.
 
