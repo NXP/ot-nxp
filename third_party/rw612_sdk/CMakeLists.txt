@@ -685,12 +685,13 @@ if(OT_NCP_RADIO)
         PUBLIC
         -DCONFIG_CRC32_HW_ACCELERATE
         -DNCP_TLV_TX_TASK_PRIORITY=3
+        -DRW610
     )
 
-    if(NOT OT_NXP_LWIP_WIFI)
+    if(OT_NXP_LWIP_WIFI)
         target_compile_definitions(${NXP_DRIVER_LIB}
             PUBLIC
-            -DRW610
+            -DWIFI_BT_TX_PWR_LIMITS="wlan_txpwrlimit_cfg_WW_rw610.h"
         )
     endif()
 
