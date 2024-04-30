@@ -55,13 +55,15 @@
 
 #include "addons_cli.h"
 #include "app_ot.h"
+#include "border_agent.h"
 #include "br_rtos_manager.h"
 #include "ncp_ot.h"
 #include "ot_lwip.h"
+#include "utils.h"
 
 #include "openthread-system.h"
 #include <openthread-core-config.h>
-#include <openthread/mdns_server.h>
+#include <openthread/mdns.h>
 #include <openthread/nat64.h>
 
 #include <openthread/cli.h>
@@ -128,6 +130,8 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #define USE_OT_MDNS 1
 #endif
 
+#define MAX_HOST_IPV6_ADDRESSES 16
+
 /* Ethernet configuration. */
 #if defined(OT_NXP_PLATFORM_RT1170)
 #define EXAMPLE_CLOCK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Bus)
@@ -176,6 +180,12 @@ static struct netif     *sExtNetifPtr;
 static otInstance          *sInstance = NULL;
 static netif_ext_callback_t sNetifCallback;
 
+static otMdnsHost      sHost;
+static otIp6Address    sHostAddresses[MAX_HOST_IPV6_ADDRESSES];
+static otMdnsRequestId sRequestId;
+
+static char sHostName[] = "NXP-BR#0000";
+
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -199,6 +209,7 @@ static void appOtInit();
 static void appBrInit();
 static void mainloop(void *aContext);
 static void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args);
+static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions prototypes                   */
@@ -465,14 +476,21 @@ static void appBrInit()
     appConfigEnetIf();
 #endif
 
-    BrInitServices(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
+    BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
 
-    otMdnsServerSetHostName(sInstance, "NXPBR-xxxx.local.");
-    otMdnsServerStart(sInstance);
+    sHost.mHostName        = CreateBaseName(sInstance, sHostName);
+    sHost.mAddressesLength = 0;
+    sHost.mTtl             = 120;
+    sHost.mInfraIfIndex    = 0;
+    sHost.mAddresses       = sHostAddresses;
+
+    BrInitServices(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
 }
 
 void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args)
 {
+    bool shouldAddAddress = true;
+
     if ((reason & (LWIP_NSC_IPV6_SET | LWIP_NSC_IPV6_ADDR_STATE_CHANGED)) && netif == sExtNetifPtr)
     {
         for (int i = (LWIP_IPV6_NUM_ADDRESSES - 1); i >= 0; i--)
@@ -489,7 +507,21 @@ void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_
                     memcpy(externalNetifAddress.mFields.m8, ip_2_ip6(lwipAddr),
                            sizeof(externalNetifAddress.mFields.m8));
 #if OPENTHREAD_CONFIG_MDNS_SERVER_ENABLE
-                    otMdnsServerAddAddress(sInstance, &externalNetifAddress);
+                    for (uint8_t i = 0; i < sHost.mAddressesLength; i++)
+                    {
+                        if (!memcmp(sHostAddresses[i].mFields.m8, externalNetifAddress.mFields.m8,
+                                    sizeof(externalNetifAddress.mFields.m8)))
+                        {
+                            shouldAddAddress = false;
+                            break;
+                        }
+                    }
+                    if (shouldAddAddress)
+                    {
+                        sHostAddresses[sHost.mAddressesLength] = externalNetifAddress;
+                        sHost.mAddressesLength++;
+                        otMdnsRegisterHost(sInstance, &sHost, sRequestId, HandleMdnsRegisterCallback);
+                    }
 #endif
                 }
             }
@@ -527,6 +559,20 @@ static void appNcpInit()
     assert(NCP_STATUS_SUCCESS == result);
     result = ncp_cmd_list_init();
     assert(NCP_STATUS_SUCCESS == result);
+}
+
+static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
+{
+    if (aError == OT_ERROR_NONE && aRequestId == 0)
+    {
+        BorderAgentInit(aInstance, sHost.mHostName);
+    }
+    else
+    {
+        // rename
+        sHost.mHostName = CreateAlternativeBaseName(aInstance, sHost.mHostName);
+        otMdnsRegisterHost(aInstance, &sHost, sRequestId, HandleMdnsRegisterCallback);
+    }
 }
 
 static void mainloop(void *aContext)
