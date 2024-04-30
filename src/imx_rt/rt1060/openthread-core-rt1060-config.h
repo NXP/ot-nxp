@@ -302,7 +302,7 @@
  * Increasing the default TX wait value to let more time to spinel frames to be proceeded by the host
  *
  */
-#define TX_WAIT_US (10 * US_PER_S)
+#define TX_WAIT_US (10 * 1000 * 1000)
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
@@ -416,7 +416,7 @@
  *
  */
 #ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL
-#define OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL (1 * US_PER_S)
+#define OPENTHREAD_SPINEL_CONFIG_RCP_TIME_SYNC_INTERVAL (1 * 1000 * 1000)
 #endif
 
 /**
