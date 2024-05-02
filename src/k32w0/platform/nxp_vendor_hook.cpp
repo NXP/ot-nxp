@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016-2022, The OpenThread Authors.
+ *    Copyright (c) 2016-2024, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -73,10 +73,10 @@ public:
                                      otError       aError);
 
     explicit NcpNxpVendorUart(Instance *aInstance);
-
+    void Init(void);
     void HandleHdlcReceiveDoneHook(const uint8_t *aBuf, uint16_t aBufLength);
     bool GenerateHdlcMessageAndSent(uint8_t hciPacketType, void *pHciPacket, uint16_t hciPacketLength);
-    void LinkRawTransmitDoneHook(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+    void LinkRawTransmitDoneHook(uint8_t aIid, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
 
 private:
     enum
@@ -162,7 +162,7 @@ bool NcpNxpVendorUart::GenerateHdlcMessageAndSent(uint8_t hciPacketType, void *p
 
 NcpNxpVendorUart::NcpNxpVendorUart(ot::Instance *aInstance)
     : NcpHdlc(aInstance, &NcpNxpVendorUart::SendHdlcHook)
-    , mFrameDecoderHook(mRxBufferHook, &NcpNxpVendorUart::HandleFrameHook, this)
+    , mFrameDecoderHook()
 {
 }
 
@@ -175,24 +175,29 @@ void NcpNxpVendorUart::otLinkRawTransmitNXP(otInstance   *aInstance,
 
     if (ncpHdlc != nullptr)
     {
-        ncpHdlc->LinkRawTransmitDoneHook(aFrame, aAckFrame, aError);
+        ncpHdlc->LinkRawTransmitDoneHook(GetNcpBaseIid(aInstance), aFrame, aAckFrame, aError);
     }
 }
 
-void NcpNxpVendorUart::LinkRawTransmitDoneHook(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
+void NcpNxpVendorUart::LinkRawTransmitDoneHook(uint8_t       aIid,
+                                               otRadioFrame *aFrame,
+                                               otRadioFrame *aAckFrame,
+                                               otError       aError)
 {
     OT_UNUSED_VARIABLE(aFrame);
+    OT_ASSERT(aIid < kSpinelInterfaceCount);
+
     Spinel::Buffer &txFrameBuffer = mTxFrameBuffer;
     otError         error         = OT_ERROR_FAILED;
 
-    if (!mCurTransmitTID)
+    if (!mCurTransmitTID[aIid])
         return;
 
     while (error != OT_ERROR_NONE)
     {
         do
         {
-            uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
+            uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID[aIid];
 
             bool framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
             bool headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
@@ -262,7 +267,7 @@ void NcpNxpVendorUart::LinkRawTransmitDoneHook(otRadioFrame *aFrame, otRadioFram
         else
         {
             // Clear cached transmit TID
-            mCurTransmitTID = 0;
+            mCurTransmitTID[aIid] = 0;
         }
     }
 
@@ -273,6 +278,11 @@ int NcpNxpVendorUart::SendHdlcHook(const uint8_t *aBuf, uint16_t aBufLength)
 {
     IgnoreError(otPlatUartSend(aBuf, aBufLength));
     return aBufLength;
+}
+
+void NcpNxpVendorUart::Init(void)
+{
+    mFrameDecoderHook.Init(mRxBufferHook, &NcpNxpVendorUart::HandleFrameHook, this);
 }
 
 void NcpNxpVendorUart::HandleHdlcReceiveDoneHook(const uint8_t *aBuf, uint16_t aBufLength)
@@ -412,6 +422,10 @@ extern "C" void otAppNcpInit(otInstance *aInstance)
     if (ncpVendor == nullptr || ncpVendor != ot::Ncp::NcpBase::GetNcpInstance())
     {
         // assert(false);
+    }
+    else
+    {
+        ncpVendor->Init();
     }
 }
 
