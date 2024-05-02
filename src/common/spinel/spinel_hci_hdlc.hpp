@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2022, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2022-2024, NXP.
  *
  *  All rights reserved.
  *
@@ -45,10 +45,8 @@ namespace NXP {
 class HdlcSpinelHciInterface : public HdlcInterface
 {
 public:
-    HdlcSpinelHciInterface(ot::Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                           void                                             *aCallbackContext,
-                           ot::Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer)
-        : HdlcInterface(aCallback, aCallbackContext, aFrameBuffer)
+    HdlcSpinelHciInterface(const Url::Url &aRadioUrl)
+        : HdlcInterface(aRadioUrl)
     {
     }
 

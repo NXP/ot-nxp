@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022, NXP.
+ *  Copyright (c) 2022-2024, NXP.
  *
  *  All rights reserved.
  *
@@ -40,20 +40,21 @@
 
 #include <lib/platform/exit_code.h>
 #include <lib/spinel/radio_spinel.hpp> // nogncheck
+#include "lib/spinel/spinel.h"
+#include "lib/url/url.hpp"
+
+static ot::Spinel::RadioSpinel sRadioSpinel;
+static ot::Url::Url            sRadioUrl;
 
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
-static ot::Spinel::RadioSpinel sRadioSpinel;
-static ot::Url::Url            sRadioUrl;
-static ot::NXP::SpiInterface   sSpinelInterface(sRadioUrl);
+static ot::NXP::SpiInterface sSpinelInterface(sRadioUrl);
 #elif defined(OT_PLAT_SPINEL_OVER_HDLC)
 #include "spinel_hdlc.hpp"
-static ot::Spinel::RadioSpinel sRadioSpinel;
-static ot::Url::Url            sRadioUrl;
-static ot::NXP::HdlcInterface  sSpinelInterface(sRadioUrl);
+static ot::NXP::HdlcInterface sSpinelInterface(sRadioUrl);
 #elif defined(OT_PLAT_SPINEL_HCI_OVER_HDLC)
 #include "spinel_hci_hdlc.hpp"
-static ot::Spinel::RadioSpinel sRadioSpinel;
+static ot::NXP::HdlcSpinelHciInterface sSpinelInterface(sRadioUrl);
 #endif
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
