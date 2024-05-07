@@ -33,6 +33,7 @@ message(STATUS " absolut path  ${NXP_SDK_ROOT}")
 if(${SDK_TYPE} STREQUAL "GITHUB")
     message("SDK_GITHUB driver path chosen")
     set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
+    set(EXAMPLES_PATH ${NXP_SDK_ROOT}/examples)
     set(NXP_SDK_ROOT ${NXP_SDK_ROOT}/core)
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/drivers)
     set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH}/lpuart)
@@ -56,6 +57,12 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(DEBUG_CONSOLE_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console_lite)
     set(STR_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1062/xip)
+    set(NCP_FILES_PATH ${EXAMPLES_PATH}/evkbmimxrt1060/ncp_examples)
+    set(NCP_COMMON_FILES_PATH ${NCP_FILES_PATH}/common)
+    set(NCP_SDIO_HOST_FILES_PATH ${NCP_FILES_PATH}/ncp_host/sdio_host)
+    set(NCP_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi)
+    set(NCP_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
+    set(NCP_USB_FILES_PATH ${NCP_FILES_PATH}/ncp_host/usb_host)
 elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     message("SDK_PACKAGE driver path chosen")
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1062/drivers)
@@ -98,7 +105,12 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/assert)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1052/xip)
-    set(NCP_ADAPTER_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples/common)
+    set(NCP_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples)
+    set(NCP_COMMON_FILES_PATH ${NCP_FILES_PATH}/common)
+    set(NCP_SDIO_HOST_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host)
+    set(NCP_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master)
+    set(NCP_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
+    set(NCP_USB_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -332,19 +344,19 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
         ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart_freertos.c
         ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
-        ${NCP_ADAPTER_FILES_PATH}/crc/crc.c
-        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
-        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
+        ${NCP_COMMON_FILES_PATH}/crc/crc.c
+        ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
+        ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
     )
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
         list(APPEND SDK_SOURCES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/uart/ncp_intf_uart.c
+            ${NCP_UART_FILES_PATH}/ncp_intf_uart.c
         )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "USB")
         list(APPEND SDK_SOURCES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/ncp_intf_usb_host_cdc.c
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/ncp_usb_host_cdc.c
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc/usb_host_cdc_app.c
+            ${NCP_USB_FILES_PATH}/ncp_intf_usb_host_cdc.c
+            ${NCP_USB_FILES_PATH}/ncp_usb_host_cdc.c
+            ${NCP_USB_FILES_PATH}/usb_host_cdc_app.c
             ${MIDDLEWARE_PATH}/usb/host/class/usb_host_cdc.c
             ${MIDDLEWARE_PATH}/usb/host/class/usb_host_hub_app.c
             ${MIDDLEWARE_PATH}/usb/host/class/usb_host_hub.c
@@ -356,34 +368,34 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SPI")
         list(APPEND SDK_SOURCES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master/ncp_intf_spi_master.c
+            ${NCP_SPI_FILES_PATH}/ncp_intf_spi_master.c
     )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SDIO")
         list(APPEND SDK_SOURCES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host/ncp_intf_sdio_host.c
+            ${NCP_SDIO_HOST_FILES_PATH}/ncp_intf_sdio_host.c
     )
     else()
         message(FATAL_ERROR "must select one ncp interface.")
     endif()
     list(APPEND SDK_INCLUDES
         ${DRIVER_DEVICE_FILES_PATH}
-        ${NCP_ADAPTER_FILES_PATH}/crc
-        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf
-        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_tlv
-        ${NCP_ADAPTER_FILES_PATH}/ncp_adapter
-        ${NCP_ADAPTER_FILES_PATH}/ncp_debug
-        ${NCP_ADAPTER_FILES_PATH}
+        ${NCP_COMMON_FILES_PATH}/crc
+        ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf
+        ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv
+        ${NCP_COMMON_FILES_PATH}/ncp_adapter
+        ${NCP_COMMON_FILES_PATH}/ncp_debug
+        ${NCP_COMMON_FILES_PATH}
     )
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
         list(APPEND SDK_INCLUDES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/uart
+            ${NCP_UART_FILES_PATH}
         )
         list(APPEND SDK_COMPILE_DEFINITIONS
             -DCONFIG_NCP_UART
         )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "USB")
         list(APPEND SDK_INCLUDES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc
+            ${NCP_USB_FILES_PATH}
             ${MIDDLEWARE_PATH}/usb/host
             ${MIDDLEWARE_PATH}/usb/include
             ${MIDDLEWARE_PATH}/usb/host/class
@@ -394,14 +406,14 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SPI")
         list(APPEND SDK_INCLUDES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master
+            ${NCP_SPI_FILES_PATH}
         )
         list(APPEND SDK_COMPILE_DEFINITIONS
             -DCONFIG_NCP_SPI
         )
     elseif("${OT_NCP_RW612_INTERFACE}" STREQUAL "SDIO")
         list(APPEND SDK_INCLUDES
-            ${NCP_ADAPTER_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host
+            ${NCP_SDIO_HOST_FILES_PATH}
         )
         list(APPEND SDK_COMPILE_DEFINITIONS
             -DCONFIG_NCP_SDIO
