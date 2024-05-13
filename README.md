@@ -7,7 +7,7 @@
 
 # OpenThread on NXP platforms
 
-This repo contains example platform drivers for [NXP K32W061 SoC][k32w061], [NXP JN5189 SoC][jn5189], [NXP K32W148 SoC][k32w148], [NXP RT 1060 Crossover MCU][rt1060], [NXP RT 1170 Crossover MCU][rt1170] and [NXP RW612 SoC][rw612].
+This repo contains example platform drivers for [NXP K32W061 SoC][k32w061], [NXP JN5189 SoC][jn5189], [NXP K32W148 SoC][k32w148], [NXP RT 1060 Crossover MCU][rt1060], [NXP RT 1170 Crossover MCU][rt1170], [NXP RW612 SoC][rw612] and [the MCX W71x family][mcxw71].
 
 [k32w061]: https://www.nxp.com/products/wireless/thread/k32w061-41-high-performance-secure-and-ultra-low-power-mcu-for-zigbeethread-and-bluetooth-le-5-0-with-built-in-nfc-option:K32W061_41
 [k32w148]: https://www.nxp.com/products/wireless-connectivity/multiprotocol-mcus/secure-and-ultra-low-power-mcu-for-matter-over-thread-and-bluetooth-le-5-3:K32W148
@@ -15,6 +15,7 @@ This repo contains example platform drivers for [NXP K32W061 SoC][k32w061], [NXP
 [rt1060]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1060-crossover-mcu-with-arm-cortex-m7-core:i.MX-RT1060
 [rt1170]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1170-crossover-mcu-family-first-ghz-mcu-with-arm-cortex-m7-and-cortex-m4-cores:i.MX-RT1170
 [rw612]: https://www.nxp.com/products/wireless/wi-fi-plus-bluetooth-plus-802-15-4/wireless-mcu-with-integrated-tri-radiobr1x1-wi-fi-6-plus-bluetooth-low-energy-5-3-802-15-4:RW612
+[mcxw71]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w71x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W71X
 
 To learn more about building and running the examples please check:
 
@@ -24,6 +25,7 @@ To learn more about building and running the examples please check:
 - [OpenThread on RT1060 examples][rt1060-page]
 - [OpenThread on RT1170 examples][rt1170-page]
 - [OpenThread on RW612 examples][rw612-page]
+- [OpenThread on MCX W71x examples][mcxw71-page]
 
 [k32w061-page]: src/k32w0/k32w061/README.md
 [jn5189-page]: src/k32w0/jn5189/README.md
@@ -31,6 +33,7 @@ To learn more about building and running the examples please check:
 [rt1060-page]: src/imx_rt/rt1060/README.md
 [rt1170-page]: src/imx_rt/rt1170/README.md
 [rw612-page]: src/rw/rw612/README.md
+[mcxw71-page]: src/mcxw71/mcxw71/README.md
 
 # NXP OpenThread Border Router
 
