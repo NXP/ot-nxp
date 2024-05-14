@@ -44,6 +44,7 @@ manifest:
         - mcux-sdk-middleware-sdmmc
         - CMSIS_5
         - mbedtls
+        - wpa_supplicant-rtos
         - littlefs
         - lwip
         - wifi_nxp
