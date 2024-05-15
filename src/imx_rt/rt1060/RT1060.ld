@@ -65,7 +65,7 @@ MEMORY
   m_interrupts          (RX)  : ORIGIN = 0x60002000, LENGTH = 0x00000400
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
-  m_qacode              (RX)  : ORIGIN = 0x00010000, LENGTH = 0x00010000 /* ITCM 64 KB */
+  m_qacode              (RX)  : ORIGIN = 0x00000400, LENGTH = 0x0001FC00 /* ITCM 127 KB */
   m_ncache              (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
   m_data                (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00090000 /* OCRAM1 512 KB + OCRAM-FlexRAM 64 KB */
 }
