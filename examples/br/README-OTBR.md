@@ -173,12 +173,14 @@ DATE: ---Fri 12 May 2023---
 
 Obtain Border Router's MLEID ip address, `ipaddr mleid` and then on the Thread device execute `dns config <IPaddr>`
 
-Obtaining information about ```WifiTestService``` can be done by executing this command on the Thread device:
+Obtaining information about `WifiTestService` can be done by executing this command on the Thread device:
+
 ```
 dns service WifiTestService _http._tcp.default.service.arpa.
- ```
+```
 
 The console output on the Thread device is shown below:
+
 ```
 DNS service resolution response for WifiTestService for service _http._tcp.default.service.arpa.
 Port:80, Priority:0, Weight:0, TTL:120
@@ -191,6 +193,7 @@ A browse resolution query can be send executing the following command:
 `dns browse _http._tcp.default.service.arpa.`
 
 This command will return all instances with the "\_http.\_tcp" service type:
+
 ```
 DNS browse response for _http._tcp.default.service.arpa.
 WifiTestService
@@ -201,9 +204,10 @@ WifiTestService
 ```
 
 To obtain the IPV6 address of a host name, an AAAA query is sent by executing the following command:
-` dns resolve ubuntu.default.service.arpa.`
+`dns resolve ubuntu.default.service.arpa.`
 
 The console output on the Thread device is shown below:
+
 ```
 DNS response for ubuntu.default.service.arpa. - 2a02:2f01:7b11:6a00:e65f:1ff:fef5:ff11 TTL:120 fdde:ad00:beef:cafe:e65f:1ff:fef5:ff11 TTL:120
 ```
@@ -222,6 +226,7 @@ ephkey length <key_length>
 ephkey timeout <timeout> (msec)
 ephkey port <port>
 ```
+
 `length`: indicates the key size; it takes values between 6 and 32 bytes inclusive.
 
 `timeout`: While the timeout interval is in effect, the ephemeral key can be used only once by an external
