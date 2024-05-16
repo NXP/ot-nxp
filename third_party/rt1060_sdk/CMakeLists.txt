@@ -336,6 +336,11 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
     )
 elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
+
+    if(NOT DEFINED OT_NCP_RW612_INTERFACE)
+        set(OT_NCP_RW612_INTERFACE "UART") # Use UART as default NCP adapter interface
+    endif()
+
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DCONFIG_NCP_BRIDGE
         -DCONFIG_NCP_OT

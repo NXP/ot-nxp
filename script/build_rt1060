@@ -145,6 +145,7 @@ create_directory_and_build()
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
         build rw612_ncp_host "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
@@ -164,7 +165,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
         build rw612_ncp_host "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host"
         # 128 for Invalid arguments
         exit 128
     fi
