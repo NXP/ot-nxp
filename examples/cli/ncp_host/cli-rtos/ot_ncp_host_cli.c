@@ -79,7 +79,8 @@ static uint32_t ot_get_input(uint8_t *inbuf, uint8_t *inlen)
     uint32_t ret;
     size_t   n;
 
-    uint32_t input_len = 0;
+    uint8_t  front_space = 0;
+    uint32_t input_len   = 0;
 
     while (true)
     {
@@ -105,11 +106,20 @@ static uint32_t ot_get_input(uint8_t *inbuf, uint8_t *inlen)
             {
                 *(inbuf + input_len) = *ot_recv_buffer;
                 input_len++;
-                *inlen    = input_len;
-                input_len = 0;
+                *inlen      = input_len;
+                input_len   = 0;
+                front_space = 0;
                 return NCP_STATUS_SUCCESS;
             }
         }
+
+        if (!front_space && *ot_recv_buffer == ' ')
+        {
+            PRINTF(" ");
+            continue;
+        }
+
+        front_space = 1;
 
         /*User pressed backspace */
         if (*ot_recv_buffer == '\b')
