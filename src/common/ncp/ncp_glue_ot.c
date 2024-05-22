@@ -1,4 +1,4 @@
-/* @file ncp_bridge_glue_ot.c
+/* @file ncp_glue_ot.c
  *
  *  @brief This file contains ot ncp command functions.
  *
@@ -32,7 +32,7 @@ extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
 /*                                 Variables                                  */
 /* -------------------------------------------------------------------------- */
 
-uint8_t rspNcpBuffer[NCP_BRIDGE_INBUF_SIZE];
+uint8_t rspNcpBuffer[NCP_INBUF_SIZE];
 
 uint8_t  otCurrentCmd[OT_COMMANDS_MAX_LEN];
 uint32_t otCmdTotalLengh;
@@ -41,24 +41,24 @@ uint32_t otCmdTotalLengh;
 /*                                 Functions                                  */
 /* -------------------------------------------------------------------------- */
 
-NCPCmd_DS_COMMAND *ncp_bridge_get_ot_response_buffer()
+NCPCmd_DS_COMMAND *ncp_get_ot_response_buffer()
 {
     return (NCPCmd_DS_COMMAND *)(rspNcpBuffer);
 }
 
-ncp_status_t ot_bridge_send_response(uint32_t cmd, uint8_t status, uint8_t *data, size_t len)
+ncp_status_t ot_send_response(uint32_t cmd, uint8_t status, uint8_t *data, size_t len)
 {
-    NCPCmd_DS_COMMAND *cmd_res = ncp_bridge_get_ot_response_buffer();
+    NCPCmd_DS_COMMAND *cmd_res = ncp_get_ot_response_buffer();
 
-    cmd_res->header.cmd      = cmd;
-    cmd_res->header.size     = NCP_BRIDGE_CMD_HEADER_LEN + len;
-    cmd_res->header.seqnum   = 0x00;
-    cmd_res->header.msg_type = NCP_BRIDGE_MSG_TYPE_RESP;
-    cmd_res->header.result   = status;
+    cmd_res->header.cmd    = cmd;
+    cmd_res->header.size   = NCP_CMD_HEADER_LEN + len;
+    cmd_res->header.seqnum = 0x00;
+    cmd_res->header.rsvd   = 0;
+    cmd_res->header.result = status;
 
     if (data != NULL)
     {
-        memcpy((uint8_t *)cmd_res + NCP_BRIDGE_CMD_HEADER_LEN, data, len);
+        memcpy((uint8_t *)cmd_res + NCP_CMD_HEADER_LEN, data, len);
     }
 
     ncp_tlv_send((void *)cmd_res, cmd_res->header.size);
@@ -120,16 +120,16 @@ fail:
     return NCP_STATUS_ERROR;
 }
 
-static int ot_bridge_error_ack(void *tlv)
+static int ot_error_ack(void *tlv)
 {
-    return ot_bridge_send_response(NCP_BRIDGE_CMD_INVALID_CMD, NCP_BRIDGE_CMD_RESULT_ERROR, NULL, 0);
+    return ot_send_response(NCP_CMD_INVALID_CMD, NCP_CMD_RESULT_ERROR, NULL, 0);
 }
 
-struct cmd_t error_ack_cmd = {0, "lookup cmd fail", ot_bridge_error_ack, CMD_SYNC};
+struct cmd_t error_ack_cmd = {0, "lookup cmd fail", ot_error_ack, CMD_SYNC};
 
 struct cmd_t ot_command_forward[] = {
-    {NCP_BRIDGE_OT_CMD_FORWARD, "ot-command-forward", ot_ncp_cmd_handle, CMD_SYNC},
-    {NCP_BRIDGE_CMD_INVALID, NULL, NULL, NULL},
+    {NCP_OT_CMD_FORWARD, "ot-command-forward", ot_ncp_cmd_handle, CMD_SYNC},
+    {NCP_CMD_INVALID, NULL, NULL, NULL},
 };
 
 /* Need to define the unused wlan/wifi/system ncp subclass as weak,
@@ -137,18 +137,18 @@ struct cmd_t ot_command_forward[] = {
  * file in the SDK, avoid compilation errors.
  */
 OT_TOOL_WEAK struct cmd_subclass_t cmd_subclass_wlan[] = {
-    {NCP_BRIDGE_CMD_INVALID, NULL},
+    {NCP_CMD_INVALID, NULL},
 };
 
 OT_TOOL_WEAK struct cmd_subclass_t cmd_subclass_ble[] = {
-    {NCP_BRIDGE_CMD_INVALID, NULL},
+    {NCP_CMD_INVALID, NULL},
 };
 
 struct cmd_subclass_t cmd_subclass_15D4[] = {
     {NCP_15d4_CMD_FORWARD, ot_command_forward},
-    {NCP_BRIDGE_CMD_INVALID, NULL},
+    {NCP_CMD_INVALID, NULL},
 };
 
 OT_TOOL_WEAK struct cmd_subclass_t cmd_subclass_system[] = {
-    {NCP_BRIDGE_CMD_INVALID, NULL},
+    {NCP_CMD_INVALID, NULL},
 };

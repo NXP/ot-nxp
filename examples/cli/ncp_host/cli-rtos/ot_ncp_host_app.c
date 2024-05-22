@@ -12,7 +12,7 @@
 #include "ot_ncp_host_app.h"
 #include "fsl_debug_console.h"
 #include "ncp_tlv_adapter.h"
-#include "ot_ncp_bridge_cmd.h"
+#include "ot_ncp_cmd.h"
 #include "ot_ncp_host_cli.h"
 
 /* -------------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ static uint32_t ot_ncp_handle_cmd_input(uint8_t *cmd, uint32_t len)
 
     cmd[len] = '\0';
 
-    PRINTF("%s", cmd + NCP_BRIDGE_CMD_HEADER_LEN);
+    PRINTF("%s", cmd + NCP_CMD_HEADER_LEN);
 
     return ret;
 }
@@ -108,7 +108,7 @@ uint32_t ot_ncp_host_app_init(void)
         return NCP_STATUS_ERROR;
     }
 
-    ncp_tlv_install_handler(NCP_BRIDGE_CMD_15D4, (void *)ot_ncp_callback);
+    ncp_tlv_install_handler(GET_CMD_CLASS(NCP_CMD_15D4), (void *)ot_ncp_callback);
 
     ret = OSA_TaskCreate((osa_task_handle_t)ot_ncp_app_task_handle, OSA_TASK(ot_ncp_app_task), NULL);
     if (ret != KOSA_StatusSuccess)

@@ -69,9 +69,9 @@ void Copy_to_NCP_buff(const uint8_t *aBuf, uint16_t aBufLength)
 
 ncp_status_t ot_ncp_command_handle_input(uint8_t *cmd)
 {
-    NCP_BRIDGE_COMMAND *input_cmd = (NCP_BRIDGE_COMMAND *)cmd;
-    struct cmd_t       *command   = NULL;
-    ncp_status_t        ret       = NCP_STATUS_ERROR;
+    NCP_COMMAND  *input_cmd = (NCP_COMMAND *)cmd;
+    struct cmd_t *command   = NULL;
+    ncp_status_t  ret       = NCP_STATUS_ERROR;
 
     uint32_t cmd_class    = GET_CMD_CLASS(input_cmd->cmd);
     uint32_t cmd_subclass = GET_CMD_SUBCLASS(input_cmd->cmd);
@@ -156,15 +156,14 @@ static void otNcpTask(void *pvParameters)
                 }
                 else
                 {
-                    ot_bridge_send_response(NCP_BRIDGE_OT_CMD_FORWARD, NCP_BRIDGE_CMD_RESULT_OK, rsp_buf,
-                                            otNcpTxLength);
+                    ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_OK, rsp_buf, otNcpTxLength);
                 }
 
                 vPortFree(rsp_buf);
             }
             else
             {
-                ot_bridge_send_response(NCP_BRIDGE_OT_CMD_FORWARD, NCP_BRIDGE_CMD_RESULT_ERROR, NULL, 0);
+                ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_ERROR, NULL, 0);
                 OT_PLAT_ERR("failed to aquire allocate ncp buffer.\r\n");
             }
 
@@ -209,7 +208,7 @@ ncp_status_t ot_ncp_init(void)
         goto fail;
     }
 
-    ncp_tlv_install_handler(GET_CMD_CLASS(NCP_BRIDGE_CMD_15D4), (void *)otNcpCallback);
+    ncp_tlv_install_handler(GET_CMD_CLASS(NCP_CMD_15D4), (void *)otNcpCallback);
 
     if (xTaskCreate(otNcpTask, "ot_ncp_task", OT_NCP_TASK_SIZE, NULL, OT_NCP_TASK_PRIORITY, &sOtNcpTask) != pdPASS)
     {

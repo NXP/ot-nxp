@@ -1,6 +1,6 @@
 /* @file ncp_ot.h
  *
- *  @brief This file contains ncp bridge API functions definitions
+ *  @brief This file contains ncp API functions definitions
  *
  *  Copyright 2008-2024 NXP
  *

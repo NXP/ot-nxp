@@ -345,7 +345,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     endif()
 
     list(APPEND SDK_COMPILE_DEFINITIONS
-        -DCONFIG_NCP_BRIDGE
+        -DCONFIG_NCP
         -DCONFIG_NCP_OT
     )
     list(APPEND SDK_SOURCES

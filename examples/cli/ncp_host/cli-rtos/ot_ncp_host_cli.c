@@ -15,7 +15,7 @@
 #include "fsl_lpuart_freertos.h"
 #include "ncp_adapter.h"
 #include "ncp_tlv_adapter.h"
-#include "ot_ncp_bridge_cmd.h"
+#include "ot_ncp_cmd.h"
 #include "otopcode.h"
 
 /* -------------------------------------------------------------------------- */
@@ -139,9 +139,9 @@ static uint32_t ot_get_input(uint8_t *inbuf, uint8_t *inlen)
 
 uint32_t ot_ncp_host_send_tlv_command(void)
 {
-    uint32_t            ret     = NCP_STATUS_SUCCESS;
-    uint16_t            cmd_len = 0;
-    NCP_BRIDGE_COMMAND *mcu_cmd = ot_ncp_host_get_command_buffer();
+    uint32_t     ret     = NCP_STATUS_SUCCESS;
+    uint16_t     cmd_len = 0;
+    NCP_COMMAND *mcu_cmd = ot_ncp_host_get_command_buffer();
 
     cmd_len = mcu_cmd->size;
     /* set cmd seqno */
@@ -149,12 +149,12 @@ uint32_t ot_ncp_host_send_tlv_command(void)
 
     if (cmd_len == 0 || cmd_len + CHECKSUM_LEN >= NCP_HOST_COMMAND_LEN)
     {
-        PRINTF("The command length exceeds the receiving capacity of mcu bridge application!\r\n");
+        PRINTF("The command length exceeds the receiving capacity of mcu application!\r\n");
         mcu_cmd->size = 0;
         return NCP_STATUS_ERROR;
     }
 
-    if (cmd_len >= NCP_BRIDGE_CMD_HEADER_LEN)
+    if (cmd_len >= NCP_CMD_HEADER_LEN)
     {
         ncp_tlv_send(cli_tlv_command_buff, cmd_len);
         /*Increase command sequence number*/
@@ -162,8 +162,7 @@ uint32_t ot_ncp_host_send_tlv_command(void)
     }
     else
     {
-        ncp_e("Command length is less than ncp_host_app header length (%d), cmd_len = %d", NCP_BRIDGE_CMD_HEADER_LEN,
-              cmd_len);
+        ncp_e("Command length is less than ncp_host_app header length (%d), cmd_len = %d", NCP_CMD_HEADER_LEN, cmd_len);
         ret = NCP_STATUS_ERROR;
     }
 
@@ -213,17 +212,17 @@ static void ot_ncp_host_input_task(void *pvParameters)
                 continue;
             }
 
-            NCP_BRIDGE_COMMAND *command = ot_ncp_host_get_command_buffer();
+            NCP_COMMAND *command = ot_ncp_host_get_command_buffer();
             memset((uint8_t *)command, 0, NCP_HOST_COMMAND_LEN);
 
-            command->cmd      = (NCP_BRIDGE_CMD_15D4 << 24) | NCP_15d4_CMD_FORWARD | (0x01);
-            command->size     = NCP_BRIDGE_CMD_HEADER_LEN;
-            command->result   = NCP_BRIDGE_CMD_RESULT_OK;
-            command->msg_type = NCP_BRIDGE_MSG_TYPE_CMD;
+            command->cmd    = NCP_CMD_15D4 | NCP_15d4_CMD_FORWARD | NCP_MSG_TYPE_CMD | 0x00000001;
+            command->size   = NCP_CMD_HEADER_LEN;
+            command->result = NCP_CMD_RESULT_OK;
+            command->rsvd   = 0;
 
-            *((uint8_t *)command + NCP_BRIDGE_CMD_HEADER_LEN) = opcode;
-            memcpy((uint8_t *)command + NCP_BRIDGE_CMD_HEADER_LEN + OT_OPCODE_SIZE,
-                   cli_string_command_buff + otcommandlen, cli_input_len - otcommandlen);
+            *((uint8_t *)command + NCP_CMD_HEADER_LEN) = opcode;
+            memcpy((uint8_t *)command + NCP_CMD_HEADER_LEN + OT_OPCODE_SIZE, cli_string_command_buff + otcommandlen,
+                   cli_input_len - otcommandlen);
 
             command->size += OT_OPCODE_SIZE + cli_input_len - otcommandlen;
 
