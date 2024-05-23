@@ -106,15 +106,15 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower/PWR.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG/RNG.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/SecLib_sss.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/MCXW716C/clock_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/hardware_init.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/app_services_init.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/MCXW716C/pin_mux.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/board_comp.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/board_dcdc.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/board_lp.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/board.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/board_extflash.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C/clock_config.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/hardware_init.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/app_services_init.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C/pin_mux.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_comp.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_dcdc.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_lp.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_extflash.c
     $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/system_K32W1480.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/osa/fsl_os_abstraction_bm.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/lists/fsl_component_generic_list.c
@@ -316,8 +316,8 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Sensors
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Source
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Interface
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/MCXW716C
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/configs

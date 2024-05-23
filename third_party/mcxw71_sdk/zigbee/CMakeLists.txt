@@ -320,8 +320,8 @@ target_include_directories(nxp-k32w1-zigbee-plat
 
             $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console
 
-            $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x
-            $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x/MCXW716C
+            $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71
+            $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C
             $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common
             $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/FunctionLib
             $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower

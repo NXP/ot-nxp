@@ -1,6 +1,6 @@
 # OpenThread on NXP MCXW71 Example
 
-This directory contains example platform drivers for the [NXP MCXW71][nxp_mcxw71] based on FRDM-MCXW7X hardware platform.
+This directory contains example platform drivers for the [NXP MCXW71][nxp_mcxw71] based on FRDM-MCXW71 hardware platform.
 
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 

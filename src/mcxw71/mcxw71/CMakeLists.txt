@@ -80,7 +80,7 @@ list(APPEND OT_PUBLIC_INCLUDES
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG"
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Sensors"
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower"
-        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw7x"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71"
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv"
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz"
         "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen45"
