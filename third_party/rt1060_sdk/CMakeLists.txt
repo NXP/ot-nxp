@@ -57,6 +57,7 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(DEBUG_CONSOLE_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console_lite)
     set(STR_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1062/xip)
+    set(FREERTOS_LPUART_FILE_PATH ${DRIVER_LPUART_FILES_PATH})
     set(NCP_FILES_PATH ${EXAMPLES_PATH}/evkbmimxrt1060/ncp_examples)
     set(NCP_COMMON_FILES_PATH ${NCP_FILES_PATH}/common)
     set(NCP_SDIO_HOST_FILES_PATH ${NCP_FILES_PATH}/ncp_host/sdio_host)
@@ -105,6 +106,8 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/assert)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1052/xip)
+    set(FREERTOS_DRIVERS_FILES_PATH ${NXP_SDK_ROOT}/rtos/freertos/freertos-drivers)
+    set(FREERTOS_LPUART_FILE_PATH ${FREERTOS_DRIVERS_FILES_PATH}/lpuart)
     set(NCP_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples)
     set(NCP_COMMON_FILES_PATH ${NCP_FILES_PATH}/common)
     set(NCP_SDIO_HOST_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_host)
@@ -347,7 +350,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     )
     list(APPEND SDK_SOURCES
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
-        ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart_freertos.c
+        ${FREERTOS_LPUART_FILE_PATH}/fsl_lpuart_freertos.c
         ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
         ${NCP_COMMON_FILES_PATH}/crc/crc.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
@@ -390,6 +393,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${NCP_COMMON_FILES_PATH}/ncp_adapter
         ${NCP_COMMON_FILES_PATH}/ncp_debug
         ${NCP_COMMON_FILES_PATH}
+        ${FREERTOS_LPUART_FILE_PATH}
     )
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
         list(APPEND SDK_INCLUDES
