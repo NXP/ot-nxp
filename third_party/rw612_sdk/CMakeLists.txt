@@ -55,6 +55,7 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/utilities/misc_utilities)
+    set(FREERTOS_USART_FILES_PATH ${DRIVER_USART_FILES_PATH})
     set(NCP_COMMON_FILES_PATH ${EXAMPLES_PATH}/rdrw612bga/ncp_examples/common)
     set(NCP_INTF_SDIO_FILES_PATH ${NCP_COMMON_FILES_PATH}/sdio/sdio_device)
     set(NCP_INTF_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/spi/spi_slave)
@@ -115,6 +116,8 @@ elseif(${SDK_TYPE} STREQUAL "INTERNAL")
     set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
     set(FORMAT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
+    set(FREERTOS_FLEXCOMM_FILES_PATH ${NXP_SDK_ROOT}/rtos/freertos/freertos-drivers/flexcomm)
+    set(FREERTOS_USART_FILES_PATH ${FREERTOS_FLEXCOMM_FILES_PATH}/usart)
     set(NCP_COMMON_FILES_PATH ${NXP_SDK_ROOT}/boards/src/ncp_examples/common)
     set(NCP_INTF_SDIO_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/sdio/sdio_device)
     set(NCP_INTF_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_slave)
@@ -404,7 +407,7 @@ if(OT_NCP_RADIO)
 
     if(OT_NXP_NCP_UART_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
-            ${DRIVER_USART_FILES_PATH}/fsl_usart_freertos.c
+            ${FREERTOS_USART_FILES_PATH}/fsl_usart_freertos.c
             ${NCP_INTF_UART_FILES_PATH}/ncp_intf_uart.c
         )
     elseif(OT_NXP_NCP_USB_INTERFACE)
@@ -516,6 +519,7 @@ if(OT_NCP_RADIO)
 
     if(OT_NXP_NCP_UART_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
+            ${FREERTOS_USART_FILES_PATH}
             ${NCP_INTF_UART_FILES_PATH}
         )
     elseif(OT_NXP_NCP_USB_INTERFACE)
