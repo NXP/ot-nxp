@@ -533,11 +533,15 @@ if(OT_NCP_RADIO)
             ${NCP_INTF_USB_FILES_PATH}
         )
     elseif(OT_NXP_NCP_SPI_INTERFACE)
+        list(REMOVE_ITEM RW612_SDK_INCLUDES
+            ${DRIVER_FLEXCOMM_FILES_PATH}
+        )
         list(APPEND RW612_SDK_INCLUDES
             ${DRIVER_LPC_DMA_FILES_PATH}
             ${DIRVER_SPI_FILES_PATH}
             ${DRIVER_DMA_FILES_PATH}
             ${NCP_INTF_SPI_FILES_PATH}
+            ${DRIVER_FLEXCOMM_FILES_PATH}
         )
     elseif(OT_NXP_NCP_SDIO_INTERFACE)
         list(APPEND RW612_SDK_INCLUDES
