@@ -170,6 +170,7 @@ if (USE_NBU)
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/rpmsg_lite/lib/virtio/virtqueue.c
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr_imu_internal.c
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr_internal_core_api_k32w1.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr_internal_core_api_k32w1_ext.c
     )
 
     if (NOT OT_ZB_SUPPORT)
