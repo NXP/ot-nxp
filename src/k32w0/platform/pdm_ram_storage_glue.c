@@ -383,10 +383,10 @@ exit:
 ramBufferDescriptor *getRamBuffer(uint16_t nvmId, uint16_t initialSize, bool_t extendedSearch)
 {
     OT_UNUSED_VARIABLE(initialSize);
-
-    rsError              err       = RS_ERROR_NONE;
-    ramBufferDescriptor *ramDescr  = (ramBufferDescriptor *)&sPdmBuffer;
-    uint16_t             bytesRead = 0;
+#if PDM_ENCRYPTION
+    rsError              err      = RS_ERROR_NONE;
+#endif
+    ramBufferDescriptor *ramDescr = (ramBufferDescriptor *)&sPdmBuffer;
 
     otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), ramDescr = NULL);
 

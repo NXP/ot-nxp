@@ -45,12 +45,14 @@
 #include "pdm_ram_storage_glue.h"
 #include "ram_storage.h"
 
-static ramBufferDescriptor *ramDescr       = NULL;
-static osaMutexId_t         pdmMutexHandle = NULL;
-static bool_t               pdmMutexTaken  = FALSE;
+static ramBufferDescriptor *ramDescr = NULL;
+#if PDM_SAVE_IDLE
+static osaMutexId_t pdmMutexHandle = NULL;
+#endif
+static bool_t pdmMutexTaken       = FALSE;
+static bool_t settingsInitialized = FALSE;
 
 #if PDM_SAVE_IDLE
-static bool_t settingsInitialized = FALSE;
 #define mutex_lock OSA_MutexLock
 #define mutex_unlock OSA_MutexUnlock
 #define mutex_destroy OSA_MutexDestroy
@@ -92,13 +94,13 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
 
     otEXPECT_ACTION((TRUE == PDM_RetrieveSegmentSize()), error = OT_ERROR_NO_BUFS);
 
-#if PDM_SAVE_IDLE
     /* settings may have been already initialized:
      * e.g.: for PDM_SAVE_IDLE in XCVR context
      */
     if (settingsInitialized)
         return;
 
+#if PDM_SAVE_IDLE
     otEXPECT_ACTION((TRUE == FS_Init()), error = OT_ERROR_NO_BUFS);
 #endif
 
@@ -112,21 +114,21 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
 #endif
 
 exit:
-#if PDM_SAVE_IDLE
     if (error != OT_ERROR_NONE)
     {
+#if PDM_SAVE_IDLE
         if (pdmMutexHandle)
         {
             mutex_destroy(pdmMutexHandle);
         }
 
         FS_Deinit();
+#endif
     }
     else
     {
         settingsInitialized = TRUE;
     }
-#endif
 
     return;
 }
@@ -154,6 +156,7 @@ void otPlatSettingsDeinit(otInstance *aInstance)
 #if PDM_SAVE_IDLE
     FS_Deinit();
 #endif
+    settingsInitialized = false;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)

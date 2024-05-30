@@ -47,8 +47,9 @@
 #define mutex_lock(...)
 #define mutex_unlock(...)
 #endif
-
+#if defined(USE_RTOS) && (USE_RTOS == 1)
 static osaMutexId_t trngMutexHandle = NULL;
+#endif
 
 void K32WRandomInit(void)
 {
@@ -76,13 +77,15 @@ exit:
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError status = OT_ERROR_NONE;
-
+#if defined(USE_RTOS) && (USE_RTOS == 1)
     mutex_lock(trngMutexHandle, osaWaitForever_c);
-
+#endif
     otEXPECT_ACTION((aOutput != NULL), status = OT_ERROR_INVALID_ARGS);
     otEXPECT_ACTION(TRNG_GetRandomData(RNG, aOutput, aOutputLength) == kStatus_Success, status = OT_ERROR_FAILED);
 
 exit:
+#if defined(USE_RTOS) && (USE_RTOS == 1)
     mutex_unlock(trngMutexHandle);
+#endif
     return status;
 }

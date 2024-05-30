@@ -418,12 +418,6 @@ static void ConfigureAntennaDiversityPins(void)
  ******************************************************************************/
 void BOARD_InitPins(void)
 {
-    /* Define the init structure for the output LED pin*/
-    gpio_pin_config_t led_config = {
-        kGPIO_DigitalOutput,
-        0,
-    };
-
     /* Enable IOCON clock */
     CLOCK_EnableClock(kCLOCK_Iocon);
     CLOCK_EnableClock(kCLOCK_InputMux);
