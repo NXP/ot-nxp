@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021-2023, The OpenThread Authors.
+#  Copyright (c) 2021-2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,17 +31,20 @@ if (SDK_RELEASE)
     set(UTL_DIR "devices/K32W1480/utilities" CACHE STRING "")
     set(MIDLWR_DIR "middleware" CACHE STRING "")
     set(ZB_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/boards/k32w148evk/wireless_examples/zigbee" CACHE STRING "")
+    set(BLE_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/boards/k32w148evk/wireless_examples/bluetooth" CACHE STRING "")
 else()
     if (SDK_GH)
         set(DRV_DIR "drivers" CACHE STRING "")
         set(UTL_DIR "utilities" CACHE STRING "")
         set(MIDLWR_DIR "../middleware" CACHE STRING "")
         set(ZB_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/../examples/k32w148evk/wireless_examples/zigbee" CACHE STRING "")
+        set(BLE_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/../examples/k32w148evk/wireless_examples/bluetooth" CACHE STRING "")
     else()
         set(DRV_DIR "platform/drivers" CACHE STRING "")
         set(UTL_DIR "platform/utilities" CACHE STRING "")
         set(MIDLWR_DIR "middleware" CACHE STRING "")
         set(ZB_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples" CACHE STRING "")
+        set(BLE_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/examples" CACHE STRING "")
     endif()
 endif()
 
@@ -135,6 +138,7 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core/fsl_pm_core.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_nor_flash.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor/lpspi/fsl_lpspi_mem_adapter.c
+    $ENV{NXP_K32W1_SDK_ROOT}/components/reset/fsl_adapter_reset.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/port/sssapi/entropy_poll_alt.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/port/sssapi/sssapi_mbedtls.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/src/sscp/fsl_sscp_mu.c
@@ -143,6 +147,9 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_init.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_aes.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_ccm.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_aes_cmac.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_ecdh.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_sha256.c
     ${PROJECT_SOURCE_DIR}/third_party/k32w1_sdk/board_lp.c
 )
 
@@ -224,6 +231,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_edma.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpuart_edma.c
         $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/fsl_assert.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/format/fsl_format.c
 )
 else()
     list(APPEND K32W1_SDK_SOURCES
@@ -245,12 +253,14 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/dma3/fsl_edma.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart_edma.c
         $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/assert/fsl_assert.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/misc_utilities/fsl_format.c
 )
 endif()
 
 list(APPEND K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console/fsl_debug_console.c
     $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/str/fsl_str.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/shell/fsl_shell.c
 )
 
 add_library(${NXP_DRIVER_LIB}
@@ -349,6 +359,7 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/components/flash/nor
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480
     $ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core
+    $ENV{NXP_K32W1_SDK_ROOT}/components/reset
 )
 
 if (SDK_RELEASE)
@@ -383,6 +394,7 @@ endif()
 list(APPEND K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console
     $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/str
+    $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/shell
 )
 
 target_include_directories(${NXP_DRIVER_LIB}
@@ -393,6 +405,11 @@ target_include_directories(${NXP_DRIVER_LIB}
 if (OT_ZB_SUPPORT)
     add_subdirectory(zigbee)
     target_link_libraries(${NXP_DRIVER_LIB} PUBLIC nxp-k32w1-zigbee)
+endif()
+
+if (OT_BLE_SUPPORT)
+    add_subdirectory(ble)
+    target_link_libraries(${NXP_DRIVER_LIB} PUBLIC nxp-k32w1-ble)
 endif()
 
 target_link_libraries(${NXP_DRIVER_LIB} PRIVATE ot-config)
