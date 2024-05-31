@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2022-2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -164,6 +164,19 @@ volatile uint8_t gTxCntSerMgrIf = 0;
 #error Only LPUART0 or LPUART1 supported
 #endif
 #endif
+
+void *otPlatUartGetSerialHandle();
+void *otPlatUartGetSerialReadHandle();
+
+void *otPlatUartGetSerialHandle()
+{
+    return &otCliSerialHandle;
+}
+
+void *otPlatUartGetSerialReadHandle()
+{
+    return &otCliSerialReadHandle;
+}
 
 otError otPlatUartEnable(void)
 {
