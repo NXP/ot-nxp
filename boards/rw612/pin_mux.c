@@ -34,6 +34,7 @@ void BOARD_InitPins(void)
 #if defined(OT_STACK_ENABLE_LOG) || defined(CONFIG_NCP_UART)
     /* USART0 is used to print OT logs or ncp uart connection */
     IO_MUX_SetPinMux(IO_MUX_FC0_USART_DATA);
+    IO_MUX_SetPinMux(IO_MUX_FC0_USART_CMD);
 #endif
 #if defined(CONFIG_NCP_SPI)
     BOARD_InitSPISPins();
