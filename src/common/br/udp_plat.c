@@ -53,6 +53,9 @@
 #include "lwip/tcpip.h"
 #include "lwip/udp.h"
 
+#include "fsl_component_generic_list.h"
+#include "fsl_os_abstraction.h"
+
 #include "common/code_utils.hpp"
 
 /* -------------------------------------------------------------------------- */
@@ -68,9 +71,10 @@ struct udpSendContext
 
 struct udpReceiveContext
 {
-    otUdpSocket  *socket;
-    otMessage    *message;
-    otMessageInfo message_info;
+    list_element_t link;
+    otUdpSocket   *socket;
+    otMessage     *message;
+    otMessageInfo  message_info;
 };
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -82,6 +86,10 @@ static uint8_t sOtNetifIdx;
 static otInstance   *sInstance = NULL;
 static struct netif *sBackboneNetifPtr;
 static struct netif *sOtNetifPtr;
+
+list_label_t sMsgList;
+OSA_MUTEX_HANDLE_DEFINE(sMutexHandle);
+
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -90,7 +98,6 @@ static void         recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, con
 static uint8_t      getInterfaceIndex(otNetifIdentifier identifier);
 static struct pbuf *convertToLwipMsg(otMessage *otIpPkt, bool bTransport);
 static void         lwipTaskCb(void *context);
-static void         otTaskCb(void *context);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
@@ -102,6 +109,9 @@ void UdpPlatInit(otInstance *aInstance, struct netif *backboneNetif, struct neti
     sOtNetifPtr       = otNetif;
     sBackboneNetifIdx = netif_get_index(backboneNetif);
     sOtNetifIdx       = netif_get_index(otNetif);
+
+    LIST_Init(&sMsgList, 0);
+    assert(OSA_MutexCreate((osa_mutex_handle_t)sMutexHandle) == KOSA_StatusSuccess);
 }
 
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
@@ -365,8 +375,13 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     VerifyOrExit(udpReceiveContextPtr->message != NULL, otPlatFree(udpReceiveContextPtr));
     VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) == OT_ERROR_NONE,
                  error = OT_ERROR_FAILED);
-    VerifyOrExit(otTaskletExecute(sInstance, otTaskCb, (void *)udpReceiveContextPtr) == OT_ERROR_NONE,
-                 error = OT_ERROR_FAILED);
+
+    // Ignore status as we set the list to unlimited size
+    OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
+    LIST_AddTail(&sMsgList, (list_element_handle_t)udpReceiveContextPtr);
+    OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
+
+    otTaskletsSignalPending(sInstance);
 
 exit:
     if (error == OT_ERROR_FAILED)
@@ -436,11 +451,22 @@ static void lwipTaskCb(void *context)
     otPlatFree(context);
 }
 
-static void otTaskCb(void *context)
+void otPlatUdpProcess()
 {
-    struct udpReceiveContext *udpReceiveContextPtr = (struct udpReceiveContext *)context;
-    udpReceiveContextPtr->socket->mHandler(udpReceiveContextPtr->socket->mContext, udpReceiveContextPtr->message,
-                                           &udpReceiveContextPtr->message_info);
+    if (sInstance)
+    {
+        OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
+        struct udpReceiveContext *udpReceiveContextPtr = (struct udpReceiveContext *)LIST_RemoveHead(&sMsgList);
+        OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
 
-    otPlatFree(context);
+        while (udpReceiveContextPtr)
+        {
+            udpReceiveContextPtr->socket->mHandler(udpReceiveContextPtr->socket->mContext,
+                                                   udpReceiveContextPtr->message, &udpReceiveContextPtr->message_info);
+
+            OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
+            udpReceiveContextPtr = (struct udpReceiveContext *)LIST_RemoveHead(&sMsgList);
+            OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
+        }
+    }
 }

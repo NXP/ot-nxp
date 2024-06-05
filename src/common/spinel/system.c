@@ -126,6 +126,10 @@ void otSysProcessDrivers(otInstance *aInstance)
     otPlatAlarmProcess(aInstance);
     otPlatRadioProcess(aInstance);
     otPlatCliUartProcess();
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    otPlatUdpProcess();
+#endif
 }
 
 void otSysRunIdleTask(void)

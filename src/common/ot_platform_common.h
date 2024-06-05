@@ -181,6 +181,12 @@ void otPlatSaveSettingsIdle(void);
 void otPlatResetIdle(void);
 
 /**
+ * This function performs Platform UDP processing.
+ *
+ */
+void otPlatUdpProcess();
+
+/**
  * This function allows to send spinel set prop vendor cmd with uint8_t value to be set.
  */
 otError otPlatRadioSendSetPropVendorUint8Cmd(uint32_t aKey, uint8_t value);
