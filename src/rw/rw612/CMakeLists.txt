@@ -61,6 +61,7 @@ if(OT_NCP_RADIO)
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_glue_ot.c
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_ot.c
+        platform/ncp.c
     )
 
     set(OT_NCP_INCLUDES
@@ -68,9 +69,20 @@ if(OT_NCP_RADIO)
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ot_opcode
         ${PROJECT_SOURCE_DIR}/examples/common/includes
     )
+else()
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/common/uart.c
+    )
 endif()
 
 if(OT_NCP_RADIO MATCHES "ON")
+    if(NOT DEFINED OT_NXP_NCP_UART_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_USB_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SPI_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SDIO_INTERFACE)
+        set(OT_NXP_NCP_UART_INTERFACE "ON") # Use UART as default NCP adapter interface
+    endif()
+
     if(OT_NXP_NCP_UART_INTERFACE MATCHES "ON")
         target_compile_definitions(ot-config INTERFACE
             -DOT_NCP_RADIO=1
@@ -104,7 +116,7 @@ add_library(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/system.c
     ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
-    ${PROJECT_SOURCE_DIR}/src/common/uart.c
+    #${PROJECT_SOURCE_DIR}/src/common/uart.c
     ${PROJECT_SOURCE_DIR}/src/common/flash_fsa.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
     ${PROJECT_SOURCE_DIR}/src/common/entropy.c

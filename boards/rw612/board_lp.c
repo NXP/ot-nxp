@@ -103,8 +103,10 @@ static void BOARD_ExitPowerDown(void)
     /* Clocks and pins need to be reinitialized after wake up from power down */
     BOARD_InitHardware();
 
+#ifndef OT_NCP_RADIO
     /* Reinit serial interface */
     SerialManager_ExitLowpower((serial_handle_t)otCliSerialHandle);
+#endif
 }
 
 /* -------------------------------------------------------------------------- */

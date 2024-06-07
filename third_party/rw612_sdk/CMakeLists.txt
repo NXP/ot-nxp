@@ -405,6 +405,13 @@ if(OT_NCP_RADIO)
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
     )
 
+    if(NOT DEFINED OT_NXP_NCP_UART_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_USB_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SPI_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SDIO_INTERFACE)
+        set(OT_NXP_NCP_UART_INTERFACE "ON") # Use UART as default NCP adapter interface
+    endif()
+
     if(OT_NXP_NCP_UART_INTERFACE)
         list(APPEND RW612_SDK_SOURCES
             ${FREERTOS_USART_FILES_PATH}/fsl_usart_freertos.c
