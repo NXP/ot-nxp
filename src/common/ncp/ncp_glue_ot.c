@@ -26,11 +26,14 @@
 /*                                 Prototypes                                 */
 /* -------------------------------------------------------------------------- */
 
-extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
+extern void Ot_Data_RxDone(void);
+extern void Ot_Data_TxDone(void);
 
 /* -------------------------------------------------------------------------- */
 /*                                 Variables                                  */
 /* -------------------------------------------------------------------------- */
+
+static uint8_t otNcpCmdFlag = NCP_COMMAND_NOT_READY;
 
 uint8_t rspNcpBuffer[NCP_INBUF_SIZE];
 
@@ -64,6 +67,31 @@ ncp_status_t ot_send_response(uint32_t cmd, uint8_t status, uint8_t *data, size_
     ncp_tlv_send((void *)cmd_res, cmd_res->header.size);
 
     return NCP_STATUS_SUCCESS;
+}
+
+void ot_ncp_clear_cmd_ready(void)
+{
+    otNcpCmdFlag = NCP_COMMAND_NOT_READY;
+}
+
+ncp_cmd_status ot_ncp_check_cmd_ready(void)
+{
+    return otNcpCmdFlag;
+}
+
+void ot_ncp_copy_cmd_buff(uint8_t *src, uint16_t *pLen)
+{
+    assert(src != NULL);
+    assert(pLen != NULL);
+
+    *pLen = otCmdTotalLengh;
+
+    memcpy(src, otCurrentCmd, *pLen);
+}
+
+static void ot_ncp_set_cmd_ready(void)
+{
+    otNcpCmdFlag = NCP_COMMAND_READY;
 }
 
 static int ot_ncp_cmd_handle(void *cmd)
@@ -112,7 +140,9 @@ static int ot_ncp_cmd_handle(void *cmd)
     // ot command parameters should be appended
     memcpy((uint8_t *)&otCurrentCmd[0] + cmdLen, pCmdParam, cmdParamLen);
 
-    otPlatUartReceived(otCurrentCmd, otCmdTotalLengh);
+    // Notify ot task to process command
+    ot_ncp_set_cmd_ready();
+    Ot_Data_RxDone();
 
     return NCP_STATUS_SUCCESS;
 

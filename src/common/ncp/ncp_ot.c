@@ -53,6 +53,8 @@ static uint16_t otNcpTxLength;
 static TaskHandle_t  sOtNcpTask     = NULL;
 static QueueHandle_t sOtNcpCmdQueue = NULL;
 
+extern void Ot_Data_TxDone(void);
+
 /* -------------------------------------------------------------------------- */
 /*                                 Functions                                  */
 /* -------------------------------------------------------------------------- */
@@ -127,12 +129,6 @@ static void otNcpTask(void *pvParameters)
 
     while (1)
     {
-        /* we need to use ot mutex here because otPlatUartReceived(),
-         * otNcpTxBuffer, and otNcpTxLength are shared with
-         * ot task.
-         */
-        appOtLockOtTask(true);
-
         ret = xQueueReceive(sOtNcpCmdQueue, &cmd_item, (TickType_t)0);
         if (ret == pdPASS)
         {
@@ -145,33 +141,39 @@ static void otNcpTask(void *pvParameters)
             cmd_buf = NULL;
         }
 
-        if (otNcpTxLength > 1)
+        if (otNcpTxLength != 0)
         {
-            rsp_buf = ot_ncp_handle_response((uint8_t *)otNcpTxBuffer, &otNcpTxLength);
-            if (rsp_buf != NULL)
+            if (otNcpTxLength > 1)
             {
-                if ((sAutoRspFlag == 0) && (memcmp(otNcpTxBuffer, "> ", otNcpTxLength) == 0))
+                rsp_buf = ot_ncp_handle_response((uint8_t *)otNcpTxBuffer, &otNcpTxLength);
+                if (rsp_buf != NULL)
                 {
-                    sAutoRspFlag = 1;
+                    if ((sAutoRspFlag == 0) && (memcmp(otNcpTxBuffer, "> ", otNcpTxLength) == 0))
+                    {
+                        sAutoRspFlag = 1;
+                    }
+                    else
+                    {
+                        ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_OK, rsp_buf, otNcpTxLength);
+                    }
+
+                    vPortFree(rsp_buf);
                 }
                 else
                 {
-                    ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_OK, rsp_buf, otNcpTxLength);
+                    ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_ERROR, NULL, 0);
+                    OT_PLAT_ERR("failed to aquire allocate ncp buffer.\r\n");
                 }
 
-                vPortFree(rsp_buf);
+                rsp_buf       = NULL;
+                otNcpTxLength = 0;
+                Ot_Data_TxDone();
             }
             else
             {
-                ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_ERROR, NULL, 0);
-                OT_PLAT_ERR("failed to aquire allocate ncp buffer.\r\n");
+                Ot_Data_TxDone();
             }
-
-            rsp_buf       = NULL;
-            otNcpTxLength = 0;
         }
-
-        appOtLockOtTask(false);
 
         vTaskDelay(50);
     }
