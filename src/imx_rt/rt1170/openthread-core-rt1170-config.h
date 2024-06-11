@@ -307,13 +307,13 @@
 #define OPENTHREAD_CONFIG_NCP_HDLC_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
+ * @def OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
  *
  * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
  * `RadioSpinel` platform is used.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 8192
+#define OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE 8192
 
 /**
  * @def TX_WAIT_US
