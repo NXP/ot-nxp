@@ -40,11 +40,13 @@
 
 #include <lib/platform/exit_code.h>    // nogncheck
 #include <lib/spinel/radio_spinel.hpp> // nogncheck
+#include <lib/spinel/spinel_driver.hpp>
 #include "lib/spinel/spinel.h"
 #include "lib/url/url.hpp"
 
-static ot::Spinel::RadioSpinel sRadioSpinel;
-static ot::Url::Url            sRadioUrl;
+static ot::Url::Url             sRadioUrl;
+static ot::Spinel::RadioSpinel  sRadioSpinel;
+static ot::Spinel::SpinelDriver sSpinelDriver;
 
 #if defined(OT_PLAT_SPINEL_OVER_SPI)
 #include "spi_interface.hpp"
@@ -56,6 +58,12 @@ static ot::NXP::HdlcInterface sSpinelInterface(sRadioUrl);
 #include "spinel_hci_hdlc.hpp"
 static ot::NXP::HdlcSpinelHciInterface sSpinelInterface(sRadioUrl);
 #endif
+
+static const otRadioCaps sRequiredRadioCaps =
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+#endif
+    OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_TRANSMIT_RETRIES | OT_RADIO_CAPS_CSMA_BACKOFF;
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -501,9 +509,21 @@ otError otPlatRadioCcaConfigValue(uint32_t aKey, otCCAModeConfig *aCcaConfig, ui
 
 void otPlatRadioInit(void)
 {
-    uint8_t                                 i = 0;
+    spinel_iid_t iidList[ot::Spinel::kSpinelHeaderMaxNumIid];
+    iidList[0] = 0;
+
     struct ot::Spinel::RadioSpinelCallbacks callbacks;
     memset(&callbacks, 0, sizeof(callbacks));
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    bool aEnableRcpTimeSync = true;
+#else
+    bool aEnableRcpTimeSync = false;
+#endif
+
+    OT_UNUSED_VARIABLE(
+        sSpinelDriver.Init(sSpinelInterface, true /* aSoftwareReset */, iidList, OT_ARRAY_LENGTH(iidList)));
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     callbacks.mDiagReceiveDone  = otPlatDiagRadioReceiveDone;
     callbacks.mDiagTransmitDone = otPlatDiagRadioTransmitDone;
@@ -512,17 +532,21 @@ void otPlatRadioInit(void)
     callbacks.mReceiveDone    = otPlatRadioReceiveDone;
     callbacks.mTransmitDone   = otPlatRadioTxDone;
     callbacks.mTxStarted      = otPlatRadioTxStarted;
+
     sRadioSpinel.SetCallbacks(callbacks);
-    sRadioSpinel.Init(sSpinelInterface, true, false, &i, sizeof(uint8_t));
+    sRadioSpinel.Init(false /*aSkipRcpCompatibilityCheck*/, true /*aSoftwareReset*/, &sSpinelDriver, sRequiredRadioCaps,
+                      aEnableRcpTimeSync);
 }
 
 void otPlatRadioDeinit(void)
 {
     sRadioSpinel.Deinit();
+    sSpinelDriver.Deinit();
 }
 
 void otPlatRadioProcess(const otInstance *aInstance)
 {
+    sSpinelDriver.Process(aInstance);
     sRadioSpinel.Process(aInstance);
 }
 
@@ -595,7 +619,7 @@ otError otPlatRadioSpiDiag(void)
     sSpinelInterface.DiagLogStats();
     error = OT_ERROR_NONE;
 #else
-    error = OT_ERROR_INVALID_COMMAND;
+    error                   = OT_ERROR_INVALID_COMMAND;
 #endif
     return error;
 }
