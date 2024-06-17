@@ -30,6 +30,8 @@ option(OT_RCP_FLOW_CONTROL "enable UART flow control for RCP" OFF)
 option(OT_CLOCK_32K_SOURCE_FRO "enable using the FRO_32K instead of the XTAL as a clock source" OFF)
 option(OT_RCP_UART_DMA "enable UART DMA for RCP" OFF)
 option(OT_ANTENNA_DIVERSITY "enable Antenna Diversity feature" OFF)
+option(OT_EXTERNAL_FLASH_PDM "enable PDM in external flash feature" OFF)
+option(OT_LED_AND_KEYBOARD_INTERFACE "enable LED and Keyboard interface" OFF)
 
 SET_SOURCE_FILES_PROPERTIES($ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/gcc/startup_K32W061.c PROPERTIES LANGUAGE CXX)
 
@@ -79,6 +81,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Lists/GenericList.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/MemManager/Source/MemManager.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Messaging/Source/Messaging.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Panic/Source/Panic.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDM/pdm_port.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Reset/Reset.c
@@ -118,6 +121,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/FunctionLib/FunctionLib.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Lists/GenericList.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/MemManager/Source/MemManager.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Messaging/Source/Messaging.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Panic/Source/Panic.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDM/pdm_port.c
         $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Reset/Reset.c
@@ -188,6 +192,16 @@ target_compile_definitions(${NXP_DRIVER_LIB}
         -DENABLE_RAM_VECTOR_TABLE=1
         -DgKBD_KeysCount_c=2
 )
+
+if (OT_EXTERNAL_FLASH_PDM)
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+            -DgOTA_externalFlash_d=1
+            -DPDM_EXT_FLASH=1
+            -DgEepromType_d=gEepromDevice_MX25R8035F_c
+            -DgPdmNbSegments=63
+    )
+endif()
 
 if (OT_RCP_FLOW_CONTROL)
     target_compile_definitions(${NXP_DRIVER_LIB}
@@ -342,6 +356,30 @@ if (SDK_RELEASE)
     )
 endif()
 
+if (OT_EXTERNAL_FLASH_PDM)
+    target_sources(${NXP_DRIVER_LIB} PRIVATE
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Flash/External/Source/Eeprom_MX25R8035F.c
+    )
+
+    target_include_directories(${NXP_DRIVER_LIB}
+        PUBLIC
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Flash/External/Interface
+    )
+endif()
+
+if (OT_LED_AND_KEYBOARD_INTERFACE)
+    message(WARNING LEDs and Keyboard enabled)
+    target_sources(${NXP_DRIVER_LIB} PRIVATE
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/Keyboard/Source/Keyboard.c
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LED/Source/LED.c
+    )
+
+    target_include_directories(${NXP_DRIVER_LIB}
+        PUBLIC
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LED/Interface
+    )
+endif()
+
 if (NOT BOARD_OVERRIDE)
     target_include_directories(${NXP_DRIVER_LIB}
         PUBLIC
@@ -376,10 +414,21 @@ if (OT_BUILD_COEX OR OT_BLE_SUPPORT)
 endif()
 
 set(SDK_K32W0_LIBS
-    $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDM/Library/libPDM.a
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/XCVR/lib/libRadio.a
     $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/SecLib/lib_crypto_m4.a
 )
+
+if (OT_EXTERNAL_FLASH_PDM)
+    message(WARNING PDM_LIB: external)
+    list(APPEND SDK_K32W0_LIBS
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDM/Library/libPDM_extFlash.a
+    )
+else()
+    message(WARNING PDM_LIB: internal)
+    list(APPEND SDK_K32W0_LIBS
+        $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/PDM/Library/libPDM.a
+    )
+endif()
 
 if (OT_BUILD_COEX)
     message(WARNING MAC_LIB: BLE + OT + ZB + WIFI)
