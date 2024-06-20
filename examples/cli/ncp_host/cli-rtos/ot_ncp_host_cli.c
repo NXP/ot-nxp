@@ -28,6 +28,8 @@
 #define NCP_HOST_COMMAND_LEN 4096
 #define OT_OPCODE_SIZE 1
 
+#define SDHOST_RESCAN_START 0x01
+
 /* LPUART1: NCP Host input uart */
 #define NCP_HOST_INPUT_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
 #define NCP_HOST_INPUT_UART LPUART1
@@ -66,7 +68,15 @@ TaskHandle_t task_host_input_handler = NULL;
 uint16_t ot_cmd_seqno = 0;
 
 /* -------------------------------------------------------------------------- */
-/*                               unctions                                     */
+/*                                Function prototypes                         */
+/* -------------------------------------------------------------------------- */
+
+#if (CONFIG_NCP_SDIO)
+extern void sdhost_rescan_set_event(osa_event_flags_t flagsToWait);
+#endif
+
+/* -------------------------------------------------------------------------- */
+/*                               functions                                    */
 /* -------------------------------------------------------------------------- */
 
 void *ot_ncp_host_get_command_buffer(void)
@@ -230,6 +240,17 @@ static void ot_ncp_host_input_task(void *pvParameters)
 
             memset(cli_string_command_buff, 0, MCU_CLI_STRING_SIZE);
             memset((uint8_t *)command, 0, NCP_HOST_COMMAND_LEN);
+
+#if (CONFIG_NCP_SDIO)
+            /* Reset sdio host if command is reset/factoryreset */
+            if (opcode == ot_get_opcode("reset", strlen("reset")) ||
+                opcode == ot_get_opcode("factoryreset", strlen("factoryreset")))
+            {
+                PRINTF("\nSDIO reseting...\n");
+                vTaskDelay(pdMS_TO_TICKS(2000));
+                sdhost_rescan_set_event(SDHOST_RESCAN_START);
+            }
+#endif
         }
     }
 }
