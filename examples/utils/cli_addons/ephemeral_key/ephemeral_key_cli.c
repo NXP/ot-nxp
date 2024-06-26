@@ -41,20 +41,14 @@
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static otError ProcessGenerateCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessClearCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessTimeoutCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessLengthCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessPortCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+static otError ProcessEnableCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessHelpCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static const otCliCommand commands[] = {{"generate", ProcessGenerateCmd}, {"clear", ProcessClearCmd},
-                                        {"timeout", ProcessTimeoutCmd},   {"length", ProcessLengthCmd},
-                                        {"port", ProcessPortCmd},         {"help", ProcessHelpCmd}};
+static const otCliCommand commands[] = {{"enable", ProcessEnableCmd}, {"help", ProcessHelpCmd}};
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -95,69 +89,11 @@ otError ProcessEphemeralKey(void *aContext, uint8_t aArgsLength, char *aArgs[])
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
 
-static otError ProcessGenerateCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
+static otError ProcessEnableCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
+    uint32_t timeout = (aArgsLength >= 1) ? strtoul(aArgs[0], NULL, 10) : 0;
 
-    return BorderAgentGenerateAndSetEphemeralKey();
-}
-
-static otError ProcessClearCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    return BorderAgentClearEphemeralKey();
-}
-
-static otError ProcessTimeoutCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-    OT_UNUSED_VARIABLE(aArgsLength);
-
-    if (aArgsLength == 0)
-    {
-        return OT_ERROR_INVALID_ARGS;
-    }
-
-    uint32_t timeoutDuration = strtoul(aArgs[0], NULL, 10);
-    BorderAgentSetEphemeralKeyTimeout(timeoutDuration);
-
-    return OT_ERROR_NONE;
-}
-
-static otError ProcessLengthCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-
-    if (aArgsLength == 0)
-    {
-        return OT_ERROR_INVALID_ARGS;
-    }
-
-    uint16_t keyLength = strtoul(aArgs[0], NULL, 10);
-
-    BorderAgentSetEphemeralKeyLength(keyLength);
-
-    return OT_ERROR_NONE;
-}
-
-static otError ProcessPortCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-
-    if (aArgsLength == 0)
-    {
-        return OT_ERROR_INVALID_ARGS;
-    }
-
-    uint32_t port = strtoul(aArgs[0], NULL, 10);
-    BorderAgentSetEphemeralKeyPort(port);
-
-    return OT_ERROR_NONE;
+    return BorderAgentEnableEpskcService(timeout);
 }
 
 static otError ProcessHelpCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
@@ -166,10 +102,7 @@ static otError ProcessHelpCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    otCliOutputFormat("ephkey generate \r\n");
-    otCliOutputFormat("ephkey length <key_length>\r\n");
-    otCliOutputFormat("ephkey timeout <timeout> (msec)\r\n");
-    otCliOutputFormat("ephkey port <port>\r\n");
+    otCliOutputFormat("ephkey enable [timeout-in-msec]\r\n");
 
     return OT_ERROR_NONE;
 }

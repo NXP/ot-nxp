@@ -37,11 +37,7 @@ extern "C" {
 
 void BorderAgentInit(otInstance *aInstance, const char *aHostName);
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-otError BorderAgentGenerateAndSetEphemeralKey(void);
-otError BorderAgentClearEphemeralKey(void);
-void    BorderAgentSetEphemeralKeyLength(uint16_t aKeyLen);
-void    BorderAgentSetEphemeralKeyTimeout(uint32_t aKeyTimeout);
-void    BorderAgentSetEphemeralKeyPort(uint32_t aKeyPort);
+otError BorderAgentEnableEpskcService(uint32_t aTimeout);
 #endif
 #ifdef __cplusplus
 }

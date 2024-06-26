@@ -51,6 +51,8 @@
 #include <openthread/ip6.h>
 #include <openthread/mdns.h>
 #include <openthread/thread.h>
+#include <openthread/verhoeff_checksum.h>
+#include <openthread/platform/crypto.h>
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/memory.h>
 #include <openthread/platform/radio.h>
@@ -65,7 +67,10 @@
 #define BORDER_AGENT_PORT 49152
 #define BACKBONE_UDP_PORT 61631
 
-#define MAX_TXT_ENTRIES_NUMBER 17
+#define BBR_FUNCTION_STATUS_ACTIVE_MASK 1 << 1
+#define BBR_FUNCTION_STATUS_STATE_MASK 1 << 0
+
+#define MAX_TXT_ENTRIES_NUMBER 18
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
@@ -92,13 +97,22 @@ typedef enum
     kHighAvailability,
 } Availability;
 
+typedef enum
+{
+    kThreadRoleDetached = 0,
+    kThreadRoleEndDevice,
+    kThreadRoleRouter,
+    kThreadRoleLeader
+} ThreadRole;
+
 typedef struct BorderAgentStateBitmap
 {
     uint32_t mConnectionMode : 3;
     uint32_t mThreadInterfaceStatus : 2;
     uint32_t mAvailability : 2;
-    uint32_t mBBRFunctionStatusIsActive : 1;
-    uint32_t mBBRFunctionStatusIsPrimary : 1;
+    uint32_t mBBRFunctionStatus : 2;
+    uint32_t mThreadRole : 2;
+    uint32_t mEpskcSupported : 1;
 } StateBitmap;
 
 typedef struct MeshCopValues
@@ -116,16 +130,17 @@ static otInstance *sInstance;
 static bool        sBorderAgentIsInit;
 
 static otMdnsService sMeshCopService;
+static otMdnsService sEpskcService;
 static const char    sMeshCopServiceLabel[] = "_meshcop._udp";
+static const char    sEpskcServiceLabel[]   = "_meshcop-e._udp";
 static char          sServiceInstanceName[] = "MeshcopService#0000";
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-static bool    sEphemeralKeySetPending;
-static uint8_t sEphemeralKey[OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH]; ///< Byte values
+static uint8_t sEphemeralKey[10]; ///< Byte values, 9 bytes for the key, one for null terminator.
 
 static uint32_t sEphemeralKeyTimeout;
 static uint32_t sEphemeralKeyPort;
-static uint16_t sEphemeralKeyLength;
+static bool     sEpskcActive;
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -134,15 +149,19 @@ static uint16_t sEphemeralKeyLength;
 
 static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues *aMeshCopValues, otInstance *aInstance);
 static void    HandleThreadStateChanged(otChangedFlags flags, void *aContext);
-static void    HandleBorderAgentEphemeralKeyCallback(void *aContext);
 static void    PublishMeshCopService(otInstance *aInstance);
 static StateBitmap GetStateBitmap(otInstance *aInstance);
-static uint32_t    BitmapToUint32(StateBitmap aBitMap);
 static void        HandleMeshCopRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
-static void        BorderAgentSetDefaultEphemeralKeySettings();
+static void        PublishEpskcService(void);
+static void        UnpublishEpskcService(void);
+static otError     GenerateEphemeralKey(void);
+static void        HandleEpskcRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
+static void        HandleBorderAgentEphemeralKeyCallback(void *aContext);
 static uint16_t    ToBE16(uint16_t v);
 static uint32_t    ToBE32(uint32_t v);
 static uint64_t    ToBE64(uint64_t v);
+static uint32_t    BitmapToUint32(StateBitmap aBitMap);
+static const char *GetThreadVersionAsString(void);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                             */
@@ -163,7 +182,6 @@ void BorderAgentInit(otInstance *aInstance, const char *aHostName)
         otSetStateChangedCallback(aInstance, HandleThreadStateChanged, aInstance);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-        BorderAgentSetDefaultEphemeralKeySettings();
         otBorderAgentSetEphemeralKeyCallback(aInstance, HandleBorderAgentEphemeralKeyCallback, aInstance);
 #endif
         sBorderAgentIsInit = true;
@@ -171,59 +189,21 @@ void BorderAgentInit(otInstance *aInstance, const char *aHostName)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-otError BorderAgentGenerateAndSetEphemeralKey(void)
+otError BorderAgentEnableEpskcService(uint32_t aTimeout)
 {
+    sEphemeralKeyTimeout = (aTimeout && aTimeout >= OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT &&
+                            aTimeout <= OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_TIMEOUT)
+                               ? aTimeout
+                               : OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT;
+
     if (!sBorderAgentIsInit)
     {
         return OT_ERROR_INVALID_STATE;
     }
-    memset(sEphemeralKey, 0x00, sizeof(sEphemeralKey));
-    otPlatEntropyGet(sEphemeralKey, sEphemeralKeyLength); // for the moment minimum, TBD
-    if (otBorderAgentGetState(sInstance) != OT_BORDER_AGENT_STATE_STOPPED)
-    {
-        return otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
-                                            otBorderAgentGetUdpPort(sInstance));
-    }
-    else
-    {
-        sEphemeralKeySetPending = true;
-    }
+
+    PublishEpskcService();
 
     return OT_ERROR_NONE;
-}
-
-otError BorderAgentClearEphemeralKey(void)
-{
-    if (!sBorderAgentIsInit || !otBorderAgentIsEphemeralKeyActive(sInstance))
-    {
-        return OT_ERROR_INVALID_STATE;
-    }
-
-    otBorderAgentClearEphemeralKey(sInstance);
-
-    return OT_ERROR_NONE;
-}
-
-void BorderAgentSetEphemeralKeyLength(uint16_t aKeyLen)
-{
-    if (aKeyLen >= OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH && aKeyLen <= OT_BORDER_AGENT_MAX_EPHEMERAL_KEY_LENGTH)
-    {
-        sEphemeralKeyLength = aKeyLen;
-    }
-    else
-    {
-        sEphemeralKeyLength = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;
-    }
-}
-
-void BorderAgentSetEphemeralKeyTimeout(uint32_t aKeyTimeout)
-{
-    sEphemeralKeyTimeout = aKeyTimeout;
-}
-
-void BorderAgentSetEphemeralKeyPort(uint32_t aKeyPort)
-{
-    sEphemeralKeyPort = aKeyPort;
 }
 #endif
 /* -------------------------------------------------------------------------- */
@@ -233,10 +213,10 @@ void BorderAgentSetEphemeralKeyPort(uint32_t aKeyPort)
 static void PublishMeshCopService(otInstance *aInstance)
 {
     otDnsTxtEntry mTxtEntries[MAX_TXT_ENTRIES_NUMBER];
-    MeshCopValues mMeshCopValues = {0};
-    uint8_t       numTxtEntries  = 0;
+    MeshCopValues meshCopValues = {0};
+    uint8_t       numTxtEntries = 0;
 
-    numTxtEntries = PopulateMeshCopService(mTxtEntries, &mMeshCopValues, aInstance);
+    numTxtEntries = PopulateMeshCopService(mTxtEntries, &meshCopValues, aInstance);
 
     uint8_t  txtBuffer[255]  = {0};
     uint32_t txtBufferOffset = 0;
@@ -281,21 +261,6 @@ static void HandleThreadStateChanged(otChangedFlags flags, void *aContext)
     {
         PublishMeshCopService((otInstance *)aContext);
     }
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    if (flags & (OT_CHANGED_THREAD_ROLE | OT_CHANGED_COMMISSIONER_STATE))
-    {
-        if (otBorderAgentGetState((otInstance *)aContext) != OT_BORDER_AGENT_STATE_STOPPED)
-        {
-            if (sEphemeralKeySetPending)
-            {
-                otBorderAgentSetEphemeralKey((otInstance *)aContext, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
-                                             otBorderAgentGetUdpPort((otInstance *)aContext));
-                sEphemeralKeySetPending = false;
-            }
-        }
-    }
-#endif
 }
 
 static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues *aMeshCopValues, otInstance *aInstance)
@@ -315,9 +280,10 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     i++;
 
     // Thread Specification Version TXT
+    const char *version         = GetThreadVersionAsString();
     aTxtEntries[i].mKey         = "tv";
-    aTxtEntries[i].mValue       = (uint8_t *)"1.3.0";
-    aTxtEntries[i].mValueLength = strlen("1.3.0");
+    aTxtEntries[i].mValue       = (uint8_t *)(version);
+    aTxtEntries[i].mValueLength = strlen(version);
     i++;
 
     // State bitmap TXT (value is binary encoded)
@@ -346,8 +312,8 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
 
     // Model name TXT
     aTxtEntries[i].mKey         = "mn";
-    aTxtEntries[i].mValue       = (uint8_t *)"xxxx";
-    aTxtEntries[i].mValueLength = strlen("xxxx");
+    aTxtEntries[i].mValue       = (uint8_t *)"BorderRouter";
+    aTxtEntries[i].mValueLength = strlen("BorderRouter");
     i++;
 
     /* Active timestamp TXT and Partition Id TXT (values binary encoded, shall be included only if Thread Interface
@@ -377,7 +343,7 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     aTxtEntries[i].mValueLength = strlen(otThreadGetDomainName(aInstance));
     i++;
 
-    if (bitmap.mBBRFunctionStatusIsActive)
+    if ((bitmap.mBBRFunctionStatus & BBR_FUNCTION_STATUS_ACTIVE_MASK))
     {
         otBackboneRouterConfig config;
         otBackboneRouterGetConfig(aInstance, &config);
@@ -424,6 +390,14 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     aTxtEntries[i].mValueLength = sizeof(otLinkGetExtendedAddress(aInstance)->m8);
     i++;
 
+    // Border Agent ID (binary encoded)
+    otBorderAgentId id;
+    otBorderAgentGetId(aInstance, &id);
+    aTxtEntries[i].mKey         = "id";
+    aTxtEntries[i].mValue       = (uint8_t *)id.mId;
+    aTxtEntries[i].mValueLength = sizeof(otBorderAgentId);
+    i++;
+
     return i;
 }
 
@@ -439,10 +413,25 @@ static StateBitmap GetStateBitmap(otInstance *aInstance)
     {
     case OT_DEVICE_ROLE_DISABLED:
         bitmap.mThreadInterfaceStatus = kIfNotInitialized;
+        bitmap.mThreadRole            = kThreadRoleDetached;
         break;
     case OT_DEVICE_ROLE_DETACHED:
         bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadRole            = kThreadRoleDetached;
         break;
+    case OT_DEVICE_ROLE_CHILD:
+        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadRole            = kThreadRoleEndDevice;
+        break;
+    case OT_DEVICE_ROLE_ROUTER:
+        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadRole            = kThreadRoleRouter;
+        break;
+    case OT_DEVICE_ROLE_LEADER:
+        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadRole            = kThreadRoleLeader;
+        break;
+
     default:
         bitmap.mThreadInterfaceStatus = kIfActive;
     }
@@ -450,10 +439,13 @@ static StateBitmap GetStateBitmap(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (bitmap.mThreadInterfaceStatus == kIfActive)
     {
-        bitmap.mBBRFunctionStatusIsActive  = otBackboneRouterGetState(aInstance) != OT_BACKBONE_ROUTER_STATE_DISABLED;
-        bitmap.mBBRFunctionStatusIsPrimary = otBackboneRouterGetState(aInstance) == OT_BACKBONE_ROUTER_STATE_PRIMARY;
+        bitmap.mBBRFunctionStatus = ((otBackboneRouterGetState(aInstance) != OT_BACKBONE_ROUTER_STATE_DISABLED << 1) |
+                                     (otBackboneRouterGetState(aInstance) == OT_BACKBONE_ROUTER_STATE_PRIMARY));
     }
+#endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    bitmap.mEpskcSupported = 1;
 #endif
 
     return bitmap;
@@ -466,8 +458,9 @@ static uint32_t BitmapToUint32(StateBitmap aBitMap)
     bitmap |= aBitMap.mConnectionMode << 0;
     bitmap |= aBitMap.mThreadInterfaceStatus << 3;
     bitmap |= aBitMap.mAvailability << 5;
-    bitmap |= aBitMap.mBBRFunctionStatusIsActive << 7;
-    bitmap |= aBitMap.mBBRFunctionStatusIsPrimary << 8;
+    bitmap |= aBitMap.mBBRFunctionStatus << 7;
+    bitmap |= aBitMap.mThreadRole << 9;
+    bitmap |= aBitMap.mEpskcSupported << 11;
 
     return bitmap;
 }
@@ -482,42 +475,90 @@ static void HandleMeshCopRegistrationCallback(otInstance *aInstance, otMdnsReque
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+static void PublishEpskcService(void)
+{
+    static bool init = false;
+    if (!init)
+    {
+        memset(&sEpskcService, 0, sizeof(sEpskcService));
+
+        sEpskcService.mHostName        = sMeshCopService.mHostName;
+        sEpskcService.mServiceInstance = sMeshCopService.mServiceInstance;
+        sEpskcService.mServiceType     = sEpskcServiceLabel;
+        init                           = true;
+    }
+
+    sEpskcService.mPort = otBorderAgentGetUdpPort(sInstance);
+
+    otMdnsRegisterService(sInstance, &sEpskcService, 0, HandleEpskcRegistrationCallback);
+}
+
+static void UnpublishEpskcService(void)
+{
+    sEpskcActive = false;
+    (void)otMdnsUnregisterService(sInstance, &sEpskcService);
+}
+
+static void HandleEpskcRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
+{
+    if (aError == OT_ERROR_NONE)
+    {
+        if (otBorderAgentGetState(sInstance) != OT_BORDER_AGENT_STATE_STOPPED && !sEpskcActive)
+        {
+            SuccessOrExit(GenerateEphemeralKey());
+            (void)otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                               otBorderAgentGetUdpPort(sInstance));
+        }
+    }
+exit:
+    return;
+}
+
+static otError GenerateEphemeralKey(void)
+{
+    otError  error = OT_ERROR_NONE;
+    uint8_t  i     = 0;
+    uint32_t randomResult;
+    char     verhoeffChecksum;
+
+    memset(sEphemeralKey, 0, sizeof(sEphemeralKey));
+
+    VerifyOrExit(otPlatEntropyGet((uint8_t *)&randomResult, sizeof(randomResult)) == OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+    randomResult %= 100000000;
+    i += snprintf((char *)sEphemeralKey, sizeof(sEphemeralKey), "%08lu", randomResult);
+    VerifyOrExit(otVerhoeffChecksumCalculate((const char *)sEphemeralKey, &verhoeffChecksum) == OT_ERROR_NONE,
+                 error = OT_ERROR_FAILED);
+    i += snprintf((char *)&sEphemeralKey[i], sizeof(sEphemeralKey) - i, "%c", verhoeffChecksum);
+exit:
+    return error;
+}
+
 static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
 {
-    bool active = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
+    bool sEpskcActive = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
 
-    if (active)
+    if (sEpskcActive)
     {
-        if (sEphemeralKeySetPending)
         {
-            otBorderAgentSetEphemeralKey((otInstance *)aContext, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
-                                         otBorderAgentGetUdpPort((otInstance *)aContext));
-            sEphemeralKeySetPending = false;
-        }
-        else
-        {
-            otCliOutputFormat("\r\nEphemeral Key = ");
-            for (uint16_t i = 0; i < OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH; i++)
-            {
-                otCliOutputFormat("%02x", sEphemeralKey[i]);
-            }
-            otCliOutputFormat("\r\n");
-            otCliOutputFormat("Valid for %lu seconds.\r\n%s", (uint32_t)(sEphemeralKeyTimeout / 1000UL), "> ");
+            otCliOutputFormat("\r\n Use this passcode to enable an additional device to administer "
+                              "and manage your Thread network, including adding new devices to it. This passcode is "
+                              "not required for an app to communicate with existing "
+                              "devices on your Thread network.");
+            char formattedEpskc[12];
+            snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey, sEphemeralKey + 3,
+                     sEphemeralKey + 6);
+            otCliOutputFormat("\r\n\nePSKc : %s", formattedEpskc);
+            otCliOutputFormat("\r\n\nValid for %lu seconds.\r\n%s", (uint32_t)(sEphemeralKeyTimeout / 1000UL), "> ");
         }
     }
     else
     {
+        UnpublishEpskcService();
         otCliOutputFormat("\r\nEphemeral Key disabled, PSKc is now in use.\r\n%s", "> ");
     }
 }
-
-static void BorderAgentSetDefaultEphemeralKeySettings()
-{
-    sEphemeralKeyLength  = OT_BORDER_AGENT_MIN_EPHEMERAL_KEY_LENGTH;
-    sEphemeralKeyTimeout = OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT;
-    sEphemeralKeyPort    = BORDER_AGENT_PORT;
-}
-#endif
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 
 static uint16_t ToBE16(uint16_t v)
 {
@@ -536,4 +577,29 @@ static uint64_t ToBE64(uint64_t v)
            ((v & (uint64_t)(0x0000000000ff0000ULL)) << 24) | ((v & (uint64_t)(0x00000000ff000000ULL)) << 8) |
            ((v & (uint64_t)(0x000000ff00000000ULL)) >> 8) | ((v & (uint64_t)(0x0000ff0000000000ULL)) >> 24) |
            ((v & (uint64_t)(0x00ff000000000000ULL)) >> 40) | ((v & (uint64_t)(0xff00000000000000ULL)) >> 56);
+}
+
+static const char *GetThreadVersionAsString(void)
+{
+    const char *version = NULL;
+
+    switch (otThreadGetVersion())
+    {
+    case OT_THREAD_VERSION_1_1:
+        version = "1.1.1";
+        break;
+    case OT_THREAD_VERSION_1_2:
+        version = "1.2.1";
+        break;
+    case OT_THREAD_VERSION_1_3:
+        version = "1.3.0";
+        break;
+    case OT_THREAD_VERSION_1_4:
+        version = "1.4.0";
+        break;
+    default:
+        break;
+    }
+
+    return version;
 }

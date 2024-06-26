@@ -221,28 +221,22 @@ CLI commands are exposed for Ephemeral Key functionality:
 
 ```
 > ephkey help
-ephkey generate
-ephkey length <key_length>
-ephkey timeout <timeout> (msec)
-ephkey port <port>
+ephkey enable [timeout-in-msec]
 ```
-
-`length`: indicates the key size; it takes values between 6 and 32 bytes inclusive.
 
 `timeout`: While the timeout interval is in effect, the ephemeral key can be used only once by an external
 commissioner to connect. Once the commissioner disconnects, the
 ephemeral key is cleared, and Border Agent reverts to using PSKc.
 
-`port`: The UDP port to use with ephemeral key. If zero, an ephemeral port will be used.
-
-Border Router application sets default values for these parameters at start-up:
-`length` is set to 6 bytes, `timeout` is set to 120 seconds, and `port` is set to 49152.
-
 ```
-> ephkey generate
+> ephkey enable
 Done
 >
-Ephemeral Key = 1115c0c85092
+Use this passcode to enable an additional device to administer and manage your Thread network, including adding new devices to it.
+This passcode is not required for an app to communicate with existing devices on your Thread network.
+
+ePSKc : 503 065 984
+
 Valid for 120 seconds.
 >
 Ephemeral Key disabled, PSKc is now in use.
