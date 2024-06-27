@@ -16,57 +16,75 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/*! @brief The board name */
-#define BOARD_NAME "MIMXRT1060-EVKB"
 
-/* BOARD_APP_UART_INSTANCE can be used to define a serial interface used by the application
- * As an example, this is used by the OpenThread CLI interface
- * BOARD_DEBUG_UART_XXX macros will be adjusted automatically so the Debug Console doesn't conflict with the
+/* BOARD_APP_UART_INSTANCE is used to define a serial interface used by the application
+ * By default, this is used by the OpenThread CLI interface
+ * BOARD_DEBUG_UART_XXX macros should be adjusted so the Debug Console doesn't conflict with the
  * application serial interface */
 #ifndef BOARD_APP_UART_INSTANCE
-#define BOARD_APP_UART_INSTANCE 1U
+#define BOARD_APP_UART_INSTANCE BOARD_1ST_UART_INSTANCE
 #endif
 
 #ifndef BOARD_APP_UART_BAUDRATE
 #define BOARD_APP_UART_BAUDRATE 115200
 #endif /* BOARD_APP_UART_BAUDRATE */
 
-#ifndef BOARD_DEBUG_UART_BAUDRATE
-#define BOARD_DEBUG_UART_BAUDRATE 115200
-#endif /* BOARD_DEBUG_UART_BAUDRATE */
-
 #define BOARD_APP_UART_TYPE kSerialPort_Uart
-#define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
+#define BOARD_APP_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
 
 #if (BOARD_APP_UART_INSTANCE == 1)
-
 #define BOARD_APP_UART_BASEADDR (uint32_t) LPUART1
-#define BOARD_APP_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
 #define BOARD_APP_UART_IRQ_HANDLER LPUART1_IRQHandler
 #define BOARD_APP_UART_IRQ LPUART1_IRQn
-
-#define BOARD_DEBUG_UART_INSTANCE 2U
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART2
-#define BOARD_DEBUG_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
-#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART2_IRQHandler
-#define BOARD_DEBUG_UART_IRQ LPUART2_IRQn
 
 #elif (BOARD_APP_UART_INSTANCE == 2)
 
 #define BOARD_APP_UART_BASEADDR (uint32_t) LPUART2
-#define BOARD_APP_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
 #define BOARD_APP_UART_IRQ_HANDLER LPUART2_IRQHandler
 #define BOARD_APP_UART_IRQ LPUART2_IRQn
 
-#define BOARD_DEBUG_UART_INSTANCE 1U
-#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART1
-#define BOARD_DEBUG_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
-#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART1_IRQHandler
-#define BOARD_DEBUG_UART_IRQ LPUART1_IRQn
+#elif (BOARD_APP_UART_INSTANCE == 8)
+
+#define BOARD_APP_UART_BASEADDR (uint32_t) LPUART8
+#define BOARD_APP_UART_IRQ_HANDLER LPUART8_IRQHandler
+#define BOARD_APP_UART_IRQ LPUART8_IRQn
 
 #else
 #error "BOARD_APP_UART_INSTANCE unsupported instance"
 #endif /* BOARD_APP_UART_INSTANCE */
+
+#ifndef BOARD_DEBUG_UART_INSTANCE
+#define BOARD_DEBUG_UART_INSTANCE BOARD_2ND_UART_INSTANCE
+#endif
+
+#ifndef BOARD_DEBUG_UART_BAUDRATE
+#define BOARD_DEBUG_UART_BAUDRATE 115200
+#endif /* BOARD_DEBUG_UART_BAUDRATE */
+
+#define BOARD_DEBUG_UART_TYPE kSerialPort_Uart
+#define BOARD_DEBUG_UART_CLK_FREQ BOARD_DebugConsoleSrcFreq()
+
+#if (BOARD_DEBUG_UART_INSTANCE == 1)
+
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART1
+#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART1_IRQHandler
+#define BOARD_DEBUG_UART_IRQ LPUART1_IRQn
+
+#elif (BOARD_DEBUG_UART_INSTANCE == 2)
+
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART2
+#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART2_IRQHandler
+#define BOARD_DEBUG_UART_IRQ LPUART2_IRQn
+
+#elif (BOARD_DEBUG_UART_INSTANCE == 8)
+
+#define BOARD_DEBUG_UART_BASEADDR (uint32_t) LPUART8
+#define BOARD_DEBUG_UART_IRQ_HANDLER LPUART8_IRQHandler
+#define BOARD_DEBUG_UART_IRQ LPUART8_IRQn
+
+#else
+#error "BOARD_DEBUG_UART_INSTANCE unsupported instance"
+#endif /* BOARD_DEBUG_UART_INSTANCE */
 
 /*! @brief The USER_LED used for board */
 #define LOGIC_LED_ON (0U)
