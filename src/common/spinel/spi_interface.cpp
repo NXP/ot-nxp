@@ -47,7 +47,7 @@
 #ifndef LPSPI_MASTER_CLK_FREQ
 #define LPSPI_MASTER_CLK_FREQ (CLOCK_GetFreqFromObs(CCM_OBS_LPSPI1_CLK_ROOT))
 #endif
-#define OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ 4000000 ///< Default SPI speed in hertz.
+#define OT_PLATFORM_CONFIG_SPI_DEFAULT_SPEED_HZ 2000000 ///< Default SPI speed in hertz. Max supported 3.8MHz .
 
 #define OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE \
     16 ///< Default maximum number of 0xFF bytes to clip from start of MISO frame.
