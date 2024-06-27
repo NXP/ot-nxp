@@ -263,7 +263,7 @@ void otSysRunIdleTask(void);
  * This function displays SPI diagnostic statistics on OT CLI
  *
  */
-void otPlatRadioSpiDiag(void);
+otError otPlatRadioSpiDiag(void);
 
 #ifdef __cplusplus
 } // end of extern "C"

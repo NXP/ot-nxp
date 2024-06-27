@@ -584,9 +584,14 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
 }
 #endif
 
-#if defined(OT_PLAT_SPINEL_OVER_SPI)
-void otPlatRadioSpiDiag(void)
+otError otPlatRadioSpiDiag(void)
 {
+    otError error;
+#if defined(OT_PLAT_SPINEL_OVER_SPI)
     sSpinelInterface.DiagLogStats();
-}
+    error = OT_ERROR_NONE;
+#else
+    error = OT_ERROR_INVALID_COMMAND;
 #endif
+    return error;
+}

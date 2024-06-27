@@ -98,12 +98,8 @@ static otError ProcessSpiCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
     otError error = OT_ERROR_NONE;
 
-#if defined(OT_PLAT_SPINEL_OVER_SPI)
     otLogInfoPlat("ProcessSpiCmd");
-    otPlatRadioSpiDiag();
-#else
-    error = OT_ERROR_INVALID_COMMAND;
-#endif
+    error = otPlatRadioSpiDiag();
 
     return error;
 }
