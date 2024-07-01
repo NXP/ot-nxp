@@ -1025,7 +1025,7 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         /* TX activity is done */
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
-            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
         {
             otMacFrameSetFrameCounter(&sTxFrame, pDataMsg->fc);
         }
@@ -1124,7 +1124,7 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
             /* Ack timeout */
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
             if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
-                !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+                !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
             {
                 otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
             }
@@ -1145,7 +1145,7 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         /* TX Packet was loaded into TX Packet RAM but the TX/TR seq did not ended ok */
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
-            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed)
+            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
         {
             otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
         }
