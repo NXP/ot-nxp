@@ -175,7 +175,6 @@ list(APPEND SDK_SOURCES
     # File system
     ${MIDDLEWARE_PATH}/littlefs/lfs.c
     ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
-    ${NXP_SDK_ROOT}/components/flash/mflash/mimxrt1062/mflash_drv.c
 
     # sdmmc
     ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
@@ -249,6 +248,22 @@ list(APPEND SDK_INCLUDES
     ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
     ${MIDDLEWARE_PATH}/sdmmc/osa
 )
+
+if("${EVK_RT1060_BOARD}" STREQUAL "evkcmimxrt1060")
+    list(APPEND SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/flash/mflash/evkcmimxrt1060
+    )
+    list(APPEND SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/flash/mflash/evkcmimxrt1060/mflash_drv.c
+    )
+else()
+    list(APPEND SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/flash/mflash/mimxrt1062
+    )
+    list(APPEND SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/flash/mflash/mimxrt1062/mflash_drv.c
+    )
+endif()
 
 list(APPEND SDK_COMPILE_DEFINITIONS
     -D__STARTUP_CLEAR_BSS
