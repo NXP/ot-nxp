@@ -90,6 +90,7 @@
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
+#include "fwk_platform.h"
 #include "wm_net.h"
 #include "wpl.h"
 #endif
@@ -197,6 +198,7 @@ static void appConfigWifiIf();
 #endif
 
 static void appOtInit();
+static void appBrExternalIpv6InterfaceInit(void);
 static void appBrInit();
 static void mainloop(void *aContext);
 static void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args);
@@ -428,23 +430,29 @@ static void appOtInit()
     otAppCliAddonsInit(sInstance);
 }
 
-static void appBrInit()
+static void appBrExternalIpv6InterfaceInit()
 {
 #ifdef OT_APP_BR_ETH_EN
     appConfigEnetHw();
 #endif
 
-    otPlatLwipInit(sInstance, appOtLockOtTask);
-    otPlatLwipAddThreadInterface();
-    otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
+    otPlatLwipInit(appOtLockOtTask);
 
 #ifdef OT_APP_BR_WIFI_EN
+    PLATFORM_InitTimeStamp();
     appConfigWifiIf();
 #endif
 
 #ifdef OT_APP_BR_ETH_EN
     appConfigEnetIf();
 #endif
+}
+
+static void appBrInit()
+{
+    otPlatLwipSetOtInstance(sInstance);
+    otPlatLwipAddThreadInterface();
+    otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
 
     BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
 
@@ -549,6 +557,7 @@ static void mainloop(void *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
 
+    appBrExternalIpv6InterfaceInit();
     appOtInit();
     appBrInit();
     appNcpInit();

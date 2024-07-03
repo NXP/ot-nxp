@@ -399,21 +399,6 @@
 #define LWIP_STATS_DISPLAY 1
 
 /*
-   ----------------------------------------
-   - Platform specific diagnostic output. -
-   ----------------------------------------
-*/
-#ifndef LWIP_PLATFORM_DIAG
-#include <openthread/cli.h>
-
-#define LWIP_PLATFORM_DIAG(x) \
-    do                        \
-    {                         \
-        otCliOutputFormat x;  \
-    } while (0)
-#endif /* LWIP_PLATFORM_DIAG */
-
-/*
    ----------------------------------
    ---------- DHCP options ----------
    ----------------------------------

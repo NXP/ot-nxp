@@ -78,13 +78,11 @@ static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt)
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb)
+void otPlatLwipInit(otPlatLockTaskCb lockTaskCb)
 {
     VerifyOrExit(sLwipUninitialized);
-    VerifyOrExit(aInstance != NULL);
     VerifyOrExit(lockTaskCb != NULL);
 
-    sInstance   = aInstance;
     sLockTaskCb = lockTaskCb;
 
 #ifndef DISABLE_TCPIP_INIT
@@ -98,13 +96,21 @@ exit:
     return;
 }
 
+void otPlatLwipSetOtInstance(otInstance *aInstance)
+{
+    VerifyOrExit(aInstance != NULL);
+    sInstance = aInstance;
+exit:
+    return;
+}
+
 void otPlatLwipAddThreadInterface(void)
 {
     struct netif *pNetIf;
 
     VerifyOrExit(sThreadIfaceNotAdded);
 
-    /* otPlatLwipInit must be called first */
+    /* otPlatLwipInit and otPlatLwipSetOtInstance must be called first */
     VerifyOrExit(sInstance != NULL);
 
     /* Lock LwIP stack */

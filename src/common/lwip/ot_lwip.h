@@ -49,14 +49,20 @@ typedef void (*otPlatLockTaskCb)(bool bLockState);
 /*!
  * @brief This function initializes LWIP stack
  *
- * @param[in] aInstance pointer to openthread instance
  * @param[in] lockTaskCb a function pointer to lock/unlock the Thread task
  */
-void otPlatLwipInit(otInstance *aInstance, otPlatLockTaskCb lockTaskCb);
+void otPlatLwipInit(otPlatLockTaskCb lockTaskCb);
 
 /*!
- * @brief This function creates an OpenThread interface in Lwip
- *        otPlatLwipInit must be called before
+ * @brief This function sets the OpenThread instance reference for lwip task.
+ *
+ * @param[in] aInstance pointer to OpenThread instance
+ */
+void otPlatLwipSetOtInstance(otInstance *aInstance);
+
+/*!
+ * @brief This function creates an OpenThread interface in Lwip.
+ * otPlatLwipInit and otPlatLwipSetOtInstance must be called before.
  *
  */
 void otPlatLwipAddThreadInterface(void);

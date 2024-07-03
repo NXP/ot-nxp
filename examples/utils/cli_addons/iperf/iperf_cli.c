@@ -196,7 +196,8 @@ const char *report_type_str[] = {
 
 void otAppCliIperfCliInit(otInstance *aInstance)
 {
-    otPlatLwipInit(aInstance, appOtLockOtTask);
+    otPlatLwipInit(appOtLockOtTask);
+    otPlatLwipSetOtInstance(aInstance);
     otPlatLwipAddThreadInterface();
 
     (void)memset(&ctx, 0, sizeof(struct iperf_test_context));
