@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BR_RTOS_MANAGER_H__
-#define __BR_RTOS_MANAGER_H__
+#ifndef __OT_TREL_PLAT_H__
+#define __OT_TREL_PLAT_H__
 
-#include <openthread/backbone_router_ftd.h>
-#include <openthread/ip6.h>
+#include <openthread/instance.h>
 #include "lwip/netif.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Must be called before BrInitServices*/
-void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif);
-/* Must be called after BrInitPlatform */
-void BrInitServices();
+#define ADDITIONAL_PEER_NUMBER 32
+#define MAX_PEER_NUMBER OPENTHREAD_CONFIG_MLE_MAX_ROUTERS + OPENTHREAD_CONFIG_MLE_MAX_CHILDREN + ADDITIONAL_PEER_NUMBER
 
-void BrMdnsHostSetInitialized(bool aState);
-bool BrMdnsHostIsInitialized();
+void TrelPlatInit(otInstance *aInstance, struct netif *backboneNetif);
+void TrelOnAppReady(const char *aHostName);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* __BR_RTOS_MANAGER_H__ */
+
+#endif /* __OT_TREL_PLAT_H__ */

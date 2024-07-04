@@ -59,6 +59,7 @@
 #include "br_rtos_manager.h"
 #include "ncp_ot.h"
 #include "ot_lwip.h"
+#include "trel_plat.h"
 #include "utils.h"
 
 #include "openthread-system.h"
@@ -543,7 +544,9 @@ static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aR
 {
     if (aError == OT_ERROR_NONE && aRequestId == 0)
     {
+        BrMdnsHostSetInitialized(true);
         BorderAgentInit(aInstance, sHost.mHostName);
+        TrelOnAppReady(sHost.mHostName);
     }
     else
     {

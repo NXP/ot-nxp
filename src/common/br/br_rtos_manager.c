@@ -39,6 +39,7 @@
 #include "br_rtos_manager.h"
 #include "infra_if.h"
 #include "mdns_socket.h"
+#include "trel_plat.h"
 #include "udp_plat.h"
 
 #include "lwip_hooks.h"
@@ -58,6 +59,7 @@
 /* -------------------------------------------------------------------------- */
 static otInstance   *sInstance = NULL;
 static struct netif *sExtNetif = NULL;
+static bool          smDnsHostInitialized;
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -103,6 +105,17 @@ void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif
     InfraIfInit(sInstance, sExtNetif);
     MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
     Dhcp6PdInit(sExtNetif);
+    TrelPlatInit(sInstance, sExtNetif);
+}
+
+void BrMdnsHostSetInitialized(bool aState)
+{
+    smDnsHostInitialized = aState;
+}
+
+bool BrMdnsHostIsInitialized()
+{
+    return smDnsHostInitialized;
 }
 
 /* -------------------------------------------------------------------------- */
