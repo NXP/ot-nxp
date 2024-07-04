@@ -103,7 +103,7 @@ set(K32W1_SOURCES
 
 if (NOT NO_THREAD_1_3_FLAGS)
     list(APPEND K32W1_SOURCES
-        ecdsa_sss.cpp
+        ../../common/crypto/ecdsa_sss.cpp
     )
 endif()
 
