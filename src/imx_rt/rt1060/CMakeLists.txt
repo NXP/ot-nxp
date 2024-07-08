@@ -39,6 +39,12 @@ if(OT_NXP_LWIP)
     )
 endif()
 
+if(OT_NXP_LWIP_WIFI)
+    list(APPEND OT_PLAT_FLAGS
+        -DOT_PLAT_SYS_WIFI_INIT
+    )
+endif()
+
 if(OT_APP_BR_FREERTOS)
     set(INFRA_IF_SRC_FILE
         ${PROJECT_SOURCE_DIR}/src/common/br/infra_if.c
@@ -159,6 +165,7 @@ target_compile_definitions(${OT_PLATFORM_LIB}
 target_compile_options(${OT_PLATFORM_LIB}
     PRIVATE
     ${OT_CFLAGS}
+    ${OT_PLAT_FLAGS}
     ${OT_PLAT_SPINEL_FLAGS}
     -DOT_PLAT_SYS_CRYPTO_INIT
     -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"

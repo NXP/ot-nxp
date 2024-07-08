@@ -64,6 +64,7 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(NCP_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi)
     set(NCP_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
     set(NCP_USB_FILES_PATH ${NCP_FILES_PATH}/ncp_host/usb_host)
+    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/boards/${EVK_RT1060_BOARD}/wireless_config_template/wifi_bt_config.c)
 elseif(${SDK_TYPE} STREQUAL "PACKAGE")
     message("SDK_PACKAGE driver path chosen")
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1062/drivers)
@@ -343,7 +344,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/sdio.c
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/wifi-sdio.c
         ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
-        ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c
+        ${WIFI_BT_CONFIG_SOURCE_FILE}
     )
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DNOT_DEFINE_DEFAULT_WIFI_MODULE
