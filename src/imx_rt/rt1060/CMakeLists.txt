@@ -29,6 +29,7 @@
 if(OT_NXP_LWIP)
     set(LWIP_SRC_FILE
         ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
+        ${PROJECT_SOURCE_DIR}/src/common/lwip/token_bucket.c
     )
     set(OT_LWIP_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/common/lwip

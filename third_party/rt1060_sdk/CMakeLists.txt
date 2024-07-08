@@ -448,6 +448,26 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     endif()
 endif()
 
+if(OT_NXP_LWIP_ETH)
+    list(APPEND SDK_INCLUDES
+        ${NXP_SDK_ROOT}/components/phy/
+        ${NXP_SDK_ROOT}/components/phy/device/phyksz8081
+        ${NXP_SDK_ROOT}/components/silicon_id
+        ${NXP_SDK_ROOT}/components/silicon_id/socs
+        ${DRIVER_ENET_FILES_PATH}
+        ${DRIVER_DEVICE_FILES_PATH}
+    )
+    list(APPEND SDK_SOURCES
+        ${NXP_SDK_ROOT}/components/phy/device/phyksz8081/fsl_phyksz8081.c
+        ${NXP_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
+        ${NXP_SDK_ROOT}/components/silicon_id/socs/rt10xx/fsl_silicon_id_soc.c
+        ${DRIVER_ENET_FILES_PATH}/fsl_enet.c
+        ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
+    )
+    list(APPEND SDK_COMPILE_DEFINITIONS
+    )
+endif()
+
 add_library(${NXP_DRIVER_LIB}
     ${SDK_SOURCES}
 )
