@@ -81,6 +81,14 @@ else ()
             gHcitInterfaceSpeed_d=gUARTBaudRate115200_c
             OT_PLAT_APP_UART_INSTANCE=1
     )
+    if (OT_RCP_UART_DMA)
+        target_compile_definitions(${NXP_DRIVER_LIB}
+            PUBLIC
+                gUartHwFlowControl_d=0
+                USE_SDK_OSA=0
+        )
+    endif()
+
 endif ()
 
 #create empty libraries to be able to link with connectivity.ld
