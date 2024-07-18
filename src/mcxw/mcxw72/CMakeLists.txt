@@ -38,7 +38,7 @@ list(APPEND OT_PUBLIC_INCLUDES
         "${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include/"
         "$ENV{NXP_MCXW72_SDK_ROOT}"
         "$ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/Include"
-        "$ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW728A"
+        "$ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/common"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/flash_k4"
