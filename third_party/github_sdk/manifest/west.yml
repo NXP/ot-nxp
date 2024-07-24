@@ -35,8 +35,9 @@
 manifest:
   projects:
   - name: sdk-release
-    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
-    revision: release/2.16.000_major_rfp
+    url: https://github.com/nxp-mcuxpresso/mcux-sdk.git
+    revision: MCUX_2.16.000
+    path: core
     import:
       name-allowlist:
         - mcux-sdk
@@ -48,13 +49,16 @@ manifest:
         - littlefs
         - lwip
         - wifi_nxp
-        - secure-subsystem
+        - mcux-secure-subsystem
         - mcux-sdk-middleware-bluetooth-controller
         - mcux-sdk-middleware-bluetooth-host
         - mcux-sdk-middleware-multicore
-        - mcux-sdk-middleware-connectivity-framework
         - mcux-sdk-middleware-ieee_802.15.4
         - mcux-sdk-middleware-zigbee
         - mcux-sdk-middleware-usb
         - rpmsg-lite
         - mcux-sdk-examples
+  - name: mcux-sdk-middleware-connectivity-framework
+    url: https://github.com/nxp-mcuxpresso/mcux-sdk-middleware-connectivity-framework.git
+    revision: MCUX_2.16.000_UpdRev0
+    path: middleware/wireless/framework
