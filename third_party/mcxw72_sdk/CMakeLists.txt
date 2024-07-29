@@ -387,8 +387,7 @@ if (SDK_RELEASE)
 )
 else()
     list(APPEND MCXW72_SDK_INCLUDES
-        $ENV{NXP_MCXW72_SDK_ROOT}/devices/KW47B42ZB7/drivers
-
+        $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/drivers
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/common
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/flash_k4
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/gpio
