@@ -67,7 +67,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "gNvStorageIncluded_d=1"
     "gUnmirroredFeatureSet_d=1"
     "gNvFragmentation_Enabled_d=1"
-    "gAppButtonCnt_c=2"
     "gBleBondIdentityHeaderSize_c=56"
     "gPlatformShutdownEccRamInLowPower=0"
     "gMemManagerLightExtendHeapAreaUsage=1"
@@ -77,6 +76,21 @@ list(APPEND OT_PLATFORM_DEFINES
     "DBG_IO_ENABLE"
     "gHwParamsProdDataPlacement_c=gHwParamsProdDataPlacementLegacyMode_c"
 )
+
+if (FPGA_BUILD)
+    list(APPEND OT_PLATFORM_DEFINES
+        "gAppButtonCnt_c=0"
+        "HDI_MODE=1"
+        "FPGA_TARGET=1"
+        "FPGA_SUPPORT=1"
+        "DISABLE_WDOG=1"
+        "gUseHwParams=0"
+    )
+else()
+    list(APPEND OT_PLATFORM_DEFINES
+        "gAppButtonCnt_c=2"
+    )
+endif()
 
 if (USE_NBU)
     set_property(SOURCE $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/gcc/startup_MCXW727C_cm33_core0.S PROPERTY LANGUAGE C)
@@ -152,6 +166,13 @@ set(MCXW72_SDK_SOURCES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_sha256.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_genfsk.c
 )
+
+if (FPGA_BUILD)
+    list(APPEND MCXW72_SDK_SOURCES
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/HDI/hdi.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_fpga.c
+    )
+endif()
 
 if (USE_NBU)
     if (SDK_RELEASE)
@@ -378,6 +399,12 @@ set(MCXW72_SDK_INCLUDES
     $ENV{NXP_MCXW72_SDK_ROOT}/components/power_manager/core
     $ENV{NXP_MCXW72_SDK_ROOT}/components/reset
 )
+
+if (FPGA_BUILD)
+    list(APPEND MCXW72_SDK_INCLUDES
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/HDI
+    )
+endif()
 
 if (SDK_RELEASE)
     list(APPEND MCXW72_SDK_INCLUDES

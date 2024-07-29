@@ -189,7 +189,11 @@ otError otPlatUartEnable(void)
     /* enable clock */
     CLOCK_EnableClock(OT_APP_UART_CLK);
 
+#if defined(FPGA_TARGET) && (FPGA_TARGET > 0)
+    uartConfig.clockRate = BOARD_UART_CLK;
+#else
     uartConfig.clockRate = CLOCK_GetIpFreq(OT_APP_UART_CLK);
+#endif
 
 #if (OT_APP_UART_INSTANCE == 1U)
     BOARD_InitPinLPUART1_TX();

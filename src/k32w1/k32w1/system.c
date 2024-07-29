@@ -155,8 +155,10 @@ void otSysInit(int argc, char *argv[])
         MEM_Init();
 
 #if !defined(gBoardUseFro32k_d) || (gBoardUseFro32k_d == 0)
+#if !defined(FPGA_TARGET) || (FGPA_TARGET == 0)
         /* Make sure OSC32k is ready and select it as clock source */
         PLATFORM_SwitchToOsc32k();
+#endif
 #endif
 
         /* Hook used to call OT repo application functions*/
