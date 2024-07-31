@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022-2023, NXP.
+ *  Copyright (c) 2022-2024 NXP.
  *
  *  All rights reserved.
  *
