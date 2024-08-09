@@ -31,7 +31,6 @@ if(NOT LWIP_PATH)
 endif()
 
 set(LWIP_SDK_SOURCES
-    ${LWIP_PATH}/port/sys_arch.c
     ${LWIP_PATH}/port/arch/perf.h
 
     ${LWIP_PATH}/src/api/api_lib.c
@@ -88,6 +87,28 @@ set(LWIP_SDK_SOURCES
     ${LWIP_PATH}/src/netif/ethernet.c
 )
 
+# NOTE: to fix the OT libs compilation error before
+# ot-nxp switch SDK version to SDK 2.16.100.
+# Once ot-nxp switches to SDK 2.16.100, it needs to be removed.
+if(EXISTS ${NXP_SDK_ROOT}/SW-Content-Register.txt)
+    file(STRINGS "${NXP_SDK_ROOT}/SW-Content-Register.txt" read_var LIMIT_COUNT 2)
+    string(SUBSTRING "${read_var}" 56 26 SDK_VER)
+    message(STATUS "SDK ${SDK_VER}")
+    if(${SDK_VER} STREQUAL "Release Version: 2.16.100")
+        list(APPEND LWIP_SDK_SOURCES
+            ${LWIP_PATH}/port/sys_arch/dynamic/sys_arch.c
+        )
+    else()
+        list(APPEND LWIP_SDK_SOURCES
+            ${LWIP_PATH}/port/sys_arch.c
+        )
+    endif()
+else()
+    list(APPEND LWIP_SDK_SOURCES
+        ${LWIP_PATH}/port/sys_arch.c
+    )
+endif()
+
 if(OT_NXP_LWIP_ETH)
     list(APPEND LWIP_SDK_SOURCES
         ${LWIP_PATH}/port/enet_ethernetif.c
@@ -118,6 +139,8 @@ target_include_directories(nxp-lwip
     ${PROJECT_SOURCE_DIR}/src/common/br
     ${LWIP_PATH}/port
     ${LWIP_PATH}/port/arch
+    ${LWIP_PATH}/port/sys_arch/dynamic
+    ${LWIP_PATH}/port/sys_arch/dynamic/arch
     ${LWIP_PATH}/src/include
     ${LWIP_PATH}/src/include/lwip/apps
     ${PROJECT_SOURCE_DIR}/src/common/lwip
