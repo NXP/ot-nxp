@@ -30,21 +30,27 @@ if (SDK_RELEASE)
     set(DRV_DIR "devices/MCXW727C/drivers" CACHE STRING "")
     set(UTL_DIR "devices/MCXW727C/utilities" CACHE STRING "")
     set(MIDLWR_DIR "middleware" CACHE STRING "")
-    set(ZB_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/boards/kw47evk/wireless_examples/zigbee" CACHE STRING "")
+    set(ZB_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/boards/mcxw72evk/wireless_examples/zigbee" CACHE STRING "")
+    set(BLE_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/boards/mcxw72evk/wireless_examples/bluetooth" CACHE STRING "")
 else()
     if (SDK_GH)
         set(DRV_DIR "drivers" CACHE STRING "")
         set(UTL_DIR "utilities" CACHE STRING "")
         set(MIDLWR_DIR "../middleware" CACHE STRING "")
-        set(ZB_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/../examples/kw47evk/wireless_examples/zigbee" CACHE STRING "")
+        set(ZB_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/../examples/mcxw72evk/wireless_examples/zigbee" CACHE STRING "")
+        set(BLE_EXMPL_DIR "$ENV{NXP_K32W1_SDK_ROOT}/../examples/mcxw72evk/wireless_examples/bluetooth" CACHE STRING "")
     else()
         set(DRV_DIR "platform/drivers" CACHE STRING "")
         set(UTL_DIR "platform/utilities" CACHE STRING "")
         set(MIDLWR_DIR "middleware" CACHE STRING "")
         set(ZB_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/zigbee/examples" CACHE STRING "")
-        set(BLE_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth" CACHE STRING "")
+        set(BLE_EXMPL_DIR "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/examples" CACHE STRING "")
     endif()
 endif()
+
+set(UART_BAUD_RATE "115200" CACHE STRING "Uart baud rate")
+set(UART_INSTANCE "1" CACHE STRING "Uart instance for RCP comms")
+
 list(APPEND OT_PLATFORM_DEFINES
     "USE_NBU=${USE_NBU}"
     "CPU_MCXW727CMFTA_cm33_core0"
@@ -69,7 +75,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\""
     "SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\""
     "DBG_IO_ENABLE"
-    "FWK_RNG_DEPRECATED_API"
     "gHwParamsProdDataPlacement_c=gHwParamsProdDataPlacementLegacyMode_c"
 )
 
@@ -99,14 +104,15 @@ set(MCXW72_SDK_SOURCES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ot.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_extflash.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_rng.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_crypto.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Source/NV_Flash.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower/PWR.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG/RNG.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/SecLib_sss.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/KW47B42ZB7/clock_config.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/MCXW727C/clock_config.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/hardware_init.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/app_services_init.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/KW47B42ZB7/pin_mux.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/MCXW727C/pin_mux.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/board_comp.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/board_dcdc.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/board_lp.c
@@ -159,9 +165,11 @@ if (USE_NBU)
     endif()
 
     list(APPEND MCXW72_SDK_SOURCES
-        # using MCXW727C startup file not working (crush at run time)
+        # We're using the K32W148 startup file since it is modified to force
+        # the linking against the proper IMU interrupt hanlder in rpmsg middleware.
+        # This is done by removing the default handler declaration for the aforementioned
+        # interrupt handler. Suspecting a linking issue to be resolved.
         #$ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/gcc/startup_MCXW727C_cm33_core0.S
-        # K32W1480 startup file is used until MCXW727C startup file above will be fixed
         ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/startup_K32W1480.S
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/rpmsg/fsl_adapter_rpmsg.c
@@ -229,7 +237,9 @@ if (SDK_RELEASE)
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/fsl_wuu.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/fsl_edma.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/fsl_lpuart_edma.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/fsl_trdc.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${UTL_DIR}/fsl_assert.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${UTL_DIR}/format/fsl_format.c
 )
 else()
     list(APPEND MCXW72_SDK_SOURCES
@@ -250,16 +260,24 @@ else()
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/wuu/fsl_wuu.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/dma3/fsl_edma.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart_edma.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/trdc/fsl_trdc.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/assert/fsl_assert.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/format/fsl_format.c
 )
 endif()
-
-list(APPEND MCXW72_SDK_SOURCES
-    $ENV{NXP_MCXW72_SDK_ROOT}/components/debug_console/fsl_debug_console.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/components/str/fsl_str.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/components/shell/fsl_shell.c
-)
+if (SDK_RELEASE)
+    list(APPEND MCXW72_SDK_SOURCES
+        $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/utilities/debug_console/fsl_debug_console.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/utilities/str/fsl_str.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/utilities/shell/fsl_shell.c
+    )
+else()
+    list(APPEND MCXW72_SDK_SOURCES
+        $ENV{NXP_MCXW72_SDK_ROOT}/components/debug_console/fsl_debug_console.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/components/str/fsl_str.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/components/shell/fsl_shell.c
+    )
+endif()
 
 add_library(${NXP_DRIVER_LIB}
     ${MCXW72_SDK_SOURCES}
@@ -325,7 +343,7 @@ set(MCXW72_SDK_INCLUDES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Source
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Interface
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x
-    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/KW47B42ZB7
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/MCXW727C
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/configs
@@ -339,6 +357,7 @@ set(MCXW72_SDK_INCLUDES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/multicore/rpmsg_lite/lib/include/environment/bm
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src
     $ENV{NXP_MCXW72_SDK_ROOT}/components/osa
+    $ENV{NXP_MCXW72_SDK_ROOT}/components/osa/config
     $ENV{NXP_MCXW72_SDK_ROOT}/components/lists
     $ENV{NXP_MCXW72_SDK_ROOT}/components/messaging
     $ENV{NXP_MCXW72_SDK_ROOT}/components/mem_manager
@@ -385,13 +404,16 @@ else()
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/spc
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/lpspi
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/ccm32k
+        $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/trdc
         $ENV{NXP_MCXW72_SDK_ROOT}/components/format
-        ${BLE_DIR}/boards/kw47evk/wireless_examples
+
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/boards/mcxw72evk/wireless_examples
 )
 endif()
 
 list(APPEND MCXW72_SDK_INCLUDES
     $ENV{NXP_MCXW72_SDK_ROOT}/components/debug_console
+    $ENV{NXP_MCXW72_SDK_ROOT}/components/debug_console/config
     $ENV{NXP_MCXW72_SDK_ROOT}/components/str
     $ENV{NXP_MCXW72_SDK_ROOT}/components/shell
     $ENV{NXP_MCXW72_SDK_ROOT}/components/assert
