@@ -102,7 +102,6 @@ readonly OT_OPTIONS_NO_RCP=(
     "-DOT_APP_NCP=OFF"
     "-DOT_APP_RCP=OFF"
     "-DOT_RCP=OFF"
-    "-DUART_INSTANCE=0"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
     "-DOT_APP_LOWPOWER=OFF"
 )
@@ -117,7 +116,6 @@ readonly OT_OPTIONS_CLI_FTD_BLE_SHELL=(
     "-DOT_BLE_SUPPORT=ON"
     "-DOT_APP_FTD_BLE_SHELL=ON"
     "-DOT_PING_SENDER=ON"
-    "-DUART_INSTANCE=0"
     "-DOT_APP_LOWPOWER=OFF"
 )
 
@@ -250,6 +248,7 @@ create_directory_and_build()
         build_ot_without_rcp_image "$@"
         # build_ot_cli_ftd_zc "$@"
         # build_ot_rcp_uart_dma_zb_coprocessor "$@"
+        build_ot_cli_ftd_ble_shell "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
         build_ot_rcp_only_uart_flow_control "$@"
@@ -264,12 +263,11 @@ create_directory_and_build()
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
         build_ot_cli_ftd_ble_shell "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_zc, ot_rcp_uart_dma_zb_coprocessor"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_ble_shell"
         # 128 for Invalid arguments
         exit 128
     fi
 }
-
 main()
 {
 
