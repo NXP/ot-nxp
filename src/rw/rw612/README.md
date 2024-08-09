@@ -24,6 +24,7 @@ In a Bash terminal (found, for example, in Ubuntu OS), follow these instructions
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ ./script/bootstrap
 ```
 
@@ -175,7 +176,7 @@ If successfull you will see the following screen:
 At this point flash the image with the following command
 
 ```bash
-J-Link> loadbin path/to/binary,0x08000000
+J-Link> loadbin path/to/binary,0x08000400
 ```
 
 ## Running the example
