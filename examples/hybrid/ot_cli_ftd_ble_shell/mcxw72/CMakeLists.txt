@@ -27,12 +27,15 @@
 #
 
 if (SDK_RELEASE)
-    set(EXAMPLE_BASE_DIR ${BLE_EXMPL_DIR}/ble_shell)
+    # Temporary fix for MCXW72 EAR1 SDK
+    set(EXAMPLE_BASE_DIR ${BLE_EXMPL_DIR}/w_uart/bm)
+    set(BLE_COMMON_DIR ${EXAMPLE_BASE_DIR})
 else()
     if (SDK_GH)
         set(EXAMPLE_BASE_DIR ${BLE_EXMPL_DIR}/ble_shell)
     else()
-        set(EXAMPLE_BASE_DIR ${BLE_DIR})
+        set(EXAMPLE_BASE_DIR ${BLE_EXMPL_DIR}/ble_shell)
+        set(BLE_COMMON_DIR $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common)
     endif()
 endif()
 
@@ -44,38 +47,57 @@ add_executable(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/k32w1/main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
 
-    ${BLE_DIR}/application/common/app_advertiser.c
-    ${BLE_DIR}/application/common/app_conn.c
-    ${BLE_DIR}/application/common/app_connection.c
-    ${BLE_DIR}/application/common/app_nvm.c
-    ${BLE_DIR}/application/common/app_scanner.c
-    ${BLE_DIR}/application/common/ble_init.c
-    
-    ${BLE_DIR}/examples/ble_shell/app_config.c
-    ${BLE_DIR}/examples/ble_shell/ble_shell.c
-    ${BLE_DIR}/examples/ble_shell/shell_gap.c
-    ${BLE_DIR}/examples/ble_shell/shell_gatt.c
-    ${BLE_DIR}/examples/ble_shell/shell_gattdb.c
-    ${BLE_DIR}/examples/ble_shell/shell_thrput.c
+    ${BLE_COMMON_DIR}/app_advertiser.c
+    ${BLE_COMMON_DIR}/app_conn.c
+    ${BLE_COMMON_DIR}/app_connection.c
+    ${BLE_COMMON_DIR}/app_nvm.c
+    ${BLE_COMMON_DIR}/app_scanner.c
+    ${BLE_COMMON_DIR}/ble_init.c
 
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/app_services_init.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/app_ble_init.c
-
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/gatt_database_dynamic.c
 )
+
+# Temporary fix for MCXW72 EAR1 SDK
+if (SDK_RELEASE)
+    target_sources(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
+        ${EXAMPLE_BASE_DIR}/app_ble_init.c
+
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ble_shell.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shell_gap.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shell_gatt.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shell_gattdb.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shell_thrput.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/app_config.c
+    )
+    target_include_directories(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+else()
+    target_sources(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_advertiser.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/app_ble_init.c
+
+        ${EXAMPLE_BASE_DIR}/ble_shell.c
+        ${EXAMPLE_BASE_DIR}/shell_gap.c
+        ${EXAMPLE_BASE_DIR}/shell_gatt.c
+        ${EXAMPLE_BASE_DIR}/shell_gattdb.c
+        ${EXAMPLE_BASE_DIR}/shell_thrput.c
+        ${EXAMPLE_BASE_DIR}/app_config.c
+    )
+endif()
 
 target_include_directories(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 
-    ${BLE_DIR}/application/common
-    ${BLE_DIR}/examples/ble_shell
+    ${EXAMPLE_BASE_DIR}
 
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/interface
-    ${BLE_DIR}/boards/kw47evk/wireless_examples
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/bluetooth/boards/mcxw72evk/wireless_examples
 )
 
 target_compile_options(${NXP_DRIVER_LIB}
@@ -89,7 +111,8 @@ target_compile_options(nxp-mcxw72-ble
 )
 
 target_include_directories(nxp-mcxw72-ble PUBLIC
-    ${BLE_DIR}    
+    ${BLE_DIR}
+    ${EXAMPLE_BASE_DIR}
 )
 
 target_compile_options(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
