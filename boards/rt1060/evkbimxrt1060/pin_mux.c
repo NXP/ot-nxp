@@ -37,7 +37,9 @@ void BOARD_InitBootPins(void)
 {
     BOARD_InitPins();
     BOARD_InitDEBUG_UARTPins();
+#if !defined(CONFIG_NCP) || defined(CONFIG_NCP_UART)
     BOARD_InitArduinoUARTPins();
+#endif
 #if defined(SDIO_ENABLED)
     BOARD_InitUSDHCPins();
 #endif
