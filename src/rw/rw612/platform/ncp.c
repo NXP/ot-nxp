@@ -83,6 +83,9 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
     Copy_to_NCP_buff(aBuf, aBufLength);
 
+    /* Notify ncp task to handle ot response data */
+    ReleaseNcpLock();
+
     return OT_ERROR_NONE;
 }
 

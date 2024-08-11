@@ -48,7 +48,9 @@
 #include "addons_cli.h"
 #include "app_ot.h"
 #include "ncp_ot.h"
-
+#ifndef OT_NCP_LIBS
+#include "app_notify.h"
+#endif
 #ifndef OT_MAIN_TASK_PRIORITY
 #define OT_MAIN_TASK_PRIORITY 3
 #endif
@@ -66,7 +68,9 @@ static TaskHandle_t      sMainTask      = NULL;
 static SemaphoreHandle_t sMainStackLock = NULL;
 
 extern void otAppCliInit(otInstance *aInstance);
-
+#ifndef OT_NCP_LIBS
+extern int ncp_sleep_init(void);
+#endif
 static void appOtInit()
 {
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -103,12 +107,19 @@ static void appNcpInit()
 {
     uint32_t result;
 
+#ifndef OT_NCP_LIBS
+    result = app_notify_init();
+    assert(NCP_STATUS_SUCCESS == result);
+#endif
     result = ncp_adapter_init();
     assert(NCP_STATUS_SUCCESS == result);
     result = ot_ncp_init();
     assert(NCP_STATUS_SUCCESS == result);
     result = ncp_cmd_list_init();
     assert(NCP_STATUS_SUCCESS == result);
+#ifndef OT_NCP_LIBS
+    ncp_sleep_init();
+#endif
 }
 
 static void mainloop(void *aContext)

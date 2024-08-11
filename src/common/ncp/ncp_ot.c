@@ -10,6 +10,7 @@
 #include "app_ot.h"
 #include "board.h"
 #include "fsl_debug_console.h"
+#include "fsl_os_abstraction.h"
 #include "ncp_glue_ot.h"
 #include "ot_platform_common.h"
 #include <stdio.h>
@@ -50,8 +51,9 @@ static uint32_t sAutoRspFlag = 0;
 static uint8_t  otNcpTxBuffer[OT_NCP_RSP_MAX_SIZE];
 static uint16_t otNcpTxLength;
 
-static TaskHandle_t  sOtNcpTask     = NULL;
-static QueueHandle_t sOtNcpCmdQueue = NULL;
+static TaskHandle_t      sOtNcpTask     = NULL;
+static QueueHandle_t     sOtNcpCmdQueue = NULL;
+static SemaphoreHandle_t sNcpLock       = NULL;
 
 extern void Ot_Data_TxDone(void);
 
@@ -68,6 +70,41 @@ void Copy_to_NCP_buff(const uint8_t *aBuf, uint16_t aBufLength)
 
     otNcpTxLength += aBufLength;
 }
+
+void ReleaseNcpLock(void)
+{
+    if (sNcpLock != NULL)
+        xSemaphoreGive(sNcpLock);
+}
+
+#ifndef OT_NCP_LIBS
+int system_ncp_send_response(uint8_t *pbuf)
+{
+    int          ret          = NCP_STATUS_SUCCESS;
+    uint16_t     transfer_len = 0;
+    NCP_COMMAND *res          = (NCP_COMMAND *)pbuf;
+
+    /* set cmd seqno */
+    res->seqnum  = 0;
+    transfer_len = res->size;
+    if (transfer_len >= NCP_CMD_HEADER_LEN)
+    {
+        /* write response to host */
+        ret = ncp_tlv_send(pbuf, transfer_len);
+        if (ret != NCP_STATUS_SUCCESS)
+        {
+            ret = NCP_STATUS_ERROR;
+        }
+    }
+    else
+    {
+        ret = NCP_STATUS_ERROR;
+    }
+
+    return ret;
+}
+
+#endif
 
 ncp_status_t ot_ncp_command_handle_input(uint8_t *cmd)
 {
@@ -120,6 +157,8 @@ uint8_t *ot_ncp_handle_response(uint8_t *pbuf, uint16_t *p_len)
     return rsp_buf;
 }
 
+volatile uint8_t NeedOtSendCompleteFlag = 2;
+
 static void otNcpTask(void *pvParameters)
 {
     uint32_t         ret = 0;
@@ -129,6 +168,8 @@ static void otNcpTask(void *pvParameters)
 
     while (1)
     {
+        xSemaphoreTake(sNcpLock, portMAX_DELAY);
+
         ret = xQueueReceive(sOtNcpCmdQueue, &cmd_item, (TickType_t)0);
         if (ret == pdPASS)
         {
@@ -155,6 +196,7 @@ static void otNcpTask(void *pvParameters)
                     else
                     {
                         ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_OK, rsp_buf, otNcpTxLength);
+                        NeedOtSendCompleteFlag = 0;
                     }
 
                     vPortFree(rsp_buf);
@@ -175,7 +217,7 @@ static void otNcpTask(void *pvParameters)
             }
         }
 
-        vTaskDelay(50);
+        // vTaskDelay(50);
     }
 }
 
@@ -199,6 +241,8 @@ static void otNcpCallback(void *tlv, size_t tlv_sz, uint32_t status)
     {
         OT_PLAT_ERR("send to ot ncp cmd queue failed.\r\n");
     }
+
+    ReleaseNcpLock();
 }
 
 ncp_status_t ot_ncp_init(void)
@@ -215,6 +259,12 @@ ncp_status_t ot_ncp_init(void)
     if (xTaskCreate(otNcpTask, "ot_ncp_task", OT_NCP_TASK_SIZE, NULL, OT_NCP_TASK_PRIORITY, &sOtNcpTask) != pdPASS)
     {
         OT_PLAT_ERR("failed to create ncp ot task: %d\r\n");
+        goto fail;
+    }
+
+    sNcpLock = xSemaphoreCreateBinary();
+    if (sNcpLock == NULL)
+    {
         goto fail;
     }
 

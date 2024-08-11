@@ -13,8 +13,22 @@
 #include "openthread-system.h"
 #include "ot_platform_common.h"
 #include "otopcode_private.h"
+#ifndef OT_NCP_LIBS
+#include "ncp_lp_sys.h"
+#include "ncp_lpm.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef OT_NCP_LIBS
+#include "app_notify.h"
+
+#ifndef APP_NOTIFY_SUSPEND_EVT
+#define APP_NOTIFY_SUSPEND_EVT 0x1U
+#endif
+#ifndef APP_NOTIFY_SUSPEND_CFM
+#define APP_NOTIFY_SUSPEND_CFM 0x2U
+#endif
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                                Definitions                                 */
@@ -40,6 +54,10 @@ uint8_t rspNcpBuffer[NCP_INBUF_SIZE];
 uint8_t  otCurrentCmd[OT_COMMANDS_MAX_LEN];
 uint32_t otCmdTotalLengh;
 
+#ifndef OT_NCP_LIBS
+extern uint8_t suspend_notify_flag;
+extern OSA_SEMAPHORE_HANDLE_DEFINE(hs_cfm);
+#endif
 /* -------------------------------------------------------------------------- */
 /*                                 Functions                                  */
 /* -------------------------------------------------------------------------- */
@@ -150,6 +168,22 @@ fail:
     return NCP_STATUS_ERROR;
 }
 
+#ifndef OT_NCP_LIBS
+extern void lpm_setHandshakeState(uint8_t state);
+
+static int ot_ncp_system_sleep(void *cmd)
+{
+    suspend_notify_flag &= (~APP_NOTIFY_SUSPEND_EVT);
+    suspend_notify_flag |= APP_NOTIFY_SUSPEND_CFM;
+
+    lpm_setHandshakeState(2);
+
+    OSA_SemaphorePost((osa_semaphore_handle_t)hs_cfm);
+
+    return NCP_STATUS_SUCCESS;
+}
+#endif
+
 static int ot_error_ack(void *tlv)
 {
     return ot_send_response(NCP_CMD_INVALID_CMD, NCP_CMD_RESULT_ERROR, NULL, 0);
@@ -161,6 +195,13 @@ struct cmd_t ot_command_forward[] = {
     {NCP_OT_CMD_FORWARD, "ot-command-forward", ot_ncp_cmd_handle, CMD_SYNC},
     {NCP_CMD_INVALID, NULL, NULL, NULL},
 };
+
+#ifndef OT_NCP_LIBS
+struct cmd_t ot_ncp_system[] = {
+    {NCP_CMD_SYSTEM_POWERMGMT_MCU_SLEEP_CFM, "ot-system-sleep-cfm", ot_ncp_system_sleep, CMD_SYNC},
+    {NCP_CMD_INVALID, NULL, NULL, NULL},
+};
+#endif
 
 /* Need to define the unused wlan/wifi/system ncp subclass as weak,
  * refer to the wlan/wifi/system subclass in the ncp_glue_common.c
@@ -176,6 +217,9 @@ OT_TOOL_WEAK struct cmd_subclass_t cmd_subclass_ble[] = {
 
 struct cmd_subclass_t cmd_subclass_15D4[] = {
     {NCP_15d4_CMD_FORWARD, ot_command_forward},
+#ifndef OT_NCP_LIBS
+    {NCP_CMD_SYSTEM_POWERMGMT, ot_ncp_system},
+#endif
     {NCP_CMD_INVALID, NULL},
 };
 
