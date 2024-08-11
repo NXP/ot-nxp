@@ -75,11 +75,13 @@ extern SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
 
 void BOARD_LowPowerInit(void)
 {
+#ifndef OT_NCP_RADIO
     status_t status;
 
     status = PM_RegisterNotify(kPM_NotifyGroup2, &boardLpNotifyGroup);
     assert(status == kStatus_Success);
     (void)status;
+#endif
 }
 
 /* -------------------------------------------------------------------------- */

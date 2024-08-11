@@ -427,7 +427,7 @@ if(OT_NCP_RADIO)
             ${MIDDLEWARE_PATH}/usb/device/usb_device_dci.c
             ${MIDDLEWARE_PATH}/usb/device/usb_device_ehci.c
             ${DEVICE_USB_FILES_PATH}/usb_device_ch9.c
-            ${NCP_COMMON_FILES_PATH}/lpm/host_sleep.c
+            #${NCP_COMMON_FILES_PATH}/lpm/host_sleep.c
             ${NCP_INTF_USB_FILES_PATH}/ncp_intf_usb_device_cdc.c
             ${NCP_INTF_USB_FILES_PATH}/usb_device_cdc_app.c
             ${NCP_INTF_USB_FILES_PATH}/usb_device_descriptor.c
@@ -555,6 +555,7 @@ if(OT_NCP_RADIO)
         list(APPEND RW612_SDK_INCLUDES
             ${NXP_SDK_ROOT}/components/sdu
             ${DRIVER_SDIOSLV_PATH}
+            ${NCP_COMMON_FILES_PATH}/lpm
             ${NCP_INTF_SDIO_FILES_PATH}
         )
     else()
@@ -700,7 +701,7 @@ if(OT_NCP_RADIO)
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
         -DCONFIG_CRC32_HW_ACCELERATE
-        -DNCP_TLV_TX_TASK_PRIORITY=3
+        -DCONFIG_NCP_OT=1
         -DRW610
     )
 
@@ -721,6 +722,7 @@ if(OT_NCP_RADIO)
         target_compile_definitions(${NXP_DRIVER_LIB}
             PUBLIC
             -DCONFIG_NCP_USB
+            -DUSB_DEVICE_CONFIG_LOW_POWER_MODE=1
         )
     elseif(OT_NXP_NCP_SPI_INTERFACE)
         target_compile_definitions(${NXP_DRIVER_LIB}
@@ -731,6 +733,7 @@ if(OT_NCP_RADIO)
         target_compile_definitions(${NXP_DRIVER_LIB}
             PUBLIC
             -DCONFIG_NCP_SDIO
+            -DCONFIG_HOST_SLEEP
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")

@@ -73,6 +73,9 @@ void BOARD_InitBootClocks(void)
  ******************************************************************************/
 void BOARD_BootClockRUN(void)
 {
+    /* Disable GDET and VSensors */
+    POWER_DisableGDetVSensors();
+
     if ((PMU->CAU_SLP_CTRL & PMU_CAU_SLP_CTRL_SOC_SLP_RDY_MASK) == 0U)
     {
         /* LPOSC not enabled, enable it */
@@ -180,6 +183,9 @@ void BOARD_BootClockLPR(void)
     RESET_SetPeripheralReset(kFC2_RST_SHIFT_RSTn);
     RESET_SetPeripheralReset(kFC3_RST_SHIFT_RSTn);
     RESET_SetPeripheralReset(kCRC_RST_SHIFT_RSTn);
+
+    /* Disable GDET and VSensors */
+    POWER_DisableGDetVSensors();
 
     if ((PMU->CAU_SLP_CTRL & PMU_CAU_SLP_CTRL_SOC_SLP_RDY_MASK) == 0U)
     {

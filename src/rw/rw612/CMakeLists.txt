@@ -65,11 +65,27 @@ if(OT_NCP_RADIO)
         platform/ncp.c
     )
 
+    # For rw612 ot ncp libs, no lp code is needed since it will use wifi/ble low power desing in ncp coex
+    if(NOT DEFINED OT_NXP_BUILD_APP_AS_LIB)
+        list(APPEND PLATFORM_FILES
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/sys/ncp_lp_sys.c
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/sys/ncp_lpm.c
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/notify/app_notify.c
+        )
+    endif()
+
     set(OT_NCP_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/common/ncp
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ot_opcode
         ${PROJECT_SOURCE_DIR}/examples/common/includes
     )
+
+    if(NOT DEFINED OT_NXP_BUILD_APP_AS_LIB)
+        list(APPEND OT_NCP_INCLUDES
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/sys
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/notify
+	)
+    endif()
 else()
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/uart.c
@@ -106,6 +122,12 @@ if(OT_NCP_RADIO MATCHES "ON")
         )
     else()
         message(FATAL_ERROR "Please select one NCP interface.")
+    endif()
+
+    if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
+        target_compile_definitions(ot-config INTERFACE
+            -DOT_NCP_LIBS=1
+        )
     endif()
 endif()
 

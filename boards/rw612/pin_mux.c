@@ -31,6 +31,14 @@ void BOARD_InitPins(void)
     IO_MUX_SetPinMux(IO_MUX_FC3_USART_DATA);
     IO_MUX_SetPinMux(IO_MUX_QUAD_SPI_FLASH);
 
+#ifdef OT_NCP_RADIO
+    /* GPIO pin for PIN1 wakeup */
+    IO_MUX_SetPinMux(IO_MUX_GPIO25);
+
+    /* GPIO pin to wakeup external host */
+    IO_MUX_SetPinMux(IO_MUX_GPIO50);
+#endif
+
 #if defined(OT_STACK_ENABLE_LOG) || defined(CONFIG_NCP_UART)
     /* USART0 is used to print OT logs or ncp uart connection */
     IO_MUX_SetPinMux(IO_MUX_FC0_USART_DATA);
