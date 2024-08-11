@@ -12,6 +12,7 @@
 #include "ot_ncp_host_cli.h"
 #include "board.h"
 #include "crc.h"
+#include "fsl_adapter_gpio.h"
 #include "fsl_lpuart_freertos.h"
 #include "ncp_adapter.h"
 #include "ncp_tlv_adapter.h"
@@ -66,6 +67,11 @@ TaskHandle_t task_host_input_handler = NULL;
 
 /*command sequence number*/
 uint16_t ot_cmd_seqno = 0;
+
+GPIO_HANDLE_DEFINE(ncp_mcu_host_wakeup_handle);
+extern uint8_t     mcu_device_status;
+extern power_cfg_t global_power_config;
+OSA_SEMAPHORE_HANDLE_DEFINE(gpio_wakelock);
 
 /* -------------------------------------------------------------------------- */
 /*                                Function prototypes                         */
@@ -166,7 +172,20 @@ uint32_t ot_ncp_host_send_tlv_command(void)
 
     if (cmd_len >= NCP_CMD_HEADER_LEN)
     {
+        /* Wakeup MCU device through GPIO if host configured GPIO wake mode */
+        if ((global_power_config.wake_mode == WAKE_MODE_GPIO) && (mcu_device_status == MCU_DEVICE_STATUS_SLEEP))
+        {
+            GPIO_PinWrite(GPIO1, 27, 0);
+            PRINTF("get gpio_wakelock after GPIO wakeup\r\n");
+            /* Block here to wait for MCU device complete the PM3 exit process */
+            OSA_SemaphoreWait((osa_semaphore_handle_t)gpio_wakelock, osaWaitForever_c);
+            GPIO_PinWrite(GPIO1, 27, 1);
+            /* Release semaphore here to make sure software can get it successfully when receiving sleep enter event for
+             * next sleep loop. */
+            OSA_SemaphorePost((osa_semaphore_handle_t)gpio_wakelock);
+        }
         ncp_tlv_send(cli_tlv_command_buff, cmd_len);
+
         /*Increase command sequence number*/
         ot_cmd_seqno++;
     }
@@ -186,6 +205,7 @@ static void ot_ncp_host_input_task(void *pvParameters)
     uint8_t cli_input_len = 0;
     uint8_t otcommandlen;
     int8_t  opcode;
+    uint8_t wakeup_mode;
 
     ot_ncp_host_input_uart_config.srcclk = NCP_HOST_INPUT_UART_CLK_FREQ;
     ot_ncp_host_input_uart_config.base   = NCP_HOST_INPUT_UART;
@@ -239,7 +259,6 @@ static void ot_ncp_host_input_task(void *pvParameters)
             ot_ncp_host_send_tlv_command();
 
             memset(cli_string_command_buff, 0, MCU_CLI_STRING_SIZE);
-            memset((uint8_t *)command, 0, NCP_HOST_COMMAND_LEN);
 
 #if (CONFIG_NCP_SDIO)
             /* Reset sdio host if command is reset/factoryreset */
@@ -251,13 +270,70 @@ static void ot_ncp_host_input_task(void *pvParameters)
                 sdhost_rescan_set_event(SDHOST_RESCAN_START);
             }
 #endif
+            if (opcode == ot_get_opcode("ncp-wake-cfg", strlen("ncp-wake-cfg")))
+            {
+                wakeup_mode = *((uint8_t *)command + NCP_CMD_HEADER_LEN + 2);
+
+                if (wakeup_mode == INBAND_WAKEUP_PARAM)
+                {
+                    PRINTF("select inband mode to wake up\r\n");
+                    global_power_config.wake_mode = WAKE_MODE_INTF;
+                }
+                else if (wakeup_mode == OUTBAND_WAKEUP_PARAM)
+                {
+                    PRINTF("select outband mode to wake up\r\n");
+                    global_power_config.wake_mode = WAKE_MODE_GPIO;
+                }
+                else
+                {
+                    PRINTF("select wrong wake up param, please try again\r\n");
+                }
+            }
+
+            memset((uint8_t *)command, 0, NCP_HOST_COMMAND_LEN);
         }
     }
+}
+
+static void wakeup_int_callback(void *param)
+{
+    /* This function will be called when device wakes up host through GPIO */
+    PRINTF("Wakeup host sucessfully\r\n");
+}
+
+static void ncp_host_lpm_gpio_init()
+{
+    /* Define the init structure for the input/output switch pin */
+    gpio_pin_config_t gpio_in_config = {
+        .direction = kGPIO_DigitalInput, .outputLogic = 0, .interruptMode = kGPIO_IntRisingEdge};
+    gpio_pin_config_t gpio_out_config = {
+        .direction = kGPIO_DigitalOutput, .outputLogic = 1, .interruptMode = kGPIO_NoIntmode};
+    /* Init input GPIO for wakeup MCU host */
+    GPIO_PinInit(GPIO1, 26, &gpio_in_config);
+    /* Init output GPIO for wakeup NCP device */
+    GPIO_PinInit(GPIO1, 27, &gpio_out_config);
+    hal_gpio_pin_config_t wakeup_config = {kHAL_GpioDirectionIn, 0, 1, 26};
+    HAL_GpioInit(ncp_mcu_host_wakeup_handle, &wakeup_config);
+    HAL_GpioSetTriggerMode(ncp_mcu_host_wakeup_handle, kHAL_GpioInterruptRisingEdge);
+    HAL_GpioInstallCallback(ncp_mcu_host_wakeup_handle, wakeup_int_callback, NULL);
 }
 
 uint32_t ot_ncp_host_cli_init(void)
 {
     uint32_t ret;
+
+    ncp_host_lpm_gpio_init();
+
+    // inband as the default wake up mode
+    global_power_config.wake_mode = WAKE_MODE_INTF;
+
+    if (OSA_SemaphoreCreateBinary((osa_semaphore_handle_t)gpio_wakelock) != NCP_STATUS_SUCCESS)
+    {
+        ncp_e("Failed to create gpio_wakelock");
+        return -NCP_STATUS_ERROR;
+    }
+
+    OSA_SemaphorePost((osa_semaphore_handle_t)gpio_wakelock);
 
     ncp_tlv_chksum_init();
 

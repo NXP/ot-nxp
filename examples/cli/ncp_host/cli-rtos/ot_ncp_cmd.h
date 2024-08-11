@@ -25,6 +25,7 @@
 #define GET_CMD_TLV(cmd) \
     (((cmd)->size == NCP_CMD_HEADER_LEN) ? NULL : (uint8_t *)((uint8_t *)(cmd) + NCP_CMD_HEADER_LEN))
 #define GET_CMD_TLV_LEN(cmd) ((cmd)->size - NCP_CMD_HEADER_LEN)
+#define GET_MSG_TYPE(cmd) ((cmd)&0x000f0000)
 
 /*NCP command class*/
 #define NCP_CMD_WLAN 0x00000000
@@ -39,8 +40,8 @@
 
 /*NCP Message Type*/
 #define NCP_MSG_TYPE_CMD 0x00010000
-#define NCP_MSG_TYPE_RESP 0x00020000
-#define NCP_MSG_TYPE_EVENT 0x00030000
+#define NCP_MSG_TYPE_EVENT 0x00020000
+#define NCP_MSG_TYPE_RESP 0x00030000
 
 /*NCP CMD response state*/
 /*General result code ok*/
@@ -61,6 +62,28 @@
 
 #define NCP_HASH_TABLE_SIZE 64
 #define NCP_HASH_INVALID_KEY (uint8_t)(-1)
+
+#define MCU_DEVICE_STATUS_ACTIVE 1
+#define MCU_DEVICE_STATUS_SLEEP 2
+
+/* System NCP subclass */
+#define NCP_CMD_SYSTEM_CONFIG 0x00000000
+#define NCP_CMD_SYSTEM_TEST 0x00100000
+#define NCP_CMD_SYSTEM_POWERMGMT 0x00200000
+#define NCP_CMD_SYSTEM_ASYNC_EVENT 0x00300000
+
+/* System Configure command */
+#define NCP_CMD_SYSTEM_POWERMGMT_MCU_SLEEP_CFM (NCP_CMD_15D4 | NCP_CMD_SYSTEM_POWERMGMT | NCP_MSG_TYPE_CMD | 0x00000004)
+#define NCP_RSP_SYSTEM_POWERMGMT_MCU_SLEEP_CFM \
+    (NCP_CMD_15D4 | NCP_CMD_SYSTEM_POWERMGMT | NCP_MSG_TYPE_RESP | 0x00000004)
+
+#define NCP_EVENT_MCU_SLEEP_ENTER (NCP_CMD_15D4 | NCP_CMD_SYSTEM_ASYNC_EVENT | NCP_MSG_TYPE_EVENT | 0x00000001)
+#define NCP_EVENT_MCU_SLEEP_EXIT (NCP_CMD_15D4 | NCP_CMD_SYSTEM_ASYNC_EVENT | NCP_MSG_TYPE_EVENT | 0x00000002)
+
+/* Host wakes up MCU through interface */
+#define WAKE_MODE_INTF 0x1
+/* Host wakes up MCU through GPIO */
+#define WAKE_MODE_GPIO 0x2
 
 /*NCP command header*/
 typedef struct command_header
@@ -109,5 +132,11 @@ typedef struct
     uint32_t command_sz;
     void    *cmd_buff;
 } ot_ncp_command_t;
+
+typedef struct _power_cfg_t
+{
+    uint8_t wake_mode;
+    uint8_t wakeup_host;
+} NCP_TLV_PACK_END power_cfg_t;
 
 #endif
