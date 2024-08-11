@@ -56,4 +56,7 @@ void otAppLowPowerCliInit(otInstance *aInstance);
  */
 otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
+#ifdef OT_NCP_RADIO
+otError ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+#endif
 #endif /* LOWPOWER_CLI_H_ */

@@ -43,6 +43,9 @@
 #include "timers.h"
 
 #include "PWR_Interface.h"
+#ifdef OT_NCP_RADIO
+#include "ncp_lpm.h"
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                             Private definitions                            */
@@ -79,9 +82,11 @@ void otAppLowPowerCliInit(otInstance *aInstance)
     /* Initial low power mode is WFI */
     currentMode = PWR_WFI;
 
+#ifndef OT_NCP_RADIO
     /* Create FreeRTOS timer which will be used to disable low power after a specific time */
     lpTimer = xTimerCreate("LP timer", lpDurationMs / portTICK_PERIOD_MS, pdFALSE, NULL, otAppLowPowerCliTimerCallback);
     assert(lpTimer != NULL);
+#endif
 }
 
 otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
@@ -179,6 +184,7 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
             /* Apply next mode constraints */
             otAppLowPowerCliConfigureNextMode(nextMode);
 
+#ifndef OT_NCP_RADIO
             /* Update timer only when actually enabling low power period */
             (void)xTimerChangePeriod(lpTimer, lpDurationMs / portTICK_PERIOD_MS, 0);
 
@@ -191,6 +197,9 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
             }
 
             otCliOutputFormat("Select mode will be used for the next %u ms\r\n", lpDurationMs);
+#else
+            otCliOutputFormat("Ot ncp low power does not support timer wake up.\r\n");
+#endif
         }
         else
         {
@@ -201,6 +210,61 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
     return status;
 }
+
+#ifdef OT_NCP_RADIO
+extern uint8_t ncp_wake_up_mode;
+otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    otError status = OT_ERROR_NONE;
+    int     arg    = 0;
+
+    do
+    {
+        if (aArgsLength == 0)
+        {
+            otCliOutputFormat("Usage:\r\n");
+            otCliOutputFormat("\tncp-wake-cfg <mode>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat(
+                "This command is used to select the wake-up mode (inband or outband wake up) of ncp device sleep.\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("mode:\r\n");
+            otCliOutputFormat("\t0 - inband mode\r\n");
+            otCliOutputFormat("\t1 - outband mode\r\n");
+            break;
+        }
+
+        if (!strcmp(aArgs[arg], "0"))
+        {
+            otCliOutputFormat("inband mode selected\r\n");
+            ncp_wake_up_mode = 0;
+        }
+        else if (!strcmp(aArgs[arg], "1"))
+        {
+            otCliOutputFormat("outband mode selected\r\n");
+            ncp_wake_up_mode = 1;
+        }
+        else if (!strcmp(aArgs[arg], "help"))
+        {
+            otCliOutputFormat("Usage:\r\n");
+            otCliOutputFormat("\tncp-wake-cfg <mode>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat(
+                "This command is used to select the wake-up mode (inband or outband wake up) of ncp device sleep.\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("mode:\r\n");
+            otCliOutputFormat("\t0 - inband mode\r\n");
+            otCliOutputFormat("\t1 - outband mode\r\n");
+        }
+        else
+        {
+            otCliOutputFormat("please select sleep mode\r\n");
+        }
+    } while (false);
+
+    return status;
+}
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
@@ -226,7 +290,9 @@ static void otAppLowPowerCliTimerCallback(TimerHandle_t timer)
 {
     (void)timer;
 
+#ifndef OT_NCP_RADIO
     otCliOutputFormat("Low power period ended\r\n");
+#endif
 
     /* Timer expired, allow only WFI mode to make sure serial interface is available to the user */
     otAppLowPowerCliConfigureNextMode(PWR_WFI);
@@ -238,6 +304,8 @@ static void otAppLowPowerCliConfigureNextMode(PWR_LowpowerMode_t nextMode)
     PWR_SetLowPowerModeConstraint(nextMode);
     currentMode = nextMode;
 
+#ifndef OT_NCP_RADIO // For ot ncp, when using sdio interface, it will print 'WFI mode selected', but sdio-reinit has
+                     // not completed, which will cause error
     switch (currentMode)
     {
     case PWR_WFI:
@@ -260,4 +328,5 @@ static void otAppLowPowerCliConfigureNextMode(PWR_LowpowerMode_t nextMode)
     }
 
     otCliOutputFormat(" mode selected\r\n", lpDurationMs);
+#endif
 }

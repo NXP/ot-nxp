@@ -79,6 +79,9 @@ static const otCliCommand addonsCommands[] = {
 #endif
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
     {"lp", ProcessLowPower},
+#ifdef OT_NCP_RADIO
+    {"ncp-wake-cfg", ProcessLpConfig},
+#endif
 #endif
 #ifdef OT_APP_CLI_LWIP_ADDON
     {"lwip", ProcessLwip},
