@@ -38,7 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
-#include <lib/platform/exit_code.h>
+#include <lib/platform/exit_code.h>    // nogncheck
 #include <lib/spinel/radio_spinel.hpp> // nogncheck
 #include "lib/spinel/spinel.h"
 #include "lib/url/url.hpp"
