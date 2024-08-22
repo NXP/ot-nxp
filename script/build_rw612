@@ -43,7 +43,6 @@ readonly OT_OPTIONS=(
 readonly OT_OPTIONS_BR_WIFI=(
     "-DOT_APP_BR_FREERTOS=ON"
     "-DOT_NXP_LWIP_WIFI=ON"
-    "-DOT_NXP_LWIP_ETH=OFF"
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     # FREERTOS config file is different for BR project.
@@ -52,7 +51,6 @@ readonly OT_OPTIONS_BR_WIFI=(
 
 readonly OT_OPTIONS_BR_ETH=(
     "-DOT_APP_BR_FREERTOS=ON"
-    "-DOT_NXP_LWIP_WIFI=OFF"
     "-DOT_NXP_LWIP_ETH=ON"
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
