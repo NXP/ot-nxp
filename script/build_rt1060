@@ -43,9 +43,6 @@ readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL=(
     "-DOT_NXP_BOARD=rt1060"
     "-DSPINEL_INTERFACE_TYPE=UART"
     "-DOT_NXP_TRANSCEIVER=k32w0"
-    "-DOT_NXP_LWIP=OFF"
-    "-DOT_NXP_LWIP_IPERF=OFF"
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL_BR_ETHERNET=(
@@ -60,8 +57,6 @@ readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL_BR_ETHERNET=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_ETH=ON"
-    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
@@ -85,8 +80,6 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_ETH=ON"
-    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
 )
 
@@ -101,8 +94,6 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_WIFI=ON"
-    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
 )
 
@@ -113,7 +104,6 @@ readonly OT_OPTIONS_TRANSCEIVER_RW612=(
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_TRANSCEIVER=rw612"
     "-DOT_NCP_RTOS_HOST=ON"
-    "-DOT_NXP_LWIP=OFF"
     "-DBOARD_1ST_UART_INSTANCE=2"
     "-DBOARD_2ND_UART_INSTANCE=1"
     "-DEVK_RT1060_BOARD=evkbmimxrt1060"
