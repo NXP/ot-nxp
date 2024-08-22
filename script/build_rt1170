@@ -68,8 +68,6 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_NO_IPERF=(
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iwx12"
-    "-DOT_NXP_LWIP_IPERF=OFF"
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_TCP=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
@@ -78,9 +76,6 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_TCP=(
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iwx12"
-    "-DOT_NXP_LWIP=OFF"
-    "-DOT_NXP_LWIP_IPERF=OFF"
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
@@ -94,8 +89,6 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_ETH=ON"
-    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
@@ -109,8 +102,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     # FREERTOS CLI is disabled in this target build as it will be available in the BR app
     "-DOT_APP_CLI_FREERTOS=OFF"
     "-DOT_NXP_LWIP_WIFI=ON"
-    # Disabling iperf cli addons when BR is enabled as currently both cannot be enabled at the same time
-    "-DOT_APP_CLI_FREERTOS_IPERF=OFF"
+
 )
 
 build()
