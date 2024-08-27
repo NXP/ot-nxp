@@ -90,8 +90,7 @@ static otMdnsService      sTrelService;
 static bool               sEnabled;
 static bool               sBrowsingEnabled;
 static otMdnsBrowser      trelBrowser;
-static const char         sTrelServiceLabel[]    = "_trel._udp";
-static char               sServiceInstanceName[] = "TrelService#0000";
+static const char         sTrelServiceLabel[] = "_trel._udp";
 static uint8_t            sTrelTxtData[255];
 static otPlatTrelCounters sCounters;
 static uint8_t            peerNumber;
@@ -125,6 +124,7 @@ static void         RemoveAllPeersAndNotify();
 static void         RemoveTrelServiceInstance(struct Peer *aElement);
 static void         AddTrelServiceInstance(const char *aServiceInstanceName);
 static void         CheckTrelPeerStorage();
+static void         HandleTrelRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -135,7 +135,7 @@ void TrelPlatInit(otInstance *aInstance, struct netif *backboneNetif)
     sInstance         = aInstance;
     sBackboneNetifPtr = backboneNetif;
 
-    sTrelService.mServiceInstance = CreateBaseName(aInstance, sServiceInstanceName);
+    sTrelService.mServiceInstance = CreateBaseName(aInstance, baseServiceInstanceName, true);
     sTrelService.mServiceType     = sTrelServiceLabel;
 }
 
@@ -149,7 +149,7 @@ void TrelOnAppReady(const char *aHostName)
 
     // register TREL service
     sTrelService.mHostName = aHostName;
-    otMdnsRegisterService(sInstance, &sTrelService, 0, NULL);
+    otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
 }
 
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
@@ -539,4 +539,13 @@ static void CheckTrelPeerStorage()
     VerifyOrExit(peerNumber >= MAX_PEER_NUMBER);
 exit:
     return;
+}
+
+static void HandleTrelRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
+{
+    if (aError != OT_ERROR_NONE)
+    {
+        sTrelService.mServiceInstance = CreateAlternativeBaseName(aInstance, sTrelService.mServiceInstance);
+        otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
+    }
 }

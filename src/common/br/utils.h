@@ -40,7 +40,9 @@
 extern "C" {
 #endif
 
-char       *CreateBaseName(otInstance *aInstance, char *aBaseName);
+extern char baseServiceInstanceName[];
+
+const char *CreateBaseName(otInstance *aInstance, char *aBaseName, bool aIsForService);
 const char *CreateAlternativeBaseName(otInstance *aInstance, const char *aBaseName);
 
 #ifdef __cplusplus

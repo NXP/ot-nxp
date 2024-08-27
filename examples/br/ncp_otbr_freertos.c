@@ -457,7 +457,7 @@ static void appBrInit()
 
     BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
 
-    sHost.mHostName        = CreateBaseName(sInstance, sHostName);
+    sHost.mHostName        = CreateBaseName(sInstance, sHostName, false);
     sHost.mAddressesLength = 0;
     sHost.mTtl             = 120;
     sHost.mInfraIfIndex    = 0;

@@ -133,13 +133,11 @@ static otMdnsService sMeshCopService;
 static otMdnsService sEpskcService;
 static const char    sMeshCopServiceLabel[] = "_meshcop._udp";
 static const char    sEpskcServiceLabel[]   = "_meshcop-e._udp";
-static char          sServiceInstanceName[] = "MeshcopService#0000";
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 static uint8_t sEphemeralKey[10]; ///< Byte values, 9 bytes for the key, one for null terminator.
 
 static uint32_t sEphemeralKeyTimeout;
-static uint32_t sEphemeralKeyPort;
 static bool     sEpskcActive;
 #endif
 
@@ -174,7 +172,7 @@ void BorderAgentInit(otInstance *aInstance, const char *aHostName)
     if (!sBorderAgentIsInit)
     {
         sMeshCopService.mHostName        = aHostName;
-        sMeshCopService.mServiceInstance = CreateBaseName(aInstance, sServiceInstanceName);
+        sMeshCopService.mServiceInstance = CreateBaseName(aInstance, baseServiceInstanceName, true);
         sMeshCopService.mServiceType     = sMeshCopServiceLabel;
 
         PublishMeshCopService(aInstance);
