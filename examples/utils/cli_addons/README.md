@@ -12,18 +12,14 @@ The tool has been ported to ot-cli is order to run benchmarks and throughput sce
 
 **Note:** This addon is based on "lwiperf" which is a port of iPerf onto lwIP tcp/ip stack.
 
-To build ot-cli with iperf addon, following CMake flags are required:
+To build ot-cli with iperf addon, following CMake flag is required:
 
 `OT_APP_CLI_FREERTOS_IPERF`: Adds iperf_cli addon to the ot-cli application
-
-`OT_NXP_LWIP`: Builds NXP's lwIP as a third_party library
-
-`OT_NXP_LWIP_IPERF`: Adds lwiperf port to NXP's lwIP library
 
 Example of a typical command:
 
 ```bash
-./script/build_<platform> -DOT_APP_CLI_FREERTOS_IPERF=ON -DOT_NXP_LWIP=ON -DOT_NXP_LWIP_IPERF=ON
+./script/build_<platform> -DOT_APP_CLI_FREERTOS_IPERF=ON
 ```
 
 ## lwip-cli addon

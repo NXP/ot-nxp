@@ -127,23 +127,36 @@ if(OT_APP_BR_FREERTOS)
         OT_NXP_PLATFORM_${OT_NXP_PLATFORM_UPPER}
     )
 
+    if(OT_NXP_LWIP_IPERF)
+        # Workaround to avoid API conflict between LWIP and OT's TCPLP libs
+        # They have some API's with the same name but different implementation, so no compatible
+        # In case OT_NXP_LWIP_IPERF is enabled, we have to exclude TCPLP from the build
+        # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
+        target_compile_definitions(ot-config INTERFACE
+            -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+            -DOPENTHREAD_CONFIG_CLI_TCP_ENABLE=0
+        )
+    else()
+        target_compile_definitions(ot-config INTERFACE
+            -DLWIP_TCP=0
+        )
+    endif()
 else()
     if(NOT DEFINED OT_APP_THREAD_RATE_LIMIT)
         # Limit of traffic sent to the Thread network in bits per second, "0" for no limit.
         set(OT_APP_THREAD_RATE_LIMIT "0" CACHE STRING "OT_APP_THREAD_RATE_LIMIT")
     endif()
 
-endif()
-
-if(OT_NXP_LWIP)
-    # Workaround to avoid API conflict between LWIP and OT's TCPLP libs
-    # They have some API's with the same name but different implementation, so no compatible
-    # In case OT_NXP_LWIP is enabled, we have to exclude TCPLP from the build
-    set(OT_EXCLUDE_TCPLP_LIB ON)
-    # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
-    target_compile_definitions(ot-config INTERFACE
-        -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+    if(OT_NXP_LWIP_IPERF)
+        # Workaround to avoid API conflict between LWIP and OT's TCPLP libs
+        # They have some API's with the same name but different implementation, so no compatible
+        # In case OT_NXP_LWIP_IPERF is enabled, we have to exclude TCPLP from the build
+        # As TCPLP lib is excluded from the build, we have to disable OT TCP feature
+        target_compile_definitions(ot-config INTERFACE
+            -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+            -DOPENTHREAD_CONFIG_CLI_TCP_ENABLE=0
     )
+    endif()
 endif()
 
 # If OT logging is enabled add a dependency to SDK log components

@@ -10,9 +10,9 @@ option(OT_NXP_EXPORT_TO_BIN "Convert all executables to raw binary" OFF)
 option(OT_NXP_EXPORT_TO_SREC "Convert all executables to srec" OFF)
 
 if(OT_APP_CLI_FREERTOS_IPERF OR OT_APP_BR_FREERTOS)
-    set(OT_NXP_LWIP ON CACHE BOOL "")
+    set(OT_NXP_LWIP ON CACHE BOOL "" FORCE)
     if(OT_APP_CLI_FREERTOS_IPERF)
-        set(OT_NXP_LWIP_IPERF ON CACHE BOOL "")
+        set(OT_NXP_LWIP_IPERF ON CACHE BOOL "" FORCE)
     endif()
 endif()
 
