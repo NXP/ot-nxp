@@ -25,7 +25,7 @@
 #endif
 
 #ifndef OT_NCP_TASK_PRIORITY
-#define OT_NCP_TASK_PRIORITY 2
+#define OT_NCP_TASK_PRIORITY 3
 #endif
 
 #ifndef OT_NCP_TASK_SIZE
@@ -54,6 +54,8 @@ static uint16_t otNcpTxLength;
 static TaskHandle_t      sOtNcpTask     = NULL;
 static QueueHandle_t     sOtNcpCmdQueue = NULL;
 static SemaphoreHandle_t sNcpLock       = NULL;
+
+volatile uint8_t OtNcpDataHandle = OT_NCP_RSP_FLAG_INIT;
 
 extern void Ot_Data_TxDone(void);
 
@@ -157,8 +159,6 @@ uint8_t *ot_ncp_handle_response(uint8_t *pbuf, uint16_t *p_len)
     return rsp_buf;
 }
 
-volatile uint8_t NeedOtSendCompleteFlag = 2;
-
 static void otNcpTask(void *pvParameters)
 {
     uint32_t         ret = 0;
@@ -196,7 +196,7 @@ static void otNcpTask(void *pvParameters)
                     else
                     {
                         ot_send_response(NCP_OT_CMD_FORWARD, NCP_CMD_RESULT_OK, rsp_buf, otNcpTxLength);
-                        NeedOtSendCompleteFlag = 0;
+                        OtNcpDataHandle = OT_NCP_CMD_RSP_DONE;
                     }
 
                     vPortFree(rsp_buf);

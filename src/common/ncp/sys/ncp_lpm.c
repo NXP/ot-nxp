@@ -15,6 +15,7 @@
 #include "fwk_platform.h"
 #include "fwk_platform_lowpower.h"
 
+#include "ncp_glue_ot.h"
 #include "ncp_lp_sys.h"
 #include "ncp_lpm.h"
 
@@ -55,6 +56,8 @@ extern int32_t mflash_drv_init(void);
 
 /* Default NCP host <-> NCP device low power handshake state */
 static uint8_t ncpLowPowerHandshake = NCP_LMP_HANDSHAKE_NOT_START;
+
+extern volatile uint8_t OtNcpDataHandle;
 
 /*******************************************************************************
  * APIs
@@ -115,8 +118,6 @@ status_t powerManager_PmNotify(pm_event_type_t eventType, uint8_t powerState, vo
     return kStatus_PMSuccess;
 }
 
-extern volatile uint8_t NeedOtSendCompleteFlag;
-
 status_t powerManager_BoardNotify(pm_event_type_t eventType, uint8_t powerState, void *data)
 {
     /* is ncp host <-> ncp device handshake done? */
@@ -125,7 +126,7 @@ status_t powerManager_BoardNotify(pm_event_type_t eventType, uint8_t powerState,
         return kStatus_PMPowerStateNotAllowed;
     }
 
-    if (NeedOtSendCompleteFlag == 1)
+    if (OtNcpDataHandle == OT_NCP_WAIT_RSP)
     {
         return kStatus_PMPowerStateNotAllowed;
     }

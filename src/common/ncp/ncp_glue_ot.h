@@ -18,6 +18,12 @@ typedef enum
     NCP_COMMAND_NOT_READY = 1
 } ncp_cmd_status;
 
+#define OT_NCP_RSP_FLAG_INIT 0
+#define OT_NCP_WAIT_RSP 1
+#define OT_NCP_NOT_ALLOW_LP 2
+#define OT_NCP_CMD_RSP_DONE 3
+#define OT_NCP_CMD_HANDLING 4
+
 /* TLV command response */
 ncp_status_t ot_send_response(uint32_t cmd, uint8_t status, uint8_t *data, size_t len);
 
