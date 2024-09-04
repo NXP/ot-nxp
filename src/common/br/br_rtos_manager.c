@@ -84,7 +84,6 @@ void BrInitServices()
         otBackboneRouterSetEnabled(sInstance, true);
         otBackboneRouterSetMulticastListenerCallback(sInstance, HandleMulticastListenerCallback, sExtNetif);
         otSrpServerSetAutoEnableMode(sInstance, true);
-        otMdnsSetEnabled(sInstance, true, netif_get_index(sExtNetif));
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         otNat64SetEnabled(aInstance, true);
