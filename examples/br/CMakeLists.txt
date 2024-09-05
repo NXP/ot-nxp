@@ -37,7 +37,27 @@ else()
     )
 endif()
 
-add_executable(ot-br-${OT_NXP_PLATFORM}
+if(OT_NXP_LWIP_WIFI)
+    if(OT_NXP_LWIP_ETH)
+        message(FATAL_ERROR "Only an external interface needs to be configured for the device to work. Please select either WIFI or Ethernet")
+    else()
+        set(APP_FLAVOUR wifi)
+    endif()
+else()
+    if(OT_NXP_LWIP_ETH)
+        set(APP_FLAVOUR eth)
+    else()
+        message(FATAL_ERROR "An external interface needs to be configured for the device to work. Please select WIFI or Ethernet")
+    endif()
+endif()
+
+if(OT_NCP_RADIO)
+    set(APPLICATION "ot-br-${OT_NXP_PLATFORM}-ncp-${APP_FLAVOUR}")
+else()
+    set(APPLICATION "ot-br-${OT_NXP_PLATFORM}-${APP_FLAVOUR}")
+endif()
+
+add_executable(${APPLICATION}
     main.c
     ${OTBR_FREERTOS_SOURCES}
     ${PROJECT_SOURCE_DIR}/examples/cli/libc_hook.cpp
@@ -46,33 +66,25 @@ add_executable(ot-br-${OT_NXP_PLATFORM}
 )
 
 if(OT_NXP_LWIP_WIFI)
-    if(OT_NXP_LWIP_ETH)
-        message(FATAL_ERROR "Only an external interface needs to be configured for the device to work. Please select either WIFI or Ethernet")
-    else()
-        target_compile_definitions(ot-br-${OT_NXP_PLATFORM} PRIVATE OT_APP_BR_WIFI_EN)
-        target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE wifi)
-    endif()
+    target_compile_definitions(${APPLICATION} PRIVATE OT_APP_BR_WIFI_EN)
+    target_link_libraries(${APPLICATION} PRIVATE wifi)
 
     # In case of wifi support
-    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+    target_compile_definitions(${APPLICATION}
         PRIVATE
         WIFI_IDLE_HOOK_CALL_REQUIRED
     )
 else()
-    if(OT_NXP_LWIP_ETH)
-        target_compile_definitions(ot-br-${OT_NXP_PLATFORM} PRIVATE OT_APP_BR_ETH_EN)
-    else()
-        message(FATAL_ERROR "An external interface needs to be configured for the device to work. Please select WIFI or Ethernet")
-    endif()
+    target_compile_definitions(${APPLICATION} PRIVATE OT_APP_BR_ETH_EN)
 endif()
 
-target_include_directories(ot-br-${OT_NXP_PLATFORM} PRIVATE
+target_include_directories(${APPLICATION} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/common/includes
 )
 
-target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
+target_link_libraries(${APPLICATION} PRIVATE
     openthread-cli-ftd
     openthread-ftd
     nxp-lwip
@@ -95,20 +107,20 @@ target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
 )
 
 if(NXP_BOARD_LIB)
-    target_link_libraries(ot-br-${OT_NXP_PLATFORM} PRIVATE
+    target_link_libraries(${APPLICATION} PRIVATE
         ${NXP_BOARD_LIB}
     )
 endif()
 
 if(DEFINED WIFI_SSID)
-    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+    target_compile_definitions(${APPLICATION}
         PRIVATE
         WIFI_SSID="${WIFI_SSID}"
     )
 endif()
 
 if(DEFINED WIFI_PASSWORD)
-    target_compile_definitions(ot-br-${OT_NXP_PLATFORM}
+    target_compile_definitions(${APPLICATION}
         PRIVATE
         WIFI_PASSWORD="${WIFI_PASSWORD}"
     )
