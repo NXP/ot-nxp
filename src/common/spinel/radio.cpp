@@ -406,19 +406,23 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
     return sRadioSpinel.GetNow();
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return sRadioSpinel.GetCslAccuracy();
 }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     return sRadioSpinel.GetCslUncertainty();
 }
+#endif
 
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {
