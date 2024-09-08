@@ -18,6 +18,9 @@
 #include "ncp_tlv_adapter.h"
 #include "ot_ncp_cmd.h"
 #include "otopcode.h"
+#if CONFIG_NCP_USB
+#include "usb_host_cdc_app.h"
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                            Constants                                       */
@@ -39,6 +42,10 @@
 /* Task: Host input */
 #define TASK_HOST_INPUT_PRIO (configMAX_PRIORITIES - 3)
 #define TASK_HOST_INPUT_STACK_SIZE (configSTACK_DEPTH_TYPE)4096
+
+#if CONFIG_NCP_USB
+extern uint8_t usb_enter_pm2;
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                            Variable                                        */
@@ -255,41 +262,64 @@ static void ot_ncp_host_input_task(void *pvParameters)
                    cli_input_len - otcommandlen);
 
             command->size += OT_OPCODE_SIZE + cli_input_len - otcommandlen;
-
-            ot_ncp_host_send_tlv_command();
-
-            memset(cli_string_command_buff, 0, MCU_CLI_STRING_SIZE);
-
-#if (CONFIG_NCP_SDIO)
-            /* Reset sdio host if command is reset/factoryreset */
-            if (opcode == ot_get_opcode("reset", strlen("reset")) ||
-                opcode == ot_get_opcode("factoryreset", strlen("factoryreset")))
+#if CONFIG_NCP_USB
+            if (opcode == ot_get_opcode("ncp-usb-pm2", strlen("ncp-usb-pm2")))
             {
-                PRINTF("\nSDIO reseting...\n");
-                vTaskDelay(pdMS_TO_TICKS(2000));
-                sdhost_rescan_set_event(SDHOST_RESCAN_START);
-            }
-#endif
-            if (opcode == ot_get_opcode("ncp-wake-cfg", strlen("ncp-wake-cfg")))
-            {
-                wakeup_mode = *((uint8_t *)command + NCP_CMD_HEADER_LEN + 2);
-
-                if (wakeup_mode == INBAND_WAKEUP_PARAM)
+                if (*((uint8_t *)command + NCP_CMD_HEADER_LEN + 2) == USB_PM2_ENTER_PARAM)
                 {
-                    PRINTF("select inband mode to wake up\r\n");
-                    global_power_config.wake_mode = WAKE_MODE_INTF;
+                    usb_enter_pm2 = USB_PM2_ACTION_ENTER;
+                    PRINTF("Set usb enter PM2\r\n");
                 }
-                else if (wakeup_mode == OUTBAND_WAKEUP_PARAM)
+                else if (*((uint8_t *)command + NCP_CMD_HEADER_LEN + 2) == USB_PM2_EXIT_PARAM)
                 {
-                    PRINTF("select outband mode to wake up\r\n");
-                    global_power_config.wake_mode = WAKE_MODE_GPIO;
+                    usb_enter_pm2 = USB_PM2_ACTION_EXIT;
+                    PRINTF("Set usb exit PM2\r\n");
                 }
                 else
                 {
-                    PRINTF("select wrong wake up param, please try again\r\n");
+                    PRINTF("\r\nThe param is wrong, please use:\r\n");
+                    PRINTF("\tncp-usb-pm2 1 --> enter usb pm2 mode\r\n");
+                    PRINTF("\tncp-usb-pm2 2 --> exit usb pm2 mode\r\n");
+                    usb_enter_pm2 = USB_PM2_ACTION_NONE;
                 }
             }
+            else
+#endif
+            {
+                ot_ncp_host_send_tlv_command();
 
+                memset(cli_string_command_buff, 0, MCU_CLI_STRING_SIZE);
+
+#if (CONFIG_NCP_SDIO)
+                /* Reset sdio host if command is reset/factoryreset */
+                if (opcode == ot_get_opcode("reset", strlen("reset")) ||
+                    opcode == ot_get_opcode("factoryreset", strlen("factoryreset")))
+                {
+                    PRINTF("\nSDIO reseting...\n");
+                    vTaskDelay(pdMS_TO_TICKS(2000));
+                    sdhost_rescan_set_event(SDHOST_RESCAN_START);
+                }
+#endif
+                if (opcode == ot_get_opcode("ncp-wake-cfg", strlen("ncp-wake-cfg")))
+                {
+                    wakeup_mode = *((uint8_t *)command + NCP_CMD_HEADER_LEN + 2);
+
+                    if (wakeup_mode == INBAND_WAKEUP_PARAM)
+                    {
+                        PRINTF("select inband mode to wake up\r\n");
+                        global_power_config.wake_mode = WAKE_MODE_INTF;
+                    }
+                    else if (wakeup_mode == OUTBAND_WAKEUP_PARAM)
+                    {
+                        PRINTF("select outband mode to wake up\r\n");
+                        global_power_config.wake_mode = WAKE_MODE_GPIO;
+                    }
+                    else
+                    {
+                        PRINTF("select wrong wake up param, please try again\r\n");
+                    }
+                }
+            }
             memset((uint8_t *)command, 0, NCP_HOST_COMMAND_LEN);
         }
     }

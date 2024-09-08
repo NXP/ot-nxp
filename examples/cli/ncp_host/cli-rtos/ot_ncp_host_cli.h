@@ -21,6 +21,9 @@
 #define INBAND_WAKEUP_PARAM '0'
 #define OUTBAND_WAKEUP_PARAM '1'
 
+#define USB_PM2_ENTER_PARAM '1'
+#define USB_PM2_EXIT_PARAM '2'
+
 /* -------------------------------------------------------------------------- */
 /*                             Function prototypes                            */
 /* -------------------------------------------------------------------------- */
