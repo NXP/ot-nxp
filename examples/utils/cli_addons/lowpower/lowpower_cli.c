@@ -44,6 +44,7 @@
 
 #include "PWR_Interface.h"
 #ifdef OT_NCP_RADIO
+#include "fsl_pm_device.h"
 #include "ncp_lpm.h"
 #endif
 
@@ -181,6 +182,13 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
         if (info.mode)
         {
+#if CONFIG_NCP_USB
+            if (nextMode == PWR_DeepSleep)
+            {
+                otCliOutputFormat("Please use ncp-usb-pm2 command to enter or exit usb pm2 mode\r\n");
+                break;
+            }
+#endif
             /* Apply next mode constraints */
             otAppLowPowerCliConfigureNextMode(nextMode);
 
@@ -205,13 +213,15 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
         {
             /* nothing to do */
         }
-
     } while (false);
 
     return status;
 }
 
 #ifdef OT_NCP_RADIO
+#if CONFIG_NCP_USB
+extern bool usb_allow_pm2_lowpower;
+#endif
 extern uint8_t ncp_wake_up_mode;
 otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
@@ -238,11 +248,17 @@ otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[
         {
             otCliOutputFormat("inband mode selected\r\n");
             ncp_wake_up_mode = 0;
+#if CONFIG_NCP_USB
+            usb_allow_pm2_lowpower = true;
+#endif
         }
         else if (!strcmp(aArgs[arg], "1"))
         {
             otCliOutputFormat("outband mode selected\r\n");
             ncp_wake_up_mode = 1;
+#if CONFIG_NCP_USB
+            usb_allow_pm2_lowpower = false;
+#endif
         }
         else if (!strcmp(aArgs[arg], "help"))
         {
@@ -330,3 +346,22 @@ static void otAppLowPowerCliConfigureNextMode(PWR_LowpowerMode_t nextMode)
     otCliOutputFormat(" mode selected\r\n", lpDurationMs);
 #endif
 }
+
+#if CONFIG_NCP_USB
+void lpm_config_next_lp_mode(PWR_LowpowerMode_t nextMode)
+{
+    if (nextMode == PWR_DeepSleep)
+    {
+        /* Set specific constraints for USB PM2 */
+        (void)PM_SetConstraints(PM_LP_STATE_PM2, 1, PM_RESC_USB_ANA_ACTIVE);
+    }
+
+    if (currentMode == PWR_DeepSleep)
+    {
+        /* Release specific constraints for USB PM2 */
+        (void)PM_ReleaseConstraints(PM_LP_STATE_PM2, 1, PM_RESC_USB_ANA_ACTIVE);
+    }
+
+    otAppLowPowerCliConfigureNextMode(nextMode);
+}
+#endif
