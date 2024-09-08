@@ -27,6 +27,10 @@ static char *otcommands[] = {
     "keysequence", "leaderdata", "leaderweight", "linkmetrics", "linkmetricsmgr", "locate", "log", "lp", "lwip", "mac",
     "macfilter", "mdns", "meshdiag", "mliid", "mlr", "mode", "multiradio", "nat64",
 #ifndef OT_NCP_LIBS
+#if CONFIG_NCP_USB
+    /* This cmd is used for usb pm2 config, just available in ot ncp single */
+    "ncp-usb-pm2",
+#endif
     /* this ncp cmd is used for wake up mode config, just available in ot ncp single */
     "ncp-wake-cfg",
 #endif

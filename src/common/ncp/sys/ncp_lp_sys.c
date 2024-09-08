@@ -21,6 +21,7 @@
 #if CONFIG_CRC32_HW_ACCELERATE
 #include "fsl_crc.h"
 #endif
+#include "PWR_Interface.h"
 #include "ncp_intf_pm.h"
 
 #ifndef NCP_NOTIFY_HOST_GPIO
@@ -45,8 +46,16 @@ uint8_t                     suspend_notify_flag = 0;
 uint8_t                     ncp_wake_up_mode    = 0;
 static uart_clock_context_t s_uartClockCtx;
 extern volatile uint8_t     OtNcpDataHandle;
+#if CONFIG_NCP_USB
+bool usb_allow_pm2_lowpower = false;
+#endif
 
 OSA_SEMAPHORE_HANDLE_DEFINE(hs_cfm);
+
+#if CONFIG_NCP_USB
+extern void USB_DevicePmStartResume(void);
+extern void lpm_config_next_lp_mode(PWR_LowpowerMode_t nextMode);
+#endif
 
 static void ncp_hs_delay(uint32_t loop)
 {
@@ -286,14 +295,29 @@ void host_sleep_post_cfg(int mode)
         }
     }
 
+#if CONFIG_NCP_USB
+    if (mode == 2)
+    {
+        // start usb wakeup process
+        lpm_config_next_lp_mode(0);
+        USB_DevicePmStartResume();
+    }
+#endif
+
     suspend_notify_flag = 0;
 }
 
 #if CONFIG_NCP_USB
 int ncp_config_suspend_mode(int mode)
 {
-    /* TODO: This function should be used in usb interface layer for sleep notify */
-    return -1;
+    if (!usb_allow_pm2_lowpower)
+    {
+        return -1;
+    }
+
+    lpm_config_next_lp_mode(2);
+
+    return 0;
 }
 #endif
 
