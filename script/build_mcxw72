@@ -132,7 +132,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_MBEDTLS_CONFIG_FILE=\"mbedtls-config.h\" ${cmakeArgs[@]} "${OT_SRCDIR}"
+    cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"

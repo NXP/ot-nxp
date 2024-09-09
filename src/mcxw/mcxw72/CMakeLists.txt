@@ -32,10 +32,6 @@ list(APPEND OT_PUBLIC_DEFINES
 )
 
 list(APPEND OT_PUBLIC_INCLUDES
-        "${PROJECT_SOURCE_DIR}/include/"
-        "${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/"
-        "${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/"
-        "${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include/"
         "$ENV{NXP_MCXW72_SDK_ROOT}"
         "$ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/Include"
         "$ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C"
@@ -70,6 +66,8 @@ list(APPEND OT_PUBLIC_INCLUDES
         "$ENV{NXP_MCXW72_SDK_ROOT}/components/timer"
         "$ENV{NXP_MCXW72_SDK_ROOT}/components/power_manager/devices/KW47B42ZB7"
         "$ENV{NXP_MCXW72_SDK_ROOT}/components/power_manager/core"
+        "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/"
+        "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/include/"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu"
         "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include"

@@ -35,4 +35,7 @@
 // For BLE WirelessUART project
 #define MBEDTLS_ECDH_C
 
+/* Openthread mbetdls config include */
+#include "mbedtls-config.h"
+
 #endif
