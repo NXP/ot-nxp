@@ -192,7 +192,6 @@ target_include_directories(${OT_PLATFORM_LIB}
     PRIVATE
     ${OT_PUBLIC_INCLUDES}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-    ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls/repo/include
 )
 
 if(OT_BUILD_COEX)
