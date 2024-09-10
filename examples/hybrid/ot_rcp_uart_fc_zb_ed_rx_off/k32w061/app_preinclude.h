@@ -46,8 +46,13 @@
  * - app console for RCP
  * - debug Console for ZB app
  */
+#ifndef gUartAppConsole_d
 #define gUartAppConsole_d 0
+#endif
+
+#ifndef gUartDebugConsole_d
 #define gUartDebugConsole_d 1
+#endif
 
 #ifndef gUartHwFlowControl_d
 #define gUartHwFlowControl_d 1
@@ -135,9 +140,6 @@
 
 /* Enable the SDK OSA component */
 #define USE_SDK_OSA 1
-
-/* Enable output on USART1 on pins connected to on-board FTDI */
-#define USART1_FTDI
 
 /* For now, reuse the same define for ZED RX OFF */
 #define cPWR_FullPowerDownMode 1

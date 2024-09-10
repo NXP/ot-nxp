@@ -33,6 +33,8 @@ option(OT_RCP_UART_DMA "enable UART DMA for RCP" OFF)
 option(OT_ANTENNA_DIVERSITY "enable Antenna Diversity feature" OFF)
 option(OT_EXTERNAL_FLASH_PDM "enable PDM in external flash feature" OFF)
 option(OT_LED_AND_KEYBOARD_INTERFACE "enable LED and Keyboard interface" OFF)
+option(OT_USART1_FTDI "enable usage of USART1 pins 0 and 1 that are connected to FTDI" OFF)
+option(OT_DEBUG_CONSOLE_ENABLE "enable debug console on the gOtLogUartInstance" OFF)
 
 SET_SOURCE_FILES_PROPERTIES($ENV{NXP_K32W0_SDK_ROOT}/devices/K32W061/gcc/startup_K32W061.c PROPERTIES LANGUAGE CXX)
 
@@ -201,6 +203,20 @@ if (OT_EXTERNAL_FLASH_PDM)
             -DPDM_EXT_FLASH=1
             -DgEepromType_d=gEepromDevice_MX25R8035F_c
             -DgPdmNbSegments=63
+    )
+endif()
+
+if (OT_USART1_FTDI)
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+            -DUSART1_FTDI
+    )
+endif()
+
+if (OT_DEBUG_CONSOLE_ENABLE)
+    target_compile_definitions(${NXP_DRIVER_LIB}
+        PUBLIC
+            -DgUartDebugConsole_d=1
     )
 endif()
 

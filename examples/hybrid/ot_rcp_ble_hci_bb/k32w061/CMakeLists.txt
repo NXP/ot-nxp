@@ -54,7 +54,6 @@ if (OT_APP_RCP_BLE_HCI_BB_SINGLE_UART)
     #In case of single UART support, following defines are added, in this case all hci and spinel frame would go through the ot plat UART interface
     target_compile_definitions(${NXP_DRIVER_LIB}
         PUBLIC
-            gUartDebugConsole_d=1
             SDK_DEBUGCONSOLE=1
             gHcitSerialManagerSupport_d=0 # Disable serial manager on hci
             OT_PLAT_APP_UART_INSTANCE=0 # UART 0 with flow control would be used to transfert HCI and spinel packet

@@ -46,7 +46,10 @@
 #define gBleUseHSClock2MbpsPhy_c 1
 
 /* By default: disable App Console and Debug console as UART0 and UART1 are used for HCI and SPINEL communication */
+#ifndef gUartAppConsole_d
 #define gUartAppConsole_d 0
+#endif
+
 #ifndef gUartDebugConsole_d
 #define gUartDebugConsole_d 0
 #endif
@@ -153,9 +156,6 @@
 #ifndef USE_SDK_OSA
 #define USE_SDK_OSA 1
 #endif
-
-/* Enable output on USART1 on pins connected to on-board FTDI */
-#define USART1_FTDI
 
 /*! *********************************************************************************
  * 	RTOS Configuration

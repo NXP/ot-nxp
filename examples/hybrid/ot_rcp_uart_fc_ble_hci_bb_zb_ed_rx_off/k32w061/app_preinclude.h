@@ -46,7 +46,10 @@
 #define gBleUseHSClock2MbpsPhy_c 1
 
 /* By default: disable App Console and Debug console as UART0 and UART1 are used for HCI and SPINEL communication */
+#ifndef gUartAppConsole_d
 #define gUartAppConsole_d 0
+#endif
+
 #ifndef gUartDebugConsole_d
 #define gUartDebugConsole_d 1
 #endif
@@ -152,9 +155,6 @@
 
 /* Enable the SDK OSA component */
 #define USE_SDK_OSA 1
-
-/* Enable output on USART1 on pins connected to on-board FTDI */
-#define USART1_FTDI
 
 /* For now, reuse the same define for ZED RX OFF */
 #define cPWR_FullPowerDownMode 1

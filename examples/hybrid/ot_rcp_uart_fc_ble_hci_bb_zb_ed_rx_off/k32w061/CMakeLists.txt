@@ -147,7 +147,6 @@ target_include_directories(nxp-k32w061-zigbee PRIVATE
 #In case of single UART support, following defines are added, in this case all hci and spinel frame would go through the ot plat UART interface
 target_compile_definitions(${NXP_DRIVER_LIB}
     PUBLIC
-        gUartDebugConsole_d=1
         gHcitSerialManagerSupport_d=0 # Disable serial manager on hci
         OT_PLAT_APP_UART_INSTANCE=0 # UART 0 with flow control would be used to transfert HCI and spinel packet
 )
