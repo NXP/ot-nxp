@@ -35,8 +35,8 @@
 manifest:
   projects:
   - name: sdk-release
-    url: https://github.com/nxp-mcuxpresso/mcux-sdk.git
-    revision: MCUX_2.16.000
+    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github.git
+    revision: sdk_2.16.0-rw-nbu-update
     path: core
     import:
       name-allowlist:
