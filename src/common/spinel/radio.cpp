@@ -536,6 +536,7 @@ void otPlatRadioInit(void)
     sRadioSpinel.SetCallbacks(callbacks);
     sRadioSpinel.Init(false /*aSkipRcpCompatibilityCheck*/, true /*aSoftwareReset*/, &sSpinelDriver, sRequiredRadioCaps,
                       aEnableRcpTimeSync);
+    sRadioSpinel.SetTimeSyncState(true);
 }
 
 void otPlatRadioDeinit(void)
