@@ -226,6 +226,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpspi.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_trdc.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lptmr.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_elemu.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_spc.c
@@ -247,6 +248,7 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio/fsl_gpio.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/trdc/fsl_trdc.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr/fsl_lptmr.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi/fsl_lpspi.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/elemu/fsl_elemu.c
@@ -382,6 +384,7 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/trdc
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/port
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi
