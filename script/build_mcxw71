@@ -44,7 +44,7 @@ readonly OT_OPTIONS=(
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
     "-DOT_NXP_PLATFORM=mcxw71"
-    "-DOT_NXP_PLATFORM_FAMILY=mcxw71"
+    "-DOT_NXP_PLATFORM_FAMILY=mcxw"
 )
 
 readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(

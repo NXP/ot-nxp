@@ -33,7 +33,7 @@ To learn more about building and running the examples please check:
 [rt1060-page]: src/imx_rt/rt1060/README.md
 [rt1170-page]: src/imx_rt/rt1170/README.md
 [rw612-page]: src/rw/rw612/README.md
-[mcxw71-page]: src/mcxw71/mcxw71/README.md
+[mcxw71-page]: src/mcxw/mcxw71/README.md
 
 # NXP OpenThread Border Router
 
