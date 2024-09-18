@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,4 +26,105 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(${OT_NXP_PLATFORM})
+list(APPEND OT_PUBLIC_DEFINES
+    -Wno-unused-parameter
+    -Wno-expansion-to-defined
+)
+
+list(APPEND OT_PUBLIC_INCLUDES
+        "$ENV{NXP_K32W1_SDK_ROOT}"
+        "$ENV{NXP_K32W1_SDK_ROOT}/CMSIS/Include"
+        "$ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/common"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/flash_k4"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/port"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/cmc"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ccm32k"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/crc"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/tpm"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/misc_utilities"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/debug_console"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/str"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/osa"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/lists"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/messaging"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/mem_manager"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/internal_flash"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/panic"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/serial_manager"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/uart"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/gpio"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/led"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/button"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/timer_manager"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/timer"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/devices/K32W1480"
+        "$ENV{NXP_K32W1_SDK_ROOT}/components/power_manager/core"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/include/"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/DBG"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/FunctionLib"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/HWParameter"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Sensors"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen45"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source"
+        "$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/interface"
+)
+
+set(K32W1_SOURCES
+    alarm.c
+    diag.c
+    entropy.c
+    logging.c
+    misc.c
+    radio.c
+    system.c
+    uart.c
+    ../common/flash_nvm.c
+    ../../openthread/examples/apps/cli/cli_uart.cpp
+)
+
+if (NOT NO_THREAD_1_3_FLAGS)
+    list(APPEND K32W1_SOURCES
+        ../common/crypto/ecdsa_sss.cpp
+    )
+endif()
+
+set(K32W1_LIBS
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/lib_crypto_m33.a
+)
+
+if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
+    # disable CSL receiver for now
+    list(APPEND OT_PLATFORM_DEFINES
+        OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
+    )
+endif()
+
+if (NO_THREAD_1_3_FLAGS)
+    list(APPEND OT_PLATFORM_DEFINES
+        "NO_THREAD_1_3_FLAGS"
+    )
+endif()
+
+set(K32W1_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+)
+
+include(k32w1.cmake)

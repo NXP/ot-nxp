@@ -80,7 +80,7 @@ list(APPEND OT_PLATFORM_DEFINES
 )
 
 if (USE_NBU)
-    set_property(SOURCE ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/startup_K32W1480.S PROPERTY LANGUAGE C)
+    set_property(SOURCE ${PROJECT_SOURCE_DIR}/src/k32w1/startup_K32W1480.S PROPERTY LANGUAGE C)
 else()
     set_property(SOURCE $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/gcc/startup_K32W1480.S PROPERTY LANGUAGE C)
 endif()
@@ -161,7 +161,7 @@ if (USE_NBU)
     endif()
 
     list(APPEND K32W1_SDK_SOURCES
-        ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/startup_K32W1480.S
+        ${PROJECT_SOURCE_DIR}/src/k32w1/startup_K32W1480.S
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
         $ENV{NXP_K32W1_SDK_ROOT}/components/rpmsg/fsl_adapter_rpmsg.c
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr.c

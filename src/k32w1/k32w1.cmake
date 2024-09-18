@@ -35,7 +35,7 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 set(COMM_FLAGS
-    -I${PROJECT_SOURCE_DIR}/examples/k32w1/k32w1/
+    -I${PROJECT_SOURCE_DIR}/examples/k32w1/
 )
 #if(OT_CFLAGS MATCHES "-pedantic-errors")
 #    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
@@ -60,7 +60,7 @@ set_target_properties(openthread-k32w1
 if (USE_NBU)
     SET (K32W1_LINKER_FILE
         # TODO: use the stadard linker file -> modify the existing one and submit upstream PR
-        -T${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/K32W1480_connectivity.ld
+        -T${PROJECT_SOURCE_DIR}/src/k32w1/K32W1480_connectivity.ld
 )
 else()
     SET (K32W1_LINKER_FILE
@@ -84,7 +84,7 @@ if (USE_NBU)
 target_link_libraries(openthread-k32w1
     PUBLIC
         ${OT_MBEDTLS}
-        -L${PROJECT_SOURCE_DIR}/src/k32w1/k32w1
+        -L${PROJECT_SOURCE_DIR}/src/k32w1
         -L${NBU_BINARY_IMAGE_PATH}
         -L$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common/devices/kw45_k32w1/gcc
         ${K32W1_LINKER_FILE}
@@ -120,7 +120,7 @@ target_compile_options(openthread-k32w1
 
 target_include_directories(openthread-k32w1
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/k32w1
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${K32W1_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )

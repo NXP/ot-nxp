@@ -191,7 +191,7 @@ if(NOT DEFINED OT_PLATFORM_LIB_FTD)
     set(OT_PLATFORM_LIB_FTD ${OT_PLATFORM_LIB})
 endif()
 
-set(APP_LINKER_FILE ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/K32W1480_connectivity.ld)
+set(APP_LINKER_FILE ${PROJECT_SOURCE_DIR}/src/k32w1/K32W1480_connectivity.ld)
 
 target_compile_options(ot-config INTERFACE
     -Wno-unused-parameter
