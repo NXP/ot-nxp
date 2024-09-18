@@ -109,15 +109,15 @@ set(K32W1_SDK_SOURCES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/LowPower/PWR.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/RNG/RNG.c
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/SecLib_sss.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C/clock_config.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/hardware_init.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/app_services_init.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C/pin_mux.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_comp.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_dcdc.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_lp.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board.c
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/board_extflash.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/MCXW716C/clock_config.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/hardware_init.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/app_services_init.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/MCXW716C/pin_mux.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/board_comp.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/board_dcdc.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/board_lp.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/board.c
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/board_extflash.c
     $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/system_K32W1480.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/osa/fsl_os_abstraction_bm.c
     $ENV{NXP_K32W1_SDK_ROOT}/components/lists/fsl_component_generic_list.c
@@ -217,6 +217,7 @@ if (SDK_RELEASE)
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lpspi.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_trdc.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_lptmr.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_elemu.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/fsl_spc.c
@@ -237,6 +238,7 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio/fsl_gpio.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart/fsl_lpuart.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc/fsl_ltc.c
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/trdc/fsl_trdc.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr/fsl_lptmr.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi/fsl_lpspi.c
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/elemu/fsl_elemu.c
@@ -319,8 +321,8 @@ set(K32W1_SDK_INCLUDES
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Sensors
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Source
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/NVM/Interface
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71
-    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/frdmmcxw71/MCXW716C
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1
+    $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw45_k32w1/MCXW716C
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/include
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu
     $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/configs
@@ -369,6 +371,7 @@ else()
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/gpio
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpuart
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/ltc
+        $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/trdc
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/port
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lptmr
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}/lpspi
