@@ -117,6 +117,7 @@ target_include_directories(wifi
     ${WIFI_PATH}/incl/wifidriver
     ${WIFI_PATH}/incl/wlcmgr
     ${WIFI_PATH}/wifidriver/incl
+    ${WIFI_PATH}/wifidriver/wpa_supp_if/incl
     ${WIFI_PATH}/wifidriver
     ${WIFI_PATH}/wifi_bt_firmware
     ${PROJECT_SOURCE_DIR}/third_party/wifi
