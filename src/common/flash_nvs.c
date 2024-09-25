@@ -150,18 +150,26 @@ int subtree_cb_count_values(const char *key, size_t len, settings_read_cb read_c
  * Zephyr settings subtree callback function used to wipe out all the keys
  * available in the subtree
  */
-int subtree_cb_wipe_all(const char *key, size_t len, settings_read_cb read_cb, void *cb_arg, void *param)
+int subtree_cb_wipe(const char *key, size_t len, settings_read_cb read_cb, void *cb_arg, void *param)
 {
     int  err;
     char key_name[KEY_NAME_SIZE];
 
     /* Generate the full name of the key */
-    sprintf(key_name, OT_KEY_PREFIX "/%s", key);
+    if (param != NULL)
+    {
+        sprintf(key_name, "%s/%s", (char *)param, key);
+    }
+    else
+    {
+        sprintf(key_name, OT_KEY_PREFIX "/%s", key);
+    }
+
     err = settings_delete(key_name);
     if (err != 0)
     {
         /* An error has occurred hence abort this operation */
-        otLogWarnPlat("WARNING: Failed wipe out settings subtree! (err=%d)", err);
+        otLogWarnPlat("WARNING: Failed to wipe out settings subtree! (err=%d)", err);
         return 1;
     }
 
@@ -274,13 +282,27 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
     otError ret = OT_ERROR_NONE;
     char    key_name[KEY_NAME_SIZE];
 
-    /* Generate the name of the key, as known by the NVS/Settings module */
-    sprintf(key_name, OT_KEY_PREFIX "/%x/%d", aKey, aIndex);
-    err = settings_delete(key_name);
-    if (err != 0)
+    /* When aIndex is -1 we have to remove all instances of specified key */
+    if (aIndex == -1)
     {
-        otLogWarnPlat("ERROR: Failed to remove settings key 0x%04x[%d]!", aKey, aIndex);
-        ret = OT_ERROR_NOT_FOUND;
+        sprintf(key_name, OT_KEY_PREFIX "/%x", aKey);
+        err = settings_load_subtree_direct(key_name, subtree_cb_wipe, key_name);
+        if (err != 0)
+        {
+            otLogWarnPlat("ERROR: Failed to remove all values for key 0x%04x!", aKey);
+            ret = OT_ERROR_NOT_FOUND;
+        }
+    }
+    else
+    {
+        /* Generate the name of the key, as known by the NVS/Settings module */
+        sprintf(key_name, OT_KEY_PREFIX "/%x/%d", aKey, aIndex);
+        err = settings_delete(key_name);
+        if (err != 0)
+        {
+            otLogWarnPlat("ERROR: Failed to remove settings key 0x%04x[%d]!", aKey, aIndex);
+            ret = OT_ERROR_NOT_FOUND;
+        }
     }
 
     return ret;
@@ -290,7 +312,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
 {
     int err;
 
-    err = settings_load_subtree_direct(OT_KEY_PREFIX, subtree_cb_wipe_all, NULL);
+    err = settings_load_subtree_direct(OT_KEY_PREFIX, subtree_cb_wipe, NULL);
     if (err != 0)
     {
         otLogWarnPlat("WARNING: Failed to wipe out OT settings keys (err=%d)!", err);
