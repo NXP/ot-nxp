@@ -57,6 +57,7 @@
 #include "app_ot.h"
 #include "border_agent.h"
 #include "br_rtos_manager.h"
+#include "infra_if.h"
 #include "ot_lwip.h"
 #include "trel_plat.h"
 #include "utils.h"
@@ -131,8 +132,6 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #define USE_OT_MDNS 1
 #endif
 
-#define MAX_HOST_IPV6_ADDRESSES 16
-
 /* Ethernet configuration. */
 #if defined(OT_NXP_PLATFORM_RT1170)
 #define EXAMPLE_CLOCK_FREQ CLOCK_GetRootClockFreq(kCLOCK_Root_Bus)
@@ -176,14 +175,8 @@ static struct netif sExtNetif;
 static SemaphoreHandle_t sMainStackLock;
 static struct netif     *sExtNetifPtr;
 
-static otInstance          *sInstance = NULL;
-static netif_ext_callback_t sNetifCallback;
-
-static otMdnsHost      sHost;
-static otIp6Address    sHostAddresses[MAX_HOST_IPV6_ADDRESSES];
-static otMdnsRequestId sRequestId;
-
-static char sHostName[] = "NXP-BR#0000";
+static otInstance *sInstance   = NULL;
+static char        sHostName[] = "NXP-BR#0000";
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -197,7 +190,6 @@ static void     appConfigEnetIf();
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
-static void wifiLinkCB(bool up);
 static void appConfigWifiIf();
 #endif
 
@@ -209,12 +201,14 @@ static void appOtInit();
 static void appBrExternalIpv6InterfaceInit(void);
 static void appBrInit();
 static void mainloop(void *aContext);
-static void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args);
-static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions prototypes                   */
 /* -------------------------------------------------------------------------- */
+
+#ifdef OT_APP_BR_WIFI_EN
+extern void wifiLinkCB(bool state);
+#endif
 
 extern void otAppCliInit(otInstance *aInstance);
 extern void otSysRunIdleTask(void);
@@ -325,7 +319,6 @@ static void appConfigEnetIf()
     SILICONID_ConvertToMacAddr(&enet_config.macAddress);
 
     netifapi_netif_add(sExtNetifPtr, NULL, NULL, NULL, &enet_config, EXAMPLE_NETIF_INIT_FN, tcpip_input);
-    netif_add_ext_callback(&sNetifCallback, &NetifExtCb);
     netifapi_netif_set_up(sExtNetifPtr);
 
     LOCK_TCPIP_CORE();
@@ -337,9 +330,12 @@ static void appConfigEnetIf()
 #endif
 
 #ifdef OT_APP_BR_WIFI_EN
-static void wifiLinkCB(bool up)
+void wifiLinkCB(bool state)
 {
-    otCliOutputFormat("Wi-fi link is now %s\r\n", up ? "up" : "down");
+    otCliOutputFormat("Wi-fi link is now %s\r\n", state ? "up" : "down");
+    netif_ext_callback_args_t args = {0};
+    args.link_changed.state        = state;
+    BrNetifExtCb(sExtNetifPtr, LWIP_NSC_LINK_CHANGED, &args);
 }
 
 #ifdef WIFI_SSID
@@ -375,8 +371,6 @@ static void appConfigWifiIf()
         otCliOutputFormat("WPL_Init() failed with code %d\r\n", ret);
         VerifyOrExit(ret != WPLRET_SUCCESS);
     }
-
-    netif_add_ext_callback(&sNetifCallback, &NetifExtCb);
 
     ret = WPL_Start(&wifiLinkCB);
     if (ret != WPLRET_SUCCESS)
@@ -479,91 +473,7 @@ static void appBrInit()
     otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
 
     BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
-
-    sHost.mHostName        = CreateBaseName(sInstance, sHostName, false);
-    sHost.mAddressesLength = 0;
-    sHost.mTtl             = 120;
-    sHost.mInfraIfIndex    = 0;
-    sHost.mAddresses       = sHostAddresses;
-
-    BrInitServices(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
-}
-
-void NetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args)
-{
-    bool shouldAddAddress = true;
-    if ((reason & (LWIP_NSC_IPV6_SET | LWIP_NSC_IPV6_ADDR_STATE_CHANGED)) && netif == sExtNetifPtr)
-    {
-        for (int i = (LWIP_IPV6_NUM_ADDRESSES - 1); i >= 0; i--)
-        {
-            if (ip6_addr_isvalid(netif_ip6_addr_state(sExtNetifPtr, i)))
-            {
-                const ip6_addr_t *tmpAddr;
-                tmpAddr = netif_ip6_addr(sExtNetifPtr, i);
-
-                if (ip6_addr_islinklocal(tmpAddr) || ip6_addr_isuniquelocal(tmpAddr) || ip6_addr_isglobal(tmpAddr))
-                {
-                    const ip_addr_t *lwipAddr = netif_ip_addr6(sExtNetifPtr, i);
-                    otIp6Address     externalNetifAddress;
-                    memcpy(externalNetifAddress.mFields.m8, ip_2_ip6(lwipAddr),
-                           sizeof(externalNetifAddress.mFields.m8));
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
-                    for (uint8_t i = 0; i < sHost.mAddressesLength; i++)
-                    {
-                        if (!memcmp(sHostAddresses[i].mFields.m8, externalNetifAddress.mFields.m8,
-                                    sizeof(externalNetifAddress.mFields.m8)))
-                        {
-                            shouldAddAddress = false;
-                            break;
-                        }
-                    }
-                    if (shouldAddAddress)
-                    {
-                        sHostAddresses[sHost.mAddressesLength] = externalNetifAddress;
-                        sHost.mAddressesLength++;
-                        otMdnsRegisterHost(sInstance, &sHost, sRequestId, HandleMdnsRegisterCallback);
-                    }
-#endif
-                }
-            }
-        }
-    }
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if ((reason & LWIP_NSC_IPV4_ADDRESS_CHANGED) && netif == sExtNetifPtr)
-    {
-        const ip4_addr_t *ip4_addr;
-        otIp4Cidr         aCidr;
-        otError           error;
-
-        ip4_addr = netif_ip4_addr(sExtNetifPtr);
-        if (!ip4_addr_isany(ip4_addr))
-        {
-            aCidr.mAddress.mFields.m32 = ip4_addr->addr;
-            aCidr.mLength              = 32U;
-            error                      = otNat64SetIp4Cidr(sInstance, &aCidr);
-            if (error != OT_ERROR_NONE)
-            {
-                otCliOutputFormat("otNat64SetIp4Cidr failed: %s\r\n", otThreadErrorToString(error));
-            }
-        }
-    }
-#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
-}
-
-static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
-{
-    if (aError == OT_ERROR_NONE && aRequestId == 0)
-    {
-        BrMdnsHostSetInitialized(true);
-        BorderAgentInit(aInstance, sHost.mHostName);
-        TrelOnAppReady(sHost.mHostName);
-    }
-    else
-    {
-        // rename
-        sHost.mHostName = CreateAlternativeBaseName(aInstance, sHost.mHostName);
-        otMdnsRegisterHost(aInstance, &sHost, sRequestId, HandleMdnsRegisterCallback);
-    }
+    BrInitMdnsHost(CreateBaseName(sInstance, sHostName, false));
 }
 
 static void mainloop(void *aContext)

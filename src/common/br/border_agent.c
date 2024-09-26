@@ -184,6 +184,11 @@ void BorderAgentInit(otInstance *aInstance, const char *aHostName)
     }
 }
 
+void BorderAgentDeInit()
+{
+    sBorderAgentIsInit = false;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
 otError BorderAgentEnableEpskcService(uint32_t aTimeout)
 {

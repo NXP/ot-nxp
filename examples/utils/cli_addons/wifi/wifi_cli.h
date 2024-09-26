@@ -46,5 +46,4 @@
  * @return otError
  */
 otError ProcessWifi(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-
 #endif /* WIFI_CLI_H_ */

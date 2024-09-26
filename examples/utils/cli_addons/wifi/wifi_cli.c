@@ -100,6 +100,8 @@ otError ProcessWifi(void *aContext, uint8_t aArgsLength, char *aArgs[])
     return error;
 }
 
+extern void wifiLinkCB(bool state);
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
@@ -115,7 +117,8 @@ static otError ProcessConnectCmd(void *aContext, uint8_t aArgsLength, char *aArg
         char     *ssid = aArgs[0];
 
         /* Make sure we are not connected: */
-        ProcessDisconnectCmd(aContext, aArgsLength, aArgs);
+        (void)WPL_Leave();
+        (void)WPL_RemoveNetwork(wifi_label);
 
         ret = WPL_AddNetwork(ssid, pass, wifi_label);
         switch (ret)
@@ -135,6 +138,7 @@ static otError ProcessConnectCmd(void *aContext, uint8_t aArgsLength, char *aArg
         switch (ret)
         {
         case WPLRET_SUCCESS:
+            wifiLinkCB(true);
             return OT_ERROR_NONE;
         case WPLRET_NOT_READY:
             return OT_ERROR_BUSY;
@@ -167,6 +171,8 @@ static otError ProcessDisconnectCmd(void *aContext, uint8_t aArgsLength, char *a
 
     (void)WPL_Leave();
     (void)WPL_RemoveNetwork(wifi_label);
+
+    wifiLinkCB(false);
 
     return OT_ERROR_NONE;
 }

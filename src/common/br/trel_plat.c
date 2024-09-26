@@ -152,6 +152,15 @@ void TrelOnAppReady(const char *aHostName)
     otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
 }
 
+void TrelOnExternalNetifDown()
+{
+    // mDNS core stops browsing operation as 'otPlatInfraIfStateChanged` was called before this
+    // only change browsing state in this module
+    sBrowsingEnabled = false;
+
+    RemoveAllPeersAndNotify();
+}
+
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 {
     OT_UNUSED_VARIABLE(aInstance);

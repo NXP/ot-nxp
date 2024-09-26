@@ -41,6 +41,7 @@ extern "C" {
 
 void TrelPlatInit(otInstance *aInstance, struct netif *backboneNetif);
 void TrelOnAppReady(const char *aHostName);
+void TrelOnExternalNetifDown(void);
 
 #ifdef __cplusplus
 }

@@ -42,8 +42,11 @@ void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif
 /* Must be called after BrInitPlatform */
 void BrInitServices();
 
+void BrInitMdnsHost(const char *aHostName);
 void BrMdnsHostSetInitialized(bool aState);
 bool BrMdnsHostIsInitialized();
+
+void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args);
 
 #ifdef __cplusplus
 }
