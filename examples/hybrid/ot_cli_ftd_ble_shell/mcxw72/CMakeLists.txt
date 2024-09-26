@@ -120,7 +120,7 @@ target_compile_options(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
         -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/k32w1/ble_preinclude.h
 )
 
-set(APP_LINKER_FILE ${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/K32W1480_connectivity.ld)
+set(APP_LINKER_FILE ${PROJECT_SOURCE_DIR}/src/k32w1/K32W1480_connectivity.ld)
 
 target_compile_options(ot-config INTERFACE
     -Wno-unused-parameter

@@ -87,14 +87,14 @@ list(APPEND OT_PUBLIC_INCLUDES
 )
 
 set(MCXW72_SOURCES
-    ../../k32w1/k32w1/alarm.c
-    ../../k32w1/k32w1/diag.c
-    ../../k32w1/k32w1/entropy.c
-    ../../k32w1/k32w1/logging.c
-    ../../k32w1/k32w1/misc.c
-    ../../k32w1/k32w1/radio.c
-    ../../k32w1/k32w1/system.c
-    ../../k32w1/k32w1/uart.c
+    ../../k32w1/alarm.c
+    ../../k32w1/diag.c
+    ../../k32w1/entropy.c
+    ../../k32w1/logging.c
+    ../../k32w1/misc.c
+    ../../k32w1/radio.c
+    ../../k32w1/system.c
+    ../../k32w1/uart.c
     ../../common/flash_nvm.c
     ../../../openthread/examples/apps/cli/cli_uart.cpp
 )

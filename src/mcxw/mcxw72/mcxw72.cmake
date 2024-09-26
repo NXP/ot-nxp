@@ -60,7 +60,7 @@ set_target_properties(openthread-mcxw72
 if (USE_NBU)
     SET (MCXW72_LINKER_FILE
         # TODO: use the stadard linker file -> modify the existing one and submit upstream PR
-        -T${PROJECT_SOURCE_DIR}/src/k32w1/k32w1/K32W1480_connectivity.ld
+        -T${PROJECT_SOURCE_DIR}/src/k32w1/K32W1480_connectivity.ld
 )
 else()
     SET (MCXW72_LINKER_FILE
