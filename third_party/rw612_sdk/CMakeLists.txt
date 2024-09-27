@@ -179,6 +179,7 @@ set(RW612_SDK_SOURCES
     ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader_utils.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/life_cycle.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/nboot_hal.c
+    ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/rw61x/rw61x_cpu2.c
 )
 
 if(OT_NXP_MBEDTLS_PORT)
@@ -496,6 +497,7 @@ set(RW612_SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/power_manager/devices/RW612
     ${NXP_SDK_ROOT}/components/power_manager/core/
     ${NXP_SDK_ROOT}/components/gpio/
+    ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/inc/
 
     # LittleFS
     ${MIDDLEWARE_PATH}/littlefs
@@ -668,6 +670,13 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING
     -DSERIAL_PORT_TYPE_UART=1
     -DHAL_UART_ADAPTER_LOWPOWER=1
+    -DgPlatformMonolithicApp_d=1
+    -DCONFIG_SOC_SERIES_RW6XX_REVISION_A2=1
+    -DCONFIG_MONOLITHIC_BLE_15_4=1
+    -DWIFI_FW_ADDRESS=0
+    -DBLE_FW_ADDRESS=0
+    -DRW610
+    -DWIFI_BT_TX_PWR_LIMITS="wlan_txpwrlimit_cfg_WW_rw610.h"
 
     # -DSERIAL_MANAGER_NON_BLOCKING_MODE=1
     -DSERIAL_MANAGER_TASK_STACK_SIZE=1024
