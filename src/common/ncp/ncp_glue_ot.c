@@ -161,12 +161,10 @@ static int ot_ncp_cmd_handle(void *cmd)
     // ot command parameters should be appended
     memcpy((uint8_t *)&otCurrentCmd[0] + cmdLen, pCmdParam, cmdParamLen);
 
-#ifdef OT_NCP_LIBS
     /* Mark this value and check it before entering sleep again, to ensure
-     * that ot rsp has been sent before sleep handshaking in ncp coex
+     * that ot rsp has been sent before sleep handshaking
      * */
     OtNcpDataHandle = OT_NCP_CMD_HANDLING;
-#endif
 
     // Notify ot task to process command
     ot_ncp_set_cmd_ready();

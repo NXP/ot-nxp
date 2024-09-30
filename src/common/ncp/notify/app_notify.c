@@ -28,6 +28,8 @@
  * Prototypes
  ******************************************************************************/
 
+extern volatile uint8_t OtNcpDataHandle;
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -48,6 +50,10 @@ extern uint32_t current_cmd;
 
 #if CONFIG_NCP_USB
 extern usb_cdc_vcom_struct_t s_cdcVcom;
+#endif
+
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+extern uint8_t lpmInterfaceReinitState;
 #endif
 
 #ifndef WM_FAIL
@@ -122,6 +128,7 @@ static void app_notify_event_handler(void *argv)
 #if CONFIG_NCP_USB
     int lpm_usb_retry_cnt = 20;
 #endif
+    uint8_t ot_chk_rsp_cnt = 10;
 
     while (1)
     {
@@ -135,6 +142,21 @@ static void app_notify_event_handler(void *argv)
         switch (msg.event)
         {
         case APP_EVT_MCU_SLEEP_ENTER:
+            /* it should be ensured that the OT data has been sent first and then
+             * start sleep handshake.
+             * */
+            ot_chk_rsp_cnt = 10;
+            do
+            {
+                OSA_TimeDelay(50);
+                ot_chk_rsp_cnt--;
+            } while ((ot_chk_rsp_cnt > 0) && (OtNcpDataHandle == OT_NCP_CMD_HANDLING));
+
+            if (ot_chk_rsp_cnt == 0)
+            {
+                assert(0);
+            }
+
             // app_d("got MCU sleep enter report");
             event_buf = ncp_sys_evt_status(NCP_EVENT_MCU_SLEEP_ENTER, &msg);
             if (!event_buf)
@@ -142,6 +164,7 @@ static void app_notify_event_handler(void *argv)
             break;
         case APP_EVT_MCU_SLEEP_EXIT:
 #if CONFIG_NCP_USB
+            lpm_setNcpInterfaceReinitState(NCP_INTERFACE_REINIT_ONGOING);
             /* Wait for USB re-init done */
             lpm_usb_retry_cnt = 20;
             while (lpm_usb_retry_cnt > 0 && 1 != s_cdcVcom.attach)
@@ -154,10 +177,13 @@ static void app_notify_event_handler(void *argv)
             {
                 assert(0);
             }
+            lpm_setNcpInterfaceReinitState(NCP_INTERFACE_REINIT_DONE);
 #endif
 #if CONFIG_NCP_SDIO
+            lpm_setNcpInterfaceReinitState(NCP_INTERFACE_REINIT_ONGOING);
             /* Wait for SDIO re-init done */
             OSA_TimeDelay(800);
+            lpm_setNcpInterfaceReinitState(NCP_INTERFACE_REINIT_DONE);
 #endif
             // app_d("got MCU sleep exit report");
             event_buf = ncp_sys_evt_status(NCP_EVENT_MCU_SLEEP_EXIT, &msg);

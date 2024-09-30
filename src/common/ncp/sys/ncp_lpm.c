@@ -57,7 +57,9 @@ extern int32_t mflash_drv_init(void);
 /* Default NCP host <-> NCP device low power handshake state */
 static uint8_t ncpLowPowerHandshake = NCP_LMP_HANDSHAKE_NOT_START;
 
-extern volatile uint8_t OtNcpDataHandle;
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+static uint8_t ncpInterfaceReinitState = NCP_INTERFACE_REINIT_DONE;
+#endif
 
 /*******************************************************************************
  * APIs
@@ -70,6 +72,18 @@ void lpm_setHandshakeState(uint8_t state)
 {
     ncpLowPowerHandshake = state;
 }
+
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+void lpm_setNcpInterfaceReinitState(uint8_t state)
+{
+    ncpInterfaceReinitState = state;
+}
+
+uint8_t lpm_getNcpInterfaceReinitState(void)
+{
+    return ncpInterfaceReinitState;
+}
+#endif
 
 void lpm_pm3_exit_hw_reinit()
 {
@@ -126,10 +140,12 @@ status_t powerManager_BoardNotify(pm_event_type_t eventType, uint8_t powerState,
         return kStatus_PMPowerStateNotAllowed;
     }
 
-    if (OtNcpDataHandle == OT_NCP_WAIT_RSP)
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+    if (lpm_getNcpInterfaceReinitState() == NCP_INTERFACE_REINIT_ONGOING)
     {
         return kStatus_PMPowerStateNotAllowed;
     }
+#endif
 
 #if CONFIG_NCP_SPI
     if (ncp_spi_txrx_is_finish() == 0)

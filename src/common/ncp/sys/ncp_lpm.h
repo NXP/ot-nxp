@@ -36,6 +36,9 @@
 #define APP_NOTIFY_SUSPEND_EVT 0x1U
 #define APP_NOTIFY_SUSPEND_CFM 0x2U
 
+#define NCP_INTERFACE_REINIT_ONGOING 0
+#define NCP_INTERFACE_REINIT_DONE 1
+
 /*******************************************************************************
  * API
  ******************************************************************************/

@@ -45,7 +45,6 @@ typedef struct
 uint8_t                     suspend_notify_flag = 0;
 uint8_t                     ncp_wake_up_mode    = 0;
 static uart_clock_context_t s_uartClockCtx;
-extern volatile uint8_t     OtNcpDataHandle;
 #if CONFIG_NCP_USB
 bool usb_allow_pm2_lowpower = false;
 #endif
@@ -169,10 +168,12 @@ int host_sleep_pre_cfg(int mode)
         /* Wait until receiving NCP_CMD_WLAN_POWERMGMT_MCU_SLEEP_CFM from host */
         if (suspend_notify_flag == 0)
         {
-            if (OtNcpDataHandle == OT_NCP_WAIT_RSP)
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+            if (lpm_getNcpInterfaceReinitState() == NCP_INTERFACE_REINIT_ONGOING)
             {
                 return kStatus_PMPowerStateNotAllowed;
             }
+#endif
 
             suspend_notify_flag |= APP_NOTIFY_SUSPEND_EVT;
             lpm_setHandshakeState(NCP_LMP_HANDSHAKE_IN_PROCESS);
@@ -229,10 +230,6 @@ void host_sleep_post_cfg(int mode)
     POWER_ConfigWakeupPin(kPOWER_WakeupPin1, kPOWER_WakeupEdgeHigh);
     NVIC_ClearPendingIRQ(PIN1_INT_IRQn);
     DisableIRQ(PIN1_INT_IRQn);
-    if (POWER_GetWakeupStatus(PIN1_INT_IRQn))
-    {
-        OtNcpDataHandle = OT_NCP_WAIT_RSP;
-    }
     POWER_ClearWakeupStatus(PIN1_INT_IRQn);
     POWER_DisableWakeup(PIN1_INT_IRQn);
     EnableGlobalIRQ(irq_mask);
@@ -242,43 +239,20 @@ void host_sleep_post_cfg(int mode)
 #if CONFIG_NCP_USB
         POWER_ClearWakeupStatus(USB_IRQn);
         POWER_DisableWakeup(USB_IRQn);
-        if (POWER_GetWakeupStatus(USB_IRQn))
-        {
-            OtNcpDataHandle = OT_NCP_WAIT_RSP;
-        }
 #elif CONFIG_NCP_UART
-        if (POWER_GetWakeupStatus(FLEXCOMM0_IRQn))
-            OtNcpDataHandle = OT_NCP_WAIT_RSP;
         POWER_ClearWakeupStatus(FLEXCOMM0_IRQn);
         POWER_DisableWakeup(FLEXCOMM0_IRQn);
 #elif CONFIG_NCP_SPI
-        if (POWER_GetWakeupStatus(WKDEEPSLEEP_IRQn))
-        {
-            OtNcpDataHandle = OT_NCP_WAIT_RSP;
-        }
         POWER_ClearWakeupStatus(WKDEEPSLEEP_IRQn);
         POWER_DisableWakeup(WKDEEPSLEEP_IRQn);
         SYSCTL0->HWWAKE = 0x0;
 #elif CONFIG_NCP_SDIO
-        if (POWER_GetWakeupStatus(SDU_IRQn))
-        {
-            OtNcpDataHandle = OT_NCP_WAIT_RSP;
-        }
         POWER_ClearWakeupStatus(SDU_IRQn);
 #endif
         POWER_SetPowerSwitchCallback(NULL, NULL, NULL, NULL);
 #if !(CONFIG_NCP_SDIO)
         host_sleep_post_hook(2, NULL);
 #endif
-    }
-
-    if (mode >= 2)
-    {
-        // For rtc timeout wakeup, need to set flag to disallow do handshake
-        if (POWER_GetWakeupStatus(RTC_IRQn))
-        {
-            OtNcpDataHandle = OT_NCP_WAIT_RSP;
-        }
     }
 
 #if CONFIG_NCP_USB
