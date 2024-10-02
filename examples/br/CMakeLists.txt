@@ -27,15 +27,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_NCP_RADIO)
-    set(OTBR_FREERTOS_SOURCES
-        ncp_otbr_freertos.c
-    )
-else()
-    set(OTBR_FREERTOS_SOURCES
-        br_ot_freertos.c
-    )
-endif()
+set(OTBR_FREERTOS_SOURCES
+    br_ot_freertos.c
+)
 
 if(OT_NXP_LWIP_WIFI)
     if(OT_NXP_LWIP_ETH)
@@ -76,6 +70,10 @@ if(OT_NXP_LWIP_WIFI)
     )
 else()
     target_compile_definitions(${APPLICATION} PRIVATE OT_APP_BR_ETH_EN)
+endif()
+
+if(OT_NCP_RADIO)
+    target_compile_definitions(${APPLICATION} PRIVATE OT_NCP_RADIO)
 endif()
 
 target_include_directories(${APPLICATION} PRIVATE

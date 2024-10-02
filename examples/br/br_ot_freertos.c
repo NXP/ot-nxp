@@ -99,6 +99,10 @@
 #include LWIP_HOOK_FILENAME
 #endif
 
+#ifdef OT_NCP_RADIO
+#include "ncp_ot.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 /*                                 Definitions                                */
 /* -------------------------------------------------------------------------- */
@@ -195,6 +199,10 @@ static void     appConfigEnetIf();
 #ifdef OT_APP_BR_WIFI_EN
 static void wifiLinkCB(bool up);
 static void appConfigWifiIf();
+#endif
+
+#ifdef OT_NCP_RADIO
+static void appNcpInit();
 #endif
 
 static void appOtInit();
@@ -397,7 +405,22 @@ static void appConfigWifiIf()
 exit:
     return;
 }
+#endif
 
+#ifdef OT_NCP_RADIO
+static void appNcpInit()
+{
+    uint32_t result;
+
+    result = ncp_adapter_init();
+    assert(NCP_STATUS_SUCCESS == result);
+    result = ot_ncp_init();
+    assert(NCP_STATUS_SUCCESS == result);
+    result = ncp_cmd_list_init();
+    assert(NCP_STATUS_SUCCESS == result);
+
+    (void)result;
+}
 #endif
 
 static void appOtInit()
@@ -550,6 +573,9 @@ static void mainloop(void *aContext)
     appBrExternalIpv6InterfaceInit();
     appOtInit();
     appBrInit();
+#ifdef OT_NCP_RADIO
+    appNcpInit();
+#endif
 
     otSysProcessDrivers(sInstance);
     while (!otSysPseudoResetWasRequested())
