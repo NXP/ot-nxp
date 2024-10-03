@@ -67,9 +67,6 @@
 #define BORDER_AGENT_PORT 49152
 #define BACKBONE_UDP_PORT 61631
 
-#define BBR_FUNCTION_STATUS_ACTIVE_MASK 1 << 1
-#define BBR_FUNCTION_STATUS_STATE_MASK 1 << 0
-
 #define MAX_TXT_ENTRIES_NUMBER 18
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -110,7 +107,8 @@ typedef struct BorderAgentStateBitmap
     uint32_t mConnectionMode : 3;
     uint32_t mThreadInterfaceStatus : 2;
     uint32_t mAvailability : 2;
-    uint32_t mBBRFunctionStatus : 2;
+    uint32_t mBBRFunctionStatusIsActive : 1;
+    uint32_t mBBRFunctionStatusIsPrimary : 1;
     uint32_t mThreadRole : 2;
     uint32_t mEpskcSupported : 1;
 } StateBitmap;
@@ -341,7 +339,7 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     aTxtEntries[i].mValueLength = strlen(otThreadGetDomainName(aInstance));
     i++;
 
-    if ((bitmap.mBBRFunctionStatus & BBR_FUNCTION_STATUS_ACTIVE_MASK))
+    if (bitmap.mBBRFunctionStatusIsActive)
     {
         otBackboneRouterConfig config;
         otBackboneRouterGetConfig(aInstance, &config);
@@ -418,15 +416,15 @@ static StateBitmap GetStateBitmap(otInstance *aInstance)
         bitmap.mThreadRole            = kThreadRoleDetached;
         break;
     case OT_DEVICE_ROLE_CHILD:
-        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadInterfaceStatus = kIfActive;
         bitmap.mThreadRole            = kThreadRoleEndDevice;
         break;
     case OT_DEVICE_ROLE_ROUTER:
-        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadInterfaceStatus = kIfActive;
         bitmap.mThreadRole            = kThreadRoleRouter;
         break;
     case OT_DEVICE_ROLE_LEADER:
-        bitmap.mThreadInterfaceStatus = kIfInitialized;
+        bitmap.mThreadInterfaceStatus = kIfActive;
         bitmap.mThreadRole            = kThreadRoleLeader;
         break;
 
@@ -437,8 +435,8 @@ static StateBitmap GetStateBitmap(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (bitmap.mThreadInterfaceStatus == kIfActive)
     {
-        bitmap.mBBRFunctionStatus = ((otBackboneRouterGetState(aInstance) != OT_BACKBONE_ROUTER_STATE_DISABLED << 1) |
-                                     (otBackboneRouterGetState(aInstance) == OT_BACKBONE_ROUTER_STATE_PRIMARY));
+        bitmap.mBBRFunctionStatusIsActive  = otBackboneRouterGetState(aInstance) != OT_BACKBONE_ROUTER_STATE_DISABLED;
+        bitmap.mBBRFunctionStatusIsPrimary = otBackboneRouterGetState(aInstance) == OT_BACKBONE_ROUTER_STATE_PRIMARY;
     }
 #endif
 
@@ -456,7 +454,8 @@ static uint32_t BitmapToUint32(StateBitmap aBitMap)
     bitmap |= aBitMap.mConnectionMode << 0;
     bitmap |= aBitMap.mThreadInterfaceStatus << 3;
     bitmap |= aBitMap.mAvailability << 5;
-    bitmap |= aBitMap.mBBRFunctionStatus << 7;
+    bitmap |= aBitMap.mBBRFunctionStatusIsActive << 7;
+    bitmap |= aBitMap.mBBRFunctionStatusIsPrimary << 8;
     bitmap |= aBitMap.mThreadRole << 9;
     bitmap |= aBitMap.mEpskcSupported << 11;
 
