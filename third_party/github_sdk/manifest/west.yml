@@ -35,10 +35,10 @@
 manifest:
   projects:
   - name: sdk-release
-    url: ssh://git@bitbucket.sw.nxp.com/mcucore/mcu-sdk-github-release.git
-    revision: release/2.16.100_minor_rfp
+    url: https://github.com/nxp-mcuxpresso/mcux-sdk.git
+    revision: MCUX_2.16.100
+    path: core
     import:
-      file: west.yml
       name-allowlist:
         - mcux-sdk
         - FreeRTOS-Kernel
@@ -48,7 +48,6 @@ manifest:
         - wpa_supplicant-rtos
         - littlefs
         - lwip
-        - wifi_nxp
         - mcux-secure-subsystem
         - mcux-sdk-middleware-connectivity-framework
         - mcux-sdk-middleware-bluetooth-controller
@@ -59,3 +58,7 @@ manifest:
         - mcux-sdk-middleware-usb
         - rpmsg-lite
         - mcux-sdk-examples
+  - name: wifi_nxp
+    url: https://github.com/NXP/wifi_nxp.git
+    revision: MCUX_2.16.100_QP1
+    path: middleware/wifi_nxp
