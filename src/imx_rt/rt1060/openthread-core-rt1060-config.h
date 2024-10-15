@@ -314,6 +314,17 @@
 #define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 30
 #endif
 
+/* Thread 1.4 configuration flags */
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+ *
+ * Enables support for sending DNS Queries over TCP.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE 1
+#endif
+
 /**
  * @def PACKAGE
  *

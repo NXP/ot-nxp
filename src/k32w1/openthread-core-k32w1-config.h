@@ -434,4 +434,15 @@
 #define OPENTHREAD_CONFIG_ECDSA_ENABLE 1
 #endif
 #endif // NO_THREAD_1_3_FLAGS
+
+/* Thread 1.4 configuration flags */
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+ *
+ * Enables support for sending DNS Queries over TCP.
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE 1
+#endif
 #endif // OPENTHREAD_CORE_K32W1_CONFIG_H_
