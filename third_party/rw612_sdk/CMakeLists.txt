@@ -179,6 +179,7 @@ set(RW612_SDK_SOURCES
     ${NXP_SDK_ROOT}/components/conn_fwloader/fsl_loader_utils.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/life_cycle.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/nboot_hal.c
+    ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/rw61x/rw61x_cpu1.c
     ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/rw61x/rw61x_cpu2.c
 )
 
@@ -673,7 +674,7 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     -DgPlatformMonolithicApp_d=1
     -DCONFIG_SOC_SERIES_RW6XX_REVISION_A2=1
     -DCONFIG_MONOLITHIC_BLE_15_4=1
-    -DWIFI_FW_ADDRESS=0
+    -DCONFIG_MONOLITHIC_WIFI=1
     -DBLE_FW_ADDRESS=0
     -DRW610
     -DWIFI_BT_TX_PWR_LIMITS="wlan_txpwrlimit_cfg_WW_rw610.h"
