@@ -168,6 +168,35 @@ set(MCXW72_SDK_SOURCES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_ecdh.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/port/kw45_k4w1/sss_sha256.c
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_genfsk.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/BasicMathFunctions/BasicMathFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/BasicMathFunctions/BasicMathFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/BayesFunctions/BayesFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/BayesFunctions/BayesFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/CommonTables/CommonTables.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/CommonTables/CommonTablesF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/ComplexMathFunctions/ComplexMathFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/ComplexMathFunctions/ComplexMathFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/ControllerFunctions/ControllerFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/DistanceFunctions/DistanceFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/DistanceFunctions/DistanceFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/FastMathFunctions/FastMathFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/FastMathFunctions/FastMathFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/FilteringFunctions/FilteringFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/FilteringFunctions/FilteringFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/InterpolationFunctions/InterpolationFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/InterpolationFunctions/InterpolationFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/MatrixFunctions/MatrixFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/MatrixFunctions/MatrixFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/QuaternionMathFunctions/QuaternionMathFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/SVMFunctions/SVMFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/SVMFunctions/SVMFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/StatisticsFunctions/StatisticsFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/StatisticsFunctions/StatisticsFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/SupportFunctions/SupportFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/SupportFunctions/SupportFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/TransformFunctions/TransformFunctions.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/TransformFunctions/TransformFunctionsF16.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Source/WindowFunctions/WindowFunctions.c
 )
 
 if (FPGA_BUILD)
@@ -354,6 +383,9 @@ set(MCXW72_SDK_INCLUDES
     ${PROJECT_SOURCE_DIR}/third_party/mcxw72_sdk
     $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C
     $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/Core/Include
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Include
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Include/dsp
+    $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/PrivateInclude
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/mbedtls/port/sssapi
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/inc
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/secure-subsystem/inc/elemu

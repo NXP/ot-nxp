@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022-2024, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_RCP_BLE_HCI_BB)
-    add_subdirectory(ot_rcp_ble_hci_bb)
-endif()
-
-if(OT_APP_FTD_ZB_ED_RX_OFF)
-    add_subdirectory(ot_cli_ftd_zb_ed_rx_off)
-endif()
-
-if(OT_APP_RCP_UART_FC_ZB_ED_RX_OFF)
-    add_subdirectory(ot_rcp_uart_fc_zb_ed_rx_off)
-endif()
-
-if(OT_APP_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF)
-    add_subdirectory(ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off)
-endif()
-
-if(OT_APP_FTD_ZC)
-    add_subdirectory(ot_cli_ftd_zc)
-endif()
-
-if(OT_APP_RCP_UART_DMA_ZB_COPROCESSOR)
-    add_subdirectory(ot_rcp_uart_dma_zb_coprocessor)
-endif()
-
-if(OT_APP_FTD_BLE_SHELL)
-    add_subdirectory(ot_cli_ftd_ble_shell)
-endif()
-
-if(OT_APP_FTD_BLE_LOC_READER)
-    add_subdirectory(ot_cli_ftd_ble_loc_reader)
-endif()
+add_subdirectory(${OT_NXP_PLATFORM})

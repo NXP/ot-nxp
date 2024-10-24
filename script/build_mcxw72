@@ -119,6 +119,19 @@ readonly OT_OPTIONS_CLI_FTD_BLE_SHELL=(
     "-DOT_APP_LOWPOWER=OFF"
 )
 
+readonly OT_OPTIONS_CLI_FTD_BLE_LOC_READER=(
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_FTD=ON"
+    "-DOT_MTD=OFF"
+    "-DOT_BLE_SUPPORT=ON"
+    "-DOT_APP_FTD_BLE_LOC_READER=ON"
+    "-DOT_PING_SENDER=ON"
+    "-DOT_APP_LOWPOWER=OFF"
+)
+
 build()
 {
     local cmakeArgs=("${@}")
@@ -240,6 +253,22 @@ build_ot_cli_ftd_ble_shell()
     fi
 }
 
+build_ot_cli_ftd_ble_loc_reader()
+{
+    echo "Building dual mode app OT CLI FTD + BLE_loc_reader ..."
+    app_folder_name="ot_cli_ftd_ble_loc_reader"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_CLI_FTD_BLE_LOC_READER[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
@@ -262,8 +291,10 @@ create_directory_and_build()
         build_ot_rcp_uart_dma_zb_coprocessor "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
         build_ot_cli_ftd_ble_shell "$@"
+    elif [ "$1" == 'ot_cli_ftd_ble_loc_reader' ]; then
+        build_ot_cli_ftd_ble_loc_reader "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_ble_shell"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_ble_shell, ot_cli_ftd_ble_loc_reader"
         # 128 for Invalid arguments
         exit 128
     fi
