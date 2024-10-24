@@ -55,7 +55,6 @@ add_executable(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
     ${BLE_COMMON_DIR}/ble_init.c
 
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/boards/kw47_mcxw72x/app_services_init.c
-    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/gatt_database_dynamic.c
 )
 
 # Temporary fix for MCXW72 EAR1 SDK

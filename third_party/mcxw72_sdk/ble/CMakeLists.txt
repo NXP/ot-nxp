@@ -30,43 +30,53 @@
 set(SDK_CRYPTO_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/lib_crypto_m33.a" CACHE STRING "")
 set(SDK_BLE_HOST_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_ble_OPT_host_cm33_gcc.a" CACHE STRING "")
 
-
 list(APPEND BLE_LIB_SOURCES
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ble.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ble.c
 
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/gatt_database.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_conn_manager.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_host_tasks.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_service_discovery.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/src/controller_api.c
 
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/hci_transport/source/hcit_generic_adapter_interface.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/hci_transport/source/hcit_generic_adapter_interface.c
 
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/config/ble_globals.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/config/ble_globals.c
 
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_generic_list.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_messaging.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_os_abs.c
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_timer_manager.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_generic_list.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_messaging.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_os_abs.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port/fwk_timer_manager.c
 
-        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/src/controller_api.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/gatt_database.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/gatt_database_dynamic.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_conn_manager.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_host_tasks.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_service_discovery.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/ble_init.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_advertiser.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_conn.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_connection.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_nvm.c
+    $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/app_scanner.c
 )
 
 add_library(nxp-mcxw72-ble
-        ${BLE_LIB_SOURCES}
+    ${BLE_LIB_SOURCES}
 )
 
 target_include_directories(nxp-mcxw72-ble
     PUBLIC
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/ModuleInfo
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/DBG
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/ModuleInfo
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/DBG
 
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/interface
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/config
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/macros
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/hci_transport/interface
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/application/common/gatt_db/macros
 
-            $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/interface
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/interface
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/config
+
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/port
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/hci_transport/interface
+
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/interface
 )
 
 target_link_libraries(nxp-mcxw72-ble PUBLIC ${NXP_DRIVER_LIB})
