@@ -217,30 +217,30 @@ if (USE_NBU)
     endif()
 
 else()
-     list(APPEND MCXW72_SDK_SOURCES
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/dbg_ram_capture.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/mathfp.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/rfmc_ctrl.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/nxp2p4_xcvr.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/nxp_xcvr_trim.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_coding_config.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_common_config.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_mode_config.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_msk_config.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_oqpsk_802p15p4_config.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/gcc/startup_MCXW727C_cm33_core0.S
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPacket.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/ASP.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/MPM.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyISR.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPacketProcessor.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPlmeData.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyStateMachine.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhySec.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/K32W148/PhyPlatform.c
-       $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_genfsk.c
-       )
+    list(APPEND MCXW72_SDK_SOURCES
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/dbg_ram_capture.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/mathfp.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/rfmc_ctrl.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/nxp2p4_xcvr.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/nxp_xcvr_trim.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_coding_config.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_common_config.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_mode_config.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_msk_config.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/XCVR/drv/nb2p4ghz/configs/gen47/nxp_xcvr_oqpsk_802p15p4_config.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/gcc/startup_MCXW727C_cm33_core0.S
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPacket.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/ASP.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/MPM.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyISR.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPacketProcessor.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyPlmeData.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyStateMachine.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhySec.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/K32W148/PhyPlatform.c
+        $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_genfsk.c
+    )
 endif()
 
 if (SDK_RELEASE)
@@ -264,7 +264,7 @@ if (SDK_RELEASE)
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/fsl_trdc.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${UTL_DIR}/fsl_assert.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${UTL_DIR}/format/fsl_format.c
-)
+    )
 else()
     list(APPEND MCXW72_SDK_SOURCES
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/utils/dbg_io.c
@@ -287,7 +287,7 @@ else()
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/trdc/fsl_trdc.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/assert/fsl_assert.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/format/fsl_format.c
-)
+    )
 endif()
 if (SDK_RELEASE)
     list(APPEND MCXW72_SDK_SOURCES
@@ -434,6 +434,7 @@ else()
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/lpspi
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/ccm32k
         $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/trdc
+        $ENV{NXP_MCXW72_SDK_ROOT}/${DRV_DIR}/vbat
         $ENV{NXP_MCXW72_SDK_ROOT}/components/format
 
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/boards/mcxw72evk/wireless_examples
