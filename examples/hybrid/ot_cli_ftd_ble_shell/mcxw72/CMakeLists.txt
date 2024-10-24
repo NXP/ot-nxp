@@ -131,11 +131,11 @@ target_compile_options(ot-config INTERFACE
 
 target_link_libraries(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PUBLIC
     ${SDK_CRYPTO_LIB}
-    ${SDK_BLE_LIB}
+    ${SDK_BLE_HOST_LIB}
     ${NXP_DRIVER_LIB}
     nxp-mcxw72-ble
     ${SDK_CRYPTO_LIB}
-    ${SDK_BLE_LIB}
+    ${SDK_BLE_HOST_LIB}
     openthread-cli-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd

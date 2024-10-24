@@ -28,7 +28,7 @@
 
 
 set(SDK_CRYPTO_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/lib_crypto_m33.a" CACHE STRING "")
-set(SDK_BLE_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_ble_host_cm33_gcc.a" CACHE STRING "")
+set(SDK_BLE_HOST_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_ble_OPT_host_cm33_gcc.a" CACHE STRING "")
 
 
 list(APPEND BLE_LIB_SOURCES
