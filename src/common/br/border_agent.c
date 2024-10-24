@@ -206,6 +206,23 @@ otError BorderAgentEnableEpskcService(uint32_t aTimeout)
 
     return OT_ERROR_NONE;
 }
+
+// Defining functions below as weak allows applications to implement their specific behaviour, i.e., custom
+// messages/used print function.
+void __attribute__((weak)) PrintEphemeralKey(const char *aEphemeralKey, uint32_t aTimeout)
+{
+    otCliOutputFormat("\r\n Use this passcode to enable an additional device to administer "
+                      "and manage your Thread network, including adding new devices to it. This passcode is "
+                      "not required for an app to communicate with existing "
+                      "devices on your Thread network.");
+    otCliOutputFormat("\r\n\nePSKc : %s", aEphemeralKey);
+    otCliOutputFormat("\r\n\nValid for %lu seconds.\r\n%s", aTimeout, "> ");
+}
+
+void __attribute__((weak)) PrintEphemeralKeyExpiredMessage(void)
+{
+    otCliOutputFormat("\r\nEphemeral Key disabled, PSKc is now in use.\r\n%s", "> ");
+}
 #endif
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
@@ -543,21 +560,16 @@ static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
     if (sEpskcActive)
     {
         {
-            otCliOutputFormat("\r\n Use this passcode to enable an additional device to administer "
-                              "and manage your Thread network, including adding new devices to it. This passcode is "
-                              "not required for an app to communicate with existing "
-                              "devices on your Thread network.");
             char formattedEpskc[12];
             snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey, sEphemeralKey + 3,
                      sEphemeralKey + 6);
-            otCliOutputFormat("\r\n\nePSKc : %s", formattedEpskc);
-            otCliOutputFormat("\r\n\nValid for %lu seconds.\r\n%s", (uint32_t)(sEphemeralKeyTimeout / 1000UL), "> ");
+            PrintEphemeralKey(formattedEpskc, (uint32_t)(sEphemeralKeyTimeout / 1000UL));
         }
     }
     else
     {
         UnpublishEpskcService();
-        otCliOutputFormat("\r\nEphemeral Key disabled, PSKc is now in use.\r\n%s", "> ");
+        PrintEphemeralKeyExpiredMessage();
     }
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
