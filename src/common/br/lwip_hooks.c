@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include <common/code_utils.hpp>
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/dataset.h>
 #include <openthread/ip6.h>
@@ -42,8 +43,10 @@
 #include "lwip/stats.h"
 
 static otInstance   *sInstance = NULL;
-static struct netif *ifInfra   = NULL;
-static struct netif *ifThread  = NULL;
+static struct netif *sInfraIf  = NULL;
+static struct netif *sThreadIf = NULL;
+
+static bool sLwipHooksInit = false;
 
 /**
  * @brief Checks if lwIP address matches given prefix.
@@ -86,21 +89,21 @@ static int forwardMulticast(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, s
         return 0;
 
     /* Packet coming from the infra network - forward it to the Thread netif */
-    if (netif == ifInfra)
+    if (netif == sInfraIf)
     {
         /* Forward only packets coming from groups that are listened to */
         if (lwipMcastFilterHas(dest))
         {
             if (IP6H_HOPLIM(hdr)-- > 1)
             {
-                ifThread->output_ip6(ifThread, p, dest);
+                sThreadIf->output_ip6(sThreadIf, p, dest);
             }
         }
 
         return 0;
     }
     /* Packet coming from the Thread netif - forward it to the infra network */
-    else if (netif == ifThread)
+    else if (netif == sThreadIf)
     {
         // A secondary BBR SHOULD NOT forward a multicast packet onto an External Interface except when:
         // 1) The secondary BBR is explicitly configured to forward (method outside the scope of Thread spec)
@@ -115,7 +118,7 @@ static int forwardMulticast(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, s
 
         if (IP6H_HOPLIM(hdr)-- > 1)
         {
-            ifInfra->output_ip6(ifInfra, p, dest);
+            sInfraIf->output_ip6(sInfraIf, p, dest);
         }
         return 0;
     }
@@ -133,7 +136,7 @@ static int isLegalToForward(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, s
     otBorderRouterConfig     config;
     const otMeshLocalPrefix *meshLocalPrefix;
 
-    if (netif == ifThread)
+    if (netif == sThreadIf)
     {
         while (otNetDataGetNextOnMeshPrefix(sInstance, &iterator, &config) == OT_ERROR_NONE)
         {
@@ -169,14 +172,21 @@ static int isLegalToForward(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, s
 void lwipHooksInit(otInstance *aInstance, struct netif *infra, struct netif *thread)
 {
     assert(aInstance != NULL && infra != NULL && thread != NULL);
+    VerifyOrExit(!sLwipHooksInit);
 
     sInstance = aInstance;
-    ifInfra   = infra;
-    ifThread  = thread;
+    sInfraIf  = infra;
+    sThreadIf = thread;
+
+    sLwipHooksInit = true;
+exit:
+    return;
 }
 
 int lwipCanForwardHook(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, struct netif *netif)
 {
+    VerifyOrExit(sLwipHooksInit);
+
     if (forwardMulticast(src, dest, p, netif) == 0)
         return 0;
 
@@ -184,6 +194,12 @@ int lwipCanForwardHook(ip6_addr_t *src, ip6_addr_t *dest, struct pbuf *p, struct
         return 0;
 
     return 1;
+
+exit:
+    // return code 0 means packet consumed or not suitable for forwarding.
+    // having lwip hooks module uninitialized -> return 0.
+    // in this way we can ensure sInstance or sInfraIf variables will not be used uninitialized.
+    return 0;
 }
 
 int lwipInputHook(struct pbuf *pbuf, struct netif *input_netif)
@@ -193,10 +209,10 @@ int lwipInputHook(struct pbuf *pbuf, struct netif *input_netif)
     struct ip6_hdr       *ip6hdr;
     ip_addr_t             src;
 
-    if ((ifThread == NULL) || (ifInfra == NULL))
+    if ((sThreadIf == NULL) || (sInfraIf == NULL))
         return 0;
 
-    if (input_netif != ifThread)
+    if (input_netif != sThreadIf)
     {
         ip6hdr = (struct ip6_hdr *)pbuf->payload;
 
