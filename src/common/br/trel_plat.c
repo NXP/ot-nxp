@@ -391,6 +391,7 @@ static void HandleIp6AddressResolver(otInstance *aInstance, const otMdnsAddressR
     struct Peer       *element         = findPeerByHostName(aResult->mHostName);
     otIp6Address       selectedAddress = {.mFields = 0};
     otPlatTrelPeerInfo peer;
+
     if (element)
     {
         otMdnsStopIp6AddressResolver(sInstance, &element->mAddrResolver);
@@ -399,7 +400,7 @@ static void HandleIp6AddressResolver(otInstance *aInstance, const otMdnsAddressR
         {
             if (aResult->mAddresses[i].mTtl &&
                 (otIp6IsAddressUnspecified(&selectedAddress) ||
-                 (memcmp(selectedAddress.mFields.m8, aResult->mAddresses[i].mAddress.mFields.m8, sizeof(otIp6Address)) >
+                 (memcmp(selectedAddress.mFields.m8, aResult->mAddresses[i].mAddress.mFields.m8, sizeof(otIp6Address)) <
                   0)))
             {
                 selectedAddress = aResult->mAddresses[i].mAddress;
