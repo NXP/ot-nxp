@@ -294,6 +294,21 @@ exit:
 }
 #endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
 
+otError otPlatGetInfraIfLinkLayerAddress(otInstance                    *aInstance,
+                                         uint32_t                       aIfIndex,
+                                         otPlatInfraIfLinkLayerAddress *aInfraIfLinkLayerAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    VerifyOrExit(aIfIndex == (uint32_t)sInfraIfIndex);
+    aInfraIfLinkLayerAddress->mLength = sNetifPtr->hwaddr_len;
+    memcpy(aInfraIfLinkLayerAddress->mAddress, sNetifPtr->hwaddr, sNetifPtr->hwaddr_len);
+
+    return OT_ERROR_NONE;
+
+exit:
+    return OT_ERROR_FAILED;
+}
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
