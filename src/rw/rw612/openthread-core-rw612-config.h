@@ -415,16 +415,6 @@
 /* End of Thread 1.3 configuration flags */
 
 /**
- * @def OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
- *
- * Define to 1 to enable multiple instance support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-#define OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE 1
-#endif /* OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE */
-
-/**
  * @def OPENTHREAD_CONFIG_NCP_SPI_ENABLE
  *
  * Define to 1 to enable NCP SPI support.
