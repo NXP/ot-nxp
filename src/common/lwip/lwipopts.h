@@ -59,7 +59,7 @@
 
 #define MAX_SOCKETS_TCP 8
 #define MAX_LISTENING_SOCKETS_TCP 4
-#define MAX_SOCKETS_UDP 12
+#define MAX_SOCKETS_UDP 20
 #define TCP_SND_BUF_COUNT 2
 #define TCPIP_STACK_TX_HEAP_SIZE 0
 #define LWIP_COMPAT_SOCKETS 2
@@ -415,8 +415,9 @@
 #define LWIP_DNS 1
 #define DNS_TABLE_SIZE 2       // number of table entries, default 4
 #define DNS_MAX_NAME_LENGTH 64 // max. name length, default 256
-#define DNS_MAX_SERVERS 2      // number of DNS servers, default 2
-#define DNS_DOES_NAME_CHECK 1  // compare received name with given,def 0
+#define DNS_MAX_SERVERS 4      // number of DNS servers, default 2, increased to 4
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS 2
+#define DNS_DOES_NAME_CHECK 1 // compare received name with given,def 0
 #define DNS_MSG_SIZE 512
 #define MDNS_MSG_SIZE 512
 
