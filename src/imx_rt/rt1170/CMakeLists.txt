@@ -108,6 +108,7 @@ if(OT_APP_BR_FREERTOS)
         ${PROJECT_SOURCE_DIR}/src/common/br/mdns_socket.c
         ${PROJECT_SOURCE_DIR}/src/common/br/utils.c
         ${PROJECT_SOURCE_DIR}/src/common/br/trel_plat.c
+        ${PROJECT_SOURCE_DIR}/src/common/br/dns_upstream_resolver.c
     )
 
     set(OT_BR_INCLUDES
