@@ -38,6 +38,7 @@
 
 #include "br_rtos_manager.h"
 #include "border_agent.h"
+#include "dns_upstream_resolver.h"
 #include "infra_if.h"
 #include "mdns_socket.h"
 #include "trel_plat.h"
@@ -50,6 +51,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/border_router.h>
+#include <openthread/dnssd_server.h>
 #include <openthread/mdns.h>
 #include <openthread/nat64.h>
 #include <openthread/srp_server.h>
@@ -125,6 +127,10 @@ void BrInitServices()
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         otNat64SetEnabled(aInstance, true);
+#endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+        otDnssdUpstreamQuerySetEnabled(sInstance, true);
+        DnsResolverInit(sInstance, sExtNetif);
 #endif
     }
 }
