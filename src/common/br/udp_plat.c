@@ -98,6 +98,7 @@ static void         recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, con
 static uint8_t      getInterfaceIndex(otNetifIdentifier identifier);
 static struct pbuf *convertToLwipMsg(otMessage *otIpPkt, bool bTransport);
 static void         lwipTaskCb(void *context);
+static ip_addr_t    convertOpenthreadToLwipAddress(const otIp6Address *aAddress);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
@@ -151,10 +152,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     otError         error = OT_ERROR_NONE;
     struct udp_pcb *pcb   = (struct udp_pcb *)aUdpSocket->mHandle;
     uint16_t        port  = aUdpSocket->mSockName.mPort;
-    ip_addr_t       addr;
-
-    memcpy(ip_2_ip6(&addr)->addr, aUdpSocket->mSockName.mAddress.mFields.m8, sizeof(ip_2_ip6(&addr)->addr));
-    addr.type = IPADDR_TYPE_ANY;
+    ip_addr_t       addr  = convertOpenthreadToLwipAddress(&aUdpSocket->mSockName.mAddress);
 
     VerifyOrExit(ERR_OK == udp_bind(pcb, &addr, port), error = OT_ERROR_FAILED);
 
@@ -198,8 +196,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
     // valid UDP packets because the source port/address doesn't match 0.
     if ((port != 0) && !otIp6IsAddressUnspecified(&aUdpSocket->mPeerName.mAddress))
     {
-        memcpy(ip_2_ip6(&addr)->addr, aUdpSocket->mPeerName.mAddress.mFields.m8, sizeof(ip_2_ip6(&addr)->addr));
-        addr.type            = IPADDR_TYPE_V6;
+        convertOpenthreadToLwipAddress(&aUdpSocket->mSockName.mAddress);
         addr.u_addr.ip6.zone = IP6_NO_ZONE;
 
         if (pcb->netif_idx == NETIF_NO_INDEX)
@@ -265,12 +262,8 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     isMulticastLoop            = aMessageInfo->mMulticastLoop;
     hop_limit                  = aMessageInfo->mHopLimit ? aMessageInfo->mHopLimit : UDP_TTL;
 
-    memcpy(ip_2_ip6(&src_addr)->addr, aMessageInfo->mSockAddr.mFields.m8, sizeof(ip_2_ip6(&src_addr)->addr));
-    memcpy(ip_2_ip6(&udpSendContexPtr->peer_addr)->addr, aMessageInfo->mPeerAddr.mFields.m8,
-           sizeof(ip_2_ip6(&udpSendContexPtr->peer_addr)->addr));
-
-    src_addr.type                    = IPADDR_TYPE_V6;
-    udpSendContexPtr->peer_addr.type = IPADDR_TYPE_V6;
+    src_addr                    = convertOpenthreadToLwipAddress(&aMessageInfo->mSockAddr);
+    udpSendContexPtr->peer_addr = convertOpenthreadToLwipAddress(&aMessageInfo->mPeerAddr);
 
     udpSendContexPtr->pcb->ttl = hop_limit;
     udpSendContexPtr->pcb->flags &= ~(UDP_FLAGS_MULTICAST_LOOP);
@@ -288,13 +281,23 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     }
 
     // The LWIP address needs to be intilialized correctly with a zone
-    if (ip_addr_ismulticast(&udpSendContexPtr->peer_addr))
+    if (IP_IS_V6_VAL(udpSendContexPtr->peer_addr))
     {
-        ip6_addr_assign_zone(ip_2_ip6(&udpSendContexPtr->peer_addr), IP6_MULTICAST, netif_get_by_index(netif_idx));
+        if (ip_addr_ismulticast(&udpSendContexPtr->peer_addr))
+        {
+            ip6_addr_assign_zone(ip_2_ip6(&udpSendContexPtr->peer_addr), IP6_MULTICAST, netif_get_by_index(netif_idx));
+        }
+        else
+        {
+            ip6_addr_assign_zone(ip_2_ip6(&udpSendContexPtr->peer_addr), IP6_UNICAST, netif_get_by_index(netif_idx));
+        }
     }
     else
     {
-        ip6_addr_assign_zone(ip_2_ip6(&udpSendContexPtr->peer_addr), IP6_UNICAST, netif_get_by_index(netif_idx));
+        if (ip_addr_isany(&udpSendContexPtr->pcb->local_ip))
+        {
+            udpSendContexPtr->pcb->local_ip.type = IPADDR_TYPE_ANY;
+        }
     }
 
     if (ERR_OK != tcpip_callback(lwipTaskCb, (void *)udpSendContexPtr))
@@ -341,6 +344,28 @@ exit:
     return error;
 }
 
+void otPlatUdpProcess()
+{
+    if (sInstance)
+    {
+        struct udpReceiveContext *udpReceiveContextPtr;
+        do
+        {
+            (void)OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
+            udpReceiveContextPtr = (struct udpReceiveContext *)LIST_RemoveHead(&sMsgList);
+            (void)OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
+
+            if (udpReceiveContextPtr != NULL)
+            {
+                udpReceiveContextPtr->socket->mHandler(udpReceiveContextPtr->socket->mContext,
+                                                       udpReceiveContextPtr->message,
+                                                       &udpReceiveContextPtr->message_info);
+                otPlatFree(udpReceiveContextPtr);
+            }
+        } while (udpReceiveContextPtr);
+    }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
@@ -348,32 +373,64 @@ exit:
 static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     (void)pcb;
-    otError           error       = OT_ERROR_NONE;
-    otMessageSettings msgSettings = {.mLinkSecurityEnabled = false, .mPriority = OT_MESSAGE_PRIORITY_NORMAL};
+    otError error = OT_ERROR_NONE;
 
     struct udpReceiveContext *udpReceiveContextPtr =
         (struct udpReceiveContext *)otPlatCAlloc(1, sizeof(struct udpReceiveContext));
     VerifyOrExit(NULL != udpReceiveContextPtr);
 
-    const struct ip6_hdr *ip6_header   = ip6_current_header();
-    struct netif         *source_netif = ip_current_netif();
-    uint8_t              *data_ptr     = (uint8_t *)p->payload;
+    const struct ip6_hdr *ip6_header = ip6_current_header();
+#if LWIP_IPV4
+    const struct ip_hdr *ip4_header = ip4_current_header();
+#endif
+    struct netif *source_netif = ip_current_netif();
+    uint8_t      *data_ptr     = (uint8_t *)p->payload;
 
     udpReceiveContextPtr->socket                 = (otUdpSocket *)arg;
     udpReceiveContextPtr->message_info.mSockPort = 0;
-    // message_info.mPeerAddr is populated with the remote IPv6 address from which the packet was received.
-    memcpy(&udpReceiveContextPtr->message_info.mPeerAddr, ip_2_ip6(addr)->addr,
-           sizeof(udpReceiveContextPtr->message_info.mPeerAddr));
-    // message_info.mSockAddr is populated with the destination IPv6 address to which the packet is sent.
-    memcpy(&udpReceiveContextPtr->message_info.mSockAddr, ip6_current_dest_addr(),
-           sizeof(udpReceiveContextPtr->message_info.mSockAddr));
+    if (IP_IS_V6_VAL(*addr))
+    {
+        // message_info.mPeerAddr is populated with the remote IPv6 address from which the packet was received.
+        memcpy(&udpReceiveContextPtr->message_info.mPeerAddr, ip_2_ip6(addr)->addr,
+               sizeof(udpReceiveContextPtr->message_info.mPeerAddr));
+        // message_info.mSockAddr is populated with the destination IPv6 address to which the packet is sent.
+        memcpy(&udpReceiveContextPtr->message_info.mSockAddr, ip6_current_dest_addr(),
+               sizeof(udpReceiveContextPtr->message_info.mSockAddr));
+    }
+    else
+    {
+        ip_addr_t *tmpAddr = (ip_addr_t *)addr;
+        ip4_2_ipv4_mapped_ipv6(ip_2_ip6(tmpAddr), ip_2_ip4(tmpAddr));
+        // message_info.mPeerAddr is populated with the remote IPV4 mapped to IPv6 address from which the packet was
+        // received.
+        memcpy(&udpReceiveContextPtr->message_info.mPeerAddr, ip_2_ip6(tmpAddr)->addr,
+               sizeof(udpReceiveContextPtr->message_info.mPeerAddr));
+
+        // message_info.mSockAddr is populated with the destination IPV4 mapped to IPv6 address to which the packet is
+        // sent.
+        ip_addr_t *destAddr = ip_current_dest_addr();
+        ip4_2_ipv4_mapped_ipv6(ip_2_ip6(destAddr), ip_2_ip4(destAddr));
+        memcpy(&udpReceiveContextPtr->message_info.mSockAddr, ip_2_ip6(destAddr)->addr,
+               sizeof(udpReceiveContextPtr->message_info.mSockAddr));
+    }
     // message_info.mPeerPort is populated with the remote port from which the packet was received.
     udpReceiveContextPtr->message_info.mPeerPort = port;
+#if LWIP_IPV4
+    if (IP_IS_V4_VAL(*addr))
+    {
+        udpReceiveContextPtr->message_info.mHopLimit = IPH_TTL(ip4_header);
+    }
+    else
+    {
+        udpReceiveContextPtr->message_info.mHopLimit = IP6H_HOPLIM(ip6_header);
+    }
+#else
     udpReceiveContextPtr->message_info.mHopLimit = IP6H_HOPLIM(ip6_header);
+#endif
 
     udpReceiveContextPtr->message_info.mIsHostInterface = (netif_get_index(source_netif) == sBackboneNetifIdx);
 
-    udpReceiveContextPtr->message = otUdpNewMessage(sInstance, &msgSettings);
+    udpReceiveContextPtr->message = otUdpNewMessage(sInstance, NULL);
 
     VerifyOrExit(udpReceiveContextPtr->message != NULL, otPlatFree(udpReceiveContextPtr));
     VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) == OT_ERROR_NONE,
@@ -454,24 +511,24 @@ static void lwipTaskCb(void *context)
     otPlatFree(context);
 }
 
-void otPlatUdpProcess()
+static ip_addr_t convertOpenthreadToLwipAddress(const otIp6Address *aAddress)
 {
-    if (sInstance)
-    {
-        struct udpReceiveContext *udpReceiveContextPtr;
-        do
-        {
-            (void)OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
-            udpReceiveContextPtr = (struct udpReceiveContext *)LIST_RemoveHead(&sMsgList);
-            (void)OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
+    ip_addr_t retAddr;
+    retAddr.type = IPADDR_TYPE_V6;
 
-            if (udpReceiveContextPtr != NULL)
-            {
-                udpReceiveContextPtr->socket->mHandler(udpReceiveContextPtr->socket->mContext,
-                                                       udpReceiveContextPtr->message,
-                                                       &udpReceiveContextPtr->message_info);
-                otPlatFree(udpReceiveContextPtr);
-            }
-        } while (udpReceiveContextPtr);
+    memcpy(ip_2_ip6(&retAddr)->addr, aAddress->mFields.m8, sizeof(ip_2_ip6(&retAddr)->addr));
+
+#if LWIP_IPV4
+    if (ip6_addr_isipv4mappedipv6(ip_2_ip6(&retAddr)))
+    {
+        unmap_ipv4_mapped_ipv6(ip_2_ip4(&retAddr), ip_2_ip6(&retAddr));
+        retAddr.type = IPADDR_TYPE_V4;
     }
+    else
+    {
+        retAddr.type = IPADDR_TYPE_V6;
+    }
+#endif
+
+    return retAddr;
 }
