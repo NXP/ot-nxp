@@ -97,6 +97,7 @@ if(OT_NXP_BUILD_APP_AS_LIB)
         boards/${OT_NXP_PLATFORM}/freertos/br
         src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
         src/common/lwip
+        src/common/lwip_config
         third_party/lwip
         third_party/wifi
     )
@@ -114,6 +115,7 @@ endif()
 if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH)
 mcux_add_macro(
     -DOT_APP_BR_LWIP_HOOKS_EN
+    -DOPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 )
 mcux_add_include(
      BASE_PATH ${OT_NXP_ROOT}
@@ -123,6 +125,7 @@ mcux_add_include(
      src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
      src/common/br
      src/common/lwip
+     src/common/lwip_config
      third_party/lwip
      third_party/wifi
 )
@@ -141,6 +144,7 @@ if(OT_NXP_LWIP_IPERF)
         BASE_PATH ${OT_NXP_ROOT}
         INCLUDES
         src/common/lwip
+        src/common/lwip_config
     )
 endif()
 
