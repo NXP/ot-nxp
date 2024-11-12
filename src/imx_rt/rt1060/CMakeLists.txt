@@ -34,6 +34,7 @@ if(OT_NXP_LWIP)
     )
     set(OT_LWIP_INCLUDES
         ${PROJECT_SOURCE_DIR}/src/common/lwip
+        ${PROJECT_SOURCE_DIR}/src/common/lwip_config
     )
     set(OT_LWIP_LIBS
         nxp-lwip
