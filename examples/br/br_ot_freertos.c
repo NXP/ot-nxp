@@ -96,6 +96,10 @@
 #include "wpl.h"
 #endif
 
+#ifdef OT_PLAT_SYS_WIFI_INIT
+#include "fwk_platform_coex.h"
+#endif
+
 #if OT_APP_BR_LWIP_HOOKS_EN
 #include LWIP_HOOK_FILENAME
 #endif
@@ -365,6 +369,12 @@ static void appConfigWifiIf()
 {
     wpl_ret_t ret;
 
+    PLATFORM_InitTimeStamp();
+
+#ifdef OT_PLAT_SYS_WIFI_INIT
+    PLATFORM_InitControllers((uint8_t)conn802_15_4_c | (uint8_t)connWlan_c);
+#endif
+
     ret = WPL_Init();
     if (ret != WPLRET_SUCCESS)
     {
@@ -457,7 +467,6 @@ static void appBrExternalIpv6InterfaceInit()
     otPlatLwipInit(appOtLockOtTask);
 
 #ifdef OT_APP_BR_WIFI_EN
-    PLATFORM_InitTimeStamp();
     appConfigWifiIf();
 #endif
 
