@@ -534,7 +534,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                 msg->msgData.dataReq.flags |= gPhyUpdHDr;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                if (aFrame->mInfo.mTxInfo.mCslPresent)
+                /* Previously aFrame->mInfo.mTxInfo.mCslPresent was used to determine if the radio code should update
+                   the IE header. This field is no longer set by the OT stack. Until the issue is fixed in OT stack
+                   check if CSL period is > 0 and always update CSL IE in that case. */
+                if (sCslPeriod)
                 {
                     uint32_t hdrTimeUs;
 
