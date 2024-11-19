@@ -50,7 +50,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/platform)
 
 include(utils)
-include(${OT_NXP_PLATFORM} OPTIONAL)
 include(options)
 
 otnxp_git_version(OT_PACKAGE_VERSION)
@@ -60,7 +59,8 @@ message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
-set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
+set(NXP_DRIVER_LIB McuxSDK)
+set(OT_EXTERNAL_MBEDTLS McuxSDK)
 
 #Set default log level if not set
 if (OT_STACK_ENABLE_LOG)
@@ -215,7 +215,25 @@ else()
 endif()
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
 
-add_subdirectory(third_party)
+set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common)
+set(SDK_INCLUDE_DIRS "")
+set(SDK_COMPILE_DEFINITIONS "")
+set(SDK_COMPILE_OPTIONS "")
+
+add_subdirectory(third_party/common sdk)
+
+target_include_directories(ot-config INTERFACE
+    ${SDK_INCLUDE_DIRS}
+)
+
+target_compile_definitions(ot-config INTERFACE
+    ${SDK_COMPILE_DEFINITIONS}
+)
+
+target_compile_options(ot-config INTERFACE
+    ${SDK_COMPILE_OPTIONS}
+)
+
 add_subdirectory(src)
 add_subdirectory(examples)
 
