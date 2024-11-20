@@ -544,7 +544,7 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                     payload[2] = MFG_CMD_ACTION_SET;
                     payload[4] = (uint8_t)atoi(aArgs[1]);
                     payload[5] = (uint8_t)atoi(aArgs[2]);
-                    if ((payload[4] < 2) && (payload[5] < 4))
+                    if ((payload[4] < 2) && (payload[5] < 5))
                     {
                         otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
                                               &outputLen);
