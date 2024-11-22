@@ -94,10 +94,9 @@
 #include "fwk_platform.h"
 #include "wm_net.h"
 #include "wpl.h"
-#endif
-
-#ifdef OT_PLAT_SYS_WIFI_INIT
+#if defined(OT_NXP_PLATFORM_RT1060) || defined(OT_NXP_PLATFORM_RT1170)
 #include "fwk_platform_coex.h"
+#endif
 #endif
 
 #if OT_APP_BR_LWIP_HOOKS_EN
@@ -371,7 +370,7 @@ static void appConfigWifiIf()
 
     PLATFORM_InitTimeStamp();
 
-#ifdef OT_PLAT_SYS_WIFI_INIT
+#if defined(OT_NXP_PLATFORM_RT1060) || defined(OT_NXP_PLATFORM_RT1170)
     PLATFORM_InitControllers((uint8_t)conn802_15_4_c | (uint8_t)connWlan_c);
 #endif
 
