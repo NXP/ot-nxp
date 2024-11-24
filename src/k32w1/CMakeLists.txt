@@ -50,6 +50,10 @@ if (NOT NO_THREAD_1_3_FLAGS)
     )
 endif()
 
+list(APPEND OT_PLATFORM_DEFINES
+    "USE_NBU=${USE_NBU}"
+)
+
 if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
     # disable CSL receiver for now
     list(APPEND OT_PLATFORM_DEFINES

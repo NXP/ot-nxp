@@ -27,6 +27,10 @@
 #
 
 cmake_minimum_required(VERSION 3.10.2)
+
+include(${SdkRootDirPath}/cmake/extension/logging.cmake)
+include(${SdkRootDirPath}/cmake/toolchain/toolchain.cmake)
+
 project(ot-nxp
     VERSION 0.2.0
     LANGUAGES C CXX ASM
@@ -59,8 +63,8 @@ message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
-set(NXP_DRIVER_LIB McuxSDK)
-set(OT_EXTERNAL_MBEDTLS McuxSDK)
+set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
+set(OT_EXTERNAL_MBEDTLS nxp-${OT_NXP_PLATFORM}-driver CACHE STRING "")
 
 #Set default log level if not set
 if (OT_STACK_ENABLE_LOG)
@@ -220,7 +224,7 @@ set(SDK_INCLUDE_DIRS "")
 set(SDK_COMPILE_DEFINITIONS "")
 set(SDK_COMPILE_OPTIONS "")
 
-add_subdirectory(third_party/common sdk)
+add_subdirectory(third_party/common)
 
 target_include_directories(ot-config INTERFACE
     ${SDK_INCLUDE_DIRS}

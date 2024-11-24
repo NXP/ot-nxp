@@ -37,7 +37,7 @@ BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_k32w1}"
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
     "-DBUILD_TESTING=OFF"
-    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+#    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_EXPORT_TO_SREC=ON"
@@ -134,7 +134,9 @@ build()
     # -DAPPLICATION_BINARY_DIR:PATH="${BUILD_DIR}"
     # -DCONF_FILE=$(pwd)/../third_party/common/prj.conf
     #cmake -GNinja -Dboard=k32w148evk -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
-    west build -d "${BUILD_DIR}" -b k32w148evk . --force -- -DCONF_FILE=$(pwd)/third_party/common/prj.conf -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    # west build -d "${BUILD_DIR}" -b k32w148evk . --force -- -DCONF_FILE=$(pwd)/third_party/common/prj.conf -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    # --log-level=debug
+    west build -d "${BUILD_DIR}" -b k32w148evk . -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
     #cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
@@ -279,24 +281,11 @@ main()
     #    if NXP_K32W1_SDK_ROOT is not defined
     #         We are using a github SDK
 
-    SDK_GH=OFF
+    SDK_GH=ON
+    SDK_RELEASE=OFF
 
     if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
         export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/core"
-    fi
-
-    if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
-        SDK_RELEASE=OFF
-
-        if [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
-            SDK_GH=ON
-        fi
-
-    elif [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_RELEASE=ON
-    else
-        echo "Could not find a valid SDK package!"
-        return
     fi
 
     echo "NXP_K32W1_SDK_ROOT set to " $NXP_K32W1_SDK_ROOT

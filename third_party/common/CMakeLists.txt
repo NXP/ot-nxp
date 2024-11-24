@@ -30,19 +30,19 @@ cmake_minimum_required(VERSION 3.30)
 
 get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
-find_package(McuxSDK 3.0.0)
+# find_package(McuxSDK REQUIRED HINTS $ENV{ZEPHYR_BASE})
+include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
-project(sdk-lib LANGUAGES C CXX ASM
+project(nxp-${OT_NXP_PLATFORM}-driver LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
-    CUSTOM_PRJ_CONF_PATH examples/_common/project_segments/wireless/wireless_mcu
 )
+#     CUSTOM_PRJ_CONF_PATH examples/_common/project_segments/wireless/wireless_mcu
+
+include(${SdkRootDirPath}/CMakeLists.txt)
 
 # SDK platform specific configuration
-set(SDK_CONF_FILE ${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/config.cmake)
-if(EXISTS ${SDK_CONF_FILE})
-    include(${SDK_CONF_FILE})
-endif()
+include(${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/config.cmake OPTIONAL)
 
 # ot platform specific configuration
 #include(${OT_NXP_ROOT}/src/platform.cmake)

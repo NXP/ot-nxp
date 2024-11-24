@@ -27,6 +27,7 @@
 #
 
 mcux_add_macro(
+    USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
     SDK_COMPONENT_INTEGRATION=1
     SERIAL_PORT_TYPE_UART=1
@@ -51,12 +52,5 @@ mcux_add_macro(
 )
 
 mcux_add_configuration(
-    CC "-Wno-unknown-pragmas"
-    CC "-Wno-sign-compare"
-    CC "-Wno-unused-function"
-    CC "-Wno-unused-parameter"
-    CC "-Wno-empty-body"
-    CC "-Wno-missing-field-initializers"
-    CC "-Wno-clobbered"
-    CC "-fno-strict-aliasing"
+    CC "-Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing"
 )

@@ -57,23 +57,6 @@ set_target_properties(openthread-k32w1
 )
 
 
-if (USE_NBU)
-    SET (K32W1_LINKER_FILE
-        # TODO: use the stadard linker file -> modify the existing one and submit upstream PR
-        -T${PROJECT_SOURCE_DIR}/src/k32w1/K32W1480_connectivity.ld
-)
-else()
-    SET (K32W1_LINKER_FILE
-        -T$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common/devices/kw45_k32w1/gcc/connectivity.ld
-)
-endif()
-
-if (USE_NBU)
-    SET (NBU_BINARY_IMAGE_PATH
-         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/bin/k32w1
-
-)
-endif()
 
 target_link_libraries(ot-config
     INTERFACE
@@ -85,8 +68,7 @@ target_link_libraries(openthread-k32w1
     PUBLIC
         ${OT_MBEDTLS}
         -L${PROJECT_SOURCE_DIR}/src/k32w1
-        -L${NBU_BINARY_IMAGE_PATH}
-        -L$ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/Common/devices/kw45_k32w1/gcc
+        -L${SdkRootDirPath}/examples/_boards/${board}/wireless_examples/linker/gcc
         ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
