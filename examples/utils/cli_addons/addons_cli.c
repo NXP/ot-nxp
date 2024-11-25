@@ -73,6 +73,8 @@ static const otCliCommand addonsCommands[] = {
 #endif
 #ifdef OT_APP_CLI_PLATFORM_ADDON
     {"radio_nxp", ProcessRadio},
+    {"seteui64", ProcessSetEui64},       //=> Set ieee.802.15.4 MAC Address
+    {"txpwrlimit", ProcessTxPowerLimit}, //=> Set/Get TX power limit for 15.4
 #endif
 #ifdef OT_APP_CLI_DEBUG_ADDON
     {"debug_nxp", ProcessDebug},

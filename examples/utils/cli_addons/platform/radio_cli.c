@@ -143,8 +143,6 @@
 /* -------------------------------------------------------------------------- */
 
 static otError ProcessIRCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[]);
-static otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 static otError ProcessMfgGetInt8(void *aContext, uint8_t cmdId, uint8_t aArgsLength);
 static otError ProcessMfgSetInt8(void   *aContext,
                                  uint8_t cmdId,
@@ -166,8 +164,6 @@ static uint8_t mfgEnable = 0;
 
 static const otCliCommand radioCommands[] = {
     {"ircmd", ProcessIRCmd},              //=> InBand Independent Reset command
-    {"seteui64", ProcessSetEui64},        //=> Set ieee.802.15.4 MAC Address
-    {"txpwrlimit", ProcessTxPowerLimit},  //=> Set/Get TX power limit for 15.4
     {"mfgcmd", ProcessMfgCommands},       //=> Generic VSC for MFG RF commands
     {"ccacfg", ProcessGetSetCcaCfg},      //=> Set/Get CCA configuration for 802.15.4 CCA Before Tx operation
     {"fwversion", ProcessGetFwVersion},   //=> Get firmware version for 15.4
@@ -210,24 +206,7 @@ otError ProcessRadio(void *aContext, uint8_t aArgsLength, char *aArgs[])
     return error;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              Private functions                             */
-/* -------------------------------------------------------------------------- */
-
-static otError ProcessIRCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    OT_UNUSED_VARIABLE(aContext);
-    otError error = OT_ERROR_INVALID_ARGS;
-
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-    otLogInfoPlat("ProcessIRCmd");
-    error = otPlatResetOt();
-
-    return error;
-}
-
-static otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[])
+otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
     otError error = OT_ERROR_INVALID_ARGS;
@@ -287,7 +266,7 @@ static otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[
     return error;
 }
 
-static otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
     otError error        = OT_ERROR_INVALID_ARGS;
@@ -316,6 +295,23 @@ static otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aA
 
         otCliOutputFormat("%d\r\n", txPowerLimit);
     }
+
+    return error;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Private functions                             */
+/* -------------------------------------------------------------------------- */
+
+static otError ProcessIRCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+    otLogInfoPlat("ProcessIRCmd");
+    error = otPlatResetOt();
 
     return error;
 }

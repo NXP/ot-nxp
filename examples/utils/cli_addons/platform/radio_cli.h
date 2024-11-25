@@ -68,5 +68,7 @@
  * @return otError
  */
 otError ProcessRadio(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+otError ProcessSetEui64(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
 #endif /* RADIO_CLI_H_ */
