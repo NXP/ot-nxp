@@ -50,19 +50,22 @@ include(${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/config.cmake OPTIONAL)
 # mbedtls configuration
 # Since each platform mbedtls config file includes the openthread
 # mbedtls config file, add the dependencies here to avoid issues
-# when building the SDK target.
+# when building the SDK target. This also includes the OT project
+# file, which is used internally in the mbedtls config file to select
+# features based on OT flags.
 mcux_add_include(
     BASE_PATH ${OT_NXP_ROOT}
     INCLUDES
     openthread/include
     openthread/src/core
     openthread/third_party/mbedtls
+    src/${OT_NXP_PLATFORM}
     third_party/mbedtls/configs
 )
 
 mcux_add_macro(
     MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"
-    MBEDTLS_USER_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"
+    OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${CORE_CONFIG_FILE}\\\"
 )
 
 # Propagate SDK deps to the parent
