@@ -211,17 +211,25 @@ otError BorderAgentEnableEpskcService(uint32_t aTimeout)
 // messages/used print function.
 void __attribute__((weak)) PrintEphemeralKey(const char *aEphemeralKey, uint32_t aTimeout)
 {
+#if OT_APP_CLI_EPHEMERAL_KEY_ADDON
     otCliOutputFormat("\r\n Use this passcode to enable an additional device to administer "
                       "and manage your Thread network, including adding new devices to it. This passcode is "
                       "not required for an app to communicate with existing "
                       "devices on your Thread network.");
     otCliOutputFormat("\r\n\nePSKc : %s", aEphemeralKey);
     otCliOutputFormat("\r\n\nValid for %lu seconds.\r\n%s", aTimeout, "> ");
+#else
+    ; // do nothing, avoid build failure when ot-cli is not enabled
+#endif
 }
 
 void __attribute__((weak)) PrintEphemeralKeyExpiredMessage(void)
 {
+#if OT_APP_CLI_EPHEMERAL_KEY_ADDON
     otCliOutputFormat("\r\nEphemeral Key disabled, PSKc is now in use.\r\n%s", "> ");
+#else
+    ; // do nothing, avoid build failure when ot-cli is not enabled
+#endif
 }
 #endif
 /* -------------------------------------------------------------------------- */
