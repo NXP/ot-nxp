@@ -122,7 +122,7 @@ build()
 {
     local cmakeArgs=("${@}")
     mkdir -p "${BUILD_DIR}"
-    #cd "${BUILD_DIR}"
+
     if [ ! "$1" = "folder_not_specified" ]; then
         cmakeArgs=("${@:2}")
         rcp_folder_name="$1"
@@ -131,21 +131,13 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    # -DAPPLICATION_BINARY_DIR:PATH="${BUILD_DIR}"
-    # -DCONF_FILE=$(pwd)/../third_party/common/prj.conf
-    #cmake -GNinja -Dboard=k32w148evk -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
-    # west build -d "${BUILD_DIR}" -b k32w148evk . --force -- -DCONF_FILE=$(pwd)/third_party/common/prj.conf -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
-    # --log-level=debug
     west build -d "${BUILD_DIR}" -b k32w148evk . -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
-    #cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
 
     if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
         ninja "${OT_CMAKE_NINJA_TARGET[@]}"
     else
         ninja
     fi
-
-    #cd "${OT_SRCDIR}"
 }
 
 build_ot_rcp_only_uart_flow_control()

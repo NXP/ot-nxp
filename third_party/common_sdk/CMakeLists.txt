@@ -35,8 +35,8 @@ include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 project(nxp-${OT_NXP_PLATFORM}-driver LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY_OBJECT
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
+    CUSTOM_PRJ_CONF_PATH ${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/
 )
-#     CUSTOM_PRJ_CONF_PATH examples/_common/project_segments/wireless/wireless_mcu
 
 include(${SdkRootDirPath}/CMakeLists.txt)
 

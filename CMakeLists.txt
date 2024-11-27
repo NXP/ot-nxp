@@ -219,12 +219,12 @@ else()
 endif()
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
 
-set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common)
+set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common_sdk)
 set(SDK_INCLUDE_DIRS "")
 set(SDK_COMPILE_DEFINITIONS "")
 set(SDK_COMPILE_OPTIONS "")
 
-add_subdirectory(third_party/common)
+add_subdirectory(third_party/common_sdk)
 
 target_include_directories(ot-config INTERFACE
     ${SDK_INCLUDE_DIRS}
