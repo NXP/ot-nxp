@@ -30,11 +30,10 @@ cmake_minimum_required(VERSION 3.30)
 
 get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
-# find_package(McuxSDK REQUIRED HINTS $ENV{ZEPHYR_BASE})
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
 project(nxp-${OT_NXP_PLATFORM}-driver LANGUAGES C CXX ASM
-    PROJECT_TYPE LIBRARY
+    PROJECT_TYPE LIBRARY_OBJECT
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
 )
 #     CUSTOM_PRJ_CONF_PATH examples/_common/project_segments/wireless/wireless_mcu
@@ -43,9 +42,6 @@ include(${SdkRootDirPath}/CMakeLists.txt)
 
 # SDK platform specific configuration
 include(${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/config.cmake OPTIONAL)
-
-# ot platform specific configuration
-#include(${OT_NXP_ROOT}/src/platform.cmake)
 
 # mbedtls configuration
 # Since each platform mbedtls config file includes the openthread

@@ -48,19 +48,13 @@ set(COMM_FLAGS
 add_library(openthread-k32w1
     ${K32W1_SOURCES}
     $<TARGET_OBJECTS:openthread-platform-utils>
+    "$<TARGET_OBJECTS:${NXP_DRIVER_LIB}>"
 )
 
 set_target_properties(openthread-k32w1
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
-)
-
-
-
-target_link_libraries(ot-config
-    INTERFACE
-    ${NXP_DRIVER_LIB}
 )
 
 if (USE_NBU)
@@ -73,7 +67,6 @@ target_link_libraries(openthread-k32w1
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
-        ${NXP_DRIVER_LIB}
         ot-config
 )
 else()
@@ -84,7 +77,6 @@ target_link_libraries(openthread-k32w1
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
-        ${NXP_DRIVER_LIB}
         ot-config
 )
 endif()
