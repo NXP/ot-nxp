@@ -125,6 +125,7 @@ static void         removeAndFreeInternalPeerListEntry(list_element_handle_t aLi
 static otError      createAndAppendPeerListEntry(struct Peer aPeer);
 static struct Peer *findPeerByServiceInstance(const char *aServiceInstanceName);
 static struct Peer *findPeerByHostName(const char *aHostName);
+static struct Peer *findPeerBySockAddr(const otSockAddr *aSockAddr);
 static void         RemoveAllPeersAndNotify();
 static void         RemoveTrelServiceInstance(struct Peer *aElement);
 static void         AddTrelServiceInstance(const char *aServiceInstanceName);
@@ -305,6 +306,22 @@ void otPlatTrelResetCounters(otInstance *aInstance)
     memset(&sCounters, 0, sizeof(sCounters));
 }
 
+void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
+                                                 const otSockAddr *aPeerSockAddr,
+                                                 const otSockAddr *aRxSockAddr)
+{
+    struct Peer *element = findPeerBySockAddr(aPeerSockAddr);
+    if (element)
+    {
+        otMdnsStopSrvResolver(sInstance, &(element->mSrvResolver));
+        otMdnsStopTxtResolver(sInstance, &(element->mTxtResolver));
+        otMdnsStopIp6AddressResolver(sInstance, &element->mAddrResolver);
+
+        // restart srv resolver; this will trigger all other resolvers (txt, address) when results are received
+        otMdnsStartSrvResolver(sInstance, &(element->mSrvResolver));
+    }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
@@ -324,13 +341,16 @@ static void TrelSocketReceive(void *aContext, otMessage *aMessage, const otMessa
 {
     OT_UNUSED_VARIABLE(aContext);
 
-    uint16_t messageLen     = otMessageGetLength(aMessage);
-    uint8_t *rxPacketBuffer = (uint8_t *)otPlatCAlloc(1, messageLen);
+    otSockAddr senderAddr;
+    uint16_t   messageLen     = otMessageGetLength(aMessage);
+    uint8_t   *rxPacketBuffer = (uint8_t *)otPlatCAlloc(1, messageLen);
     otMessageRead(aMessage, 0, rxPacketBuffer, messageLen);
     otMessageFree(aMessage);
     ++sCounters.mRxPackets;
     sCounters.mRxBytes += messageLen;
-    otPlatTrelHandleReceived(sInstance, rxPacketBuffer, messageLen);
+    senderAddr.mAddress = aMessageInfo->mPeerAddr;
+    senderAddr.mPort    = aMessageInfo->mPeerPort;
+    otPlatTrelHandleReceived(sInstance, rxPacketBuffer, messageLen, &senderAddr);
     otPlatFree(rxPacketBuffer);
 }
 
@@ -463,6 +483,22 @@ static struct Peer *findPeerByHostName(const char *aHostName)
     {
         struct Peer *peer = (struct Peer *)element;
         if (!strcmp(peer->mPeerHostName, aHostName))
+        {
+            return peer;
+        }
+        element = LIST_GetNext(element);
+    }
+    return NULL;
+}
+
+static struct Peer *findPeerBySockAddr(const otSockAddr *aSockAddr)
+{
+    list_element_handle_t element = LIST_GetHead(&sPeerList);
+
+    while (element != NULL)
+    {
+        struct Peer *peer = (struct Peer *)element;
+        if (!memcmp(&(peer->mSockAddr), aSockAddr, sizeof(otSockAddr)))
         {
             return peer;
         }
