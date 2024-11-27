@@ -65,6 +65,7 @@ message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
 set(OT_EXTERNAL_MBEDTLS nxp-${OT_NXP_PLATFORM}-driver CACHE STRING "")
+set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common_sdk)
 
 #Set default log level if not set
 if (OT_STACK_ENABLE_LOG)
@@ -219,25 +220,7 @@ else()
 endif()
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
 
-set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common_sdk)
-set(SDK_INCLUDE_DIRS "")
-set(SDK_COMPILE_DEFINITIONS "")
-set(SDK_COMPILE_OPTIONS "")
-
 add_subdirectory(third_party/common_sdk)
-
-target_include_directories(ot-config INTERFACE
-    ${SDK_INCLUDE_DIRS}
-)
-
-target_compile_definitions(ot-config INTERFACE
-    ${SDK_COMPILE_DEFINITIONS}
-)
-
-target_compile_options(ot-config INTERFACE
-    ${SDK_COMPILE_OPTIONS}
-)
-
 add_subdirectory(src)
 add_subdirectory(examples)
 

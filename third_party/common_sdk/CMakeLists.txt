@@ -30,6 +30,9 @@ cmake_minimum_required(VERSION 3.30)
 
 get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
+# Propagate SDK deps to the OT targets through updating OT specific variables
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
+
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
 project(nxp-${OT_NXP_PLATFORM}-driver LANGUAGES C CXX ASM
@@ -63,12 +66,3 @@ mcux_add_macro(
     MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"
     OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${CORE_CONFIG_FILE}\\\"
 )
-
-# Propagate SDK deps to the parent
-get_target_property(SdkIncludeDirs ${MCUX_SDK_PROJECT_NAME} INTERFACE_INCLUDE_DIRECTORIES)
-get_property(SdkCompileDefinitions TARGET ${MCUX_SDK_PROJECT_NAME} PROPERTY INTERFACE_COMPILE_DEFINITIONS)
-get_property(SdkCompileOptions TARGET ${MCUX_SDK_PROJECT_NAME} PROPERTY INTERFACE_COMPILE_OPTIONS)
-
-set(SDK_INCLUDE_DIRS ${SdkIncludeDirs} PARENT_SCOPE)
-set(SDK_COMPILE_DEFINITIONS ${SdkCompileDefinitions} PARENT_SCOPE)
-set(SDK_COMPILE_OPTIONS ${SdkCompileOptions} PARENT_SCOPE)

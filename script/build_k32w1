@@ -37,7 +37,6 @@ BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_k32w1}"
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
     "-DBUILD_TESTING=OFF"
-#    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_EXPORT_TO_SREC=ON"
@@ -132,12 +131,6 @@ build()
 
     # shellcheck disable=SC2068
     west build -d "${BUILD_DIR}" -b k32w148evk . -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
-
-    if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
-        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
-    else
-        ninja
-    fi
 }
 
 build_ot_rcp_only_uart_flow_control()
@@ -268,19 +261,8 @@ create_directory_and_build()
 
 main()
 {
-
-    # Check if NXP_K32W1_SDK_ROOT contains a valid SDK
-    #    if NXP_K32W1_SDK_ROOT is not defined
-    #         We are using a github SDK
-
     SDK_GH=ON
     SDK_RELEASE=OFF
-
-    if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
-        export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/core"
-    fi
-
-    echo "NXP_K32W1_SDK_ROOT set to " $NXP_K32W1_SDK_ROOT
 
     if [ $# == 0 ]; then
         create_directory_and_build all $SDK_RELEASE "$@"
