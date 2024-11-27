@@ -54,6 +54,13 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/platform)
 
 include(utils)
+# Explicitly add some platform specific compile options to avoid
+# running into issues related to CPU architecture mismatch. This
+# happens because some targets (e.g. SDK) are built with some
+# options which are not available for some targets in the first
+# run generation. Once the cmake flags are cached, the targets are
+# built correctly upon subsequent runs.
+include(${OT_NXP_PLATFORM} OPTIONAL)
 include(options)
 
 otnxp_git_version(OT_PACKAGE_VERSION)
