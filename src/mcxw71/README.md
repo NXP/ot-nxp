@@ -115,7 +115,7 @@ One option for debugging would be to use MCUXpresso IDE.
 
 - Drag-and-drop the zip file containing the NXP SDK in the "Installed SDKs" tab:
 
-![Installed SDKs](../../../doc/img/k32w1/installed_sdks.jpg)
+![Installed SDKs](../../doc/img/k32w1/installed_sdks.jpg)
 
 - Import any demo application from the installed SDK:
 
@@ -123,7 +123,7 @@ One option for debugging would be to use MCUXpresso IDE.
 Import SDK example(s).. -> choose a demo app (demo_apps -> hello_world) -> Finish
 ```
 
-![Import demo](../../../doc/img/k32w1/import_demo.jpg)
+![Import demo](../../doc/img/k32w1/import_demo.jpg)
 
 - Flash the previously imported demo application on the board:
 
@@ -141,7 +141,7 @@ be used later on for debugging the application resulted after ot-nxp compilation
 File -> Import -> C/C++ -> Existing Code as Makefile Project
 ```
 
-![New Project](../../../doc/img/k32w1/new_project.jpg)
+![New Project](../../doc/img/k32w1/new_project.jpg)
 
 - Replace the path of the existing demo application with the path of the MCXW71 application:
 
@@ -149,7 +149,7 @@ File -> Import -> C/C++ -> Existing Code as Makefile Project
 Run -> Debug Configurations... -> C/C++ Application
 ```
 
-![Debug MCXW71](../../../doc/img/k32w1/debug_k32w1.jpg)
+![Debug MCXW71](../../doc/img/k32w1/debug_k32w1.jpg)
 
 ## Running the example
 

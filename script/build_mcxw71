@@ -37,14 +37,12 @@ BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_mcxw71}"
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
     "-DBUILD_TESTING=OFF"
-    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_EXPORT_TO_SREC=ON"
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
     "-DOT_NXP_PLATFORM=mcxw71"
-    "-DOT_NXP_PLATFORM_FAMILY=mcxw"
 )
 
 readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(
@@ -110,7 +108,7 @@ build()
 {
     local cmakeArgs=("${@}")
     mkdir -p "${BUILD_DIR}"
-    cd "${BUILD_DIR}"
+
     if [ ! "$1" = "folder_not_specified" ]; then
         cmakeArgs=("${@:2}")
         rcp_folder_name="$1"
@@ -119,15 +117,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    cmake -GNinja -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]} "${OT_SRCDIR}"
-
-    if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
-        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
-    else
-        ninja
-    fi
-
-    cd "${OT_SRCDIR}"
+    west build -d "${BUILD_DIR}" -b frdmmcxw71 . -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_rcp_only_uart_flow_control()
@@ -239,32 +229,8 @@ create_directory_and_build()
 
 main()
 {
-
-    # Check if NXP_K32W1_SDK_ROOT contains a valid SDK
-    #    if NXP_K32W1_SDK_ROOT is not defined
-    #         We are using a github SDK
-
-    SDK_GH=OFF
-
-    if [ -z "$NXP_K32W1_SDK_ROOT" ]; then
-        export NXP_K32W1_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/core"
-    fi
-
-    if [ -d $NXP_K32W1_SDK_ROOT/.git ]; then
-        SDK_RELEASE=OFF
-
-        if [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
-            SDK_GH=ON
-        fi
-
-    elif [ -f $NXP_K32W1_SDK_ROOT/SW-Content-Register.txt ]; then
-        SDK_RELEASE=ON
-    else
-        echo "Could not find a valid SDK package!"
-        return
-    fi
-
-    echo "NXP_K32W1_SDK_ROOT set to " $NXP_K32W1_SDK_ROOT
+    SDK_GH=ON
+    SDK_RELEASE=OFF
 
     if [ $# == 0 ]; then
         create_directory_and_build all $SDK_RELEASE "$@"

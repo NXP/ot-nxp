@@ -26,24 +26,4 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
-
-set(OT_NXP_PLATFORM_SOURCES "")
-
-if (OT_NXP_PLATFORM MATCHES "^(k32w1|mcxw71)$" OR
-    CONFIG_OT_NXP_PLATFORM_k32w1 OR
-    CONFIG_OT_NXP_PLATFORM_mcxw71
-)
-  list(APPEND OT_NXP_PLATFORM_SOURCES
-      ${OT_NXP_ROOT}/src/k32w1/alarm.c
-      ${OT_NXP_ROOT}/src/k32w1/diag.c
-      ${OT_NXP_ROOT}/src/k32w1/entropy.c
-      ${OT_NXP_ROOT}/src/k32w1/logging.c
-      ${OT_NXP_ROOT}/src/k32w1/misc.c
-      ${OT_NXP_ROOT}/src/k32w1/radio.c
-      ${OT_NXP_ROOT}/src/k32w1/system.c
-      ${OT_NXP_ROOT}/src/k32w1/uart.c
-      ${OT_NXP_ROOT}/src/common/flash_nvm.c
-      ${OT_NXP_ROOT}/openthread/examples/apps/cli/cli_uart.cpp
-  )
-endif()
+include(${PROJECT_SOURCE_DIR}/src/k32w1/CMakeLists.txt)

@@ -29,8 +29,12 @@
 choice OT_NXP_PLATFORM
     prompt "Select ot-nxp platform"
     default OT_NXP_PLATFORM_k32w1 if MCUX_HW_DEVICE_K32W1480
+    default OT_NXP_PLATFORM_mcxw71 if MCUX_HW_DEVICE_MCXW716C
 
 config OT_NXP_PLATFORM_k32w1
     bool "k32w1"
+
+config OT_NXP_PLATFORM_mcxw71
+    bool "mcxw71"
 
 endchoice
