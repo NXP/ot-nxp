@@ -27,7 +27,7 @@
 #
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-k32w1-config-check.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-${OT_NXP_PLATFORM}-config-check.h\""
 )
 
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
@@ -37,6 +37,8 @@ set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 # Propagate SDK deps to platform target
 get_target_property(SdkIncludeDirs ${NXP_DRIVER_LIB} INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND OT_PUBLIC_INCLUDES ${SdkIncludeDirs})
+get_target_property(SdkCompileDefinitions ${NXP_DRIVER_LIB} INTERFACE_COMPILE_DEFINITIONS)
+list(APPEND OT_PLATFORM_DEFINES ${SdkCompileDefinitions})
 
 set(COMM_FLAGS
     -I${PROJECT_SOURCE_DIR}/examples/k32w1/
@@ -49,35 +51,33 @@ set(COMM_FLAGS
 #    string(REPLACE "-Wcast-align" "" OT_CFLAGS "${OT_CFLAGS}")
 #endif()
 
-add_library(openthread-k32w1
+add_library(openthread-${OT_NXP_PLATFORM}
     ${OT_NXP_PLATFORM_SOURCES}
     $<TARGET_OBJECTS:openthread-platform-utils>
-    "$<TARGET_OBJECTS:${NXP_DRIVER_LIB}>"
+    $<TARGET_OBJECTS:${NXP_DRIVER_LIB}>
 )
 
-set_target_properties(openthread-k32w1
+set_target_properties(openthread-${OT_NXP_PLATFORM}
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
 if (USE_NBU)
-target_link_libraries(openthread-k32w1
+target_link_libraries(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_MBEDTLS}
         -L${PROJECT_SOURCE_DIR}/src/k32w1
         -L${SdkRootDirPath}/examples/_boards/${board}/wireless_examples/linker/gcc
-        ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ot-config
 )
 else()
-target_link_libraries(openthread-k32w1
+target_link_libraries(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_MBEDTLS}
-        ${K32W1_LINKER_FILE}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
@@ -85,23 +85,22 @@ target_link_libraries(openthread-k32w1
 )
 endif()
 
-target_compile_definitions(openthread-k32w1
+target_compile_definitions(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-k32w1
+target_compile_options(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_CFLAGS}
         ${COMM_FLAGS}
 )
 
-target_include_directories(openthread-k32w1
+target_include_directories(openthread-${OT_NXP_PLATFORM}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${K32W1_INCLUDES}
+        ${OT_NXP_PLATFORM_INCLUDES}
         ${OT_PUBLIC_INCLUDES}
 )
 
 target_include_directories(ot-config INTERFACE ${OT_PUBLIC_INCLUDES})
-target_compile_definitions(ot-config INTERFACE ${OT_PLATFORM_DEFINES})

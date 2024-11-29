@@ -52,9 +52,9 @@ if (NO_THREAD_1_3_FLAGS)
     )
 endif()
 
-set(K32W1_INCLUDES
+set(OT_NXP_PLATFORM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
 )
 
-include(k32w1.cmake)
+include(${PROJECT_SOURCE_DIR}/src/k32w1/k32w1.cmake)
