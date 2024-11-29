@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021-2023, The OpenThread Authors.
+#  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-list(APPEND OT_PUBLIC_DEFINES
-    -Wno-unused-parameter
-    -Wno-expansion-to-defined
-)
+get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
-include(../platform.cmake)
+set(OT_NXP_PLATFORM_SOURCES "")
 
-if (NOT NO_THREAD_1_3_FLAGS)
-    list(APPEND OT_NXP_PLATFORM_SOURCES
-        ../common/crypto/ecdsa_sss.cpp
-    )
+if (CONFIG_OT_NXP_PLATFORM_k32w1 OR OT_NXP_PLATFORM STREQUAL "k32w1")
+  list(APPEND OT_NXP_PLATFORM_SOURCES
+      ${OT_NXP_ROOT}/src/k32w1/alarm.c
+      ${OT_NXP_ROOT}/src/k32w1/diag.c
+      ${OT_NXP_ROOT}/src/k32w1/entropy.c
+      ${OT_NXP_ROOT}/src/k32w1/logging.c
+      ${OT_NXP_ROOT}/src/k32w1/misc.c
+      ${OT_NXP_ROOT}/src/k32w1/radio.c
+      ${OT_NXP_ROOT}/src/k32w1/system.c
+      ${OT_NXP_ROOT}/src/k32w1/uart.c
+      ${OT_NXP_ROOT}/src/common/flash_nvm.c
+      ${OT_NXP_ROOT}/openthread/examples/apps/cli/cli_uart.cpp
+  )
 endif()
-
-if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
-    # disable CSL receiver for now
-    list(APPEND OT_PLATFORM_DEFINES
-        OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
-    )
-endif()
-
-if (NO_THREAD_1_3_FLAGS)
-    list(APPEND OT_PLATFORM_DEFINES
-        "NO_THREAD_1_3_FLAGS"
-    )
-endif()
-
-set(K32W1_INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
-)
-
-include(k32w1.cmake)

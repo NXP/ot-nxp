@@ -50,7 +50,7 @@ set(COMM_FLAGS
 #endif()
 
 add_library(openthread-k32w1
-    ${K32W1_SOURCES}
+    ${OT_NXP_PLATFORM_SOURCES}
     $<TARGET_OBJECTS:openthread-platform-utils>
     "$<TARGET_OBJECTS:${NXP_DRIVER_LIB}>"
 )
