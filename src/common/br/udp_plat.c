@@ -168,16 +168,18 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 {
     otError         error        = OT_ERROR_NONE;
     struct udp_pcb *pcb          = (struct udp_pcb *)aUdpSocket->mHandle;
-    struct netif   *currentNetif = NULL;
+    struct netif   *currentNetif = NULL; // passing NULL to udp_bind_netif() will be treated as NETIF_NO_INDEX
 
     switch (aNetifIdentifier)
     {
     case OT_NETIF_BACKBONE:
         currentNetif = sBackboneNetifPtr;
         break;
-    case OT_NETIF_THREAD:
+    case OT_NETIF_THREAD_HOST: // allow use of platform UDP
         currentNetif = sOtNetifPtr;
         break;
+    case OT_NETIF_THREAD_INTERNAL: // do not use platform UDP
+        assert(false);
     case OT_NETIF_UNSPECIFIED:
     default:
         break;
@@ -480,13 +482,14 @@ static uint8_t getInterfaceIndex(otNetifIdentifier aNetifIdentifier)
 {
     switch (aNetifIdentifier)
     {
-    case OT_NETIF_THREAD:
+    case OT_NETIF_THREAD_HOST:
         return sOtNetifIdx;
         break;
     case OT_NETIF_BACKBONE:
         return sBackboneNetifIdx;
         break;
     case OT_NETIF_UNSPECIFIED:
+    case OT_NETIF_THREAD_INTERNAL:
     default:
         return NETIF_NO_INDEX;
         break;
