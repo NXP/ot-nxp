@@ -30,12 +30,9 @@ cmake_minimum_required(VERSION 3.30)
 
 get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
-# Propagate SDK deps to the OT targets through updating OT specific variables
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
-project(nxp-${OT_NXP_PLATFORM}-driver LANGUAGES C CXX ASM
+project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY_OBJECT
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
     CUSTOM_PRJ_CONF_PATH ${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/
