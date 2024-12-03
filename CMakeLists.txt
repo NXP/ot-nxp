@@ -71,8 +71,17 @@ message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
-set(OT_EXTERNAL_MBEDTLS nxp-${OT_NXP_PLATFORM}-driver CACHE STRING "")
-set(SDK_EXTERNAL_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/common_sdk)
+if (DEFINED core_id)
+    set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB}_${core_id} CACHE STRING "")
+else()
+    set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB} CACHE STRING "")
+endif()
+
+# This variable will be set in the SDK project. This is necessary in order
+# to have a valid target name in other scopes, such as src/platform scope.
+# Some platforms are dual core, in which case the SDK framework will add
+# a suffix to the SDK target name: e.g. ${NXP_DRIVER_LIB}_cm33_core0
+set(MCUX_SDK_PROJECT_NAME "")
 
 #Set default log level if not set
 if (OT_STACK_ENABLE_LOG)

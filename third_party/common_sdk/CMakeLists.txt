@@ -32,11 +32,14 @@ get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
+# For multi core platforms, the actual target will be driver lib plus
+# a suffix related to core id: e.g. ${NXP_DRIVER_LIB}_cm33_core0
 project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY_OBJECT
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
     CUSTOM_PRJ_CONF_PATH ${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/
 )
+set(MCUX_SDK_PROJECT_NAME ${MCUX_SDK_PROJECT_NAME} PARENT_SCOPE)
 
 include(${SdkRootDirPath}/CMakeLists.txt)
 
