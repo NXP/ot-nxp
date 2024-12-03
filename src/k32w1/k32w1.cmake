@@ -35,9 +35,9 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 # Propagate SDK deps to platform target
-get_target_property(SdkIncludeDirs ${NXP_DRIVER_LIB} INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(SdkIncludeDirs ${MCUX_SDK_PROJECT_NAME} INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND OT_PUBLIC_INCLUDES ${SdkIncludeDirs})
-get_target_property(SdkCompileDefinitions ${NXP_DRIVER_LIB} INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(SdkCompileDefinitions ${MCUX_SDK_PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
 list(APPEND OT_PLATFORM_DEFINES ${SdkCompileDefinitions})
 
 set(COMM_FLAGS
@@ -54,7 +54,7 @@ set(COMM_FLAGS
 add_library(openthread-${OT_NXP_PLATFORM}
     ${OT_NXP_PLATFORM_SOURCES}
     $<TARGET_OBJECTS:openthread-platform-utils>
-    $<TARGET_OBJECTS:${NXP_DRIVER_LIB}>
+    $<TARGET_OBJECTS:${MCUX_SDK_PROJECT_NAME}>
 )
 
 set_target_properties(openthread-${OT_NXP_PLATFORM}
