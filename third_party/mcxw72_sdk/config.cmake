@@ -26,7 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_compile_definitions(${NXP_DRIVER_LIB} PUBLIC
+target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
     SDK_COMPONENT_INTEGRATION=1
@@ -52,6 +52,6 @@ target_compile_definitions(${NXP_DRIVER_LIB} PUBLIC
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
 )
 
-target_compile_options(${NXP_DRIVER_LIB} PUBLIC
+target_compile_options(${MCUX_SDK_PROJECT_NAME} PUBLIC
     -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
 )
