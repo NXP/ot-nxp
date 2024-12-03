@@ -117,7 +117,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}" -b frdmmcxw71 . -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}" -b frdmmcxw71 . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_rcp_only_uart_flow_control()
