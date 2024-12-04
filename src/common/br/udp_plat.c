@@ -196,7 +196,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
     // valid UDP packets because the source port/address doesn't match 0.
     if ((port != 0) && !otIp6IsAddressUnspecified(&aUdpSocket->mPeerName.mAddress))
     {
-        convertOpenthreadToLwipAddress(&aUdpSocket->mSockName.mAddress);
+        addr                 = convertOpenthreadToLwipAddress(&aUdpSocket->mPeerName.mAddress);
         addr.u_addr.ip6.zone = IP6_NO_ZONE;
 
         if (pcb->netif_idx == NETIF_NO_INDEX)
@@ -513,8 +513,8 @@ static void lwipTaskCb(void *context)
 
 static ip_addr_t convertOpenthreadToLwipAddress(const otIp6Address *aAddress)
 {
-    ip_addr_t retAddr;
-    retAddr.type = IPADDR_TYPE_V6;
+    ip_addr_t retAddr = {0};
+    retAddr.type      = IPADDR_TYPE_V6;
 
     memcpy(ip_2_ip6(&retAddr)->addr, aAddress->mFields.m8, sizeof(ip_2_ip6(&retAddr)->addr));
 
