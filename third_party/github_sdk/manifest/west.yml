@@ -58,3 +58,4 @@ manifest:
         - mcux-sdk-middleware-usb
         - rpmsg-lite
         - mcux-sdk-examples
+        - wifi_nxp
