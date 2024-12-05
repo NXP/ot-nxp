@@ -58,7 +58,4 @@ manifest:
         - mcux-sdk-middleware-usb
         - rpmsg-lite
         - mcux-sdk-examples
-  - name: wifi_nxp
-    url: https://github.com/NXP/wifi_nxp.git
-    revision: MCUX_2.16.100_QP1
-    path: middleware/wifi_nxp
+        - wifi_nxp
