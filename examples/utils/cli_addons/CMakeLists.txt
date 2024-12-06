@@ -46,12 +46,6 @@ target_link_libraries(ot-cli-addons PRIVATE
     ot-config
 )
 
-if(OT_APP_CLI_FREERTOS_LOWPOWER)
-    target_link_libraries(ot-cli-addons PRIVATE
-        connfwk-LowPower
-    )
-endif()
-
 if(OT_APP_CLI_FREERTOS_IPERF)
     add_subdirectory(iperf)
 endif()

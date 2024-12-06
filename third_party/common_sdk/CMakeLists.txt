@@ -32,13 +32,28 @@ get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
 include(${SdkRootDirPath}/cmake/extension/mcux.cmake)
 
+list(APPEND PRJ_CONF_PATH "${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk")
+
+if(OT_NXP_LWIP_ETH)
+    list(APPEND PRJ_CONF_PATH "${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/eth")
+endif()
+
 # For multi core platforms, the actual target will be driver lib plus
 # a suffix related to core id: e.g. ${NXP_DRIVER_LIB}_cm33_core0
+if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH)
+project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
+    PROJECT_TYPE LIBRARY
+    PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
+    CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
+)
+else()
 project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY_OBJECT
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
-    CUSTOM_PRJ_CONF_PATH ${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/
+    CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
 )
+endif()
+
 set(MCUX_SDK_PROJECT_NAME ${MCUX_SDK_PROJECT_NAME} PARENT_SCOPE)
 
 include(${SdkRootDirPath}/CMakeLists.txt)

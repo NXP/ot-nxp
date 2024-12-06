@@ -39,5 +39,5 @@ target_compile_definitions(ot-config INTERFACE
 )
 
 target_link_libraries(ot-cli-addons PUBLIC
-    connfwk-LowPower
+    ${NXP_DRIVER_LIB}
 )

@@ -69,6 +69,8 @@ message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 message(STATUS "NXP Platform: ${OT_NXP_PLATFORM}")
 
+set(PRJ_CONF_PATH "" CACHE STRING "Define all custom prj.conf files")
+
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
 if (DEFINED core_id)
@@ -104,6 +106,23 @@ if(OT_NCP_RTOS_HOST)
     add_library(ot-cli-addons INTERFACE)
 else()
     add_subdirectory(openthread)
+    # changes done for avoiding symbol redefinitions between OpenThread and LWIP.
+    # issues were found when building OpenThread's tcp6.cpp file.
+    if(OT_FTD)
+        target_compile_definitions(tcplp-ftd
+        INTERFACE
+            "LWIP_HDR_OPT_H=1"
+            "LWIP_PROVIDE_ERRNO=1"
+        )
+    endif()
+
+    if(OT_MTD)
+        target_compile_definitions(tcplp-mtd
+        INTERFACE
+            "LWIP_HDR_OPT_H=1"
+            "LWIP_PROVIDE_ERRNO=1"
+        )
+    endif()
 endif()
 
 if(OT_APP_BR_FREERTOS)
@@ -235,6 +254,14 @@ else()
     set(SDK_TYPE "INTERNAL")
 endif()
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
+
+if(OT_NXP_LWIP)
+    add_subdirectory(third_party/lwip)
+endif()
+
+if(OT_NXP_LWIP_WIFI)
+    add_subdirectory(third_party/wifi)
+endif()
 
 add_subdirectory(third_party/common_sdk)
 add_subdirectory(src)
