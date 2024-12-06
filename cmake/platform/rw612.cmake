@@ -24,13 +24,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-set(PLATFORM_C_FLAGS "-mcpu=cortex-m33+nodsp -mfloat-abi=hard -mthumb -mfpu=fpv5-sp-d16")
-set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u flexspi_config")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PLATFORM_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PLATFORM_C_FLAGS}")
-set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${PLATFORM_C_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} ")
+add_compile_options(-mcpu=cortex-m33+nodsp -mfloat-abi=hard -mthumb -mfpu=fpv5-sp-d16)
+add_link_options(-u flexspi_config)
 
 # FreeRTOS CMake config
 set(FREERTOS_PORT GCC_ARM_CM33_NTZ_NONSECURE CACHE STRING "")
@@ -60,7 +55,6 @@ set(OT_APP_RCP OFF CACHE BOOL "")
 set(OT_APP_RCP OFF CACHE BOOL "")
 set(OT_RCP_RESTORATION_MAX_COUNT "10" CACHE STRING "")
 set(OT_COMPILE_WARNING_AS_ERROR ON CACHE BOOL "")
-set(OT_EXTERNAL_MBEDTLS "nxp-rw612-mbedtls" CACHE STRING "")
 
 # ot-nxp config
 set(OT_NXP_PLATFORM_FAMILY "rw" CACHE STRING "")

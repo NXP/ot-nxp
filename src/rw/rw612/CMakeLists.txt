@@ -27,6 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+# Propagate SDK deps to platform target
+get_target_property(SdkIncludeDirs ${NXP_DRIVER_LIB} INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND OT_PUBLIC_INCLUDES ${SdkIncludeDirs})
+get_target_property(SdkCompileDefinitions ${NXP_DRIVER_LIB} INTERFACE_COMPILE_DEFINITIONS)
+list(APPEND OT_PLATFORM_DEFINES ${SdkCompileDefinitions})
+
 if(OT_NXP_LWIP)
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/lwip/ot_lwip.c
@@ -142,7 +148,7 @@ add_library(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
     #${PROJECT_SOURCE_DIR}/src/common/uart.c
-    ${PROJECT_SOURCE_DIR}/src/common/flash_fsa.c
+    ${PROJECT_SOURCE_DIR}/src/common/flash_nvs.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
     ${PROJECT_SOURCE_DIR}/src/common/entropy.c
     ${PROJECT_SOURCE_DIR}/src/common/diag.c
@@ -164,14 +170,9 @@ target_link_libraries(${OT_PLATFORM_LIB}
         openthread-radio-spinel
         openthread-url
         openthread-spinel-rcp
-        connfwk-FunctionLib
-        connfwk-FSAbstraction
-        connfwk-LowPower
-        connfwk-platform-rw61x
         ${NXP_DRIVER_LIB}
         ${NXP_BOARD_LIB}
     PUBLIC
-        connfwk-config
         ${OT_LWIP_LIBS}
         -T${PROJECT_SOURCE_DIR}/src/rw/rw612/rw612.ld
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage

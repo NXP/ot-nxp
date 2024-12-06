@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2020-2023, The OpenThread Authors.
+#  Copyright (c) 2020-2024, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,10 @@ set -exo pipefail
 
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
+target_board_name="rdrw612bga"
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_BR_RTOS_CONFIG_PATH='boards/rw612/freertos/br'
 readonly OT_OPTIONS=(
-    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
     "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DOT_NXP_PLATFORM=rw612"
@@ -67,18 +67,10 @@ build()
     mkdir -p "${builddir}"
     cd "${builddir}"
     mkdir -p "$1"
-    cd "$1"
+    cd "${OT_SRCDIR}"
 
     # shellcheck disable=SC2068
-    cmake -GNinja "$@" "${OT_SRCDIR}"
-
-    if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
-        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
-    else
-        ninja
-    fi
-
-    cd "${OT_SRCDIR}"
+    west build -d "${builddir}/$1" -b ${target_board_name} . --no_sanity_check "${@:2}"
 }
 
 create_directory_and_build()
@@ -104,7 +96,6 @@ create_directory_and_build()
 build_ot_cli()
 {
     local options=("${OT_OPTIONS[@]}")
-    options+=("-DNXP_SDK_ROOT=$NXP_RW612_SDK_ROOT")
     options+=("${@:2}")
     build rw612_ot_cli "${options[@]}"
 }
@@ -113,7 +104,6 @@ build_otbr_wifi()
 {
     local options=("${OT_OPTIONS_BR_WIFI[@]}")
     options+=("${OT_OPTIONS[@]}")
-    options+=("-DNXP_SDK_ROOT=$NXP_RW612_SDK_ROOT")
     options+=("${@:2}")
     build rw612_ot_br_wifi "${options[@]}"
 }
@@ -122,7 +112,6 @@ build_otbr_eth()
 {
     local options=("${OT_OPTIONS_BR_ETH[@]}")
     options+=("${OT_OPTIONS[@]}")
-    options+=("-DNXP_SDK_ROOT=$NXP_RW612_SDK_ROOT")
     options+=("${@:2}")
     build rw612_ot_br_eth "${options[@]}"
 }
@@ -130,13 +119,22 @@ build_otbr_eth()
 main()
 {
 
-    # check if environmental variable NXP_RW612_SDK_ROOT is set
-    #     if not, then use "../../../" as a possible path
-    if [ -z "$NXP_RW612_SDK_ROOT" ]; then
-        export NXP_RW612_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/"
-    fi
+    OT_NXP_BOARD_NAME_VAL=""
+    # Iterate over all positional parameters
+    for arg in "$@"; do
+        case "$arg" in "-DOT_NXP_BOARD_NAME"*)
+            # try to extract '-DOT_NXP_BOARD_NAME' the parameter value
+            OT_NXP_BOARD_NAME_VAL="${arg#*-DOT_NXP_BOARD_NAME=}"
+            OT_NXP_BOARD_NAME_VAL="${OT_NXP_BOARD_NAME_VAL#\"${OT_NXP_BOARD_NAME_VAL%%\"*}\"}"
+            OT_NXP_BOARD_NAME_VAL="${OT_NXP_BOARD_NAME_VAL%\"${OT_NXP_BOARD_NAME_VAL##*\"}}"
+            break
+            ;;
+        esac
+    done
 
-    echo "NXP_RW612_SDK_ROOT set to " $NXP_RW612_SDK_ROOT
+    if [[ $OT_NXP_BOARD_NAME_VAL == "rw612_frdm" ]]; then
+        target_board_name="frdmrw612"
+    fi
 
     if [ $# == 0 ]; then
         create_directory_and_build all

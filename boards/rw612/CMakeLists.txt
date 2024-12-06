@@ -33,7 +33,6 @@ set(RW612_BOARD_SOURCES
     pin_mux.c
     clock_config.c
     hardware_init.c
-    peripherals.c
 )
 
 if(OT_NXP_BOARD_NAME MATCHES "rw612_rd")
@@ -63,7 +62,6 @@ target_include_directories(${NXP_BOARD_LIB}
 target_link_libraries(${NXP_BOARD_LIB}
     PRIVATE
         ot-config
-        connfwk-LowPower
         ${NXP_DRIVER_LIB}
         ${OT_PLATFORM_LIB}
 )

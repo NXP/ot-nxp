@@ -47,8 +47,8 @@ fw_storage_end                      = fw_storage_start + fw_storage_size -1;
 NV_STORAGE_MAX_SECTORS              = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 16;
 NV_STORAGE_SECTOR_SIZE              = m_sector_size;
 NV_STORAGE_END_ADDRESS              = m_flash_end;
-m_nvm_storage_size                  = NV_STORAGE_MAX_SECTORS * NV_STORAGE_SECTOR_SIZE;
-NV_STORAGE_START_ADDRESS            = NV_STORAGE_END_ADDRESS - m_nvm_storage_size + 1;
+NV_STORAGE_SIZE                     = NV_STORAGE_MAX_SECTORS * NV_STORAGE_SECTOR_SIZE;
+NV_STORAGE_START_ADDRESS            = NV_STORAGE_END_ADDRESS - NV_STORAGE_SIZE + 1;
 NV_STORAGE_START_ADDRESS_OFFSET     = NV_STORAGE_START_ADDRESS - m_flash_start;
 
 m_text_start                        = 0x08001280;
@@ -61,7 +61,7 @@ MEMORY
   m_flash_config        (RX)  : ORIGIN = 0x08000400, LENGTH = 0x00000C00
   m_interrupts          (RX)  : ORIGIN = 0x08001000, LENGTH = 0x00000280
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
-  m_nvm_region          (RX)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = m_nvm_storage_size
+  m_nvm_region          (RX)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
   m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00130000
   m_sqram_cpu13_mbox    (RW)  : ORIGIN = 0x41380000, LENGTH = 0x00000488
   m_sqram_cpu13_txq     (RW)  : ORIGIN = 0x41380488, LENGTH = 0x00001000
@@ -203,6 +203,15 @@ SECTIONS
     KEEP (*(SORT(.fini_array.*)))
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
+  } > m_text
+
+  ._settings_handler_static :
+  {
+    . = ALIGN(4);
+    _settings_handler_static_list_start = .;
+    KEEP(*(SORT(._settings_handler_static.static.*)))
+    _settings_handler_static_list_end = .;
+    . = ALIGN(4);
   } > m_text
 
   __etext = .;    /* define a global symbol at end of code */
