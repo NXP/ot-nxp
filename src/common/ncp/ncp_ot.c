@@ -254,17 +254,17 @@ ncp_status_t ot_ncp_init(void)
         goto fail;
     }
 
+    sNcpLock = xSemaphoreCreateBinary();
+    if (sNcpLock == NULL)
+    {
+        goto fail;
+    }
+
     ncp_tlv_install_handler(GET_CMD_CLASS(NCP_CMD_15D4), (void *)otNcpCallback);
 
     if (xTaskCreate(otNcpTask, "ot_ncp_task", OT_NCP_TASK_SIZE, NULL, OT_NCP_TASK_PRIORITY, &sOtNcpTask) != pdPASS)
     {
         OT_PLAT_ERR("failed to create ncp ot task: %d\r\n");
-        goto fail;
-    }
-
-    sNcpLock = xSemaphoreCreateBinary();
-    if (sNcpLock == NULL)
-    {
         goto fail;
     }
 
