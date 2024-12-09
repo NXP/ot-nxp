@@ -178,6 +178,75 @@ if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
     )
 endif()
 
+if(OT_NCP_RADIO)
+    mcux_add_source(
+        BASE_PATH ${SdkRootDirPath}/examples/ncp_examples/common
+        SOURCES
+        crc/crc.c
+        ncp_glue_common.c
+        ncp_adapter/ncp_intf/ncp_intf_pm.c
+        ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
+        ncp_adapter/ncp_intf/uart/ncp_intf_uart.c
+        ncp_adapter/ncp_intf/usb/usb_device_cdc/ncp_intf_usb_device_cdc.c
+        ncp_adapter/ncp_intf/usb/usb_device_cdc/usb_device_cdc_app.c
+        ncp_adapter/ncp_intf/usb/usb_device_cdc/usb_device_descriptor.c
+        ncp_adapter/ncp_intf/spi/spi_slave/ncp_intf_spi_slave.c
+        ncp_adapter/ncp_intf/sdio/sdio_device/ncp_intf_sdio.c
+    )
+
+    mcux_add_include(
+        BASE_PATH ${SdkRootDirPath}/examples/ncp_examples/common
+        INCLUDES
+        .
+        crc
+        lpm
+        ncp_debug
+        ncp_adapter
+        ncp_adapter/ncp_intf
+        ncp_adapter/ncp_tlv
+        ncp_adapter/ncp_intf/uart
+        ncp_adapter/ncp_intf/usb/usb_device_cdc
+        ncp_adapter/ncp_intf/spi/spi_slave
+        ncp_adapter/ncp_intf/sdio/sdio_device
+    )
+
+    mcux_add_macro(
+        -DCONFIG_CRC32_HW_ACCELERATE
+        -DCONFIG_NCP_OT=1
+        -DNCP_UART_TASK_PRIORITY=3
+        -DUSB_DEVICE_CONFIG_LOW_POWER_MODE=1
+        -DCONFIG_HOST_SLEEP
+        -DRW610
+    )
+
+    if(NOT DEFINED OT_NXP_NCP_UART_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_USB_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SPI_INTERFACE
+       AND NOT DEFINED OT_NXP_NCP_SDIO_INTERFACE)
+        set(OT_NXP_NCP_UART_INTERFACE "ON") # Use UART as default NCP adapter interface
+    endif()
+
+    if(OT_NXP_NCP_UART_INTERFACE)
+        mcux_add_macro(
+            -DCONFIG_NCP_UART
+        )
+    elseif(OT_NXP_NCP_USB_INTERFACE)
+        mcux_add_macro(
+            -DCONFIG_NCP_USB
+        )
+    elseif(OT_NXP_NCP_SPI_INTERFACE)
+        mcux_add_macro(
+            -DCONFIG_NCP_SPI
+        )
+    elseif(OT_NXP_NCP_SDIO_INTERFACE)
+        mcux_add_macro(
+		-DCONFIG_NCP_SDIO
+        )
+    else()
+        message(FATAL_ERROR "Please select one NCP interface.")
+    endif()
+endif()
+
 # Remove the default link script, rw612 will use a custom one instead.
 mcux_remove_armgcc_linker_script(
     BASE_PATH ${SdkRootDirPath}
