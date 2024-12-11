@@ -1,35 +1,39 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
-#  All rights reserved.
+# Copyright (c) 2021, The OpenThread Authors.
+# All rights reserved.
 #
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that the following conditions are met:
-#  1. Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#  2. Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#  3. Neither the name of the copyright holder nor the
-#     names of its contributors may be used to endorse or promote products
-#     derived from this software without specific prior written permission.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the
+# names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
 #
-#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-#  POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
 
 cmake_minimum_required(VERSION 3.10.2)
 
-include(${SdkRootDirPath}/cmake/extension/logging.cmake)
-include(${SdkRootDirPath}/cmake/toolchain/toolchain.cmake)
+message(STATUS "SdkRootDirPath ${SdkRootDirPath}")
+
+if(DEFINED SdkRootDirPath)
+    include(${SdkRootDirPath}/cmake/extension/logging.cmake)
+    include(${SdkRootDirPath}/cmake/toolchain/toolchain.cmake)
+endif()
 
 project(ot-nxp
     VERSION 0.2.0
@@ -43,9 +47,11 @@ set(CMAKE_C_STANDARD 99)
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 endif()
+
 if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 endif()
+
 if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 endif()
@@ -54,6 +60,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/platform)
 
 include(utils)
+
 # Explicitly add some platform specific compile options to avoid
 # running into issues related to CPU architecture mismatch. This
 # happens because some targets (e.g. SDK) are built with some
@@ -73,24 +80,28 @@ set(PRJ_CONF_PATH "" CACHE STRING "Define all custom prj.conf files")
 
 set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
-if (DEFINED core_id)
-    set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB}_${core_id} CACHE STRING "")
-else()
-    set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB} CACHE STRING "")
+
+if(DEFINED SdkRootDirPath)
+    if(DEFINED core_id)
+        set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB}_${core_id} CACHE STRING "")
+    else()
+        set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB} CACHE STRING "")
+    endif()
+
+    # This variable will be set in the SDK project. This is necessary in order
+    # to have a valid target name in other scopes, such as src/platform scope.
+    # Some platforms are dual core, in which case the SDK framework will add
+    # a suffix to the SDK target name: e.g. ${NXP_DRIVER_LIB}_cm33_core0
+    set(MCUX_SDK_PROJECT_NAME "")
 endif()
 
-# This variable will be set in the SDK project. This is necessary in order
-# to have a valid target name in other scopes, such as src/platform scope.
-# Some platforms are dual core, in which case the SDK framework will add
-# a suffix to the SDK target name: e.g. ${NXP_DRIVER_LIB}_cm33_core0
-set(MCUX_SDK_PROJECT_NAME "")
-
-#Set default log level if not set
-if (OT_STACK_ENABLE_LOG)
-    if (NOT OT_LOG_LEVEL)
+# Set default log level if not set
+if(OT_STACK_ENABLE_LOG)
+    if(NOT OT_LOG_LEVEL)
         set(OT_LOG_LEVEL INFO)
     endif()
-    if (NOT OT_LOG_OUTPUT)
+
+    if(NOT OT_LOG_OUTPUT)
         set(OT_LOG_OUTPUT APP)
     endif()
 else()
@@ -106,22 +117,25 @@ if(OT_NCP_RTOS_HOST)
     add_library(ot-cli-addons INTERFACE)
 else()
     add_subdirectory(openthread)
-    # changes done for avoiding symbol redefinitions between OpenThread and LWIP.
-    # issues were found when building OpenThread's tcp6.cpp file.
-    if(OT_FTD)
-        target_compile_definitions(tcplp-ftd
-        INTERFACE
-            "LWIP_HDR_OPT_H=1"
-            "LWIP_PROVIDE_ERRNO=1"
-        )
-    endif()
 
-    if(OT_MTD)
-        target_compile_definitions(tcplp-mtd
-        INTERFACE
-            "LWIP_HDR_OPT_H=1"
-            "LWIP_PROVIDE_ERRNO=1"
-        )
+    if(DEFINED SdkRootDirPath)
+        # changes done for avoiding symbol redefinitions between OpenThread and LWIP.
+        # issues were found when building OpenThread's tcp6.cpp file.
+        if(OT_FTD)
+            target_compile_definitions(tcplp-ftd
+                INTERFACE
+                "LWIP_HDR_OPT_H=1"
+                "LWIP_PROVIDE_ERRNO=1"
+            )
+        endif()
+
+        if(OT_MTD)
+            target_compile_definitions(tcplp-mtd
+                INTERFACE
+                "LWIP_HDR_OPT_H=1"
+                "LWIP_PROVIDE_ERRNO=1"
+            )
+        endif()
     endif()
 endif()
 
@@ -177,14 +191,14 @@ else()
 endif()
 
 # If OT logging is enabled add a dependency to SDK log components
-if (OT_STACK_ENABLE_LOG)
+if(OT_STACK_ENABLE_LOG)
     target_link_libraries(ot-config
         INTERFACE
         ${NXP_DRIVER_LIB})
     target_compile_definitions(ot-config
         INTERFACE
         -DOT_STACK_ENABLE_LOG)
-endif ()
+endif()
 
 set(CONFIG_FILE "\"openthread-core-${OT_NXP_PLATFORM}-config.h\"")
 set(CORE_CONFIG_FILE ${CONFIG_FILE})
@@ -205,7 +219,7 @@ if(OT_NXP_PLATFORM_FAMILY)
 else()
     target_include_directories(ot-config INTERFACE
         ${PROJECT_SOURCE_DIR}/src/${OT_NXP_PLATFORM}
-        )
+    )
 endif()
 
 if(NOT FREERTOS_CONFIG_FILE_DIRECTORY)
@@ -214,11 +228,12 @@ endif()
 
 # Give the possibility to the user to define his own path to board files
 if(OT_NXP_BOARD_PATH)
-    message(STATUS  "Using user defined board folder:\n"
+    message(STATUS "Using user defined board folder:\n"
         "${OT_NXP_BOARD_PATH}"
     )
+
     if(NOT NXP_BOARD_LIB)
-        message(WARNING  "The name of the board lib is not specified. It may not be linked properly by ot-nxp targets\n"
+        message(WARNING "The name of the board lib is not specified. It may not be linked properly by ot-nxp targets\n"
             "You can add the link dependency in your projet:\n"
             "target_link_libraries(<ot-nxp-target> <your board target>)\n"
             "Or you can define the name of your board library:\n"
@@ -227,6 +242,7 @@ if(OT_NXP_BOARD_PATH)
             "set(NXP_BOARD_LIB <name of the board lib>)"
         )
     endif()
+
     add_subdirectory(${OT_NXP_BOARD_PATH} ${PROJECT_BINARY_DIR}/board)
 elseif(OT_NXP_BOARD) # TODO: move to "else" when all boards are supported
     set(NXP_BOARD_LIB nxp-${OT_NXP_BOARD}-board)
@@ -234,9 +250,9 @@ elseif(OT_NXP_BOARD) # TODO: move to "else" when all boards are supported
 else()
     # TODO: enable following message when all boards are supported
     # if(NOT OT_NXP_BOARD)
-    #     message(FATAL_ERROR  "Board is not defined. Please specify to board to build:\n"
-    #         "-DOT_NXP_BOARD=<board name>"
-    #     )
+    # message(FATAL_ERROR  "Board is not defined. Please specify to board to build:\n"
+    # "-DOT_NXP_BOARD=<board name>"
+    # )
     # endif()
 endif()
 
@@ -253,17 +269,23 @@ elseif(EXISTS ${NXP_SDK_ROOT}/SW-Content-Register.txt)
 else()
     set(SDK_TYPE "INTERNAL")
 endif()
+
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
 
-if(OT_NXP_LWIP)
-    add_subdirectory(third_party/lwip)
+if(DEFINED SdkRootDirPath)
+    if(OT_NXP_LWIP)
+        add_subdirectory(third_party/lwip)
+    endif()
+
+    if(OT_NXP_LWIP_WIFI)
+        add_subdirectory(third_party/wifi)
+    endif()
+
+    add_subdirectory(third_party/common_sdk)
+else()
+    add_subdirectory(third_party)
 endif()
 
-if(OT_NXP_LWIP_WIFI)
-    add_subdirectory(third_party/wifi)
-endif()
-
-add_subdirectory(third_party/common_sdk)
 add_subdirectory(src)
 add_subdirectory(examples)
 
