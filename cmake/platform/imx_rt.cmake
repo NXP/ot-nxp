@@ -24,7 +24,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-set(PLATFORM_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard -mthumb -mfpu=fpv5-d16 -fno-common -ffreestanding -fno-builtin -mapcs")
+set(PLATFORM_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard -mthumb -mfpu=fpv5-d16 -fno-common -mapcs")
 set(PLATFORM_CXX_FLAGS "${PLATFORM_C_FLAGS} -MMD -MP")
 set(PLATFORM_LINKER_FLAGS "${PLATFORM_C_FLAGS} -u qspiflash_config -u image_vector_table -u boot_data -u dcd_data -Wl,--sort-section=alignment -Wl,--cref")
 

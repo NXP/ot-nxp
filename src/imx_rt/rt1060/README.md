@@ -30,31 +30,16 @@ to install the GNU toolchain and other dependencies.
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/bootstrap
 ```
 
-## Tools
+## Downloading the SDK
 
-- Download and install the [MCUXpresso IDE][mcuxpresso ide].
+Note: Before downloading the SDK, it is assumed that ot-nxp has been downloaded and submodules have been updated, because the script of nxp_matter_support submodule is required.
+Download the NXP MCUXpresso git SDK and associated middleware from GitHub using script:
 
-[mcuxpresso ide]: https://www.nxp.com/support/developer-resources/software-development-tools/mcuxpresso-software-and-tools/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE
-
-- Download the NXP MCUXpresso git SDK
-  and associated middleware from GitHub using the west tool.
-
-```
-bash
-$ cd third_party/github_sdk
-$ west init -l manifest --mf west.yml
-$ west update
-```
-
-In case there are local modifications to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
-
-```
-bash
-$ cd third_party/github_sdk/sdk_2.15.1
-$ west forall -c "git reset --hard && git clean -xdf" -a
+```bash
+$ cd <path-to-ot-nxp>
+$ ./third_party/nxp_matter_support/scripts/update_nxp_sdk.py --platform common
 ```
 
 ## Hardware requirements
@@ -138,6 +123,17 @@ The Iw612 module should be plugged to the M.2 connector on RT1060-EVKC board.
 
 ## Building examples
 
+### Set the compilation parameters
+
+Please set the ARMGCC_DIR and ZEPHYR_BASE parameters using the following commands:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export ARMGCC_DIR='your-own-armgcc-dir-path'
+$ source ./third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk/mcux-env.sh
+$ west mcuxsdk-export
+```
+
 ### Building all targets
 
 The build script located in `<ot_nxp_repo>/script/build_rt1060` allows to build various openthread application targeted to run on RT1060 platform.
@@ -149,7 +145,6 @@ Note: to target the RT1060 + K32W0 configuration, before building any Openthread
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rt1060
 ```
 

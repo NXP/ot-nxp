@@ -267,18 +267,18 @@ if(EXISTS ${NXP_SDK_ROOT}/core/.github)
 elseif(EXISTS ${NXP_SDK_ROOT}/SW-Content-Register.txt)
     set(SDK_TYPE "PACKAGE")
 else()
-    set(SDK_TYPE "INTERNAL")
+    set(SDK_TYPE "GITHUB")
 endif()
 
 message(STATUS "SDK_TYPE: ${SDK_TYPE}")
 
 if(DEFINED SdkRootDirPath)
     if(OT_NXP_LWIP)
-        add_subdirectory(third_party/lwip)
+        add_subdirectory(third_party/lwip/lwip_next_gen)
     endif()
 
     if(OT_NXP_LWIP_WIFI)
-        add_subdirectory(third_party/wifi)
+        add_subdirectory(third_party/wifi/wifi_next_gen)
     endif()
 
     add_subdirectory(third_party/common_sdk)

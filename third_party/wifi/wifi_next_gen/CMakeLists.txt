@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023, NXP
+# Copyright (c) 2024, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,33 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_policy(SET CMP0079 NEW)
+list(APPEND PRJ_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
-# Each platform must set FreeRTOS CMake config flags in order to build freertos-kernel library
-# FREERTOS_PORT
-# FREERTOS_CONFIG_FILE_DIRECTORY
-# FREERTOS_HEAP
-add_subdirectory(freertos-kernel-build ${PROJECT_BINARY_DIR}/freertos-kernel)
+list(APPEND PRJ_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/wifi_${OT_NXP_PLATFORM}")
+
+set(PRJ_CONF_PATH ${PRJ_CONF_PATH} PARENT_SCOPE)
+
+add_library(wifi
+    ${SdkRootDirPath}/middleware/wifi_nxp/port/osa/osa_freertos.c
+    ${SdkRootDirPath}/middleware/wifi_nxp/port/net/net.c
+)
+
+target_compile_definitions(wifi
+    PRIVATE
+    vApplicationIdleHook=vApplicationIdleHook_wifi # hack to prevent definition of multiple idle tasks (OT has one)
+    tcpip_init=tcpip_init_once
+)
+
+target_include_directories(wifi
+    PUBLIC
+    ${SdkRootDirPath}/middleware/wifi_nxp/port/osa
+    ${SdkRootDirPath}/middleware/wifi_nxp/port/net
+    ${PROJECT_SOURCE_DIR}/third_party/wifi
+)
+
+target_link_libraries(wifi
+    PRIVATE
+    ot-config
+    ${NXP_DRIVER_LIB}
+    ${NXP_BOARD_LIB}
+)

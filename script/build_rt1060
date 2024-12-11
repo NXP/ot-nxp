@@ -192,7 +192,7 @@ main()
     # check if environmental variable NXP_RT1060_SDK_ROOT is set
     #     if not, then use the github repo mounted with west
     if [ -z "$NXP_RT1060_SDK_ROOT" ]; then
-        export NXP_RT1060_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/"
+        export NXP_RT1060_SDK_ROOT="${OT_SRCDIR}/third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk"
     fi
 
     echo "NXP_RT1060_SDK_ROOT set to " $NXP_RT1060_SDK_ROOT

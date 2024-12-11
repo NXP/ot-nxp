@@ -183,7 +183,7 @@ main()
     # check if environmental variable NXP_RT1170_SDK_ROOT is set
     #     if not, then use "../../../" as a possible path
     if [ -z "$NXP_RT1170_SDK_ROOT" ]; then
-        NXP_RT1170_SDK_ROOT="${OT_SRCDIR}/third_party/github_sdk/"
+        NXP_RT1170_SDK_ROOT="${OT_SRCDIR}/third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk"
     fi
 
     echo "NXP_RT1170_SDK_ROOT set to " $NXP_RT1170_SDK_ROOT

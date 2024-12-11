@@ -37,7 +37,6 @@ set(MIMXRT1170_EVK "mimxrt1170evkb" CACHE STRING "mimxrt1170evkb")
 if(${SDK_TYPE} STREQUAL "GITHUB")
     message("SDK_GITHUB driver path chosen")
     set(MIDDLEWARE_PATH ${NXP_SDK_ROOT}/middleware)
-    set(NXP_SDK_ROOT ${NXP_SDK_ROOT}/core)
     set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/drivers)
     set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH}/lpuart)
     set(DRIVER_LPSPI_FILES_PATH ${DRIVER_FILES_PATH}/lpspi)
@@ -57,66 +56,15 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(DRIVER_SDHC_FILES_PATH ${DRIVER_FILES_PATH}/sdhc)
     set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH}/caam)
     set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH}/mu)
-    set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
-    set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers/cm7)
-    set(UTILITIES_FILES_PATH ${NXP_SDK_ROOT}/utilities)
-    set(UTILITIES_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities)
-    set(ASSERT_FILES_PATH ${UTILITIES_FILES_PATH}/assert)
-    set(DEBUG_CONSOLE_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console_lite)
-    set(STR_FILES_PATH ${UTILITIES_FILES_PATH}/debug_console/str)
-    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
+    set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cache/armv7-m7)
+    set(DEVICE_RT1060_PERIPH_FILES_PATH ${NXP_SDK_ROOT}/devices/RT/RT1170/periph)
+    set(DEVICE_RT_FILES_PATH ${NXP_SDK_ROOT}/devices/RT/RT1170/MIMXRT1176)
+    set(DRIVER_DEVICE_FILES_PATH ${DEVICE_RT_FILES_PATH}/drivers)
+    set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/components/assert)
+    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/components/debug_console_lite)
+    set(STR_FILES_PATH ${NXP_SDK_ROOT}/components/str)
+    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/RT/RT1170/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/utilities/misc_utilities)
-    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/wireless_config_template/wifi_bt_config.c)
-elseif(${SDK_TYPE} STREQUAL "PACKAGE")
-    set(DRIVER_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
-    set(DRIVER_LPUART_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_LPSPI_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_LPI2C_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_PIT_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_GPT_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_FLEXSPI_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_IGPIO_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_COMMON_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_DEVICE_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_EDMA_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_DMAMUX_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_ENET_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_USDHC_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_SDHC_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_CACHE_FILES_PATH ${DRIVER_FILES_PATH}/cm7)
-    set(DRIVER_CAAM_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DRIVER_MU_FILES_PATH ${DRIVER_FILES_PATH})
-    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/debug_console)
-    set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities)
-    set(STR_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/str)
-    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
-    set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/utilities/incbin)
-    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c)
-    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/wireless_config_template/wifi_bt_config.c)
-elseif(${SDK_TYPE} STREQUAL "INTERNAL")
-    set(DRIVER_LPUART_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpuart)
-    set(DRIVER_LPSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpspi)
-    set(DRIVER_LPI2C_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/lpi2c)
-    set(DRIVER_PIT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/pit)
-    set(DRIVER_GPT_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/gpt)
-    set(DRIVER_FLEXSPI_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/flexspi)
-    set(DRIVER_IGPIO_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/igpio)
-    set(DRIVER_COMMON_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/common)
-    set(DRIVER_DEVICE_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/drivers)
-    set(DRIVER_EDMA_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/edma)
-    set(DRIVER_DMAMUX_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/dmamux)
-    set(DRIVER_ENET_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/enet)
-    set(DRIVER_USDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/usdhc)
-    set(DRIVER_SDHC_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/sdhc)
-    set(DRIVER_CACHE_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/cache/armv7-m7)
-    set(DRIVER_CAAM_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/caam)
-    set(DRIVER_MU_FILES_PATH ${NXP_SDK_ROOT}/platform/drivers/mu)
-    set(DEBUG_CONSOLE_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/debug_console)
-    set(ASSERT_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/assert)
-    set(STR_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/str)
-    set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip)
-    set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/platform/utilities/misc_utilities)
-    set(WIFI_BT_CONFIG_SOURCE_FILE ${NXP_SDK_ROOT}/components/wifi_bt_module/template/wifi_bt_config.c)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -124,12 +72,16 @@ endif()
 list(APPEND SDK_INCLUDES
 
     # CMSIS includes
-    ${NXP_SDK_ROOT}/CMSIS/Core/Include
+    ${NXP_SDK_ROOT}/arch/arm/CMSIS/Core/Include
 
     # other SDK files
-    ${NXP_SDK_ROOT}/devices/MIMXRT1176
+    ${DRIVER_DEVICE_FILES_PATH}
+    ${DEVICE_RT_FILES_PATH}
+    ${DEVICE_RT1060_PERIPH_FILES_PATH}
     ${DRIVER_DEVICE_FILES_PATH}
     ${DRIVER_DEVICE_FILES_PATH}/cm7
+    ${DRIVER_DEVICE_FILES_PATH}/power
+    ${DRIVER_DEVICE_FILES_PATH}/anatop_ai
     ${DRIVER_COMMON_FILES_PATH}
     ${DRIVER_LPUART_FILES_PATH}
     ${DRIVER_LPSPI_FILES_PATH}
@@ -148,14 +100,14 @@ list(APPEND SDK_INCLUDES
     ${STR_FILES_PATH}
 
     # XIP
-    ${NXP_SDK_ROOT}/devices/MIMXRT1176/xip
-    ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip
+    ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}
 
     # SDK components
     ${NXP_SDK_ROOT}/components/uart
     ${NXP_SDK_ROOT}/components/serial_manager
     ${NXP_SDK_ROOT}/components/lists
     ${NXP_SDK_ROOT}/components/osa
+    ${NXP_SDK_ROOT}/components/osa/config
     ${NXP_SDK_ROOT}/components/common_task
     ${NXP_SDK_ROOT}/components/log
     ${NXP_SDK_ROOT}/components/timer_manager
@@ -174,10 +126,9 @@ list(APPEND SDK_INCLUDES
 list(APPEND SDK_SOURCES
 
     # startup files
-    ${NXP_SDK_ROOT}/devices/MIMXRT1176/gcc/startup_MIMXRT1176_cm7.S
+    ${DEVICE_RT_FILES_PATH}/gcc/startup_MIMXRT1176_cm7.S
 
-    # ${NXP_SDK_ROOT}/devices/MIMXRT1176/mcuxpresso/startup_mimxrt1176_cm7.c
-    ${NXP_SDK_ROOT}/devices/MIMXRT1176/system_MIMXRT1176_cm7.c
+    ${DEVICE_RT_FILES_PATH}/system_MIMXRT1176_cm7.c
 
     # other SDK files
     ${DRIVER_LPUART_FILES_PATH}/fsl_lpuart.c
@@ -190,10 +141,11 @@ list(APPEND SDK_SOURCES
     ${DRIVER_FLEXSPI_FILES_PATH}/fsl_flexspi.c
     ${DRIVER_COMMON_FILES_PATH}/fsl_common_arm.c
     ${DRIVER_DEVICE_FILES_PATH}/fsl_clock.c
-    ${DRIVER_DEVICE_FILES_PATH}/fsl_pmu.c
-    ${DRIVER_DEVICE_FILES_PATH}/fsl_anatop_ai.c
-    ${DRIVER_DEVICE_FILES_PATH}/fsl_soc_src.c
-    ${DRIVER_DEVICE_FILES_PATH}/fsl_dcdc.c
+    ${DRIVER_DEVICE_FILES_PATH}/power/fsl_pmu.c
+    ${DRIVER_DEVICE_FILES_PATH}/anatop_ai/fsl_anatop_ai.c
+
+    ${DRIVER_DEVICE_FILES_PATH}/power/fsl_soc_src.c
+    ${DRIVER_DEVICE_FILES_PATH}/power/fsl_dcdc.c
     ${DRIVER_EDMA_FILES_PATH}/fsl_edma.c
     ${DRIVER_DMAMUX_FILES_PATH}/fsl_dmamux.c
     ${DRIVER_CACHE_FILES_PATH}/fsl_cache.c
@@ -205,7 +157,7 @@ list(APPEND SDK_SOURCES
 
     # XIP
     ${FSL_FLEXSPI_NOR_BOOT_FILES_PATH}/fsl_flexspi_nor_boot.c
-    ${NXP_SDK_ROOT}/boards/${EVK_MIMXRT1170}/xip/${EVK_MIMXRT1170}_flexspi_nor_config.c
+    ${NXP_SDK_ROOT}/examples/_boards//${EVK_MIMXRT1170}/xip/${EVK_MIMXRT1170}_flexspi_nor_config.c
 
     # SDK components
     ${NXP_SDK_ROOT}/components/serial_manager/fsl_component_serial_manager.c
@@ -266,13 +218,16 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DCRYPTO_USE_DRIVER_CAAM
     -DCACHE_MODE_WRITE_THROUGH=1
 )
+message(STATUS "==> 1 OT_NXP_TRANSCEIVER RT1170 ${OT_NXP_TRANSCEIVER}")
 
 if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+    message(STATUS "==> 2 OT_NXP_TRANSCEIVER RT1170 ${OT_NXP_TRANSCEIVER}")
+
     if(OT_NXP_LWIP_WIFI)
     # Do nothing transceiver file will be added in the wifi lib
     else()
-        # If Wi-Fi is disabled provide the path to the app_config file to have all required flags for transceivers
-        list(APPEND SDK_TARGET_COMPILE_OPTIONS -include ${PROJECT_SOURCE_DIR}/third_party/wifi/wifi_${OT_NXP_PLATFORM}/app_wifi_config.h)
+        # If Wi-Fi is disabled provide the path to the app_config/wifi_config file to have all required flags for transceivers
+        list(APPEND SDK_INCLUDES ${PROJECT_SOURCE_DIR}/third_party/wifi)
     endif()
 
     list(APPEND SDK_INCLUDES
@@ -295,7 +250,6 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/incl
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld
-        ${NXP_SDK_ROOT}/components/wifi_bt_module/template
         ${NXP_SDK_ROOT}/components/wifi_bt_module/incl
     )
     list(APPEND SDK_SOURCES
@@ -311,13 +265,12 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/sdio.c
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver/wifi-sdio.c
         ${DRIVER_USDHC_FILES_PATH}/fsl_usdhc.c
-        ${WIFI_BT_CONFIG_SOURCE_FILE}
     )
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DNOT_DEFINE_DEFAULT_WIFI_MODULE
         -D${OT_NXP_TRANSCEIVER_INTERFACE_DETAIL}
     )
-elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+elseif(" ${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0 ")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DHAL_UART_DMA_ENABLE=1 # OTW requires the DMA to be enabled
     )
@@ -369,6 +322,10 @@ add_library(${NXP_DRIVER_LIB}
     ${SDK_SOURCES}
 )
 
+target_sources(${NXP_DRIVER_LIB}
+    PUBLIC
+    ${NXP_SDK_ROOT}/components/misc_utilities/fsl_syscall_stub.c)
+
 target_include_directories(${NXP_DRIVER_LIB}
     PUBLIC
     ${SDK_INCLUDES}
@@ -393,14 +350,14 @@ target_link_libraries(${NXP_DRIVER_LIB}
 target_compile_options(${NXP_DRIVER_LIB}
     PUBLIC
     ${SDK_TARGET_COMPILE_OPTIONS}
+    -Wno-unused-parameter
     PRIVATE
     ${OT_CFLAGS}
     -Wno-unknown-pragmas
     -Wno-sign-compare
-    -Wno-unused-parameter
     -Wno-empty-body
     -Wno-unused-function
 )
 
-set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
+set(OT_NXP_MBEDTLS_CONFIG_FILE " \"ot-nxp-mbedtls-config.h\" " PARENT_SCOPE)
 set(OT_NXP_MBEDTLS_PORT ksdk PARENT_SCOPE)

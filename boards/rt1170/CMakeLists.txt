@@ -42,6 +42,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     list(APPEND BOARD_SOURCES
         sdmmc_config.c
     )
+    list(APPEND BOARD_SOURCES wifi_bt_config.c)
     list(APPEND BOARD_COMPILE_DEFINITIONS_PUBLIC
         -DSDIO_ENABLED
     )

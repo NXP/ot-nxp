@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023, NXP
+# Copyright (c) 2024, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,28 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_policy(SET CMP0079 NEW)
+list(APPEND PRJ_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
-# Each platform must set FreeRTOS CMake config flags in order to build freertos-kernel library
-# FREERTOS_PORT
-# FREERTOS_CONFIG_FILE_DIRECTORY
-# FREERTOS_HEAP
-add_subdirectory(freertos-kernel-build ${PROJECT_BINARY_DIR}/freertos-kernel)
+if(OT_NXP_LWIP_ETH)
+    list(APPEND PRJ_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../lwip_eth")
+endif()
+
+if(OT_NXP_LWIP_IPERF)
+    list(APPEND PRJ_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../lwip_iperf")
+endif()
+
+set(PRJ_CONF_PATH ${PRJ_CONF_PATH} PARENT_SCOPE)
+
+add_library(nxp-lwip
+    ../lwip_tcpip_init_once.c
+)
+
+target_include_directories(nxp-lwip
+    PUBLIC
+    ..
+)
+
+target_link_libraries(nxp-lwip
+    PRIVATE
+    ${NXP_DRIVER_LIB}
+)

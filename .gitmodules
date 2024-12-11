@@ -1,3 +1,6 @@
 [submodule "openthread"]
 	path = openthread
 	url = ../openthread.git
+[submodule "third_party/nxp_matter_support"]
+	path = third_party/nxp_matter_support
+	url = ../nxp_matter_support.git

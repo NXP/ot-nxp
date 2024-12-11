@@ -42,9 +42,10 @@ endif()
 
 # Tell the framework which board lib to link to, to retrieve dependencies (include paths, flags)
 set(CONNFWK_BOARD_LIB_EXTERNAL ${NXP_BOARD_LIB})
+set(CONNFWK_SDK_PATH ${NXP_SDK_ROOT}/middleware/wireless/framework)
 
 # Add the Framework as a subdirectory
-add_subdirectory(${NXP_SDK_ROOT}/middleware/wireless/framework ${PROJECT_BINARY_DIR}/framework)
+add_subdirectory(connfwk_build ${PROJECT_BINARY_DIR}/framework)
 
 target_compile_definitions(connfwk-config
     INTERFACE
