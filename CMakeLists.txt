@@ -33,6 +33,7 @@ message(STATUS "SdkRootDirPath ${SdkRootDirPath}")
 if(DEFINED SdkRootDirPath)
     include(${SdkRootDirPath}/cmake/extension/logging.cmake)
     include(${SdkRootDirPath}/cmake/toolchain/toolchain.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchain/arm-none-eabi.cmake)
 endif()
 
 project(ot-nxp
