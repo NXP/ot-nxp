@@ -53,7 +53,3 @@ endif()
 if(OT_APP_FTD_BLE_SHELL)
     add_subdirectory(ot_cli_ftd_ble_shell)
 endif()
-
-if(OT_APP_FTD_BLE_LOC_READER)
-    add_subdirectory(ot_cli_ftd_ble_loc_reader)
-endif()

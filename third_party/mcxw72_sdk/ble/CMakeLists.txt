@@ -29,9 +29,6 @@
 
 set(SDK_CRYPTO_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/SecLib/lib_crypto_m33.a" CACHE STRING "")
 set(SDK_BLE_HOST_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_ble_OPT_host_cm33_gcc.a" CACHE STRING "")
-set(SDK_BLE_HDO_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_ble_handover_cm33_gcc.a" CACHE STRING "")
-set(SDK_BLE_CS_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/host/lib/lib_channel_sounding_gcc.a" CACHE STRING "")
-set(SDK_BLE_LCL_LIB "$ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/localization/lib/lib_lcl_algo_cm33_gcc.a" CACHE STRING "")
 
 list(APPEND BLE_LIB_SOURCES
     $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/framework/platform/connected_mcu/fwk_platform_ble.c
@@ -80,8 +77,6 @@ target_include_directories(nxp-mcxw72-ble
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/bluetooth/hci_transport/interface
 
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ble_controller/interface
-
-        $ENV{NXP_MCXW72_SDK_ROOT}/CMSIS/DSP/Include
 )
 
 target_link_libraries(nxp-mcxw72-ble PUBLIC ${NXP_DRIVER_LIB})
