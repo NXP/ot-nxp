@@ -143,7 +143,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}" -b mcxw72evk . --no_sanity_check -Dcore_id=cm33_core0 -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}" --config release -b mcxw72evk . --no_sanity_check -Dcore_id=cm33_core0 -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_rcp_only_uart_flow_control()
@@ -262,29 +262,30 @@ build_ot_cli_ftd_ble_loc_reader()
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
-        build_ot_rcp_only_uart_flow_control "$@"
-        build_ot_rcp_only_uart_dma "$@"
+        # build_ot_rcp_only_uart_flow_control "$@"
+        # build_ot_rcp_only_uart_dma "$@"
         build_ot_without_rcp_image "$@"
         # build_ot_cli_ftd_zc "$@"
         # build_ot_rcp_uart_dma_zb_coprocessor "$@"
-        build_ot_cli_ftd_ble_shell "$@"
+        # build_ot_cli_ftd_ble_shell "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
-        build_ot_rcp_only_uart_flow_control "$@"
+        exit 128 # build_ot_rcp_only_uart_flow_control "$@"
     elif [ "$1" == 'ot_rcp_only_uart_dma' ]; then
-        build_ot_rcp_only_uart_dma "$@"
+        exit 128 # build_ot_rcp_only_uart_dma "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
     elif [ "$1" == 'ot_cli_ftd_zc' ]; then
-        build_ot_cli_ftd_zc "$@"
+        exit 128 # build_ot_cli_ftd_zc "$@"
     elif [ "$1" == 'ot_rcp_uart_dma_zb_coprocessor' ]; then
-        build_ot_rcp_uart_dma_zb_coprocessor "$@"
+        exit 128 # build_ot_rcp_uart_dma_zb_coprocessor "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
-        build_ot_cli_ftd_ble_shell "$@"
+        exit 128 # build_ot_cli_ftd_ble_shell "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_loc_reader' ]; then
-        build_ot_cli_ftd_ble_loc_reader "$@"
+        exit 128 # build_ot_cli_ftd_ble_loc_reader "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_ble_shell, ot_cli_ftd_ble_loc_reader"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image"
+        # echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_ble_shell, ot_cli_ftd_ble_loc_reader"
         # 128 for Invalid arguments
         exit 128
     fi
