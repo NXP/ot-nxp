@@ -101,7 +101,7 @@ readonly OT_OPTIONS_NO_RCP=(
     "-DOT_APP_RCP=OFF"
     "-DOT_RCP=OFF"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
-    "-DOT_APP_LOWPOWER=ON"
+    "-DOT_APP_LOWPOWER=OFF"
 )
 
 build()
@@ -117,7 +117,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}" -b frdmmcxw71 . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}" --config release -b frdmmcxw71 . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_rcp_only_uart_flow_control()
@@ -204,24 +204,25 @@ build_ot_without_rcp_image()
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
-        build_ot_rcp_only_uart_flow_control "$@"
-        build_ot_rcp_only_uart_dma "$@"
+        # build_ot_rcp_only_uart_flow_control "$@"
+        # build_ot_rcp_only_uart_dma "$@"
         build_ot_without_rcp_image "$@"
         # build_ot_cli_ftd_zc "$@"
         # build_ot_rcp_uart_dma_zb_coprocessor "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
-        build_ot_rcp_only_uart_flow_control "$@"
+        exit 128 # build_ot_rcp_only_uart_flow_control "$@"
     elif [ "$1" == 'ot_rcp_only_uart_dma' ]; then
-        build_ot_rcp_only_uart_dma "$@"
+        exit 128 # build_ot_rcp_only_uart_dma "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
     elif [ "$1" == 'ot_cli_ftd_zc' ]; then
-        build_ot_cli_ftd_zc "$@"
+        exit 128 # build_ot_cli_ftd_zc "$@"
     elif [ "$1" == 'ot_rcp_uart_dma_zb_coprocessor' ]; then
-        build_ot_rcp_uart_dma_zb_coprocessor "$@"
+        exit 128 # build_ot_rcp_uart_dma_zb_coprocessor "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_zc, ot_rcp_uart_dma_zb_coprocessor"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image"
+        # echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_zc, ot_rcp_uart_dma_zb_coprocessor"
         # 128 for Invalid arguments
         exit 128
     fi

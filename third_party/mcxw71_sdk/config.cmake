@@ -26,6 +26,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+if (OT_APP_LOWPOWER)
+    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+        gAppLowpowerEnabled_d=1
+    )
+else()
+    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+        gAppLowpowerEnabled_d=0
+    )
+endif()
+
 target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
