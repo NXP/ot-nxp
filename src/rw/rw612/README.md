@@ -48,15 +48,26 @@ Make sure that the paths of all these tools are set into the `Path` system varia
 
 ## Downloading the SDK
 
-Download the NXP MCUXpresso git SDK and associated middleware from GitHub using the west tool:
+Note: Before downloading the SDK, it is assumed that ot-nxp has been downloaded and submodules have been updated, because the script of nxp_matter_support submodule is required.
+Download the NXP MCUXpresso git SDK and associated middleware from GitHub using script:
 
 ```bash
-$ cd <path-to-ot-nxp>/third_party/github_sdk/
-$ west init -l manifest --mf west.yml
-$ west update
+$ cd <path-to-ot-nxp>
+$ ./third_party/nxp_matter_support/scripts/update_nxp_sdk.py --platform common
 ```
 
 ## Building the examples
+
+### Set the compilation parameters
+
+Please set the ARMGCC_DIR and ZEPHYR_BASE parameters using the following commands:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export ARMGCC_DIR='your-own-armgcc-dir-path'
+$ source ./third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk/mcux-env.sh
+$ west mcuxsdk-export
+```
 
 ### To build for RW612_RD board:
 
@@ -64,7 +75,6 @@ $ west update
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_cli
 ```
 
@@ -72,7 +82,6 @@ $ ./script/build_rw612 ot_cli
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_br_wifi
 ```
 
@@ -80,7 +89,6 @@ $ ./script/build_rw612 ot_br_wifi
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_br_eth
 ```
 
@@ -88,7 +96,6 @@ To build ncp adapter support with specific interface such as UART(if use USB, SP
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_cli -DOT_NCP_RADIO=ON -DOT_NXP_NCP_UART_INTERFACE=ON
 ```
 
@@ -96,7 +103,6 @@ To build for a specific device revision such as A0:
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_cli -DOT_NXP_DEVICE_REVISION=A0
 ```
 
@@ -106,7 +112,6 @@ $ ./script/build_rw612 ot_cli -DOT_NXP_DEVICE_REVISION=A0
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_cli -DOT_NXP_BOARD_NAME=rw612_frdm
 ```
 
@@ -114,7 +119,6 @@ $ ./script/build_rw612 ot_cli -DOT_NXP_BOARD_NAME=rw612_frdm
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_br_wifi -DOT_NXP_BOARD_NAME=rw612_frdm
 ```
 
@@ -122,7 +126,6 @@ $ ./script/build_rw612 ot_br_wifi -DOT_NXP_BOARD_NAME=rw612_frdm
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ git submodule update --init
 $ ./script/build_rw612 ot_br_eth -DOT_NXP_BOARD_NAME=rw612_frdm
 ```
 
