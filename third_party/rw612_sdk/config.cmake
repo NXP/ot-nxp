@@ -98,6 +98,7 @@ if(OT_NXP_BUILD_APP_AS_LIB)
         src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
         src/common/lwip
         third_party/lwip
+        third_party/wifi
     )
 endif()
 
@@ -119,6 +120,7 @@ mcux_add_include(
      src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
      src/common/lwip
      third_party/lwip
+     third_party/wifi
 )
 else()
 mcux_add_include(
@@ -212,6 +214,7 @@ if(OT_NCP_RADIO)
 
     mcux_add_macro(
         -DCONFIG_CRC32_HW_ACCELERATE
+        -DCONFIG_NCP=1
         -DCONFIG_NCP_OT=1
         -DNCP_UART_TASK_PRIORITY=3
         -DUSB_DEVICE_CONFIG_LOW_POWER_MODE=1
