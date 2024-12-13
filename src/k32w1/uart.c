@@ -43,6 +43,7 @@
 
 #include "fsl_clock.h"
 #include "fsl_lpuart.h"
+#include "fsl_os_abstraction.h"
 #include "fsl_port.h"
 
 #include "app.h"
@@ -73,7 +74,7 @@ static SERIAL_MANAGER_READ_HANDLE_DEFINE(otCliSerialReadHandle);
 static void Uart_RxCallBack(void *pData, serial_manager_callback_message_t *message, serial_manager_status_t status);
 static void Uart_TxCallBack(void *pBuffer, serial_manager_callback_message_t *message, serial_manager_status_t status);
 
-uint8_t rxBuffer[kReceiveBufferSize];
+uint8_t rxBuffer[SERIAL_MANAGER_RING_BUFFER_SIZE];
 #ifndef OT_APP_SERIAL_PORT_USE_DMA
 static serial_port_uart_config_t uartConfig = {
     .instance     = OT_APP_UART_INSTANCE,
@@ -182,7 +183,6 @@ otError otPlatUartEnable(void)
 {
     serial_manager_status_t status;
     otError                 error = OT_ERROR_NONE;
-    otPlatUartEnabled             = TRUE;
 
     /* set clock */
     CLOCK_SetIpSrc(OT_APP_UART_CLK, OT_APP_UART_CLKSRC);
@@ -222,6 +222,8 @@ otError otPlatUartEnable(void)
     SerialManager_InstallRxCallback((serial_read_handle_t)otCliSerialReadHandle, Uart_RxCallBack, NULL);
     SerialManager_InstallTxCallback((serial_write_handle_t)otCliSerialWriteHandle, Uart_TxCallBack, NULL);
 
+    otPlatUartEnabled = TRUE;
+
 exit:
     return error;
 }
@@ -229,11 +231,25 @@ exit:
 void otPlatUartProcess()
 {
     uint32_t bytesRead = 0U;
-    if ((otPlatUartEnabled) && (sUartRxFired))
+    bool_t   read_data = FALSE;
+
+    if (!otPlatUartEnabled)
     {
+        return;
+    }
+
+    OSA_InterruptDisable();
+    if (sUartRxFired)
+    {
+        read_data    = TRUE;
         sUartRxFired = FALSE;
         PWR_AllowDeviceToSleep();
-        if ((SerialManager_TryRead((serial_read_handle_t)otCliSerialReadHandle, rxBuffer, kReceiveBufferSize,
+    }
+    OSA_InterruptEnable();
+
+    if (read_data)
+    {
+        if ((SerialManager_TryRead((serial_read_handle_t)otCliSerialReadHandle, rxBuffer, sizeof(rxBuffer),
                                    &bytesRead) == kStatus_SerialManager_Success) &&
             (bytesRead != 0))
         {
@@ -297,8 +313,19 @@ otError otPlatUartFlush(void)
 
 static void Uart_RxCallBack(void *pData, serial_manager_callback_message_t *message, serial_manager_status_t status)
 {
-    sUartRxFired = TRUE;
-    PWR_DisallowDeviceToSleep();
+    if (!otPlatUartEnabled)
+    {
+        return;
+    }
+
+    OSA_InterruptDisable();
+    if (!sUartRxFired)
+    {
+        sUartRxFired = TRUE;
+        PWR_DisallowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
     otSysEventSignalPending();
 }
 
