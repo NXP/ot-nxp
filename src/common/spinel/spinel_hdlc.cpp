@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021, The OpenThread Authors.
- *  Copyright (c) 2022-2024 NXP.
+ *  Copyright (c) 2022-2025 NXP.
  *
  *  All rights reserved.
  *
@@ -39,8 +39,8 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include "common/code_utils.hpp"
 #include "common/logging.hpp"
-#include "lib/utils/utils.hpp"
 
 namespace ot {
 
@@ -141,11 +141,11 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 
     assert(mEncoderBuffer.IsEmpty());
 
-    EXPECT_NO_ERROR(error = mHdlcEncoder.BeginFrame());
-    EXPECT_NO_ERROR(error = mHdlcEncoder.Encode(aFrame, aLength));
-    EXPECT_NO_ERROR(error = mHdlcEncoder.EndFrame());
+    SuccessOrExit(error = mHdlcEncoder.BeginFrame());
+    SuccessOrExit(error = mHdlcEncoder.Encode(aFrame, aLength));
+    SuccessOrExit(error = mHdlcEncoder.EndFrame());
     otLogDebgPlat("frame len to send = %d/%d", mEncoderBuffer.GetLength(), aLength);
-    EXPECT_NO_ERROR(error = Write(mEncoderBuffer.GetFrame(), mEncoderBuffer.GetLength()));
+    SuccessOrExit(error = Write(mEncoderBuffer.GetFrame(), mEncoderBuffer.GetLength()));
 
 exit:
     if (xSemaphoreGive(mWriteMutexHandle) != pdTRUE)
