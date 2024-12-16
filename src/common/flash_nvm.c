@@ -399,36 +399,19 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-#if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
-    int again;
-#endif
-
     OT_UNUSED_VARIABLE(aInstance);
     (void)OSA_MutexLock((osa_mutex_handle_t)mFlashRamBufferMutexId, osaWaitForever_c);
     FLib_MemSet((void *)&otSettingsBuffer, 0, sizeof(otSettingsBuffer));
     otSettingsBuffer.recordFreeLen = OT_SETTINGS_BUFFER_SIZE - otSettingsBuffer.recordLen;
+
 #if OT_PLAT_SAVE_NVM_DATA_ON_IDLE
-    /* When saving the NVM data on idle, simply calling the NvSyncSave() here
-     * is not a solution because there is a risk for it to overlap with NVM
-     * operations already started by the idle task. This will lead to the
-     * NvSyncSave() call to occasionally fail its intended purpose.
-     *
-     * Normally, in this case, we would choose to post a request to flush the
-     * NVM data on idle and expect that all pending NVM operations to be
-     * executed during the (subsequent) NvShutdown() phase. However, because
-     * the NvShutdown() API currently has a problem, we cannot do that. In its
-     * stead we are going to use a temporary workaround here and force
-     * execution of the entire NVM task queue before continuing. This
-     * workaround will be removed when the NvShutdown() function will be fixed. */
     NvSaveOnIdle(&otSettingsBuffer, false);
-    do
-    {
-        again = NvIdle();
-    } while (again);
 #else
     /* Save it in flash now */
     NvSyncSave(&otSettingsBuffer, false);
 #endif
+
+    NvShutdown();
     (void)OSA_MutexUnlock((osa_mutex_handle_t)mFlashRamBufferMutexId);
 }
 
