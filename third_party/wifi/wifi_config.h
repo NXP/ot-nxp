@@ -10,7 +10,9 @@
 
 #include "app_config.h"
 
+#ifndef RW610
 #include "wifi_bt_module_config.h"
+#endif
 
 #ifdef WIFI_USER_CONFIG_FILE
 #include WIFI_USER_CONFIG_FILE
