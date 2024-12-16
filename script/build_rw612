@@ -70,7 +70,7 @@ build()
     cd "${OT_SRCDIR}"
 
     # shellcheck disable=SC2068
-    west build -d "${builddir}/$1" -b ${target_board_name} . --no_sanity_check "${@:2}"
+    west build -d "${builddir}/$1" --config release -b ${target_board_name} . --no_sanity_check "${@:2}"
 }
 
 create_directory_and_build()
