@@ -74,7 +74,7 @@ The image needed on the host side is the one generated in `build_mcxw71/bin` whi
 
 ### Flashing the NBU image
 
-NBU image should be written only when a new NXP-SDK is released. [blhost tool](https://cache.nxp.com/secured/assets/downloads/en/device-drivers/blhost_2.6.7.zip?fileExt=.zip) can be used for flashing. Before writing the image, please make sure that MCXW71 is in bootloader mode by keeping the SW4 button pressed while connecting the MCXW71 board to an USB port (unplug the board if already connected to an USB port):
+NBU image should be written only when a new NXP-SDK is released. [blhost tool](https://cache.nxp.com/secured/assets/downloads/en/device-drivers/blhost_2.6.7.zip?fileExt=.zip) can be used for flashing. Before writing the image, please make sure that MCXW71 is in bootloader mode by keeping the SW3 button (also named ISP) pressed while connecting the MCXW71 board to an USB port (unplug the board if already connected to an USB port):
 
 ```bash
 C:\nxp\blhost_2.6.7> blhost.exe -p COM50 -- receive-sb-file .\k32w1_nbu_ble_15_4_dyn.sb3
