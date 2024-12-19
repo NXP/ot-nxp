@@ -132,6 +132,14 @@ mcux_add_include(
 )
 endif()
 
+if(OT_NXP_LWIP_IPERF)
+    mcux_add_include(
+        BASE_PATH ${OT_NXP_ROOT}
+        INCLUDES
+        src/common/lwip
+    )
+endif()
+
 if(OT_NXP_LWIP_WIFI)
 target_link_libraries(${NXP_DRIVER_LIB}
     PUBLIC
