@@ -97,7 +97,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
 )
 
-readonly OT_OPTIONS_TRANSCEIVER_RW612=(
+readonly OT_OPTIONS_TRANSCEIVER_RW612_UART=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
@@ -108,6 +108,49 @@ readonly OT_OPTIONS_TRANSCEIVER_RW612=(
     "-DBOARD_2ND_UART_INSTANCE=1"
     "-DEVK_RT1060_BOARD=evkbmimxrt1060"
     "-DFREERTOS_CONFIG_FILE_DIRECTORY=${OT_SRCDIR}/boards/rt1060/freertos/ncp_host"
+    "-DOT_NCP_RW612_INTERFACE=UART"
+)
+
+readonly OT_OPTIONS_TRANSCEIVER_RW612_USB=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1060"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_TRANSCEIVER=rw612"
+    "-DOT_NCP_RTOS_HOST=ON"
+    "-DBOARD_1ST_UART_INSTANCE=2"
+    "-DBOARD_2ND_UART_INSTANCE=1"
+    "-DEVK_RT1060_BOARD=evkbmimxrt1060"
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY=${OT_SRCDIR}/boards/rt1060/freertos/ncp_host"
+    "-DOT_NCP_RW612_INTERFACE=USB"
+)
+
+readonly OT_OPTIONS_TRANSCEIVER_RW612_SDIO=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1060"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_TRANSCEIVER=rw612"
+    "-DOT_NCP_RTOS_HOST=ON"
+    "-DBOARD_1ST_UART_INSTANCE=2"
+    "-DBOARD_2ND_UART_INSTANCE=1"
+    "-DEVK_RT1060_BOARD=evkbmimxrt1060"
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY=${OT_SRCDIR}/boards/rt1060/freertos/ncp_host"
+    "-DOT_NCP_RW612_INTERFACE=SDIO"
+)
+
+readonly OT_OPTIONS_TRANSCEIVER_RW612_SPI=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1060"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_TRANSCEIVER=rw612"
+    "-DOT_NCP_RTOS_HOST=ON"
+    "-DBOARD_1ST_UART_INSTANCE=2"
+    "-DBOARD_2ND_UART_INSTANCE=1"
+    "-DEVK_RT1060_BOARD=evkbmimxrt1060"
+    "-DFREERTOS_CONFIG_FILE_DIRECTORY=${OT_SRCDIR}/boards/rt1060/freertos/ncp_host"
+    "-DOT_NCP_RW612_INTERFACE=SPI"
 )
 
 build()
@@ -158,8 +201,17 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
-        build rw612_ncp_host "${options[@]}"
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_UART[@]}")
+        build rw612_ncp_host_uart "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
+        build rw612_ncp_host_usb "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
+        build rw612_ncp_host_sdio "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
+        build rw612_ncp_host_spi "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
@@ -176,11 +228,20 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi_br_wifi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
-    elif [ "$1" == 'rw612_ncp_host' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612[@]}")
-        build rw612_ncp_host "${options[@]}"
+    elif [ "$1" == 'rw612_ncp_host_uart' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_UART[@]}")
+        build rw612_ncp_host_uart "${options[@]}"
+    elif [ "$1" == 'rw612_ncp_host_usb' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
+        build rw612_ncp_host_usb "${options[@]}"
+    elif [ "$1" == 'rw612_ncp_host_sdio' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
+        build rw612_ncp_host_sdio "${options[@]}"
+    elif [ "$1" == 'rw612_ncp_host_spi' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
+        build rw612_ncp_host_spi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet,  iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet,  iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host_uart, rw612_ncp_host_usb, rw612_ncp_host_sdio, rw612_ncp_host_spi"
         # 128 for Invalid arguments
         exit 128
     fi
