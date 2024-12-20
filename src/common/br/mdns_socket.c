@@ -139,6 +139,9 @@ void SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex)
         msgInfo.mPeerPort = sMulticastPort;
         msgInfo.mSockAddr = kAnyAddress;
         msgInfo.mSockPort = sMulticastPort;
+        // Enable multicast loop to cover the case where a discovery proxy
+        // query must be also be checked against BR's own services.
+        msgInfo.mMulticastLoop = true;
 
         otPlatUdpSend(&sMdnsSocket, aMessage, &msgInfo);
     }
