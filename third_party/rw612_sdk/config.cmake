@@ -112,12 +112,16 @@ if(OT_NXP_LWIP_WIFI)
 endif()
 
 if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH)
+mcux_add_macro(
+    -DOT_APP_BR_LWIP_HOOKS_EN
+)
 mcux_add_include(
      BASE_PATH ${OT_NXP_ROOT}
      INCLUDES
      boards/${OT_NXP_PLATFORM}
      boards/${OT_NXP_PLATFORM}/freertos/br
      src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
+     src/common/br
      src/common/lwip
      third_party/lwip
      third_party/wifi
