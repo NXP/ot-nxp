@@ -43,6 +43,7 @@ target_include_directories(ot-cli-addons PUBLIC
 
 target_link_libraries(ot-cli-addons PRIVATE
     ${OT_PLATFORM_LIB}
+    ${NXP_DRIVER_LIB}
     ot-config
 )
 

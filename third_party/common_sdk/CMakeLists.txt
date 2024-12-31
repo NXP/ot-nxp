@@ -40,7 +40,7 @@ endif()
 
 # For multi core platforms, the actual target will be driver lib plus
 # a suffix related to core id: e.g. ${NXP_DRIVER_LIB}_cm33_core0
-if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH)
+if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH OR OT_NXP_BUILD_APP_AS_LIB)
 project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
     PROJECT_TYPE LIBRARY
     PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
