@@ -139,6 +139,17 @@ if(OT_NCP_RADIO MATCHES "ON")
     endif()
 endif()
 
+# For ot libs, littlefs is used here to align with ble and wifi
+if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/common/flash_littlefs.c
+    )
+else()
+    list(APPEND PLATFORM_FILES
+        ${PROJECT_SOURCE_DIR}/src/common/flash_nvs.c
+    )
+endif()
+
 add_library(${OT_PLATFORM_LIB}
     ${PLATFORM_FILES}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/radio.cpp
@@ -148,7 +159,6 @@ add_library(${OT_PLATFORM_LIB}
     ${PROJECT_SOURCE_DIR}/src/common/spinel/misc.c
     ${PROJECT_SOURCE_DIR}/src/common/alarm_freertos.c
     #${PROJECT_SOURCE_DIR}/src/common/uart.c
-    ${PROJECT_SOURCE_DIR}/src/common/flash_nvs.c
     ${PROJECT_SOURCE_DIR}/src/common/logging.c
     ${PROJECT_SOURCE_DIR}/src/common/entropy.c
     ${PROJECT_SOURCE_DIR}/src/common/diag.c
