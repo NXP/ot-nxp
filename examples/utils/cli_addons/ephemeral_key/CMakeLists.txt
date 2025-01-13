@@ -34,6 +34,10 @@ target_include_directories(ot-cli-addons PRIVATE
     .
 )
 
+target_compile_definitions(ot-config INTERFACE
+    OT_APP_CLI_EPHEMERAL_KEY_ADDON
+)
+
 target_compile_definitions(ot-cli-addons PRIVATE
     -DOT_APP_CLI_EPHEMERAL_KEY_ADDON
 )
