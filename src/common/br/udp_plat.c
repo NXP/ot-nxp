@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,10 @@
 #include "lwip/sockets.h"
 #include "lwip/tcpip.h"
 #include "lwip/udp.h"
+
+#if LWIP_IPV4
+#include "lwip/igmp.h"
+#endif
 
 #include "fsl_component_generic_list.h"
 #include "fsl_os_abstraction.h"
@@ -318,11 +322,21 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
 {
     otError error = OT_ERROR_NONE;
 
-    ip6_addr_t addr = {0};
-    memcpy(&addr.addr, aAddress->mFields.m8, sizeof(addr.addr));
-
-    VerifyOrExit(ERR_OK == mld6_joingroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), &addr),
-                 error = OT_ERROR_FAILED);
+    ip_addr_t addr = convertOpenthreadToLwipAddress(aAddress);
+    if (IP_IS_V4_VAL(addr))
+    {
+#if LWIP_IPV4
+        VerifyOrExit(ERR_OK ==
+                         igmp_joingroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), ip_2_ip4(&addr)),
+                     error = OT_ERROR_FAILED);
+#endif
+    }
+    else
+    {
+        VerifyOrExit(ERR_OK ==
+                         mld6_joingroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), ip_2_ip6(&addr)),
+                     error = OT_ERROR_FAILED);
+    }
 
 exit:
     return error;
@@ -334,11 +348,21 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
 {
     otError error = OT_ERROR_NONE;
 
-    ip6_addr_t addr = {0};
-    memcpy(&addr.addr, aAddress->mFields.m8, sizeof(addr.addr));
-
-    VerifyOrExit(ERR_OK == mld6_leavegroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), &addr),
-                 error = OT_ERROR_FAILED);
+    ip_addr_t addr = convertOpenthreadToLwipAddress(aAddress);
+    if (IP_IS_V4_VAL(addr))
+    {
+#if LWIP_IPV4
+        VerifyOrExit(
+            ERR_OK == igmp_leavegroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), ip_2_ip4(&addr)),
+            error = OT_ERROR_FAILED);
+#endif
+    }
+    else
+    {
+        VerifyOrExit(
+            ERR_OK == mld6_leavegroup_netif(netif_get_by_index(getInterfaceIndex(aNetifIdentifier)), ip_2_ip6(&addr)),
+            error = OT_ERROR_FAILED);
+    }
 
 exit:
     return error;
