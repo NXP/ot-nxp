@@ -413,6 +413,11 @@ void K32WRadioInit(void)
     /* TX initialization.
        Both frames have the same payload */
     sTxOtFrame.mPsdu = sTxMacFrame.uPayload.au8Byte;
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    /* set the noise floor used by Link Metrics (-110 dBm) */
+    otLinkMetricsInit(K32W_RADIO_RX_SENSITIVITY_DBM - K32W_RADIO_RX_MAX_DBM);
+#endif
 }
 
 void K32WRadioProcess(otInstance *aInstance)
@@ -1738,9 +1743,6 @@ static void K32WGetVsIeGen(void *t, uint8_t *b)
 
     uint8_t lqi  = u8MMAC_GetRxLqi(NULL);
     int8_t  rssi = i8Radio_GetLastPacketRSSI() - K32W_RADIO_RX_MAX_DBM;
-
-    /* set the noise floor used by Link Metrics (-110 dBm) */
-    otLinkMetricsInit(K32W_RADIO_RX_SENSITIVITY_DBM - K32W_RADIO_RX_MAX_DBM);
 
     f.mPsdu   = ((tsPhyFrame *)t)->uPayload.au8Byte;
     f.mLength = ((tsPhyFrame *)t)->u8PayloadLength;
