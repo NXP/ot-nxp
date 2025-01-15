@@ -476,7 +476,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     rf_set_channel(aFrame->mChannel);
 
     msg->msgType                     = gPdDataReq_c;
-    msg->msgData.dataReq.slottedTx   = gPhyUnslottedMode_c;
     msg->msgData.dataReq.psduLength  = aFrame->mLength;
     msg->msgData.dataReq.CCABeforeTx = DEFAULT_CCA_MODE;
 
@@ -825,11 +824,10 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 
     aStart = rf_adjust_tstamp_from_ot(aStart);
 
-    msg.msgType                            = gPlmeSetTRxStateReq_c;
-    msg.msgData.setTRxStateReq.slottedMode = gPhyUnslottedMode_c;
-    msg.msgData.setTRxStateReq.state       = gPhySetRxOn_c;
-    msg.msgData.setTRxStateReq.rxDuration  = aDuration / IEEE802154_SYMBOL_TIME_US;
-    msg.msgData.setTRxStateReq.startTime   = aStart / IEEE802154_SYMBOL_TIME_US;
+    msg.msgType                           = gPlmeSetTRxStateReq_c;
+    msg.msgData.setTRxStateReq.state      = gPhySetRxOn_c;
+    msg.msgData.setTRxStateReq.rxDuration = aDuration / IEEE802154_SYMBOL_TIME_US;
+    msg.msgData.setTRxStateReq.startTime  = aStart / IEEE802154_SYMBOL_TIME_US;
 
     (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
