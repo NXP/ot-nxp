@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2024-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -143,6 +143,8 @@ void TrelPlatInit(otInstance *aInstance, struct netif *backboneNetif)
 
     sTrelService.mServiceInstance = CreateBaseName(aInstance, baseServiceInstanceName, true);
     sTrelService.mServiceType     = sTrelServiceLabel;
+
+    (void)otPlatUdpBindToNetif(&sTrelSocket, OT_NETIF_BACKBONE);
 }
 
 void TrelOnAppReady(const char *aHostName)
@@ -183,7 +185,6 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 
     VerifyOrExit(otPlatUdpSocket(&sTrelSocket) == OT_ERROR_NONE);
     VerifyOrExit(otPlatUdpBind(&sTrelSocket) == OT_ERROR_NONE);
-    VerifyOrExit(otPlatUdpBindToNetif(&sTrelSocket, OT_NETIF_BACKBONE) == OT_ERROR_NONE);
 
     pcb = (struct udp_pcb *)sTrelSocket.mHandle;
 
@@ -257,10 +258,11 @@ void otPlatTrelSend(otInstance       *aInstance,
         return;
     }
 
-    messageInfo.mPeerAddr = aDestSockAddr->mAddress;
-    messageInfo.mPeerPort = aDestSockAddr->mPort;
-    messageInfo.mSockPort = sTrelSocket.mSockName.mPort;
-    messageInfo.mSockAddr = kAnyAddress;
+    messageInfo.mPeerAddr        = aDestSockAddr->mAddress;
+    messageInfo.mPeerPort        = aDestSockAddr->mPort;
+    messageInfo.mSockPort        = sTrelSocket.mSockName.mPort;
+    messageInfo.mSockAddr        = kAnyAddress;
+    messageInfo.mIsHostInterface = true;
 
     if (otPlatUdpSend(&sTrelSocket, message, &messageInfo) == OT_ERROR_NONE)
     {
@@ -400,7 +402,7 @@ static void HandleIp6AddressResolver(otInstance *aInstance, const otMdnsAddressR
         {
             if (aResult->mAddresses[i].mTtl &&
                 (otIp6IsAddressUnspecified(&selectedAddress) ||
-                 (memcmp(selectedAddress.mFields.m8, aResult->mAddresses[i].mAddress.mFields.m8, sizeof(otIp6Address)) <
+                 (memcmp(selectedAddress.mFields.m8, aResult->mAddresses[i].mAddress.mFields.m8, sizeof(otIp6Address)) >
                   0)))
             {
                 selectedAddress = aResult->mAddresses[i].mAddress;
