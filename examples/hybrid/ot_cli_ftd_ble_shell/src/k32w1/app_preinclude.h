@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 NXP
+ * Copyright 2024-2025 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -20,14 +20,6 @@ extern "C" {
 #undef gUnmirroredFeatureSet_d
 
 #define gUseHciTransportDownward_d 1
-#define GENERIC_LIST_LIGHT 0
-#define MULTICORE_APP 1
-
-#define FSL_OSA_TASK_ENABLE 1
-#define FSL_OSA_BM_TIMER_CONFIG FSL_OSA_BM_TIMER_SYSTICK
-
-#define PRINTF_ADVANCED_ENABLE 1
-#define SCANF_ADVANCED_ENABLE 1
 
 #define gAppUseSensors_d 0
 

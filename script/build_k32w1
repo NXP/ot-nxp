@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2021-2024, The OpenThread Authors.
+#  Copyright (c) 2021-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -114,7 +114,9 @@ readonly OT_OPTIONS_CLI_FTD_BLE_SHELL=(
     "-DOT_BLE_SUPPORT=ON"
     "-DOT_APP_FTD_BLE_SHELL=ON"
     "-DOT_PING_SENDER=ON"
+    "-DOT_APP_LOWPOWER=OFF"
     "-DUART_INSTANCE=1"
+    "-DCONF_FILE=${OT_SRCDIR}/examples/hybrid/ot_cli_ftd_ble_shell/prj.conf"
 )
 
 build()
@@ -125,12 +127,10 @@ build()
     if [ ! "$1" = "folder_not_specified" ]; then
         cmakeArgs=("${@:2}")
         rcp_folder_name="$1"
-        mkdir -p "${rcp_folder_name}"
-        cd "${rcp_folder_name}"
     fi
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}" --config release -b k32w148evk . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}/${rcp_folder_name}" --config release -b k32w148evk . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_rcp_only_uart_flow_control()
@@ -238,7 +238,7 @@ create_directory_and_build()
         build_ot_without_rcp_image "$@"
         # build_ot_cli_ftd_zc "$@"
         # build_ot_rcp_uart_dma_zb_coprocessor "$@"
-        # build_ot_cli_ftd_ble_shell "$@"
+        build_ot_cli_ftd_ble_shell "$@"
 
     elif [ "$1" == 'ot_rcp_only_uart_flow_control' ]; then
         exit 128 # build_ot_rcp_only_uart_flow_control "$@"
@@ -251,9 +251,9 @@ create_directory_and_build()
     elif [ "$1" == 'ot_rcp_uart_dma_zb_coprocessor' ]; then
         exit 128 # build_ot_rcp_uart_dma_zb_coprocessor "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
-        exit 128 # build_ot_cli_ftd_ble_shell "$@"
+        build_ot_cli_ftd_ble_shell "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, build_ot_cli_ftd_ble_shell"
         # echo >&2 "Unsupported action: $1. Supported: all, ot_rcp_only_uart_flow_control, ot_rcp_only_uart_dma, ot_without_rcp_image, ot_cli_ftd_zc, ot_rcp_uart_dma_zb_coprocessor, ot_cli_ftd_ble_shell"
         # 128 for Invalid arguments
         exit 128

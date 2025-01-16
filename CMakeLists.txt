@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021, The OpenThread Authors.
+# Copyright (c) 2021-2025, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ cmake_minimum_required(VERSION 3.10.2)
 message(STATUS "SdkRootDirPath ${SdkRootDirPath}")
 
 if(DEFINED SdkRootDirPath)
+    cmake_path(SET SdkRootDirPath ${SdkRootDirPath})
     include(${SdkRootDirPath}/cmake/extension/logging.cmake)
     include(${SdkRootDirPath}/cmake/toolchain/toolchain.cmake)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchain/arm-none-eabi.cmake)

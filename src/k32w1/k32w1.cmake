@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2021-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,12 @@ target_link_libraries(openthread-${OT_NXP_PLATFORM}
         ot-config
 )
 endif()
+
+# Openthread libs need to have openthread platform dependencies
+target_link_libraries(ot-config
+    INTERFACE
+        openthread-${OT_NXP_PLATFORM}
+)
 
 target_compile_definitions(openthread-${OT_NXP_PLATFORM}
     PUBLIC
