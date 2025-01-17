@@ -88,7 +88,7 @@ Host image is the one found under `build_mcxw71/bin`. It should be written after
 
 If debugging is needed then jump directly to the [Debugging](#debugging) section. Otherwise, if only flashing is needed then [JLink 7.84b](https://www.segger.com/downloads/jlink/) can be used:
 
-- Plug MCXW71 to the USB port (no need to keep the SW4 button pressed while doing this)
+- Plug MCXW71 to the USB port (no need to keep the SW3 button pressed while doing this)
 
 - Create a new file, `commands_script`, with the following content (change application name accordingly):
 
