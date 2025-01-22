@@ -30,6 +30,7 @@
 #define OT_LWIP_H_
 
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/message.h>
 
 #include "lwip/tcpip.h"
@@ -52,11 +53,8 @@ typedef void (*otPlatUnlockTaskCb)();
 
 /*!
  * @brief This function initializes LWIP stack
- *
- * @param[in] lockTaskCb a function pointer to lock the Thread task
- * @param[in] unlockTaskCb a function pointer to unlock the Thread task
  */
-void otPlatLwipInit(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockTaskCb);
+void otPlatLwipInit(void);
 
 /*!
  * @brief This function sets the OpenThread instance reference for lwip task.
@@ -101,6 +99,22 @@ struct pbuf *otPlatLwipConvertToLwipMsg(otMessage *otIpPkt, bool bTransport);
  * @return otMessage* pointer to OT message
  */
 otMessage *otPlatLwipConvertToOtMsg(struct pbuf *lwipIpPkt);
+
+/*!
+ * @brief This function converts an OT IP address to a Lwip IP address
+ *
+ * @param[in] aAddress pointer to OT IP address
+ * @return ip_addr_t Lwip IP address with populated fields
+ */
+ip_addr_t otPlatLwipConvertToLwipAddress(const otIp6Address *aAddress);
+
+/*!
+ * @brief This function converts a Lwip IP address to an OT IP address
+ *
+ * @param[in] ip_addr_t pointer to Lwip IP address
+ * @return otIp6Address OT IP address with populated fields
+ */
+otIp6Address otPlatLwipConvertToOtAddress(const ip_addr_t *addr);
 
 /*!
  * @brief This function returns a pointer to the already assigned OpenThread network interface

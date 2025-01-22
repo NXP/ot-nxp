@@ -50,14 +50,15 @@
 #include "lwip_mcast.h"
 #include "lwip/dhcp6.h"
 
-#include <openthread/backbone_router_ftd.h>
 #include <openthread/border_router.h>
+#include <openthread/cli.h>
 #include <openthread/dnssd_server.h>
 #include <openthread/mdns.h>
-#include <openthread/nat64.h>
 #include <openthread/srp_server.h>
+#include <openthread/tasklet.h>
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/infra_if.h>
+#include <openthread/platform/memory.h>
 
 #include <string.h>
 
@@ -66,6 +67,13 @@
 /* -------------------------------------------------------------------------- */
 
 #define MAX_HOST_IPV6_ADDRESSES 4
+
+/* -------------------------------------------------------------------------- */
+/*                             Public memory                                 */
+/* -------------------------------------------------------------------------- */
+
+otPlatLockTaskCb   gLockTaskCb;
+otPlatUnlockTaskCb gUnlockTaskCb;
 
 /* -------------------------------------------------------------------------- */
 /*                             Private memory                                 */
@@ -84,6 +92,20 @@ static bool sNat64TranslatorEnable = true;
 static otMdnsHost   sHost;
 static otIp6Address sHostAddresses[MAX_HOST_IPV6_ADDRESSES];
 
+// MSG system
+static list_label_t sBrMsgList;
+static OSA_MUTEX_HANDLE_DEFINE(sBrMutex);
+
+// Event system
+static list_label_t sBrEvtList;
+static OSA_MUTEX_HANDLE_DEFINE(sBrEvtMutex);
+
+struct brMdnsHostInitContext
+{
+    netif_nsc_reason_t        reason;
+    netif_ext_callback_args_t args;
+};
+
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
@@ -96,6 +118,7 @@ static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext);
 
 static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
 static bool UpdateIp6AddressList();
+static void BrMdnsHostInitLwipCb(void *aContext);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
@@ -106,22 +129,36 @@ void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif
     sExtNetif    = aExtNetif;
     sThreadNetif = aThreadNetif;
 
-#if OT_APP_BR_LWIP_HOOKS_EN
-    lwipHooksInit(sInstance, sExtNetif, aThreadNetif);
-#endif
-    UdpPlatInit(sInstance, sExtNetif, aThreadNetif);
-    InfraIfInit(sInstance, sExtNetif);
-    MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
-    TrelPlatInit(sInstance, sExtNetif);
+    LIST_Init(&sBrMsgList, 0);
+    if (KOSA_StatusSuccess != OSA_MutexCreate((osa_mutex_handle_t)sBrMutex))
+    {
+        assert(true);
+    }
 
-    netif_add_ext_callback(&sNetifCallback, &BrNetifExtCb);
+    LIST_Init(&sBrEvtList, 0);
+    if (KOSA_StatusSuccess != OSA_MutexCreate((osa_mutex_handle_t)sBrEvtMutex))
+    {
+        assert(true);
+    }
+
+    brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+
+    // in case there is no memory to allocate BR platfrom init event, assert,
+    // as functionality is dependent on this event.
+    if (context == NULL)
+    {
+        assert(true);
+    }
+
+    context->type = eBrInitPlatform;
+    BrPostOtEvent(context);
 }
 
-void BrUpdateLwipThrIf(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockCb)
+void BrUpdateLwipThrIf()
 {
     // Update the LWIP Thread interface to use the send/receive functions from otPLatLwip.
     // These functions supoprt NAT64 and rate limiting.
-    otPlatLwipInit(lockTaskCb, unlockCb);
+    otPlatLwipInit();
     otPlatLwipSetOtInstance(sInstance);
     otPlatLwipAddThreadInterface(sThreadNetif);
 }
@@ -133,6 +170,12 @@ void BrSetNat64TranslatorState(bool aEnable)
         sNat64TranslatorEnable = aEnable;
         otNat64SetEnabled(sInstance, sNat64TranslatorEnable);
     }
+}
+
+void BrInitAppLock(otPlatLockTaskCb aLockTaskCb, otPlatUnlockTaskCb aUnlockTaskCb)
+{
+    gLockTaskCb   = aLockTaskCb;
+    gUnlockTaskCb = aUnlockTaskCb;
 }
 
 void BrInitServices()
@@ -167,14 +210,18 @@ void BrInitMdnsHost(const char *aHostName)
 
     if (netif_is_link_up(sExtNetif))
     {
-        netif_ext_callback_args_t args = {0};
-        args.link_changed.state        = true;
-        netif_nsc_reason_t cbFlags     = LWIP_NSC_LINK_CHANGED | LWIP_NSC_IPV6_SET;
+        struct brMdnsHostInitContext *brMdnsHostInitContextPtr =
+            (struct brMdnsHostInitContext *)otPlatCAlloc(1, sizeof(struct brMdnsHostInitContext));
+
+        brMdnsHostInitContextPtr->args.link_changed.state = true;
+        brMdnsHostInitContextPtr->reason                  = LWIP_NSC_LINK_CHANGED | LWIP_NSC_IPV6_SET;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         if (!ip4_addr_isany(netif_ip4_addr(sExtNetif)))
         {
-            cbFlags |= LWIP_NSC_IPV4_ADDRESS_CHANGED;
+            brMdnsHostInitContextPtr->reason |= LWIP_NSC_IPV4_ADDRESS_CHANGED;
         }
-        BrNetifExtCb(sExtNetif, cbFlags, &args);
+#endif
+        tcpip_callback(BrMdnsHostInitLwipCb, (void *)brMdnsHostInitContextPtr);
     }
 }
 
@@ -194,40 +241,37 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
     {
         if ((reason & LWIP_NSC_LINK_CHANGED))
         {
-            sExternalNetifState = args->link_changed.state;
-            otPlatInfraIfStateChanged(sInstance, netif_get_index(sExtNetif), sExternalNetifState);
-            if (sExternalNetifState)
-            {
-                if (!sBrIsInitialized)
-                {
-                    BrInitServices();
-                    sBrIsInitialized = true;
-                }
-                else
-                {
-                    otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
-                }
-            }
-            else
-            {
-                BorderAgentDeInit();
-                TrelOnExternalNetifDown();
-            }
+            sExternalNetifState   = args->link_changed.state;
+            brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+            VerifyOrExit(context != NULL);
+            context->type                           = eLinkChangedEvent;
+            context->link_changed_event.netif_idx   = netif_get_index(netif);
+            context->link_changed_event.netif_state = sExternalNetifState;
+            BrPostOtEvent(context);
         }
         if ((reason & (LWIP_NSC_IPV6_SET | LWIP_NSC_IPV6_ADDR_STATE_CHANGED)) && sExternalNetifState)
         {
             if (UpdateIp6AddressList())
             {
-                otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
+                brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+                VerifyOrExit(context != NULL);
+                context->type                            = eAddrSetOrChanged;
+                context->addr_set_or_changed_event.isIp6 = true;
+                BrPostOtEvent(context);
             }
         }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         if ((reason & LWIP_NSC_IPV4_ADDRESS_CHANGED))
         {
-            otIp4Cidr         aCidr;
+            otIp4Cidr         aCidr                 = {0};
             const ip4_addr_t *ip4Addr               = netif_ip4_addr(sExtNetif);
             const ip4_addr_t *ip4DefRoute           = netif_ip4_gw(sExtNetif);
             bool              bNat64TranslatorState = false;
+
+            brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+            VerifyOrExit(context != NULL);
+            context->type                            = eAddrSetOrChanged;
+            context->addr_set_or_changed_event.isIp6 = false;
 
             // Evaluate conditions to enable / disable NAT64. According to specification we must have a valid IPv4
             // address and a default gateway in order to enable 6 to 4 translation.
@@ -244,20 +288,153 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
 
                 aCidr.mAddress.mFields.m32 = ip4Addr->addr;
                 aCidr.mLength              = 32U;
-                // Ignore error for the call, can only fail if the cidr len is 0 but we are always setting it to 32.
-                otNat64SetIp4Cidr(sInstance, &aCidr);
+
                 // Only enable if master flag is true. The spec requires that the user can decide to disable NAT64
                 // translation but default value is true.
                 bNat64TranslatorState = sNat64TranslatorEnable;
+
+                context->addr_set_or_changed_event.cidr = aCidr;
             }
             else
             {
                 // Disable the default interface, with no default gateway or IPv4 address it cannot be used.
                 netif_set_default(sExtNetif);
             }
-            otNat64SetEnabled(sInstance, bNat64TranslatorState);
+
+            context->addr_set_or_changed_event.nat64TranslatorState = bNat64TranslatorState;
+            BrPostOtEvent(context);
         }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+    }
+
+exit:
+    return;
+}
+
+void BrPostOtMessage(brMsgContext *aContextMsgPtr)
+{
+    // Ignore status as we set the list to unlimited size
+    (void)OSA_MutexLock((osa_mutex_handle_t)sBrMutex, osaWaitForever_c);
+    LIST_AddTail(&sBrMsgList, (list_element_handle_t)aContextMsgPtr);
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)sBrMutex);
+
+    otTaskletsSignalPending(sInstance);
+}
+
+void BrPostOtEvent(brEvtContext *aContextEvtPtr)
+{
+    // Ignore status as we set the list to unlimited size
+    (void)OSA_MutexLock((osa_mutex_handle_t)sBrEvtMutex, osaWaitForever_c);
+    LIST_AddTail(&sBrEvtList, (list_element_handle_t)aContextEvtPtr);
+    (void)OSA_MutexUnlock((osa_mutex_handle_t)sBrEvtMutex);
+
+    otTaskletsSignalPending(sInstance);
+}
+
+void otPlatBrProcessOtMsgQueue()
+{
+    if (sInstance)
+    {
+        brMsgContext *msgReceiveContextPtr = NULL;
+
+        do
+        {
+            (void)OSA_MutexLock((osa_mutex_handle_t)sBrMutex, osaWaitForever_c);
+            msgReceiveContextPtr = (brMsgContext *)LIST_RemoveHead(&sBrMsgList);
+            (void)OSA_MutexUnlock((osa_mutex_handle_t)sBrMutex);
+
+            if (msgReceiveContextPtr != NULL)
+            {
+                msgReceiveContextPtr->brMsgCallback(msgReceiveContextPtr);
+                otPlatFree(msgReceiveContextPtr);
+            }
+        } while (msgReceiveContextPtr);
+    }
+}
+
+void otPlatBrProcessOtEvtQueue()
+{
+    if (sInstance)
+    {
+        brEvtContext *evtReceiveContextPtr = NULL;
+
+        do
+        {
+            (void)OSA_MutexLock((osa_mutex_handle_t)sBrEvtMutex, osaWaitForever_c);
+            evtReceiveContextPtr = (brEvtContext *)LIST_RemoveHead(&sBrEvtList);
+            (void)OSA_MutexUnlock((osa_mutex_handle_t)sBrEvtMutex);
+
+            if (evtReceiveContextPtr != NULL)
+            {
+                switch (evtReceiveContextPtr->type)
+                {
+                case eLinkChangedEvent:
+                    otPlatInfraIfStateChanged(sInstance, evtReceiveContextPtr->link_changed_event.netif_idx,
+                                              evtReceiveContextPtr->link_changed_event.netif_state);
+                    if (evtReceiveContextPtr->link_changed_event.netif_state)
+                    {
+                        if (!sBrIsInitialized)
+                        {
+                            BrInitServices();
+                            sBrIsInitialized = true;
+                        }
+                        else
+                        {
+                            otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
+                        }
+                    }
+                    else
+                    {
+                        BorderAgentDeInit();
+                        TrelOnExternalNetifDown();
+                    }
+                    break;
+                case eAddrSetOrChanged:
+                    if (evtReceiveContextPtr->addr_set_or_changed_event.isIp6)
+                    {
+                        otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
+                    }
+                    else // isIp4
+                    {
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+                        // check to see if it was actually set
+                        if (evtReceiveContextPtr->addr_set_or_changed_event.cidr.mAddress.mFields.m32 != 0)
+                        {
+                            otError error =
+                                otNat64SetIp4Cidr(sInstance, &evtReceiveContextPtr->addr_set_or_changed_event.cidr);
+                            if (error != OT_ERROR_NONE)
+                            {
+                                otCliOutputFormat("otNat64SetIp4Cidr failed: %s\r\n", otThreadErrorToString(error));
+                            }
+                        }
+
+                        otNat64SetEnabled(sInstance,
+                                          evtReceiveContextPtr->addr_set_or_changed_event.nat64TranslatorState);
+#endif
+                    }
+                    break;
+                case eDhcp6PrefixChanged:
+                    otPlatBorderRoutingProcessDhcp6PdPrefix(
+                        sInstance, &evtReceiveContextPtr->dhcp6_prefix_changed_event.prefixEntry);
+                    break;
+
+                case eBrInitPlatform:
+#if OT_APP_BR_LWIP_HOOKS_EN
+                    lwipHooksInit(sInstance, sExtNetif, sThreadNetif);
+#endif
+                    UdpPlatInit(sInstance, sExtNetif, sThreadNetif);
+                    InfraIfInit(sInstance, sExtNetif);
+                    MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
+                    TrelPlatInit(sInstance, sExtNetif);
+
+                    CALL_LWIP_API_FROM_OT_CONTEXT(netif_add_ext_callback(&sNetifCallback, &BrNetifExtCb));
+                    break;
+                }
+
+                otPlatFree(evtReceiveContextPtr);
+            }
+        } while (evtReceiveContextPtr);
     }
 }
 
@@ -268,19 +445,26 @@ static void Dhcp6PrefixChangedCb(struct netif *netif, const struct dhcp6_delegat
 {
     if ((netif != NULL) && (prefix != NULL) && (valid == true))
     {
-        otBorderRoutingPrefixTableEntry prefixEntry = {0};
+        brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+        VerifyOrExit(context != NULL);
 
-        prefixEntry.mIsOnLink          = true;
-        prefixEntry.mValidLifetime     = prefix->prefix_valid;
-        prefixEntry.mPreferredLifetime = prefix->prefix_valid;
+        context->type = eDhcp6PrefixChanged;
+        memset(&context->dhcp6_prefix_changed_event.prefixEntry, 0, sizeof(otBorderRoutingPrefixTableEntry));
+
+        context->dhcp6_prefix_changed_event.prefixEntry.mIsOnLink          = true;
+        context->dhcp6_prefix_changed_event.prefixEntry.mValidLifetime     = prefix->prefix_valid;
+        context->dhcp6_prefix_changed_event.prefixEntry.mPreferredLifetime = prefix->prefix_valid;
 
         // Use only 64 long pref to allow SLAAC even if we got smaller prefix. The remainig bits until 64
         // legth will be 0s.
-        prefixEntry.mPrefix.mLength = 64;
-        memcpy(prefixEntry.mPrefix.mPrefix.mFields.m8, prefix->prefix.addr, sizeof(otIp6Address));
+        context->dhcp6_prefix_changed_event.prefixEntry.mPrefix.mLength = 64;
+        memcpy(context->dhcp6_prefix_changed_event.prefixEntry.mPrefix.mPrefix.mFields.m8, prefix->prefix.addr,
+               sizeof(otIp6Address));
 
-        otPlatBorderRoutingProcessDhcp6PdPrefix(sInstance, &prefixEntry);
+        BrPostOtEvent(context);
     }
+exit:
+    return;
 }
 
 static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext)
@@ -291,14 +475,16 @@ static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext)
     {
     case OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED:
     case OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED:
-        dhcp6_disable(sExtNetif);
+        CALL_LWIP_API_FROM_OT_CONTEXT(dhcp6_disable(sExtNetif));
         break;
 
     case OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING:
-        dhcp6_enable(sExtNetif);
-        dhcp6_register_pd_callback(sExtNetif, &Dhcp6PrefixChangedCb);
+        CALL_LWIP_API_FROM_OT_CONTEXT({
+            dhcp6_enable(sExtNetif);
+            dhcp6_register_pd_callback(sExtNetif, &Dhcp6PrefixChangedCb);
 
-        prefix = dhcp6_get_delegated_prefix(sExtNetif);
+            prefix = dhcp6_get_delegated_prefix(sExtNetif);
+        });
         if (prefix->prefix_valid > 0)
         {
             Dhcp6PrefixChangedCb(sExtNetif, prefix, true);
@@ -320,11 +506,11 @@ static void HandleMulticastListenerCallback(void                                
 {
     if (aEvent == OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED)
     {
-        lwipMcastSubscribe((otIp6Address *)aAddress, (struct netif *)aContext);
+        CALL_LWIP_API_FROM_OT_CONTEXT(lwipMcastSubscribe((otIp6Address *)aAddress, (struct netif *)aContext));
     }
     else
     {
-        lwipMcastUnsubscribe((otIp6Address *)aAddress, (struct netif *)aContext);
+        CALL_LWIP_API_FROM_OT_CONTEXT(lwipMcastUnsubscribe((otIp6Address *)aAddress, (struct netif *)aContext));
     }
 }
 
@@ -378,4 +564,11 @@ static bool UpdateIp6AddressList()
     sHost.mAddressesLength = newIp6AddrNum;
 
     return bAddrChange;
+}
+
+static void BrMdnsHostInitLwipCb(void *aContext)
+{
+    struct brMdnsHostInitContext *brMdnsHostInitContextPtr = (struct brMdnsHostInitContext *)aContext;
+    BrNetifExtCb(sExtNetif, brMdnsHostInitContextPtr->reason, &brMdnsHostInitContextPtr->args);
+    otPlatFree(aContext);
 }

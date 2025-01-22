@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2024-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,12 @@
 /* -------------------------------------------------------------------------- */
 
 #include "dns_upstream_resolver.h"
+#include "br_rtos_manager.h"
 #include "udp_plat.h"
 #include <openthread/nat64.h>
 #include <openthread/udp.h>
 #include <openthread/platform/dns.h>
+#include <openthread/platform/memory.h>
 #include <openthread/platform/udp.h>
 #include "common/code_utils.hpp"
 #include "lwip/dns.h"
@@ -61,9 +63,9 @@ static otInstance   *sInstance;
 static struct netif *sBackboneNetif;
 
 static ip_addr_t sUpstreamDnsServers[DNS_MAX_SERVERS];
-static uint8_t   mUpstreamDnsServerCount;
+static uint8_t   sUpstreamDnsServerCount;
 
-static otUdpSocket mTransactions[MAX_CONCURRENT_TRANSACTIONS];
+static otUdpSocket sTransactions[MAX_CONCURRENT_TRANSACTIONS];
 
 static const otIp6Address kAnyAddress = {
     .mFields.m8 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
@@ -80,7 +82,12 @@ static void            CancelTransaction(otPlatDnsUpstreamQuery *aTxn);
 static struct udp_pcb *CreateUdpSocket(otUdpSocket *aUdpSocket);
 static otUdpSocket    *GetTransactionSocket(otPlatDnsUpstreamQuery *aTxn);
 static void            OnUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-
+static void            DnsUpstreamResolverUdpReceive(void            *arg,
+                                                     struct udp_pcb  *pcb,
+                                                     struct pbuf     *p,
+                                                     const ip_addr_t *addr,
+                                                     u16_t            port);
+static void            DnsUpstreamResolverProcessOtReceive(brMsgContext *aContextMsgPtr);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
@@ -109,7 +116,7 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
 
 void GetDnsServerList()
 {
-    mUpstreamDnsServerCount = 0;
+    sUpstreamDnsServerCount = 0;
     for (uint8_t i = 0; i < DNS_MAX_SERVERS; i++)
     {
         if (!ip_addr_isany(dns_getserver(i)))
@@ -120,26 +127,26 @@ void GetDnsServerList()
                 ip4_2_ipv4_mapped_ipv6(ip_2_ip6(&sUpstreamDnsServers[i]), ip_2_ip4(&sUpstreamDnsServers[i]));
                 sUpstreamDnsServers[i].type = IPADDR_TYPE_V6;
             }
-            mUpstreamDnsServerCount++;
+            sUpstreamDnsServerCount++;
         }
     }
 }
 
 static void SendQuery(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
-    otError      error   = OT_ERROR_NONE;
-    otUdpSocket *txn     = NULL;
-    otMessage   *message = NULL;
+    otError      error        = OT_ERROR_NONE;
+    otUdpSocket *txn          = NULL;
+    otMessage   *message      = NULL;
+    uint8_t     *packetToSend = NULL;
 
-    otMessageInfo     messageInfo;
+    otMessageInfo     messageInfo = {0};
     otMessageSettings msgSettings = {.mLinkSecurityEnabled = false, .mPriority = OT_MESSAGE_PRIORITY_NORMAL};
 
-    char     packet[DNS_MSG_MAX_SIZE];
     uint16_t length = otMessageGetLength(aQuery);
+    packetToSend    = (uint8_t *)otPlatCAlloc(1, length);
+    VerifyOrExit(packetToSend != NULL, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(otMessageRead(aQuery, 0, &packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
-
-    memset(&messageInfo, 0, sizeof(otMessageInfo));
+    VerifyOrExit(otMessageRead(aQuery, 0, packetToSend, length) == length, error = OT_ERROR_NO_BUFS);
 
     GetDnsServerList();
     txn = CreateTransaction(aTxn);
@@ -149,14 +156,14 @@ static void SendQuery(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     messageInfo.mSockPort = txn->mSockName.mPort;
     messageInfo.mSockAddr = kAnyAddress;
 
-    for (uint8_t i = 0; i < mUpstreamDnsServerCount; i++)
+    for (uint8_t i = 0; i < sUpstreamDnsServerCount; i++)
     {
         memcpy(&messageInfo.mPeerAddr, ip_2_ip6(&sUpstreamDnsServers[i])->addr, sizeof(messageInfo.mPeerAddr));
 
         message = otUdpNewMessage(sInstance, &msgSettings);
         VerifyOrExit(message != NULL, error = OT_ERROR_NO_BUFS);
 
-        VerifyOrExit(otMessageAppend(message, &packet, length) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
+        VerifyOrExit(otMessageAppend(message, packetToSend, length) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
 
         error = otPlatUdpSend(txn, message, &messageInfo);
     }
@@ -167,6 +174,10 @@ exit:
         {
             otMessageFree(message);
         }
+    }
+    if (packetToSend)
+    {
+        otPlatFree(packetToSend);
     }
     return;
 }
@@ -183,20 +194,20 @@ static otUdpSocket *CreateTransaction(otPlatDnsUpstreamQuery *aTxn)
 
     for (uint8_t i = 0; i < MAX_CONCURRENT_TRANSACTIONS; i++)
     {
-        if (mTransactions[i].mContext == aTxn)
+        if (sTransactions[i].mContext == aTxn)
         {
             return NULL;
         }
-        if (mTransactions[i].mContext == NULL)
+        if (sTransactions[i].mContext == NULL)
         {
-            struct udp_pcb *pcb = CreateUdpSocket(&mTransactions[i]);
+            struct udp_pcb *pcb = CreateUdpSocket(&sTransactions[i]);
             if (pcb == NULL)
             {
                 break;
             }
 
-            txn                       = &mTransactions[i];
-            mTransactions[i].mContext = aTxn;
+            txn                       = &sTransactions[i];
+            sTransactions[i].mContext = aTxn;
             break;
         }
     }
@@ -221,16 +232,15 @@ static void CloseTransaction(otPlatDnsUpstreamQuery *aTxn)
 static void CancelTransaction(otPlatDnsUpstreamQuery *aTxn)
 {
     CloseTransaction(aTxn);
-    otPlatDnsUpstreamQueryDone(sInstance, aTxn, NULL);
 }
 
 static otUdpSocket *GetTransactionSocket(otPlatDnsUpstreamQuery *aTxn)
 {
     for (uint8_t i = 0; i < MAX_CONCURRENT_TRANSACTIONS; i++)
     {
-        if (mTransactions[i].mContext == aTxn)
+        if (sTransactions[i].mContext == aTxn)
         {
-            return &mTransactions[i];
+            return &sTransactions[i];
         }
     }
 
@@ -242,16 +252,27 @@ static struct udp_pcb *CreateUdpSocket(otUdpSocket *aUdpSocket)
     struct udp_pcb *pcb = NULL;
 
     aUdpSocket->mHandler = OnUdpReceive;
-    VerifyOrExit(otPlatUdpSocket(aUdpSocket) == OT_ERROR_NONE);
+
+    CALL_LWIP_API_FROM_OT_CONTEXT({
+        pcb = udp_new();
+        if (pcb != NULL)
+        {
+            udp_recv(pcb, DnsUpstreamResolverUdpReceive, aUdpSocket);
+            aUdpSocket->mHandle = pcb;
+        }
+    });
+    VerifyOrExit(pcb != NULL);
     VerifyOrExit(otPlatUdpBind(aUdpSocket) == OT_ERROR_NONE);
     VerifyOrExit(otPlatUdpBindToNetif(aUdpSocket, OT_NETIF_BACKBONE) == OT_ERROR_NONE);
-
-    pcb = (struct udp_pcb *)aUdpSocket->mHandle;
 
     aUdpSocket->mSockName.mPort = pcb->local_port;
 
     return pcb;
 exit:
+    if (pcb != NULL)
+    {
+        CALL_LWIP_API_FROM_OT_CONTEXT(udp_remove(pcb));
+    }
     return NULL;
 }
 
@@ -259,4 +280,45 @@ static void OnUdpReceive(void *aContext, otMessage *aMessage, const otMessageInf
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
     SendResponse(aContext, aMessage);
+}
+
+static void DnsUpstreamResolverUdpReceive(void            *arg,
+                                          struct udp_pcb  *pcb,
+                                          struct pbuf     *p,
+                                          const ip_addr_t *addr,
+                                          u16_t            port)
+{
+    (void)pcb;
+    otError error = OT_ERROR_NONE;
+
+    brMsgContext *contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext));
+    VerifyOrExit(contextMsgPtr != NULL);
+
+    contextMsgPtr->socket = (otUdpSocket *)arg;
+    contextMsgPtr->pbuf   = p;
+
+    contextMsgPtr->brMsgCallback = DnsUpstreamResolverProcessOtReceive;
+
+    BrPostOtMessage(contextMsgPtr);
+
+exit:
+    if (contextMsgPtr == NULL)
+    {
+        pbuf_free(p);
+    }
+}
+
+static void DnsUpstreamResolverProcessOtReceive(brMsgContext *aContextMsgPtr)
+{
+    if (sInstance)
+    {
+        otMessage *message = otPlatLwipConvertToOtMsg(aContextMsgPtr->pbuf);
+        VerifyOrExit(message != NULL);
+
+        // message is owned by OT, no need to free it explicitly
+        aContextMsgPtr->socket->mHandler(aContextMsgPtr->socket->mContext, message, &aContextMsgPtr->messageInfo);
+    }
+exit:
+    // Free the pbuf on lwip context to prevent any possible corruption
+    (void)pbuf_free_callback(aContextMsgPtr->pbuf);
 }

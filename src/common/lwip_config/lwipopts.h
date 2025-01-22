@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -516,6 +516,21 @@ u32_t lwip_rand(void);
 
 #define LWIP_NUM_NETIF_CLIENT_DATA 10
 #define LWIP_TCPIP_CORE_LOCKING 1
+
+#if LWIP_TCPIP_CORE_LOCKING
+void sys_lock_tcpip_core(void);
+#define LOCK_TCPIP_CORE() sys_lock_tcpip_core()
+
+void sys_unlock_tcpip_core(void);
+#define UNLOCK_TCPIP_CORE() sys_unlock_tcpip_core()
+
+void sys_check_core_locking(void);
+#define LWIP_ASSERT_CORE_LOCKED() sys_check_core_locking()
+
+void sys_mark_tcpip_thread(void);
+#define LWIP_MARK_TCPIP_THREAD() sys_mark_tcpip_thread()
+#endif // LWIP_TPIP_CORE_LOCKING
+
 #define LWIP_NETCONN_SEM_PER_THREAD 0
 #define LWIP_NETCONN_FULLDUPLEX 0
 // Note: According to Thread Conformance v1.2.0, a Thread Border Router MUST be able to hold a Multicast Listeners Table

@@ -62,6 +62,14 @@ static uint8_t bufferLog[SYSTEM_BUFFER_LOG_SIZE];
 #endif
 #endif
 
+/**
+ * Weak functions in case the ot_cli is compiled with OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE flag set.
+ * OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE is set to 1 by default in platform's core-config.h file.
+ */
+
+OT_TOOL_WEAK void otPlatBrProcessOtEvtQueue();
+OT_TOOL_WEAK void otPlatBrProcessOtMsgQueue();
+
 void otPlatExitFunction(void)
 {
     otLogCritPlat("======> OT error stack blocked ");
@@ -128,8 +136,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     otPlatRadioProcess(aInstance);
     otPlatCliUartProcess();
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    otPlatUdpProcess();
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    otPlatBrProcessOtEvtQueue();
+    otPlatBrProcessOtMsgQueue();
 #endif
 }
 

@@ -137,6 +137,7 @@ static uint8_t sEphemeralKey[10]; ///< Byte values, 9 bytes for the key, one for
 
 static uint32_t sEphemeralKeyTimeout;
 static bool     sEpskcActive;
+static bool     sEpskcServiceAdvertisementActive;
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -517,13 +518,17 @@ static void PublishEpskcService(void)
 
     sEpskcService.mPort = otBorderAgentGetUdpPort(sInstance);
 
-    otMdnsRegisterService(sInstance, &sEpskcService, 0, HandleEpskcRegistrationCallback);
+    sEpskcServiceAdvertisementActive =
+        (otMdnsRegisterService(sInstance, &sEpskcService, 0, HandleEpskcRegistrationCallback) == OT_ERROR_NONE);
 }
 
 static void UnpublishEpskcService(void)
 {
-    sEpskcActive = false;
+    VerifyOrExit(sEpskcServiceAdvertisementActive);
     (void)otMdnsUnregisterService(sInstance, &sEpskcService);
+    sEpskcServiceAdvertisementActive = false;
+exit:
+    return;
 }
 
 static void HandleEpskcRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
@@ -563,15 +568,24 @@ exit:
 
 static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
 {
-    bool sEpskcActive = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
+    sEpskcActive                     = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
+    bool candidateSessionEstablished = (otBorderAgentGetState(sInstance) == OT_BORDER_AGENT_STATE_ACTIVE);
 
     if (sEpskcActive)
     {
+        if (!candidateSessionEstablished)
         {
             char formattedEpskc[12];
             snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey, sEphemeralKey + 3,
                      sEphemeralKey + 6);
             PrintEphemeralKey(formattedEpskc, (uint32_t)(sEphemeralKeyTimeout / 1000UL));
+        }
+        else
+        {
+            // Commissioner candidate successfully established a connection using the ephemeral key.
+            // This means that application can stop advertising the mDNS service 'meshcop-e._udp' earlier,
+            // as ephemeral key is one-time use.
+            UnpublishEpskcService();
         }
     }
     else

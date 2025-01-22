@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 #ifndef __OT_UDP_PLAT_H__
 #define __OT_UDP_PLAT_H__
 
+#include "ot_lwip.h"
 #include <openthread/instance.h>
 #include "lwip/netif.h"
 

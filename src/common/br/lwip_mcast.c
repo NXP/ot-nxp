@@ -90,17 +90,19 @@ err_t lwipMcastSubscribe(otIp6Address *addr, struct netif *ifInfra)
         We still need to configure that MAC address filter and express the intent to join a multicast group,
         but also need to forward that traffic.
     */
+    err_t      status   = ERR_OK;
     ip6_addr_t lwipAddr = {.addr = {[0] = addr->mFields.m32[0],
                                     [1] = addr->mFields.m32[1],
                                     [2] = addr->mFields.m32[2],
                                     [3] = addr->mFields.m32[3]},
                            .zone = 255};
 
-    err_t status = filterAdd(&lwipAddr);
+    status = filterAdd(&lwipAddr);
     if (status != ERR_OK)
         return status;
+    status = mld6_joingroup_netif(ifInfra, &lwipAddr);
 
-    return mld6_joingroup_netif(ifInfra, &lwipAddr);
+    return status;
 }
 
 err_t lwipMcastUnsubscribe(otIp6Address *addr, struct netif *ifInfra)
@@ -110,8 +112,7 @@ err_t lwipMcastUnsubscribe(otIp6Address *addr, struct netif *ifInfra)
                                     [2] = addr->mFields.m32[2],
                                     [3] = addr->mFields.m32[3]},
                            .zone = 255};
-
-    err_t status = mld6_leavegroup_netif(ifInfra, &lwipAddr);
+    err_t      status   = mld6_leavegroup_netif(ifInfra, &lwipAddr);
     if (status != ERR_OK)
         return status;
 

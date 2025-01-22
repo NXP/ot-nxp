@@ -181,10 +181,16 @@ void otPlatSaveSettingsIdle(void);
 void otPlatResetIdle(void);
 
 /**
- * This function performs Platform UDP processing.
+ * This function processes messages from external network interface.
  *
  */
-void otPlatUdpProcess();
+void otPlatBrProcessOtMsgQueue();
+
+/**
+ * This function processes events from external network interface.
+ *
+ */
+void otPlatBrProcessOtEvtQueue();
 
 /**
  * This function allows to send spinel set prop vendor cmd with uint8_t value to be set.

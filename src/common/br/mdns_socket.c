@@ -30,11 +30,17 @@
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
 #include "mdns_socket.h"
+#include "br_rtos_manager.h"
+#include "ot_lwip.h"
+
 #include <openthread/nat64.h>
 #include <openthread/platform/mdns_socket.h>
 #include <openthread/platform/memory.h>
 #include <openthread/platform/udp.h>
+#include "lwip/dns.h"
+#include "lwip/igmp.h"
 #include "lwip/ip_addr.h"
+#include "lwip/mld6.h"
 #include "lwip/udp.h"
 
 /* -------------------------------------------------------------------------- */
@@ -44,28 +50,45 @@
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
-static otInstance        *sInstance;
-static otUdpSocket        sMdnsSocket;
-static uint32_t           sInfraIfIndex;
-static const uint16_t     sMulticastPort = 5353;
-static bool               sIsEnabled;
+static otInstance     *sInstance;
+static struct udp_pcb *sMdnsPcb;
+static uint32_t        sInfraIfIndex;
+static const uint16_t  sMulticastPort = 5353;
+
+static bool sMdnsIsEnabled;
+
 static const otIp6Address sMulticastGroupv4MappedTov6 = {
     .mFields.m8 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xE0, 0x00, 0x00, 0xFB}};
 static const otIp6Address sMulticastGroupv6 = {
     .mFields.m8 = {0xFF, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFB}};
-static const otIp6Address kAnyAddressv4MappedTov6 = {
-    .mFields.m8 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00}};
-static const otIp6Address kAnyAddressv6 = {
-    .mFields.m8 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
+typedef struct MdnsAddressInfo
+{
+    otPlatMdnsAddressInfo mAddrInfov6;
+    otPlatMdnsAddressInfo mAddrInfov4;
+    bool                  mTransmitIp6;
+    bool                  mTransmitIp4;
+} MdnsAddressInfo;
+
+struct udpSendContext
+{
+    struct udp_pcb *pcb;
+    otMessage      *message;
+    MdnsAddressInfo addressInfo;
+};
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-void    MdnsSocketReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-void    SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex);
-void    SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress);
-otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
+static void    MdnsSocketReceive(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
+static void    SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex);
+static void    SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress);
+static otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex);
+static otError SocketInit(uint32_t aInfraIfIndex);
+static otError SocketDeInit(uint32_t aInfraIfIndex);
+static void    LwipTaskCb(void *aContext);
+static void    MdnsProcessOtReceive(brMsgContext *aMsgContextPtr);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -75,9 +98,6 @@ void MdnsSocketInit(otInstance *aInstance, uint32_t aInfraIfIndex)
 {
     sInstance     = aInstance;
     sInfraIfIndex = aInfraIfIndex;
-    memset(&sMdnsSocket, 0, sizeof(sMdnsSocket));
-    sMdnsSocket.mSockName.mPort = sMulticastPort;
-    sMdnsSocket.mHandler        = MdnsSocketReceive;
 }
 
 otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
@@ -101,97 +121,164 @@ void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otP
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
 
-void MdnsSocketReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+static void MdnsSocketReceive(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
-    otPlatMdnsAddressInfo addrInfo = {0};
+    (void)pcb;
+    brMsgContext *contextMsgPtr = NULL;
 
-    addrInfo.mAddress      = aMessageInfo->mPeerAddr;
-    addrInfo.mPort         = aMessageInfo->mPeerPort;
-    addrInfo.mInfraIfIndex = sInfraIfIndex;
+    VerifyOrExit(sMdnsIsEnabled);
 
-    otPlatMdnsHandleReceive(sInstance, aMessage, /* aInUnicast */ false, &addrInfo);
+    contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext));
+    VerifyOrExit(contextMsgPtr != NULL);
+
+    contextMsgPtr->socket = (otUdpSocket *)arg;
+    contextMsgPtr->pbuf   = p;
+
+    contextMsgPtr->addrInfo.mAddress      = otPlatLwipConvertToOtAddress(addr);
+    contextMsgPtr->addrInfo.mPort         = port;
+    contextMsgPtr->addrInfo.mInfraIfIndex = sInfraIfIndex;
+    contextMsgPtr->brMsgCallback          = MdnsProcessOtReceive;
+
+    BrPostOtMessage(contextMsgPtr);
+
+exit:
+    if (contextMsgPtr == NULL)
+    {
+        pbuf_free(p);
+    }
 }
 
-otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+static void MdnsProcessOtReceive(brMsgContext *aContextMsgPtr)
+{
+    otMessage *message = NULL;
+
+    VerifyOrExit(sMdnsIsEnabled);
+
+    message = otPlatLwipConvertToOtMsg(aContextMsgPtr->pbuf);
+    VerifyOrExit(message != NULL);
+
+    // message is owned by OT, no need to free it explicitly
+    otPlatMdnsHandleReceive(sInstance, message, /* aInUnicast */ false, &aContextMsgPtr->addrInfo);
+exit:
+    // Free the pbuf on lwip context to prevent any possible corruption
+    (void)pbuf_free_callback(aContextMsgPtr->pbuf);
+}
+
+static otError SetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
     otError error = OT_ERROR_NONE;
+
     if (aEnable)
     {
-        VerifyOrExit(otPlatUdpSocket(&sMdnsSocket) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
-        // Lwip states that for listening to dual-stack packets, IPADDR_TYPE_ANY should be used for local_ip and
-        // remote_ip members and binding should also be done to IP_ANY_TYPE
-        struct udp_pcb *pcb = (struct udp_pcb *)sMdnsSocket.mHandle;
-        pcb->local_ip.type  = IPADDR_TYPE_ANY;
-        pcb->remote_ip.type = IPADDR_TYPE_ANY;
-
-        VerifyOrExit(otPlatUdpBindToNetif(&sMdnsSocket, OT_NETIF_BACKBONE) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
-        VerifyOrExit(otPlatUdpBind(&sMdnsSocket) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
-
-        VerifyOrExit(otPlatUdpJoinMulticastGroup(&sMdnsSocket, OT_NETIF_BACKBONE, &sMulticastGroupv4MappedTov6) ==
-                         OT_ERROR_NONE,
-                     error = OT_ERROR_FAILED);
-
-        VerifyOrExit(otPlatUdpJoinMulticastGroup(&sMdnsSocket, OT_NETIF_BACKBONE, &sMulticastGroupv6) == OT_ERROR_NONE,
-                     error = OT_ERROR_FAILED);
-        sIsEnabled = true;
+        VerifyOrExit(SocketInit(aInfraIfIndex) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
     }
     else
     {
-        sIsEnabled = false;
-
-        VerifyOrExit(otPlatUdpLeaveMulticastGroup(&sMdnsSocket, OT_NETIF_BACKBONE, &sMulticastGroupv4MappedTov6) ==
-                         OT_ERROR_NONE,
-                     error = OT_ERROR_FAILED);
-
-        VerifyOrExit(otPlatUdpLeaveMulticastGroup(&sMdnsSocket, OT_NETIF_BACKBONE, &sMulticastGroupv6) == OT_ERROR_NONE,
-                     error = OT_ERROR_FAILED);
-        VerifyOrExit(otPlatUdpClose(&sMdnsSocket) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
+        error = SocketDeInit(aInfraIfIndex);
     }
 
 exit:
     return error;
 }
 
-void SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex)
+static otError SocketInit(uint32_t aInfraIfIndex)
 {
-    otError    error       = OT_ERROR_NONE;
-    uint8_t   *msgCopyBuf  = NULL;
-    otMessage *copyMessage = NULL;
+    otError error     = OT_ERROR_FAILED;
+    err_t   lwipError = ERR_OK;
+    VerifyOrExit(aInfraIfIndex == sInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
 
-    if (sIsEnabled && aInfraIfIndex == sInfraIfIndex)
+    CALL_LWIP_API_FROM_OT_CONTEXT(sMdnsPcb = udp_new_ip_type(IP_ADDR_ANY));
+    if (sMdnsPcb != NULL)
     {
-        otMessageInfo msgInfov6 = {0};
-        otMessageInfo msgInfov4 = {0};
-        uint16_t      msgLen    = otMessageGetLength(aMessage);
+        CALL_LWIP_API_FROM_OT_CONTEXT(lwipError = udp_bind(sMdnsPcb, IP_ANY_TYPE, sMulticastPort));
+        VerifyOrExit(lwipError == ERR_OK, error = OT_ERROR_FAILED);
 
-        msgCopyBuf = (uint8_t *)otPlatCAlloc(1, msgLen);
-        VerifyOrExit(msgCopyBuf != NULL, error = OT_ERROR_FAILED);
+        CALL_LWIP_API_FROM_OT_CONTEXT(udp_bind_netif(sMdnsPcb, netif_get_by_index(aInfraIfIndex)));
+        ip_addr_t groupAddr = {0};
+        groupAddr           = otPlatLwipConvertToLwipAddress(&sMulticastGroupv6);
 
-        if (otMessageRead(aMessage, 0, msgCopyBuf, msgLen) != msgLen)
+        CALL_LWIP_API_FROM_OT_CONTEXT(
+            lwipError = mld6_joingroup_netif(netif_get_by_index(aInfraIfIndex), ip_2_ip6(&groupAddr)));
+        VerifyOrExit(lwipError == ERR_OK, error = OT_ERROR_FAILED);
+
+        groupAddr = otPlatLwipConvertToLwipAddress(&sMulticastGroupv4MappedTov6);
+        CALL_LWIP_API_FROM_OT_CONTEXT(
+            lwipError = igmp_joingroup_netif(netif_get_by_index(aInfraIfIndex), ip_2_ip4(&groupAddr)));
+        VerifyOrExit(lwipError == ERR_OK, error = OT_ERROR_FAILED);
+
+        CALL_LWIP_API_FROM_OT_CONTEXT(udp_recv(sMdnsPcb, MdnsSocketReceive, NULL));
+        sMdnsIsEnabled = true;
+        error          = OT_ERROR_NONE;
+    }
+
+exit:
+    if (error != OT_ERROR_NONE && sMdnsPcb != NULL)
+    {
+        CALL_LWIP_API_FROM_OT_CONTEXT(udp_remove(sMdnsPcb));
+    }
+    return error;
+}
+
+static otError SocketDeInit(uint32_t aInfraIfIndex)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aInfraIfIndex == sInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(sMdnsIsEnabled, error = OT_ERROR_INVALID_STATE);
+    ip_addr_t groupAddr = {0};
+    groupAddr           = otPlatLwipConvertToLwipAddress(&sMulticastGroupv6);
+
+    CALL_LWIP_API_FROM_OT_CONTEXT({
+        (void)mld6_leavegroup_netif(netif_get_by_index(aInfraIfIndex), ip_2_ip6(&groupAddr));
+        groupAddr = otPlatLwipConvertToLwipAddress(&sMulticastGroupv4MappedTov6);
+        (void)igmp_leavegroup_netif(netif_get_by_index(aInfraIfIndex), ip_2_ip4(&groupAddr));
+        udp_remove(sMdnsPcb);
+    });
+
+    sMdnsIsEnabled = false;
+exit:
+    return error;
+}
+
+static void SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex)
+{
+    otError error       = OT_ERROR_NONE;
+    err_t   postCbError = ERR_OK;
+
+    if (sMdnsIsEnabled && aInfraIfIndex == sInfraIfIndex)
+    {
+        struct udpSendContext *udpSendContexPtr =
+            (struct udpSendContext *)otPlatCAlloc(1, sizeof(struct udpSendContext));
+        VerifyOrExit(NULL != udpSendContexPtr, error = OT_ERROR_FAILED);
+
+        MdnsAddressInfo addressInfo = {.mAddrInfov6.mAddress      = sMulticastGroupv6,
+                                       .mAddrInfov6.mPort         = sMulticastPort,
+                                       .mAddrInfov6.mInfraIfIndex = sInfraIfIndex,
+                                       .mAddrInfov4.mAddress      = sMulticastGroupv4MappedTov6,
+                                       .mAddrInfov4.mPort         = sMulticastPort,
+                                       .mAddrInfov4.mInfraIfIndex = sInfraIfIndex,
+                                       .mTransmitIp6              = true,
+                                       .mTransmitIp4              = true};
+
+        udpSendContexPtr->addressInfo = addressInfo;
+        udpSendContexPtr->message     = aMessage;
+
+        POST_LWIP_CALLBACK_FROM_OT_CONTEXT(postCbError = tcpip_callback(LwipTaskCb, (void *)udpSendContexPtr));
+
+        if (postCbError != ERR_OK)
         {
-            ExitNow(error = OT_ERROR_FAILED);
+            otPlatFree(udpSendContexPtr);
+            otMessageFree(aMessage);
+            aMessage = NULL;
+            error    = OT_ERROR_FAILED;
         }
-        copyMessage = otIp6NewMessage(sInstance, NULL);
-        VerifyOrExit(copyMessage != NULL, error = OT_ERROR_FAILED);
-
-        VerifyOrExit(otMessageAppend(copyMessage, msgCopyBuf, msgLen) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
-        otPlatFree(msgCopyBuf);
-
-        msgInfov6.mPeerAddr = sMulticastGroupv6;
-        msgInfov6.mPeerPort = sMulticastPort;
-        msgInfov6.mSockAddr = kAnyAddressv6;
-        msgInfov6.mSockPort = sMulticastPort;
-        // Enable multicast loop to cover the case where a discovery proxy
-        // query must be also be checked against BR's own services.
-        msgInfov6.mMulticastLoop = true;
-
-        msgInfov4.mPeerAddr = sMulticastGroupv4MappedTov6;
-        msgInfov4.mPeerPort = sMulticastPort;
-        msgInfov4.mSockAddr = kAnyAddressv4MappedTov6;
-        msgInfov4.mSockPort = sMulticastPort;
-
-        otPlatUdpSend(&sMdnsSocket, aMessage, &msgInfov6);
-        otPlatUdpSend(&sMdnsSocket, copyMessage, &msgInfov4);
+    }
+    else
+    {
+        if (aMessage != NULL)
+        {
+            otMessageFree(aMessage);
+            aMessage = NULL;
+        }
     }
 exit:
     if (error == OT_ERROR_FAILED)
@@ -200,42 +287,106 @@ exit:
         {
             otMessageFree(aMessage);
         }
-        if (copyMessage != NULL)
-        {
-            otMessageFree(copyMessage);
-        }
-        if (msgCopyBuf != NULL)
-        {
-            otPlatFree(msgCopyBuf);
-        }
     }
+    return;
 }
 
-void SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
+static void SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
 {
-    if (sIsEnabled && aAddress->mInfraIfIndex == sInfraIfIndex)
+    otError error       = OT_ERROR_NONE;
+    err_t   postCbError = ERR_OK;
+
+    if (sMdnsIsEnabled && aAddress->mInfraIfIndex == sInfraIfIndex)
     {
-        otIp4Address  ip4Address = {0};
-        otMessageInfo msgInfo    = {0};
-        if (otIp4FromIp4MappedIp6Address(&aAddress->mAddress, &ip4Address))
+        struct udpSendContext *udpSendContexPtr =
+            (struct udpSendContext *)otPlatCAlloc(1, sizeof(struct udpSendContext));
+        VerifyOrExit(NULL != udpSendContexPtr, error = OT_ERROR_FAILED);
+
+        otIp4Address    tmp         = {0};
+        MdnsAddressInfo addressInfo = {0};
+        if (otIp4FromIp4MappedIp6Address(&aAddress->mAddress, &tmp) == OT_ERROR_NONE)
         {
-            msgInfo.mSockAddr = kAnyAddressv4MappedTov6;
+            addressInfo.mAddrInfov4.mAddress = aAddress->mAddress;
+            addressInfo.mAddrInfov4.mPort    = aAddress->mPort;
+            addressInfo.mTransmitIp4         = true;
         }
         else
         {
-            msgInfo.mSockAddr = kAnyAddressv6;
+            addressInfo.mAddrInfov6.mAddress = aAddress->mAddress;
+            addressInfo.mAddrInfov6.mPort    = aAddress->mPort;
+            addressInfo.mTransmitIp6         = true;
         }
-        msgInfo.mPeerAddr = aAddress->mAddress;
-        msgInfo.mPeerPort = aAddress->mPort;
-        msgInfo.mSockPort = sMulticastPort;
 
-        otPlatUdpSend(&sMdnsSocket, aMessage, &msgInfo);
+        udpSendContexPtr->addressInfo = addressInfo;
+        udpSendContexPtr->message     = aMessage;
+
+        POST_LWIP_CALLBACK_FROM_OT_CONTEXT(postCbError = tcpip_callback(LwipTaskCb, (void *)udpSendContexPtr));
+        if (postCbError != ERR_OK)
+        {
+            otPlatFree(udpSendContexPtr);
+            otMessageFree(aMessage);
+            aMessage = NULL;
+            error    = OT_ERROR_FAILED;
+        }
     }
     else
     {
         if (aMessage != NULL)
         {
             otMessageFree(aMessage);
+            aMessage = NULL;
         }
     }
+exit:
+    if (error == OT_ERROR_FAILED)
+    {
+        if (aMessage != NULL)
+        {
+            otMessageFree(aMessage);
+        }
+    }
+    return;
+}
+
+static void LwipTaskCb(void *aContext)
+{
+    struct udpSendContext *udpSendContexPtr = (struct udpSendContext *)aContext;
+    struct pbuf           *buffer           = NULL;
+
+    if (udpSendContexPtr->addressInfo.mTransmitIp6)
+    {
+        buffer = otPlatLwipConvertToLwipMsg(udpSendContexPtr->message, true);
+        if (buffer != NULL)
+        {
+            ip_addr_t peerAddress = otPlatLwipConvertToLwipAddress(
+                (const otIp6Address *)&udpSendContexPtr->addressInfo.mAddrInfov6.mAddress);
+            uint16_t port = udpSendContexPtr->addressInfo.mAddrInfov6.mPort;
+            (void)udp_sendto(sMdnsPcb, buffer, &peerAddress, port);
+            pbuf_free(buffer);
+            buffer = NULL;
+        }
+    }
+
+    if (udpSendContexPtr->addressInfo.mTransmitIp4)
+    {
+        buffer = otPlatLwipConvertToLwipMsg(udpSendContexPtr->message, true);
+        if (buffer != NULL)
+        {
+            ip_addr_t peerAddress = otPlatLwipConvertToLwipAddress(
+                (const otIp6Address *)&udpSendContexPtr->addressInfo.mAddrInfov4.mAddress);
+            uint16_t port = udpSendContexPtr->addressInfo.mAddrInfov4.mPort;
+            (void)udp_sendto(sMdnsPcb, buffer, &peerAddress, port);
+            pbuf_free(buffer);
+            buffer = NULL;
+        }
+    }
+
+    gLockTaskCb();
+    otMessageFree(udpSendContexPtr->message);
+    gUnlockTaskCb();
+
+    otPlatFree(aContext);
+    aContext = NULL;
+
+    return;
 }

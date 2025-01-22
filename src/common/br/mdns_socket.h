@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2024-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 #ifndef __OT_MDNS_SOCKET_H__
 #define __OT_MDNS_SOCKET_H__
 
+#include "ot_lwip.h"
 #include <string.h>
 #include <openthread/instance.h>
 #include <openthread/udp.h>

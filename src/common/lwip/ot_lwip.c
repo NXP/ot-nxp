@@ -31,6 +31,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "ot_lwip.h"
+#include "br_rtos_manager.h"
 #include "token_bucket.h"
 
 #include <string.h>
@@ -38,11 +39,10 @@
 #include <common/code_utils.hpp>
 #include <openthread-core-config.h>
 #include <openthread/icmp6.h>
-#include <openthread/instance.h>
-#include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/nat64.h>
 #include <openthread/thread.h>
+#include <openthread/platform/memory.h>
 
 #ifndef DISABLE_TCPIP_INIT
 #include "lwip_tcpip_init_once.h"
@@ -57,14 +57,12 @@
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static struct netif       sThreadNetIf;
-static struct netif      *sThreadNetIfPtr;
-static otInstance        *sInstance = NULL;
-static bool               sAddrAssigned[LWIP_IPV6_NUM_ADDRESSES];
-static otPlatLockTaskCb   sLockTaskCb          = NULL;
-static otPlatUnlockTaskCb sUnlockTaskCb        = NULL;
-static bool               sLwipUninitialized   = true;
-static bool               sThreadIfaceNotAdded = true;
+static struct netif  sThreadNetIf;
+static struct netif *sThreadNetIfPtr;
+static otInstance   *sInstance = NULL;
+static bool          sAddrAssigned[LWIP_IPV6_NUM_ADDRESSES];
+static bool          sLwipUninitialized   = true;
+static bool          sThreadIfaceNotAdded = true;
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
 static otTokenBucket sTokenBucket;
 #endif
@@ -74,20 +72,18 @@ static otTokenBucket sTokenBucket;
 
 static err_t   otPlatLwipThreadNetIfInitCallback(struct netif *netif);
 static err_t   otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr);
+static void    otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr);
 static void    otPlatLwipReceivePacket(otMessage *pkt, void *context);
 static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt);
+static otError otPlatLwipCopyToBuffer(struct pbuf *lwipIpPkt, uint8_t *pBuff);
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void otPlatLwipInit(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockTaskCb)
+void otPlatLwipInit()
 {
     VerifyOrExit(sLwipUninitialized);
-    VerifyOrExit((lockTaskCb != NULL) && (unlockTaskCb != NULL));
-
-    sLockTaskCb   = lockTaskCb;
-    sUnlockTaskCb = unlockTaskCb;
 
 #ifndef DISABLE_TCPIP_INIT
     /* Initialize LWIP stack */
@@ -115,9 +111,6 @@ void otPlatLwipAddThreadInterface(struct netif *aNetIf)
     /* otPlatLwipInit and otPlatLwipSetOtInstance must be called first */
     VerifyOrExit(sInstance != NULL);
 
-    /* Lock LwIP stack */
-    LOCK_TCPIP_CORE();
-
     if (aNetIf != NULL)
     {
         sThreadNetIfPtr             = aNetIf;
@@ -128,25 +121,24 @@ void otPlatLwipAddThreadInterface(struct netif *aNetIf)
     {
         /* Initialize a LwIP netif structure for the OpenThread interface and add it to the list of interfaces known to
          * LwIP. */
-        sThreadNetIfPtr =
-            netif_add(&sThreadNetIf, NULL, NULL, NULL, NULL, otPlatLwipThreadNetIfInitCallback, tcpip_input);
+        CALL_LWIP_API_FROM_OT_CONTEXT({
+            sThreadNetIfPtr =
+                netif_add(&sThreadNetIf, NULL, NULL, NULL, NULL, otPlatLwipThreadNetIfInitCallback, tcpip_input);
 
-        /* Start with the interface in the down state. */
-        netif_set_link_down(sThreadNetIfPtr);
-
+            /* Start with the interface in the down state. */
+            netif_set_link_down(sThreadNetIfPtr);
+        });
         /* ICMPv6 Echo processing enabled for unicast and multicast requests */
         otIcmp6SetEchoMode(sInstance, OT_ICMP6_ECHO_HANDLER_ALL);
         /* Enable the receive filter for Thread control traffic. */
         otIp6SetReceiveFilterEnabled(sInstance, true);
     }
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
-    /* Initialize rate limiter. This is done while lwIP lock is held to prevent it being called before initialization is
-     * complete. */
+    /* Initialize rate limiter. This is done while lwIP lock is held to prevent it being called before
+     * initialization is complete. */
     otTokenBucketInit(&sTokenBucket,
                       OT_APP_THREAD_RATE_LIMIT / 8U); /* Convert from bits per second to bytes per second. */
 #endif
-    /* Unlock LwIP stack */
-    UNLOCK_TCPIP_CORE();
 
     VerifyOrExit(sThreadNetIfPtr != NULL);
 
@@ -175,9 +167,6 @@ void otPlatLwipUpdateState(otChangedFlags flags, void *context)
 
         memset(addrAssigned, 0, sizeof(addrAssigned));
 
-        // Lock LwIP stack.
-        LOCK_TCPIP_CORE();
-
         // Determine whether the device Thread interface is up..
         isInterfaceUp = otIp6IsEnabled(sInstance);
 
@@ -185,14 +174,16 @@ void otPlatLwipUpdateState(otChangedFlags flags, void *context)
         // Set ifConnectivity to indicate the change in the link state.
         if (isInterfaceUp != (bool)netif_is_link_up(sThreadNetIfPtr))
         {
-            if (isInterfaceUp)
-            {
-                netif_set_link_up(sThreadNetIfPtr);
-            }
-            else
-            {
-                netif_set_link_down(sThreadNetIfPtr);
-            }
+            CALL_LWIP_API_FROM_OT_CONTEXT({
+                if (isInterfaceUp)
+                {
+                    netif_set_link_up(sThreadNetIfPtr);
+                }
+                else
+                {
+                    netif_set_link_down(sThreadNetIfPtr);
+                }
+            });
 
             // Presume the interface addresses are also changing.
             addrChange = true;
@@ -222,34 +213,36 @@ void otPlatLwipUpdateState(otChangedFlags flags, void *context)
 
                         // Add the address to the LwIP netif.  If the address is a link-local, and the primary
                         // link-local address* for the LwIP netif has not been set already, then use
-                        // netif_ip6_addr_set() to set the primary address.  Otherwise use netif_add_ip6_address(). This
-                        // special case is required because LwIP's netif_add_ip6_address() will never set the primary
-                        // link-local address.
+                        // netif_ip6_addr_set() to set the primary address.  Otherwise use netif_add_ip6_address().
+                        // This special case is required because LwIP's netif_add_ip6_address() will never set the
+                        // primary link-local address.
                         //
                         // * -- The primary link-local address always appears in the first slot in the netif address
                         // table.
                         //
                         if (ip6_addr_islinklocal(&lwipAddr) && !addrAssigned[0])
                         {
-                            netif_ip6_addr_set(sThreadNetIfPtr, 0, &lwipAddr);
+                            CALL_LWIP_API_FROM_OT_CONTEXT(netif_ip6_addr_set(sThreadNetIfPtr, 0, &lwipAddr));
                             addrIdx = 0;
                         }
                         else
                         {
                             // Add the address to the LwIP netif.  If the address table fills (ERR_VAL), simply stop
                             // adding addresses.  If something else fails, log it and soldier on.
-                            lwipErr = netif_add_ip6_address(sThreadNetIfPtr, &lwipAddr, &addrIdx);
+                            CALL_LWIP_API_FROM_OT_CONTEXT(
+                                lwipErr = netif_add_ip6_address(sThreadNetIfPtr, &lwipAddr, &addrIdx));
                             if (lwipErr == ERR_VAL)
                             {
                                 break;
                             }
                         }
-                        // Set non-mesh-local address state to PREFERRED or ACTIVE depending on the state in OpenThread.
-                        netif_ip6_addr_set_state(
+                        // Set non-mesh-local address state to PREFERRED or ACTIVE depending on the state in
+                        // OpenThread.
+                        CALL_LWIP_API_FROM_OT_CONTEXT(netif_ip6_addr_set_state(
                             sThreadNetIfPtr, addrIdx,
                             (otAddr->mPreferred && otAddr->mAddressOrigin != OT_ADDRESS_ORIGIN_THREAD)
                                 ? IP6_ADDR_PREFERRED
-                                : IP6_ADDR_VALID);
+                                : IP6_ADDR_VALID));
 
                         // Record that the netif address slot was assigned during this loop.
                         addrAssigned[addrIdx] = true;
@@ -260,20 +253,19 @@ void otPlatLwipUpdateState(otChangedFlags flags, void *context)
             // from the netif if the address is one that was previously assigned by this method.
             // In the case where the device is no longer attached to a Thread network, remove all addresses
             // from the netif.
+
             for (u8_t addrIdx = 0; addrIdx < LWIP_IPV6_NUM_ADDRESSES; addrIdx++)
             {
                 if (!isInterfaceUp || (sAddrAssigned[addrIdx] && !addrAssigned[addrIdx]))
                 {
                     // Remove the address from the netif by setting its state to INVALID
-                    netif_ip6_addr_set_state(sThreadNetIfPtr, addrIdx, IP6_ADDR_INVALID);
+                    CALL_LWIP_API_FROM_OT_CONTEXT(netif_ip6_addr_set_state(sThreadNetIfPtr, addrIdx, IP6_ADDR_INVALID));
                 }
             }
 
             // Remember the set of assigned addresses.
             memcpy(sAddrAssigned, addrAssigned, sizeof(sAddrAssigned));
         }
-
-        UNLOCK_TCPIP_CORE();
     }
 }
 
@@ -304,7 +296,7 @@ struct pbuf *otPlatLwipConvertToLwipMsg(otMessage *otIpPkt, bool bTransport)
 exit:
     if (bFreeLwipPkt)
     {
-        pbuf_free(lwipIpPkt);
+        (void)pbuf_free_callback(lwipIpPkt);
         lwipIpPkt = NULL;
     }
     return lwipIpPkt;
@@ -330,6 +322,42 @@ exit:
         otIpPkt = NULL;
     }
     return otIpPkt;
+}
+
+ip_addr_t otPlatLwipConvertToLwipAddress(const otIp6Address *aAddress)
+{
+    ip_addr_t retAddr = {0};
+    retAddr.type      = IPADDR_TYPE_V6;
+
+    memcpy(ip_2_ip6(&retAddr)->addr, aAddress->mFields.m8, sizeof(ip_2_ip6(&retAddr)->addr));
+
+#if LWIP_IPV4
+    if (ip6_addr_isipv4mappedipv6(ip_2_ip6(&retAddr)))
+    {
+        unmap_ipv4_mapped_ipv6(ip_2_ip4(&retAddr), ip_2_ip6(&retAddr));
+        retAddr.type = IPADDR_TYPE_V4;
+    }
+#endif
+
+    return retAddr;
+}
+
+otIp6Address otPlatLwipConvertToOtAddress(const ip_addr_t *addr)
+{
+    otIp6Address retAddr = {0};
+
+    if (IP_IS_V6_VAL(*addr))
+    {
+        memcpy(&retAddr, ip_2_ip6(addr)->addr, sizeof(retAddr));
+    }
+    else
+    {
+        ip_addr_t *tmpAddr = (ip_addr_t *)addr;
+        ip4_2_ipv4_mapped_ipv6(ip_2_ip6(tmpAddr), ip_2_ip4(tmpAddr));
+        memcpy(&retAddr, ip_2_ip6(tmpAddr)->addr, sizeof(retAddr));
+    }
+
+    return retAddr;
 }
 
 struct netif *otPlatLwipGetOtNetif(void)
@@ -359,8 +387,15 @@ otError otPlatLwipNat64Send(struct pbuf *lwipIpv4Pkt)
                  result = OT_ERROR_BUSY);
 #endif
 
+    /* Temporarily release the TCP/IP mutex, take OT mutex, and take back TCP/IP mutex to preserve the
+     * mutex take order as to avoid deadlock. */
+    UNLOCK_TCPIP_CORE();
+
     // Lock OT
-    sLockTaskCb();
+    gLockTaskCb();
+
+    // Take back TCP/IP mutex which was temporarily released above
+    LOCK_TCPIP_CORE();
 
     /* Create OT message to copy lwIP packet into */
     settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(sInstance) != OT_DEVICE_ROLE_DISABLED);
@@ -380,7 +415,7 @@ otError otPlatLwipNat64Send(struct pbuf *lwipIpv4Pkt)
     message = NULL; /* otNat64Send took ownership of message regardless if it has been sent or not */
 
     // Unlock OT
-    sUnlockTaskCb();
+    gUnlockTaskCb();
 
     VerifyOrExit(error == OT_ERROR_NONE, result = error);
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
@@ -419,20 +454,10 @@ static err_t otPlatLwipThreadNetIfInitCallback(struct netif *netif)
 
 static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr)
 {
-    err_t lwipErr = ERR_IF;
+    err_t lwipErr = ERR_OK;
 
     /* Filter out any link local multicast traffic, like ND, that LWIP might send on this interface. */
     VerifyOrExit(!ip6_addr_ismulticast_linklocal(ipaddr), lwipErr = ERR_OK);
-
-    /* Temporarily release the TCP/IP mutex, take OT mutex, and take back TCP/IP mutex to preserve the
-     * mutex take order as to avoid deadlock. */
-    UNLOCK_TCPIP_CORE();
-
-    // Lock OT
-    sLockTaskCb();
-
-    // Take back TCP/IP mutex which was temporarily released above
-    LOCK_TCPIP_CORE();
 
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
     /* TODO: Instead of using lwIP packet length for rate limiting, calculate how many bytes
@@ -445,33 +470,51 @@ static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const s
     else
     {
 #endif
-        otMessage *otIpPkt = otPlatLwipConvertToOtMsg(pkt);
+        // To reduce the number of memory allocations and CPU cycles we are doing a single one
+        // for both context structure and IP packet data.
+        brMsgContext *contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext) + pkt->tot_len);
+        VerifyOrExit(contextMsgPtr != NULL, lwipErr = ERR_IF);
 
-        if (otIpPkt != NULL)
+        contextMsgPtr->buffAndLen.buffer    = ((uint8_t *)contextMsgPtr) + sizeof(brMsgContext);
+        contextMsgPtr->buffAndLen.bufferLen = pkt->tot_len;
+        contextMsgPtr->brMsgCallback        = otPlatLwipProcessOtReceive;
+
+        if (OT_ERROR_NONE != otPlatLwipCopyToBuffer(pkt, contextMsgPtr->buffAndLen.buffer))
         {
-            /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage
-             * object regardless of whether otIp6Send() succeeds or fails. */
-            if (otIp6Send(sInstance, otIpPkt) == OT_ERROR_NONE)
-            {
-                lwipErr = ERR_OK;
-            }
+            otPlatFree(contextMsgPtr);
+            lwipErr = ERR_IF;
+            ExitNow();
         }
+
+        BrPostOtMessage(contextMsgPtr);
 #if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
     }
 #endif
-
-    // Unlock OT
-    sUnlockTaskCb();
 
 exit:
     /* pkt is freed by LWIP stack */
     return lwipErr;
 }
 
+static void otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr)
+{
+    const otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    otMessage              *otIpPkt     = otIp6NewMessage(sInstance, &msgSettings);
+
+    if (otIpPkt != NULL)
+    {
+        otMessageAppend(otIpPkt, aContextMsgPtr->buffAndLen.buffer, aContextMsgPtr->buffAndLen.bufferLen);
+
+        /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage
+         * object regardless of whether otIp6Send() succeeds or fails. */
+        otIp6Send(sInstance, otIpPkt);
+    }
+}
+
 static void otPlatLwipReceivePacket(otMessage *pkt, void *context)
 {
-    struct pbuf *lwipIpPkt = otPlatLwipConvertToLwipMsg(pkt, false);
-
+    struct pbuf *lwipIpPkt = NULL;
+    lwipIpPkt              = otPlatLwipConvertToLwipMsg(pkt, false);
     if (lwipIpPkt != NULL)
     {
         /* Deliver the packet to the input function associated with the LwIP netif.
@@ -479,7 +522,7 @@ static void otPlatLwipReceivePacket(otMessage *pkt, void *context)
          * Thus there's no need to acquire the LwIP TCPIP core lock here. */
         if (sThreadNetIfPtr->input(lwipIpPkt, sThreadNetIfPtr) != ERR_OK)
         {
-            pbuf_free(lwipIpPkt);
+            pbuf_free_callback(lwipIpPkt);
         }
     }
 
@@ -499,6 +542,26 @@ static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt)
         VerifyOrExit(partialPkt->len <= remainingLen);
 
         VerifyOrExit(otMessageAppend(otIpPkt, partialPkt->payload, partialPkt->len) == OT_ERROR_NONE);
+        remainingLen = (uint16_t)(remainingLen - partialPkt->len);
+    }
+    VerifyOrExit(remainingLen == 0);
+    error = OT_ERROR_NONE;
+
+exit:
+    return error;
+}
+static otError otPlatLwipCopyToBuffer(struct pbuf *lwipIpPkt, uint8_t *pBuff)
+{
+    uint16_t remainingLen;
+    otError  error = OT_ERROR_FAILED;
+
+    // Copy data from LwIP's packet buffer chain into the OpenThread message.
+    remainingLen = lwipIpPkt->tot_len;
+    for (struct pbuf *partialPkt = lwipIpPkt; (partialPkt != NULL) && (remainingLen > 0); partialPkt = partialPkt->next)
+    {
+        VerifyOrExit(partialPkt->len <= remainingLen);
+        memcpy(pBuff, partialPkt->payload, partialPkt->len);
+        pBuff += partialPkt->len;
         remainingLen = (uint16_t)(remainingLen - partialPkt->len);
     }
     VerifyOrExit(remainingLen == 0);

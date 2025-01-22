@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -463,7 +463,7 @@ static void appBrExternalIpv6InterfaceInit()
     appConfigEnetHw();
 #endif
 
-    otPlatLwipInit(appOtLockOtTask, appOtUnlockOtTask);
+    otPlatLwipInit();
 
 #ifdef OT_APP_BR_WIFI_EN
     appConfigWifiIf();
@@ -496,6 +496,10 @@ static void mainloop(void *aContext)
 #endif
 
     otSysProcessDrivers(sInstance);
+
+    // Notify BR manager about OpenThread task lock and unlock functions.
+    BrInitAppLock(appOtLockOtTask, appOtUnlockOtTask);
+
     while (!otSysPseudoResetWasRequested())
     {
         /* Aqquired the task mutex lock and release after OT processing is done */

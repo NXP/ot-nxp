@@ -29,6 +29,7 @@
 #ifndef __OT_INFRA_IF_H__
 #define __OT_INFRA_IF_H__
 
+#include "ot_lwip.h"
 #include <openthread/instance.h>
 
 #include "lwip/netif.h"

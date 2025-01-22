@@ -345,7 +345,6 @@ static void TrelSocketReceive(void *aContext, otMessage *aMessage, const otMessa
     uint16_t   messageLen     = otMessageGetLength(aMessage);
     uint8_t   *rxPacketBuffer = (uint8_t *)otPlatCAlloc(1, messageLen);
     otMessageRead(aMessage, 0, rxPacketBuffer, messageLen);
-    otMessageFree(aMessage);
     ++sCounters.mRxPackets;
     sCounters.mRxBytes += messageLen;
     senderAddr.mAddress = aMessageInfo->mPeerAddr;
