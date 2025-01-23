@@ -38,8 +38,9 @@ static OSA_TASK_HANDLE_DEFINE(ot_ncp_app_task_handle);
 OSA_MSGQ_HANDLE_DEFINE(ot_ncp_command_queue_buff, OT_NCP_COMMAND_QUEUE_NUM, sizeof(ot_ncp_command_t));
 
 extern OSA_SEMAPHORE_HANDLE_DEFINE(gpio_wakelock);
+extern OSA_MUTEX_HANDLE_DEFINE(ncp_device_status_mutex);
 
-int         mcu_device_status = MCU_DEVICE_STATUS_ACTIVE;
+int         ncp_device_status = NCP_DEVICE_STATUS_ACTIVE;
 power_cfg_t global_power_config;
 
 /* -------------------------------------------------------------------------- */
@@ -90,21 +91,24 @@ int ot_ncp_process_sleep_status(uint8_t *res)
             PRINTF("Failed to send mcu sleep cfm\r\n");
 
         OSA_TimeDelay(100);
-        mcu_device_status = MCU_DEVICE_STATUS_SLEEP;
+        ncp_device_status = NCP_DEVICE_STATUS_SLEEP;
 
-        if (global_power_config.wake_mode == WAKE_MODE_GPIO)
+        if ((global_power_config.wake_mode == WAKE_MODE_GPIO) || (global_power_config.wake_mode == WAKE_MODE_INTF))
         {
             status = OSA_SemaphoreWait((osa_semaphore_handle_t)gpio_wakelock, osaWaitNone_c);
             if (status != NCP_STATUS_SUCCESS)
                 (void)PRINTF("Failed to get gpio_wakelock\r\n");
         }
+
+        OSA_MutexLock((osa_mutex_handle_t)ncp_device_status_mutex, osaWaitForever_c);
+        OSA_MutexUnlock((osa_mutex_handle_t)ncp_device_status_mutex);
     }
     else
     {
-        PRINTF("\r\nMCU device exits sleep mode\r\n");
-        mcu_device_status = MCU_DEVICE_STATUS_ACTIVE;
+        PRINTF("\r\nNCP device exits sleep mode\r\n");
+        ncp_device_status = NCP_DEVICE_STATUS_ACTIVE;
 
-        if (global_power_config.wake_mode == WAKE_MODE_GPIO)
+        if ((global_power_config.wake_mode == WAKE_MODE_GPIO) || (global_power_config.wake_mode == WAKE_MODE_INTF))
         {
             status = OSA_SemaphorePost((osa_semaphore_handle_t)gpio_wakelock);
             if (status != NCP_STATUS_SUCCESS)
