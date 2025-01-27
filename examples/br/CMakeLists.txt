@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2023, The OpenThread Authors.
-# Copyright 2024 NXP
+# Copyright 2024-2025 NXP
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -80,23 +80,6 @@ target_include_directories(${APPLICATION} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
     ${PROJECT_SOURCE_DIR}/examples/common/includes
-)
-
-set(LIST_OF_SYMBOLS
-    "tcp_input"
-    "tcp_close"
-    "tcp_output"
-)
-
-set(OBJCOPY_COMMAND)
-
-foreach(element ${LIST_OF_SYMBOLS})
-    list(APPEND OBJCOPY_COMMAND --redefine-sym ${element}=${element}_lwip)
-endforeach()
-
-add_custom_command(TARGET ${APPLICATION}
-    PRE_LINK
-    COMMAND ${CMAKE_OBJCOPY} ${OBJCOPY_COMMAND} $<TARGET_FILE:${NXP_DRIVER_LIB}>
 )
 
 target_link_libraries(${APPLICATION} PRIVATE

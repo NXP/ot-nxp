@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023, The OpenThread Authors.
+# Copyright (c) 2023-2025, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -106,23 +106,6 @@ endif()
 add_library(nxp-lwip
     ${LWIP_SDK_SOURCES}
     lwip_tcpip_init_once.c
-)
-
-set(LIST_OF_SYMBOLS
-    "tcp_input"
-    "tcp_close"
-    "tcp_output"
-)
-
-set(OBJCOPY_COMMAND)
-
-foreach(element ${LIST_OF_SYMBOLS})
-    list(APPEND OBJCOPY_COMMAND --redefine-sym ${element}=${element}_lwip)
-endforeach()
-
-add_custom_command(TARGET nxp-lwip
-    POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} ${OBJCOPY_COMMAND} $<TARGET_FILE:nxp-lwip>
 )
 
 target_compile_definitions(nxp-lwip

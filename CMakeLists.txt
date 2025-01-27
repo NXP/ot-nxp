@@ -119,26 +119,6 @@ if(OT_NCP_RTOS_HOST)
     add_library(ot-cli-addons INTERFACE)
 else()
     add_subdirectory(openthread)
-
-    if(DEFINED SdkRootDirPath)
-        # changes done for avoiding symbol redefinitions between OpenThread and LWIP.
-        # issues were found when building OpenThread's tcp6.cpp file.
-        if(OT_FTD)
-            target_compile_definitions(tcplp-ftd
-                INTERFACE
-                "LWIP_HDR_OPT_H=1"
-                "LWIP_PROVIDE_ERRNO=1"
-            )
-        endif()
-
-        if(OT_MTD)
-            target_compile_definitions(tcplp-mtd
-                INTERFACE
-                "LWIP_HDR_OPT_H=1"
-                "LWIP_PROVIDE_ERRNO=1"
-            )
-        endif()
-    endif()
 endif()
 
 if(OT_APP_BR_FREERTOS)
