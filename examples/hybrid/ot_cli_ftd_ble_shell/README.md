@@ -1,6 +1,7 @@
 # OpenThread OT-CLI-FTD-BLE-SHELL
 
 This example is a dual host application designed to enable and demonstrate BLE & 15.4 dynamic mode feature.
+This application is supported for K32W1 and MCXW72.
 
 ## 1. Build
 
@@ -8,7 +9,7 @@ a. following environment variables need to be set before building application
 ZEPHYR_BASE=<path to sdk>
 ARMGCC_DIR=<path to compiler>
 
-b.
+b. build for K32W1
 
 ```bash
 $ cd <path-to-openthread>
@@ -16,6 +17,15 @@ $ sh script/build_k32w1 ot_cli_ftd_ble_shell --force
 ```
 
 Application will be built in: <path-to-openthread>/build_k32w1/ot_cli_ftd_ble_shell/bin/ot-cli-ftd-ble-shell-k32w1.srec
+
+c. build for MCXW72
+
+```bash
+$ cd <path-to-openthread>
+$ sh script/build_mcxw72 ot_cli_ftd_ble_shell --force
+```
+
+Application will be built in: <path-to-openthread>/build_mcxw72/ot_cli_ftd_ble_shell/bin/ot-cli-ftd-ble-shell-mcxw72.srec
 
 ## 2. Setup and how to run application
 
