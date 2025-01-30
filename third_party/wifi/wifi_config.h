@@ -35,6 +35,12 @@
 #define CONFIG_WIFI_GET_LOG 1 /* missing in wifi_config_default.h for rt1060 and rt1170 */
 
 /*
+ * "CONFIG_WMM" need to be enabled here, as it is required for wifi_nxp compilation.
+ * TODO : remove this define once SDK enable it by default in "wifi_config_default.h"
+*/
+#define CONFIG_WMM 1
+
+/*
  * Wifi extra debug options
  */
 #define CONFIG_WIFI_EXTRA_DEBUG 0
