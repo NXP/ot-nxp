@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2021, 2025 The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
  *
  */
 
+#include "EmbeddedTypes.h"
 #include <openthread/platform/entropy.h>
 #include "mbedtls/entropy_poll.h"
 #include "utils/code_utils.h"
@@ -48,14 +49,23 @@ OSA_MUTEX_HANDLE_DEFINE(trngMutexHandle);
 #define mutex_unlock(...)
 #endif
 
+static bool_t isInitialized = false;
+
 void K32WRandomInit(void)
 {
+    OSA_InterruptDisable();
+    if (!isInitialized)
+    {
 #if defined(USE_RTOS) && (USE_RTOS == 1)
-    (void)OSA_MutexCreate(trngMutexHandle);
-    otEXPECT(NULL != trngMutexHandle);
+        (void)OSA_MutexCreate(trngMutexHandle);
+        otEXPECT(NULL != trngMutexHandle);
 #endif
+        isInitialized = true;
+    }
 
 exit:
+    /* In case otEXPECT returns execution to exit, interrupts must be enabled again */
+    OSA_InterruptEnable();
     return;
 }
 
