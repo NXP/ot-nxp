@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2022, 2025 The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@
 #include <openthread/platform/time.h>
 
 static bool_t sEventFired = FALSE;
+static bool_t alreadyInit = false;
 TIMER_MANAGER_HANDLE_DEFINE(sAlarmTimerHandle);
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -82,6 +83,13 @@ static uint32_t timestamp_to_ms(uint64_t timestamp)
 
 void otPlatAlarmInit(void)
 {
+    OSA_InterruptDisable();
+    if (alreadyInit)
+    {
+        OSA_InterruptEnable();
+        return;
+    }
+
     (void)TM_Open((timer_handle_t)sAlarmTimerHandle);
     (void)TM_InstallCallback((timer_handle_t)sAlarmTimerHandle, (timer_callback_t)timerCallback, NULL);
 
@@ -89,6 +97,8 @@ void otPlatAlarmInit(void)
     (void)TM_Open((timer_handle_t)sAlarmMicroTimerHandle);
     (void)TM_InstallCallback((timer_handle_t)sAlarmMicroTimerHandle, (timer_callback_t)timerMicroCallback, NULL);
 #endif
+    alreadyInit = true;
+    OSA_InterruptEnable();
 }
 
 void otPlatAlarmProcess(otInstance *aInstance)
