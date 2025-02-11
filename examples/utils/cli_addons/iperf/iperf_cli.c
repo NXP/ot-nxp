@@ -43,8 +43,8 @@
 
 #include "app_ot.h"
 #include "iperf_cli.h"
-#include "lwiperf.h"
 #include "ot_lwip.h"
+#include "lwip/apps/lwiperf.h"
 #include "lwip/inet.h"
 #include "lwip/tcpip.h"
 
