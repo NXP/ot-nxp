@@ -64,7 +64,7 @@
 /*                                 Definitions                                */
 /* -------------------------------------------------------------------------- */
 
-#define MAX_HOST_IPV6_ADDRESSES 3
+#define MAX_HOST_IPV6_ADDRESSES 4
 
 /* -------------------------------------------------------------------------- */
 /*                             Private memory                                 */
@@ -304,10 +304,10 @@ static bool UpdateIp6AddressList()
     uint32_t          newIp6AddrNum = 0;
     uint32_t          lwipIterator, addrListIterator;
 
-    for (lwipIterator = 0; lwipIterator < LWIP_IPV6_NUM_ADDRESSES; lwipIterator++)
+    for (lwipIterator = 0; lwipIterator < LWIP_IPV6_NUM_ADDRESSES && newIp6AddrNum < MAX_HOST_IPV6_ADDRESSES;
+         lwipIterator++)
     {
-        if (ip6_addr_ispreferred(netif_ip6_addr_state(sExtNetif, lwipIterator)) &&
-            (sHost.mAddressesLength <= MAX_HOST_IPV6_ADDRESSES))
+        if (ip6_addr_ispreferred(netif_ip6_addr_state(sExtNetif, lwipIterator)))
         {
             addr6 = netif_ip6_addr(sExtNetif, lwipIterator);
             for (addrListIterator = 0; addrListIterator < MAX_HOST_IPV6_ADDRESSES; addrListIterator++)
