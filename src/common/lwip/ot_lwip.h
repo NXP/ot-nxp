@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -39,19 +39,24 @@ extern "C" {
 #endif
 
 /**
- * This function is used to lock/unlock the Open Thread task
- *
- * @param[in] bLockState         Set to TRUE to lock the task and to FALSE to unlock it.
+ * This function is used to lock the Open Thread task
  *
  */
-typedef void (*otPlatLockTaskCb)(bool bLockState);
+typedef void (*otPlatLockTaskCb)();
+
+/**
+ * This function is used to unlock the Open Thread task
+ *
+ */
+typedef void (*otPlatUnlockTaskCb)();
 
 /*!
  * @brief This function initializes LWIP stack
  *
- * @param[in] lockTaskCb a function pointer to lock/unlock the Thread task
+ * @param[in] lockTaskCb a function pointer to lock the Thread task
+ * @param[in] unlockTaskCb a function pointer to unlock the Thread task
  */
-void otPlatLwipInit(otPlatLockTaskCb lockTaskCb);
+void otPlatLwipInit(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockTaskCb);
 
 /*!
  * @brief This function sets the OpenThread instance reference for lwip task.
@@ -61,11 +66,14 @@ void otPlatLwipInit(otPlatLockTaskCb lockTaskCb);
 void otPlatLwipSetOtInstance(otInstance *aInstance);
 
 /*!
- * @brief This function creates an OpenThread interface in Lwip.
- * otPlatLwipInit and otPlatLwipSetOtInstance must be called before.
+ * @brief This function creates or adds an OpenThread interface in Lwip. If the function is called
+ * using null pointer then the OpenThread interface is created inside. If the OpenThread interface
+ * is created outside and provided as a pointer the function will take care of initializing the
+ * platform code correctly. otPlatLwipInit and otPlatLwipSetOtInstance must be called before.
  *
+ * @param[in] aNetIf pointer to netif interface allready created
  */
-void otPlatLwipAddThreadInterface(void);
+void otPlatLwipAddThreadInterface(struct netif *aNetIf);
 
 /*!
  * @brief otStateChangedCallback that must be registered directly to OpenThread using otSetStateChangedCallback or

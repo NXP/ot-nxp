@@ -111,10 +111,10 @@ static void mainloop(void *aContext)
     while (!otSysPseudoResetWasRequested())
     {
         /* Aqquired the task mutex lock and release after OT processing is done */
-        appOtLockOtTask(true);
+        appOtLockOtTask();
         otTaskletsProcess(sInstance);
         otSysProcessDrivers(sInstance);
-        appOtLockOtTask(false);
+        appOtUnlockOtTask();
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
@@ -123,18 +123,16 @@ static void mainloop(void *aContext)
     vTaskDelete(NULL);
 }
 
-void appOtLockOtTask(bool bLockState)
+void appOtLockOtTask()
 {
-    if (bLockState)
-    {
-        /* Aqquired the task mutex lock */
-        xSemaphoreTakeRecursive(sMainStackLock, portMAX_DELAY);
-    }
-    else
-    {
-        /* Release the task mutex lock */
-        xSemaphoreGiveRecursive(sMainStackLock);
-    }
+    /* Aqquired the task mutex lock */
+    xSemaphoreTakeRecursive(sMainStackLock, portMAX_DELAY);
+}
+
+void appOtUnlockOtTask()
+{
+    /* Release the task mutex lock */
+    xSemaphoreGiveRecursive(sMainStackLock);
 }
 
 void appOtStart(int argc, char *argv[])

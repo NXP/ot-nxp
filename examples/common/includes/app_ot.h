@@ -49,12 +49,16 @@ extern "C" {
 void appOtStart(int argc, char *argv[]);
 
 /**
- * This function is used to lock/unlock the OpenThread task using a mutex
- *
- * @param[in] bLockState      Set to TRUE to lock the task and to FALSE to unlock it.
+ * This function is used to lock the OpenThread task using a mutex
  *
  */
-void appOtLockOtTask(bool bLockState);
+void appOtLockOtTask();
+
+/**
+ * This function is used to unlock the OpenThread task using a mutex
+ *
+ */
+void appOtUnlockOtTask();
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include "dns_upstream_resolver.h"
 #include "infra_if.h"
 #include "mdns_socket.h"
+#include "ot_lwip.h"
 #include "trel_plat.h"
 #include "udp_plat.h"
 #include "utils.h"
@@ -70,13 +71,15 @@
 /*                             Private memory                                 */
 /* -------------------------------------------------------------------------- */
 
-static otInstance          *sInstance = NULL;
-static struct netif        *sExtNetif = NULL;
+static otInstance          *sInstance    = NULL;
+static struct netif        *sExtNetif    = NULL;
+static struct netif        *sThreadNetif = NULL;
 static netif_ext_callback_t sNetifCallback;
 
-static bool sDnsHostInitialized = false;
-static bool sBrIsInitialized    = false;
-static bool sExternalNetifState = false;
+static bool sDnsHostInitialized    = false;
+static bool sBrIsInitialized       = false;
+static bool sExternalNetifState    = false;
+static bool sNat64TranslatorEnable = true;
 
 static otMdnsHost   sHost;
 static otIp6Address sHostAddresses[MAX_HOST_IPV6_ADDRESSES];
@@ -99,8 +102,9 @@ static bool UpdateIp6AddressList();
 
 void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif)
 {
-    sInstance = aInstance;
-    sExtNetif = aExtNetif;
+    sInstance    = aInstance;
+    sExtNetif    = aExtNetif;
+    sThreadNetif = aThreadNetif;
 
 #if OT_APP_BR_LWIP_HOOKS_EN
     lwipHooksInit(sInstance, sExtNetif, aThreadNetif);
@@ -111,6 +115,24 @@ void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif
     TrelPlatInit(sInstance, sExtNetif);
 
     netif_add_ext_callback(&sNetifCallback, &BrNetifExtCb);
+}
+
+void BrUpdateLwipThrIf(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockCb)
+{
+    // Update the LWIP Thread interface to use the send/receive functions from otPLatLwip.
+    // These functions supoprt NAT64 and rate limiting.
+    otPlatLwipInit(lockTaskCb, unlockCb);
+    otPlatLwipSetOtInstance(sInstance);
+    otPlatLwipAddThreadInterface(sThreadNetif);
+}
+
+void BrSetNat64TranslatorState(bool aEnable)
+{
+    if (sNat64TranslatorEnable != aEnable)
+    {
+        sNat64TranslatorEnable = aEnable;
+        otNat64SetEnabled(sInstance, sNat64TranslatorEnable);
+    }
 }
 
 void BrInitServices()
@@ -126,7 +148,7 @@ void BrInitServices()
         otBorderRoutingDhcp6PdSetRequestCallback(sInstance, otDhcpPdCb, NULL);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        otNat64SetEnabled(aInstance, true);
+        otNat64SetEnabled(sInstance, true);
 #endif
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
         otDnssdUpstreamQuerySetEnabled(sInstance, true);
@@ -147,7 +169,12 @@ void BrInitMdnsHost(const char *aHostName)
     {
         netif_ext_callback_args_t args = {0};
         args.link_changed.state        = true;
-        BrNetifExtCb(sExtNetif, LWIP_NSC_LINK_CHANGED | LWIP_NSC_IPV6_SET, &args);
+        netif_nsc_reason_t cbFlags     = LWIP_NSC_LINK_CHANGED | LWIP_NSC_IPV6_SET;
+        if (!ip4_addr_isany(netif_ip4_addr(sExtNetif)))
+        {
+            cbFlags |= LWIP_NSC_IPV4_ADDRESS_CHANGED;
+        }
+        BrNetifExtCb(sExtNetif, cbFlags, &args);
     }
 }
 
@@ -194,24 +221,41 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
                 otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
             }
         }
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         if ((reason & LWIP_NSC_IPV4_ADDRESS_CHANGED))
         {
-            const ip4_addr_t *ip4_addr;
             otIp4Cidr         aCidr;
-            otError           error;
+            const ip4_addr_t *ip4Addr               = netif_ip4_addr(sExtNetif);
+            const ip4_addr_t *ip4DefRoute           = netif_ip4_gw(sExtNetif);
+            bool              bNat64TranslatorState = false;
 
-            ip4_addr = netif_ip4_addr(sExtNetif);
-            if (!ip4_addr_isany(ip4_addr))
+            // Evaluate conditions to enable / disable NAT64. According to specification we must have a valid IPv4
+            // address and a default gateway in order to enable 6 to 4 translation.
+            if (!ip4_addr_isany(ip4Addr) && !ip4_addr_isany(ip4DefRoute))
             {
-                aCidr.mAddress.mFields.m32 = ip4_addr->addr;
+                // A default gateway is available on this interface, for LWIP this is translated to a default
+                // interface. If no default interface is set public, addresses will not be forwarded to the
+                // default gateway.
+                netif_set_default(sExtNetif);
+
+                // Bind the device's IPv4 address to the RAW sockets used for receiving IPv4 traffic to filter
+                // out any other packets that might be received by the NAT64 translator, like multicast traffic.
+                InfraIfNat64Init();
+
+                aCidr.mAddress.mFields.m32 = ip4Addr->addr;
                 aCidr.mLength              = 32U;
-                error                      = otNat64SetIp4Cidr(sInstance, &aCidr);
-                if (error != OT_ERROR_NONE)
-                {
-                    otCliOutputFormat("otNat64SetIp4Cidr failed: %s\r\n", otThreadErrorToString(error));
-                }
+                // Ignore error for the call, can only fail if the cidr len is 0 but we are always setting it to 32.
+                otNat64SetIp4Cidr(sInstance, &aCidr);
+                // Only enable if master flag is true. The spec requires that the user can decide to disable NAT64
+                // translation but default value is true.
+                bNat64TranslatorState = sNat64TranslatorEnable;
             }
+            else
+            {
+                // Disable the default interface, with no default gateway or IPv4 address it cannot be used.
+                netif_set_default(sExtNetif);
+            }
+            otNat64SetEnabled(sInstance, bNat64TranslatorState);
         }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
     }
@@ -258,6 +302,10 @@ static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext)
         if (prefix->prefix_valid > 0)
         {
             Dhcp6PrefixChangedCb(sExtNetif, prefix, true);
+        }
+        else
+        {
+            dhcp6_nd6_ra_trigger(sExtNetif, 0, 1);
         }
         break;
 

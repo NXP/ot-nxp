@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 #ifndef __BR_RTOS_MANAGER_H__
 #define __BR_RTOS_MANAGER_H__
 
+#include "ot_lwip.h"
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/ip6.h>
 #include "lwip/netif.h"
@@ -37,10 +38,17 @@
 extern "C" {
 #endif
 
-/* Must be called before BrInitServices*/
+/* Must be called before BrInitServices and BrUpdateLwipThrIf*/
 void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif);
 /* Must be called after BrInitPlatform */
 void BrInitServices();
+/* Must be called after BrInitPlatform, used for Matter to switch using OTBR implementation of LWIP Thread IP interface
+   TX/RX functions. This allows using OTBR features in Matter like NAT64 and rate limiting */
+void BrUpdateLwipThrIf(otPlatLockTaskCb lockTaskCb, otPlatUnlockTaskCb unlockCb);
+
+/* According to Thread spec a Border Router MUST provide a mechanism to manually disable NAT64 translation in cases
+   where the user does not desire NAT64 translation. */
+void BrSetNat64TranslatorState(bool aEnable);
 
 void BrInitMdnsHost(const char *aHostName);
 void BrMdnsHostSetInitialized(bool aState);

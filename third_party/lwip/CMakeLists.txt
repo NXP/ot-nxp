@@ -123,6 +123,7 @@ target_include_directories(nxp-lwip
     ${LWIP_PATH}/src/include
     ${LWIP_PATH}/src/include/lwip/apps
     ${PROJECT_SOURCE_DIR}/src/common/lwip
+	${PROJECT_SOURCE_DIR}/src/common/lwip_config
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

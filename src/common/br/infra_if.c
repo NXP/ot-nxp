@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -88,12 +88,6 @@ static struct raw_pcb *sIcmpRawPcb;
 static struct raw_pcb *sUdpRawPcb;
 static struct raw_pcb *sTcpRawPcb;
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-static const char         sWellKnownIpv4OnlyName[]   = "ipv4only.arpa";
-static const otIp4Address sWellKnownIpv4OnlyAddress1 = {{{192, 0, 0, 170}}};
-static const otIp4Address sWellKnownIpv4OnlyAddress2 = {{{192, 0, 0, 171}}};
-static const uint8_t      sValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
-#endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -111,9 +105,6 @@ static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static uint8_t ReceiveIPV4Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-static void DnsNat64Callback(const char *name, const ip_addr_t *ipaddr, void *arg);
-#endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -144,31 +135,41 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
     sIcmp6RawPcb->chksum_reqd   = 1;
     sIcmp6RawPcb->chksum_offset = 2;
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
-    assert(sIcmpRawPcb != NULL);
-
-    raw_bind_netif(sIcmpRawPcb, netif);
-    raw_recv(sIcmpRawPcb, ReceiveIPV4Message, NULL);
-
-    sUdpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_UDP);
-    assert(sUdpRawPcb != NULL);
-
-    raw_bind_netif(sUdpRawPcb, netif);
-    raw_recv(sUdpRawPcb, ReceiveIPV4Message, NULL);
-
-    sTcpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_TCP);
-    assert(sTcpRawPcb != NULL);
-
-    raw_bind_netif(sTcpRawPcb, netif);
-    raw_recv(sTcpRawPcb, ReceiveIPV4Message, NULL);
-#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
-
     // Register to all routers multicast address to recive RS messages
     assert(ERR_OK == mld6_joingroup_netif(netif, &ip6_allrouters_ll));
 
     UNLOCK_TCPIP_CORE();
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void InfraIfNat64Init()
+{
+    const ip_addr_t *ip4Addr = netif_ip_addr4(sNetifPtr);
+
+    // Check only first PCB for NULL, they will be all NULL or all allocated as we assert on any NULL.
+    if (sIcmpRawPcb == NULL)
+    {
+        sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
+        assert(sIcmpRawPcb != NULL);
+        sUdpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_UDP);
+        assert(sUdpRawPcb != NULL);
+        sTcpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_TCP);
+        assert(sTcpRawPcb != NULL);
+
+        raw_bind_netif(sIcmpRawPcb, sNetifPtr);
+        raw_bind_netif(sUdpRawPcb, sNetifPtr);
+        raw_bind_netif(sTcpRawPcb, sNetifPtr);
+
+        raw_recv(sIcmpRawPcb, ReceiveIPV4Message, NULL);
+        raw_recv(sUdpRawPcb, ReceiveIPV4Message, NULL);
+        raw_recv(sTcpRawPcb, ReceiveIPV4Message, NULL);
+    }
+
+    raw_bind(sIcmpRawPcb, ip4Addr);
+    raw_bind(sUdpRawPcb, ip4Addr);
+    raw_bind(sTcpRawPcb, ip4Addr);
+}
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
 
 void InfraIfDeInit()
 {
@@ -257,40 +258,7 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
-    otError    res  = OT_ERROR_FAILED;
-    ip_addr_t *addr = NULL;
-    err_t      error;
-
-    VerifyOrExit(aInfraIfIndex == (uint32_t)sInfraIfIndex);
-
-    addr = (ip_addr_t *)otPlatCAlloc(1, sizeof(ip_addr_t));
-    VerifyOrExit(addr != NULL);
-
-    LOCK_TCPIP_CORE();
-    /* Note it processes just the first address returned by DNS */
-    error = dns_gethostbyname_addrtype(sWellKnownIpv4OnlyName, addr, DnsNat64Callback, (void *)addr,
-                                       LWIP_DNS_ADDRTYPE_IPV6);
-    UNLOCK_TCPIP_CORE();
-
-    if (error == ERR_OK)
-    {
-        /* Address already resolved */
-        DnsNat64Callback(sWellKnownIpv4OnlyName, addr, (void *)addr);
-        addr = NULL; /* Just deallocated by the callback */
-        res  = OT_ERROR_NONE;
-    }
-    else if (error == ERR_INPROGRESS)
-    {
-        addr = NULL; /* Will be deallocated by the callback */
-        res  = OT_ERROR_NONE;
-    } /* else failed */
-
-exit:
-    if (addr != NULL)
-    {
-        otPlatFree(addr);
-    }
-    return res;
+    return OT_ERROR_NONE;
 }
 #endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */
 
@@ -516,64 +484,3 @@ static uint8_t ReceiveIPV4Message(void *arg, struct raw_pcb *pcb, struct pbuf *p
     return ret;
 }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-static void DnsNat64Callback(const char *name, const ip_addr_t *ipaddr, void *arg)
-{
-    otIp6Address ip6Address;
-    otIp6Prefix  prefix = {}; /* Initialize to an empty prefix */
-    int          i;
-    int          j;
-    uint8_t      length;
-    uint8_t      dupLength;
-    otIp4Address ip4Address;
-    otIp4Address dupIp4Address;
-    bool         foundDuplicate;
-
-    VerifyOrExit(ipaddr != NULL);
-    memcpy(&ip6Address.mFields.m8, (void *)&(ip_2_ip6(ipaddr)->addr), OT_IP6_ADDRESS_SIZE);
-
-    for (i = 0; i < ARRAY_SIZE(sValidNat64PrefixLength); i++)
-    {
-        length = sValidNat64PrefixLength[i];
-        otIp4ExtractFromIp6Address(length, &ip6Address, &ip4Address);
-
-        if (otIp4IsAddressEqual(&ip4Address, &sWellKnownIpv4OnlyAddress1) ||
-            otIp4IsAddressEqual(&ip4Address, &sWellKnownIpv4OnlyAddress2))
-        {
-            // We check that the well-known IPv4 address is present only once in the IPv6 address.
-            // In case another instance of the value is found for another prefix length, we ignore this address
-            // and search for the other well-known IPv4 address (per RFC 7050 section 3).
-            foundDuplicate = false;
-
-            for (j = 0; j < ARRAY_SIZE(sValidNat64PrefixLength); j++)
-            {
-                if (i == j)
-                {
-                    continue;
-                }
-
-                dupLength = sValidNat64PrefixLength[j];
-                otIp4ExtractFromIp6Address(dupLength, &ip6Address, &dupIp4Address);
-
-                if (otIp4IsAddressEqual(&dupIp4Address, &ip4Address))
-                {
-                    foundDuplicate = true;
-                    break;
-                }
-            }
-
-            if (!foundDuplicate)
-            {
-                otIp6GetPrefix(&ip6Address, length, &prefix);
-                break;
-            }
-        }
-    }
-
-exit:
-    /* Notify about the found NAT64 prefix (or empty prefix if query failed) */
-    otPlatInfraIfDiscoverNat64PrefixDone(sInstance, sInfraIfIndex, &prefix);
-    otPlatFree(arg);
-}
-#endif /* OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE */

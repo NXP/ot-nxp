@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ extern "C" {
 #endif
 
 void InfraIfInit(otInstance *aInstance, struct netif *netif);
+void InfraIfNat64Init();
 void InfraIfDeInit();
 void InfraIfLinkState(bool bUp);
 
