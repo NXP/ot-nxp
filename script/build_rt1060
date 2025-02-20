@@ -202,16 +202,16 @@ create_directory_and_build()
         build iwx12_spi_br_wifi "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612_UART[@]}")
-        # build rw612_ncp_host_uart "${options[@]}"
-        # options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        # options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
-        # build rw612_ncp_host_usb "${options[@]}"
-        # options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        # options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
-        # build rw612_ncp_host_sdio "${options[@]}"
-        # options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        # options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
-        # build rw612_ncp_host_spi "${options[@]}"
+        build rw612_ncp_host_uart "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
+        build rw612_ncp_host_usb "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
+        build rw612_ncp_host_sdio "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
+        build rw612_ncp_host_spi "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")

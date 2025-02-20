@@ -308,6 +308,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DCONFIG_NCP
         -DCONFIG_NCP_OT
+        -DMBEDTLS_CONFIG_FILE="ksdk_mbedtls_config.h"
     )
     list(APPEND SDK_SOURCES
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
@@ -316,6 +317,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${NCP_COMMON_FILES_PATH}/crc/crc.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
+        ${NCP_COMMON_FILES_PATH}/mbedtls/mbedtls_common.c
     )
 
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
@@ -354,8 +356,16 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv
         ${NCP_COMMON_FILES_PATH}/ncp_adapter
         ${NCP_COMMON_FILES_PATH}/ncp_debug
+        ${NCP_COMMON_FILES_PATH}/mbedtls
         ${NCP_COMMON_FILES_PATH}
+        ${NCP_COMMON_FILES_PATH}/../ncp_host/mbedtls
         ${FREERTOS_LPUART_FILE_PATH}
+        # Add mbedtls header since ncp adapter need these header files, but in ot-nxp,
+        # mbedtls cmake needs to be reloaded after this cmake file, otherwise compiling
+        # errors will be occurred.
+        ${MIDDLEWARE_PATH}/mbedtls/include
+        # The ksdk_mbedtls_config.h should be used when compiling ncp host.
+        ${MIDDLEWARE_PATH}/mbedtls/port/ksdk
     )
 
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
@@ -461,5 +471,10 @@ target_compile_options(${NXP_DRIVER_LIB}
     -Wno-empty-body
 )
 
-set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
+    set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ksdk_mbedtls_config.h\"" PARENT_SCOPE)
+else()
+    set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
+endif()
+
 set(OT_NXP_MBEDTLS_PORT ksdk PARENT_SCOPE)

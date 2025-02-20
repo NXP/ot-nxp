@@ -68,15 +68,14 @@ MEMORY
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
   m_qacode              (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00020000 /* ITCM 128 KB */
   m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
-  m_ncache              (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00008000 /* OCRAM2 32 KB */
-  m_data2               (RW)  : ORIGIN = 0x20208000, LENGTH = 0x000B8000 /* OCRAM2 480 KB + OCRAM-FlexRAM 256 KB */
+  m_data2               (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00080000 /* OCRAM2 512 KB */
 }
 
 /* Define output sections */
 SECTIONS
 {
-  __NCACHE_REGION_START = ORIGIN(m_ncache);
-  __NCACHE_REGION_SIZE  = LENGTH(m_ncache);
+  __NCACHE_REGION_START = ORIGIN(m_data2);
+  __NCACHE_REGION_SIZE  = 0x00080000;
 
   .flash_config :
   {
@@ -224,7 +223,7 @@ SECTIONS
     . += VECTOR_RAM_SIZE;
     . = ALIGN(4);
     __interrupts_ram_end__ = .; /* Define a global symbol at data end */
-  } > m_data2
+  } > m_data
 
   __VECTOR_RAM = DEFINED(__ram_vector_table__) ? __VECTOR_RAM__ : ORIGIN(m_interrupts);
   __RAM_VECTOR_TABLE_SIZE_BYTES = DEFINED(__ram_vector_table__) ? (__interrupts_ram_end__ - __interrupts_ram_start__) : 0x0;
@@ -241,7 +240,7 @@ SECTIONS
     KEEP(*(.jcr*))
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
-  } > m_data2
+  } > m_data
 
   __ram_function_flash_start = __DATA_ROM + (__data_end__ - __data_start__); /* Symbol is used by startup for TCM data initialization */
 
@@ -281,14 +280,14 @@ SECTIONS
     *(NonCacheable.init)
     . = ALIGN(4);
     __noncachedata_init_end__ = .;   /* create a global symbol at initialized ncache data end */
-  } > m_ncache
+  } > m_data
   . = __noncachedata_init_end__;
   .ncache :
   {
     *(NonCacheable)
     . = ALIGN(4);
     __noncachedata_end__ = .;     /* define a global symbol at ncache data end */
-  } > m_ncache
+  } > m_data
 
   __DATA_END = __NDATA_ROM + (__noncachedata_init_end__ - __noncachedata_start__);
   text_end = ORIGIN(m_text) + LENGTH(m_text);
@@ -309,7 +308,7 @@ SECTIONS
     . = ALIGN(4);
     __bss_end__ = .;
     __END_BSS = .;
-  } > m_data
+  } > m_data2
 
   .heap (NOLOAD) :
   {
