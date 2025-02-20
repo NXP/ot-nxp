@@ -28,7 +28,7 @@
 
 add_subdirectory(${OT_NXP_PLATFORM}_sdk)
 
-if(OT_EXTERNAL_MBEDTLS AND NOT OT_NCP_RTOS_HOST)
+if(OT_EXTERNAL_MBEDTLS)
     # Build mbedtls library from the SDK
     add_subdirectory(mbedtls)
 endif()

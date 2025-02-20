@@ -11,6 +11,7 @@
 
 #include "ot_ncp_host_app.h"
 #include "fsl_debug_console.h"
+#include "ncp_mbedtls_host.h"
 #include "ncp_tlv_adapter.h"
 #include "ot_ncp_cmd.h"
 #include "ot_ncp_host_cli.h"
@@ -27,6 +28,7 @@
 
 void ot_ncp_app_task(void *pvParameters);
 int  system_process_event(uint8_t *res);
+int  ot_ncp_process_sleep_status(uint8_t *res);
 
 /* -------------------------------------------------------------------------- */
 /*                              Variable                                      */
@@ -58,6 +60,12 @@ int system_process_event(uint8_t *res)
     case NCP_EVENT_MCU_SLEEP_ENTER:
     case NCP_EVENT_MCU_SLEEP_EXIT:
         ret = ot_ncp_process_sleep_status(res);
+        break;
+    case NCP_EVENT_SYSTEM_ENCRYPT:
+        ret = ncp_process_encrypt_event(res);
+        break;
+    case NCP_EVENT_SYSTEM_ENCRYPT_STOP:
+        ret = ncp_process_encrypt_stop_event(res);
         break;
     default:
         PRINTF("Invalid event!\r\n");
@@ -133,10 +141,19 @@ static uint32_t ot_ncp_handle_cmd_input(uint8_t *cmd, uint32_t len)
             ncp_e("Failed to parse ncp event.");
         }
     }
-    else
+    else // there is cmd response here
     {
-        cmd[len] = '\0';
-        PRINTF("%s", cmd + NCP_CMD_HEADER_LEN);
+        switch (((NCP_COMMAND *)cmd)->cmd)
+        {
+        case NCP_RSP_SYSTEM_CONFIG_ENCRYPT:
+            ret = ncp_process_encrypt_response(cmd);
+            break;
+        default:
+            cmd[len] = '\0';
+            PRINTF("%s", cmd + NCP_CMD_HEADER_LEN);
+            break;
+        }
+        ncp_put_command_resp_sem();
     }
 
     return ret;

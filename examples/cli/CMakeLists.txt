@@ -52,6 +52,9 @@ elseif(OT_NCP_RTOS_HOST)
         ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_freertos.c
         ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_cli.c
         ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ot_ncp_host_app.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ncp_host/cli-rtos/ncp_mbedtls_host.c
+        # Add this file due to undefined '__wrap_malloc'
+        ${CMAKE_CURRENT_SOURCE_DIR}/libc_hook.cpp
     )
 else()
     add_executable(ot-cli-${OT_NXP_PLATFORM}

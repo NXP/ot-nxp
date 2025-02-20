@@ -42,6 +42,8 @@ typedef struct
 
 int app_notify_event(uint16_t event, int result, void *data, int len);
 
+uint8_t *ncp_sys_evt_status(uint32_t evt_id, void *msg);
+
 int app_notify_init(void);
 
 #endif /* __APP_NOTIFY_H__ */

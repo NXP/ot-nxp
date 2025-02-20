@@ -28,6 +28,12 @@
 /*                             Function prototypes                            */
 /* -------------------------------------------------------------------------- */
 
+int ncp_get_command_resp_sem();
+
+int ncp_put_command_resp_sem();
+
+uint32_t ot_ncp_host_send_tlv_command(void);
+
 uint32_t ot_ncp_host_cli_init(void);
 
 #endif /* __OT_NCP_HOST_CLI_H__ */

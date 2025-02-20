@@ -56,6 +56,10 @@ extern void USB_DevicePmStartResume(void);
 extern void lpm_config_next_lp_mode(PWR_LowpowerMode_t nextMode);
 #endif
 
+#if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
+extern uint8_t lpm_getNcpInterfaceReinitState(void);
+#endif
+
 static void ncp_hs_delay(uint32_t loop)
 {
     if (loop > 0U)
@@ -69,7 +73,7 @@ static void ncp_hs_delay(uint32_t loop)
     }
 }
 
-static void ncp_hs_delay_us(uint32_t us)
+void ncp_hs_delay_us(uint32_t us)
 {
     uint32_t instNum;
 

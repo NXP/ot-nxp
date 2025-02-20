@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #ifndef OT_NCP_LIBS
 #include "app_notify.h"
+#include "ncp_mbedtls_device.h"
 
 #ifndef APP_NOTIFY_SUSPEND_EVT
 #define APP_NOTIFY_SUSPEND_EVT 0x1U
@@ -190,7 +191,6 @@ static int ot_ncp_system_sleep(void *cmd)
 
     return NCP_STATUS_SUCCESS;
 }
-#endif
 
 static int ot_error_ack(void *tlv)
 {
@@ -198,6 +198,7 @@ static int ot_error_ack(void *tlv)
 }
 
 struct cmd_t error_ack_cmd = {0, "lookup cmd fail", ot_error_ack, CMD_SYNC};
+#endif
 
 struct cmd_t ot_command_forward[] = {
     {NCP_OT_CMD_FORWARD, "ot-command-forward", ot_ncp_cmd_handle, CMD_SYNC},
@@ -209,6 +210,12 @@ struct cmd_t ot_ncp_system[] = {
     {NCP_CMD_SYSTEM_POWERMGMT_MCU_SLEEP_CFM, "ot-system-sleep-cfm", ot_ncp_system_sleep, CMD_SYNC},
     {NCP_CMD_INVALID, NULL, NULL, NULL},
 };
+
+struct cmd_t ot_system_config[] = {
+    {NCP_CMD_SYSTEM_CONFIG_ENCRYPT, "ncp-encrypted-communication", ncp_sys_encrypt, CMD_SYNC},
+    {NCP_CMD_INVALID, NULL, NULL, NULL},
+};
+
 #endif
 
 /* Need to define the unused wlan/wifi/system ncp subclass as weak,
@@ -227,6 +234,7 @@ struct cmd_subclass_t cmd_subclass_15D4[] = {
     {NCP_15d4_CMD_FORWARD, ot_command_forward},
 #ifndef OT_NCP_LIBS
     {NCP_CMD_SYSTEM_POWERMGMT, ot_ncp_system},
+    {NCP_CMD_SYSTEM_CONFIG, ot_system_config},
 #endif
     {NCP_CMD_INVALID, NULL},
 };

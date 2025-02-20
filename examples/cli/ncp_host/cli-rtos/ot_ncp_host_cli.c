@@ -80,6 +80,7 @@ extern uint8_t     ncp_device_status;
 extern power_cfg_t global_power_config;
 OSA_SEMAPHORE_HANDLE_DEFINE(gpio_wakelock);
 OSA_MUTEX_HANDLE_DEFINE(ncp_device_status_mutex);
+OSA_SEMAPHORE_HANDLE_DEFINE(ncp_cmd_resp_sem);
 
 #if CONFIG_NCP_UART
 #define UART_WAKEUP_MAGIC_PATTERN (0xABCDEF8987FEDCBAU)
@@ -97,6 +98,15 @@ extern void sdhost_rescan_set_event(osa_event_flags_t flagsToWait);
 /* -------------------------------------------------------------------------- */
 /*                               functions                                    */
 /* -------------------------------------------------------------------------- */
+int ncp_get_command_resp_sem()
+{
+    return OSA_SemaphoreWait(ncp_cmd_resp_sem, osaWaitForever_c);
+}
+
+int ncp_put_command_resp_sem()
+{
+    return OSA_SemaphorePost(&ncp_cmd_resp_sem);
+}
 
 void *ot_ncp_host_get_command_buffer(void)
 {
@@ -178,6 +188,7 @@ uint32_t ot_ncp_host_send_tlv_command(void)
 
     if (cmd_len == 0 || cmd_len + CHECKSUM_LEN >= NCP_HOST_COMMAND_LEN)
     {
+        ncp_put_command_resp_sem();
         PRINTF("The command length exceeds the receiving capacity of mcu application!\r\n");
         mcu_cmd->size = 0;
         return NCP_STATUS_ERROR;
@@ -233,6 +244,7 @@ uint32_t ot_ncp_host_send_tlv_command(void)
     }
     else
     {
+        ncp_put_command_resp_sem();
         ncp_e("Command length is less than ncp_host_app header length (%d), cmd_len = %d", NCP_CMD_HEADER_LEN, cmd_len);
         ret = NCP_STATUS_ERROR;
     }
@@ -265,6 +277,9 @@ static void ot_ncp_host_input_task(void *pvParameters)
         /* Receive user input */
         if (ot_get_input(cli_string_command_buff, &cli_input_len) == NCP_STATUS_SUCCESS)
         {
+            /* Wait for command response semaphore. */
+            ncp_get_command_resp_sem();
+
             // Determine the size of ot command excluding parameters
             for (otcommandlen = 0; otcommandlen < cli_input_len; otcommandlen++)
             {
@@ -281,6 +296,7 @@ static void ot_ncp_host_input_task(void *pvParameters)
             if (opcode == -1)
             {
                 PRINTF("\nNot supported command.\n> ");
+                ncp_put_command_resp_sem();
                 continue;
             }
 
@@ -392,7 +408,7 @@ uint32_t ot_ncp_host_cli_init(void)
     // inband as the default wake up mode
     global_power_config.wake_mode = WAKE_MODE_INTF;
 
-    if (OSA_SemaphoreCreateBinary((osa_semaphore_handle_t)gpio_wakelock) != NCP_STATUS_SUCCESS)
+    if (OSA_SemaphoreCreateBinary((osa_semaphore_handle_t)gpio_wakelock) != KOSA_StatusSuccess)
     {
         ncp_e("Failed to create gpio_wakelock");
         return -NCP_STATUS_ERROR;
@@ -400,7 +416,15 @@ uint32_t ot_ncp_host_cli_init(void)
 
     OSA_SemaphorePost((osa_semaphore_handle_t)gpio_wakelock);
 
-    if (OSA_MutexCreate((osa_mutex_handle_t)ncp_device_status_mutex) != NCP_SUCCESS)
+    if (OSA_SemaphoreCreateBinary(ncp_cmd_resp_sem) != KOSA_StatusSuccess)
+    {
+        ncp_e("Failed to create mcu command resposne semaphore");
+        return -NCP_STATUS_ERROR;
+    }
+
+    ncp_put_command_resp_sem();
+
+    if (OSA_MutexCreate((osa_mutex_handle_t)ncp_device_status_mutex) != KOSA_StatusSuccess)
     {
         ncp_e("Failed to create ncp_device_status_mutex");
         return -NCP_STATUS_ERROR;

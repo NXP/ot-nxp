@@ -54,6 +54,7 @@ extern usb_cdc_vcom_struct_t s_cdcVcom;
 
 #if (CONFIG_NCP_USB) || (CONFIG_NCP_SDIO)
 extern uint8_t lpmInterfaceReinitState;
+extern void    lpm_setNcpInterfaceReinitState(uint8_t state);
 #endif
 
 #ifndef WM_FAIL
@@ -90,7 +91,7 @@ int app_notify_event(uint16_t event, int result, void *data, int len)
     return WM_SUCCESS;
 }
 
-static uint8_t *ncp_sys_evt_status(uint32_t evt_id, void *msg)
+uint8_t *ncp_sys_evt_status(uint32_t evt_id, void *msg)
 {
     uint8_t          *event_buf = NULL;
     app_notify_msg_t *message   = (app_notify_msg_t *)msg;
