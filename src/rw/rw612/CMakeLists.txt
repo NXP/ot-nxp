@@ -80,6 +80,7 @@ if(OT_NCP_RADIO)
             ${PROJECT_SOURCE_DIR}/src/common/ncp/sys/ncp_lp_sys.c
             ${PROJECT_SOURCE_DIR}/src/common/ncp/sys/ncp_lpm.c
             ${PROJECT_SOURCE_DIR}/src/common/ncp/notify/app_notify.c
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/mbedtls/ncp_mbedtls_device.c
         )
     endif()
 
@@ -93,6 +94,7 @@ if(OT_NCP_RADIO)
         list(APPEND OT_NCP_INCLUDES
             ${PROJECT_SOURCE_DIR}/src/common/ncp/sys
             ${PROJECT_SOURCE_DIR}/src/common/ncp/notify
+            ${PROJECT_SOURCE_DIR}/src/common/ncp/mbedtls
 	)
     endif()
 else()

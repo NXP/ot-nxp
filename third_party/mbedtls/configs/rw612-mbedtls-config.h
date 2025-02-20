@@ -34,6 +34,19 @@
 #define MBEDTLS_THREADING_C
 #define MBEDTLS_THREADING_ALT
 
+/* Enable PSA */
+#define MBEDTLS_PSA_CRYPTO_C
+#define MBEDTLS_PSA_CRYPTO_CONFIG
+
+/* PSA core mandatory configuration options */
+#define MBEDTLS_CIPHER_C
+#define MBEDTLS_AES_C
+#define MBEDTLS_SHA256_C
+#define MBEDTLS_PSA_BUILTIN_ALG_SHA_256 1
+#define MBEDTLS_CTR_DRBG_C
+#define MBEDTLS_ENTROPY_C
+#define MBEDTLS_ENTROPY_FORCE_SHA256
+
 /* SDK mbetdls config include */
 #include "els_pkc_mbedtls_config.h"
 

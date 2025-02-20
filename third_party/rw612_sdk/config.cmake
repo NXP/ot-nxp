@@ -214,6 +214,14 @@ if(OT_NCP_RADIO)
         ncp_adapter/ncp_intf/usb/usb_device_cdc/usb_device_descriptor.c
         ncp_adapter/ncp_intf/spi/spi_slave/ncp_intf_spi_slave.c
         ncp_adapter/ncp_intf/sdio/sdio_device/ncp_intf_sdio.c
+        mbedtls/mbedtls_common.c
+    )
+
+    mcux_add_include(
+        BASE_PATH ${SdkRootDirPath}/examples/ncp_examples/ncp_device
+        INCLUDES
+        mbedtls
+        ../../../middleware/wireless/wpa_supplicant-rtos/port/mbedtls
     )
 
     mcux_add_include(
@@ -230,6 +238,7 @@ if(OT_NCP_RADIO)
         ncp_adapter/ncp_intf/usb/usb_device_cdc
         ncp_adapter/ncp_intf/spi/spi_slave
         ncp_adapter/ncp_intf/sdio/sdio_device
+        mbedtls
     )
 
     mcux_add_macro(
@@ -237,7 +246,6 @@ if(OT_NCP_RADIO)
         -DCONFIG_NCP=1
         -DCONFIG_NCP_OT=1
         -DNCP_UART_TASK_PRIORITY=3
-        -DUSB_DEVICE_CONFIG_LOW_POWER_MODE=1
         -DCONFIG_HOST_SLEEP
         -DRW610
     )
