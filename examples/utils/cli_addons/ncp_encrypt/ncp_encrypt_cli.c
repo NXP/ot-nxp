@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,113 +29,71 @@
 /* -------------------------------------------------------------------------- */
 /*                                  Includes                                  */
 /* -------------------------------------------------------------------------- */
-
-#include <common/code_utils.hpp>
+#include "ncp_cmd_ot.h"
+#include "ncp_mbedtls_device.h"
 #include <openthread/cli.h>
-#include <openthread/instance.h>
 
-#ifdef OT_APP_CLI_IPERF_ADDON
-#include "iperf_cli.h"
-#include "ot_lwip.h"
-#endif
-
-#ifdef OT_APP_CLI_DEBUG_ADDON
-#include "debug_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_LWIP_ADDON
-#include "lwip_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_WIFI_ADDON
-#include "wifi_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_PLATFORM_ADDON
-#include "radio_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_LOWPOWER_ADDON
-#include "lowpower_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_EPHEMERAL_KEY_ADDON
-#include "ephemeral_key_cli.h"
-#endif
-
-#ifdef OT_APP_CLI_NCP_ENCRYPT_ADDON
-#include "ncp_encrypt_cli.h"
-#endif
-
-extern otError ProcessNcpLinkEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 /* -------------------------------------------------------------------------- */
-/*                               Private memory                               */
+/*                             Private definitions                            */
 /* -------------------------------------------------------------------------- */
-
-static const otCliCommand addonsCommands[] = {
-#ifdef OT_APP_CLI_IPERF_ADDON
-    {"iperf", ProcessIperf},
-#endif
-#ifdef OT_APP_CLI_PLATFORM_ADDON
-    {"radio_nxp", ProcessRadio},
-    {"seteui64", ProcessSetEui64},       //=> Set ieee.802.15.4 MAC Address
-    {"txpwrlimit", ProcessTxPowerLimit}, //=> Set/Get TX power limit for 15.4
-#endif
-#ifdef OT_APP_CLI_DEBUG_ADDON
-    {"debug_nxp", ProcessDebug},
-#endif
-#ifdef OT_APP_CLI_LOWPOWER_ADDON
-    {"lp", ProcessLowPower},
-#ifdef OT_NCP_RADIO
-    {"ncp-wake-cfg", ProcessLpConfig},
-#endif
-#endif
-#ifdef OT_APP_CLI_LWIP_ADDON
-    {"lwip", ProcessLwip},
-#endif
-#ifdef OT_APP_CLI_WIFI_ADDON
-    {"wifi", ProcessWifi},
-#endif
-#ifdef OT_APP_CLI_EPHEMERAL_KEY_ADDON
-    {"ephkey", ProcessEphemeralKey},
-#endif
-#ifdef OT_APP_CLI_NCP_ENCRYPT_ADDON
-    {"ncp-sys-encrypt", ProcessNcpLinkEncrypt},
-#endif
-};
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static void otAppCliStateChangeCallback(otChangedFlags flags, void *context);
+/* -------------------------------------------------------------------------- */
+/*                               Private memory                               */
+/* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void otAppCliAddonsInit(otInstance *aInstance)
+otError ProcessNcpLinkEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
-#ifdef OT_APP_CLI_IPERF_ADDON
-    otAppCliIperfCliInit(aInstance);
-#endif
+    otError         error = OT_ERROR_NONE;
+    NCP_CMD_ENCRYPT enc;
+    int             arg = 0;
 
-#ifdef OT_APP_CLI_LOWPOWER_ADDON
-    otAppLowPowerCliInit(aInstance);
-#endif
+    memset((uint8_t *)&enc, 0, sizeof(enc));
 
-    otSetStateChangedCallback(aInstance, otAppCliStateChangeCallback, NULL);
+    do
+    {
+        if (aArgsLength == 0)
+        {
+            error = OT_ERROR_INVALID_ARGS;
+            break;
+        }
 
-    otCliSetUserCommands(addonsCommands, OT_ARRAY_LENGTH(addonsCommands), NULL);
-}
+        if (!strcmp(aArgs[arg], "1"))
+        {
+            otCliOutputFormat("Enable ncp encrypted communication\r\n");
+            enc.action = NCP_CMD_ENCRYPT_ACTION_INIT;
+            ncp_sys_encrypt(&enc);
+        }
+        else if (!strcmp(aArgs[arg], "0"))
+        {
+            otCliOutputFormat("Disable ncp encrypted communication\r\n");
+            enc.action = NCP_CMD_ENCRYPT_ACTION_STOP;
+            ncp_sys_encrypt(&enc);
+        }
+        else if (!strcmp(aArgs[arg], "help"))
+        {
+            otCliOutputFormat("Usage:\r\n");
+            otCliOutputFormat("\tncp-sys-encrypt <mode>\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("This command is used to enable/disable ncp encrypted communication.\r\n");
+            otCliOutputFormat("\r\n");
+            otCliOutputFormat("mode:\r\n");
+            otCliOutputFormat("\t0 - Disable ncp encrypted communication\r\n");
+            otCliOutputFormat("\t1 - Enable ncp encrypted communication\r\n");
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+            break;
+        }
+    } while (false);
 
-/* -------------------------------------------------------------------------- */
-/*                              Private functions                             */
-/* -------------------------------------------------------------------------- */
-
-static void otAppCliStateChangeCallback(otChangedFlags flags, void *context)
-{
-#ifdef OT_APP_CLI_IPERF_ADDON
-    otPlatLwipUpdateState(flags, context);
-#endif
+    return error;
 }

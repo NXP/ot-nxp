@@ -74,3 +74,7 @@ endif()
 if(OT_APP_CLI_FREERTOS_EPHEMERAL_KEY)
     add_subdirectory(ephemeral_key)
 endif()
+
+if(OT_APP_CLI_FREERTOS_NCP_ENCRYPT)
+    add_subdirectory(ncp_encrypt)
+endif()
