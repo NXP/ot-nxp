@@ -130,7 +130,7 @@ static void lwiperf_report(void                    *arg,
                            uint32_t                 ms_duration,
                            uint32_t                 bandwidth_kbitpsec);
 
-int get_uint(const char *arg, unsigned int *dest, unsigned int len);
+static int get_uint(const char *arg, unsigned int *dest, unsigned int len);
 
 static void TESTAbort(void);
 
@@ -175,7 +175,7 @@ static unsigned int              buffer_len      = 0;
 static unsigned int              port            = LWIPERF_TCP_PORT_DEFAULT;
 
 /* Report state => string */
-const char *report_type_str[] = {
+const char *ot_report_type_str[] = {
     "TCP_DONE_SERVER (RX)",        /* LWIPERF_TCP_DONE_SERVER,*/
     "TCP_DONE_CLIENT (TX)",        /* LWIPERF_TCP_DONE_CLIENT,*/
     "TCP_ABORTED_LOCAL",           /* LWIPERF_TCP_ABORTED_LOCAL, */
@@ -676,9 +676,9 @@ static void lwiperf_report(void                    *arg,
                            uint32_t                 bandwidth_kbitpsec)
 {
     otCliOutputFormat("-------------------------------------------------\r\n");
-    if (report_type < (sizeof(report_type_str) / sizeof(report_type_str[0])))
+    if (report_type < (sizeof(ot_report_type_str) / sizeof(ot_report_type_str[0])))
     {
-        otCliOutputFormat(" %s \r\n", report_type_str[report_type]);
+        otCliOutputFormat(" %s \r\n", ot_report_type_str[report_type]);
         if (local_addr && remote_addr)
         {
             otCliOutputFormat(" Local address : %s ", inet6_ntoa(local_addr->u_addr.ip6));
@@ -705,7 +705,7 @@ static void lwiperf_report(void                    *arg,
 #endif
 }
 
-int get_uint(const char *arg, unsigned int *dest, unsigned int len)
+static int get_uint(const char *arg, unsigned int *dest, unsigned int len)
 {
     int          i;
     unsigned int val = 0;
