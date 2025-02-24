@@ -77,7 +77,9 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configTICK_RATE_HZ ((TickType_t)1000)
 #define configMAX_PRIORITIES (10)
 #define configMINIMAL_STACK_SIZE ((uint16_t)1024)
+#ifndef configAPPLICATION_ALLOCATED_HEAP
 #define configAPPLICATION_ALLOCATED_HEAP 1
+#endif
 #ifndef configTOTAL_HEAP_SIZE
 #define configTOTAL_HEAP_SIZE ((size_t)(124 * 1024))
 #endif

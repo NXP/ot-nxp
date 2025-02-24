@@ -83,6 +83,10 @@ mcux_add_source(
 )
 
 if(OT_NXP_BUILD_APP_AS_LIB)
+    mcux_add_macro(
+        -DconfigAPPLICATION_ALLOCATED_HEAP=0
+    )
+
     # ethermind/coex_app_cli include
     mcux_add_include(
         BASE_PATH ${SdkRootDirPath}
