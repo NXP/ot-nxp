@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2019-2025 The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 static osaMutexId_t trngMutexHandle = NULL;
 #endif
 
-void K32WRandomInit(void)
+void otPlatRandomInit(void)
 {
     trng_config_t config;
     uint32_t      seed;

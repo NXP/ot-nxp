@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2019-2025 The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -83,7 +83,7 @@ void K32WRadioProcess(otInstance *aInstance);
  * This function initializes the random number service used by OpenThread.
  *
  */
-void K32WRandomInit(void);
+void otPlatRandomInit(void);
 
 /**
  * This function performs UART driver processing.
