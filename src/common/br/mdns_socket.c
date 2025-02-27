@@ -187,7 +187,7 @@ static otError SocketInit(uint32_t aInfraIfIndex)
     err_t   lwipError = ERR_OK;
     VerifyOrExit(aInfraIfIndex == sInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
 
-    CALL_LWIP_API_FROM_OT_CONTEXT(sMdnsPcb = udp_new_ip_type(IP_ADDR_ANY));
+    CALL_LWIP_API_FROM_OT_CONTEXT(sMdnsPcb = udp_new_ip_type(IPADDR_TYPE_ANY));
     if (sMdnsPcb != NULL)
     {
         CALL_LWIP_API_FROM_OT_CONTEXT(lwipError = udp_bind(sMdnsPcb, IP_ANY_TYPE, sMulticastPort));
