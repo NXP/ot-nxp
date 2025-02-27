@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2023, The OpenThread Authors.
+ *  Copyright (c) 2022-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -185,7 +185,7 @@ void otSysInit(int argc, char *argv[])
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
         K32WLogInit();
 #endif
-        K32WRandomInit();
+        otPlatRandomInit();
     }
 
     otPlatRadioInit();

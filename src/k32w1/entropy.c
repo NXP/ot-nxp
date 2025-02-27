@@ -51,7 +51,7 @@ OSA_MUTEX_HANDLE_DEFINE(trngMutexHandle);
 
 static bool_t isInitialized = false;
 
-void K32WRandomInit(void)
+void otPlatRandomInit(void)
 {
     OSA_InterruptDisable();
     if (!isInitialized)
