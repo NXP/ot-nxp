@@ -34,6 +34,9 @@ OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 OT_SRCDIR="$(pwd)"
 readonly OT_SRCDIR
+readonly OT_OPTIONS_CLI_IPERF=(
+    "-DOT_APP_CLI_FREERTOS_IPERF=ON"
+)
 
 readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
@@ -185,6 +188,8 @@ create_directory_and_build()
     if [ "$1" == 'all' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        build iwx12_spi_iperf "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${@:2}")
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
@@ -222,6 +227,10 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
+    elif [ "$1" == 'iwx12_spi_iperf' ]; then
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
+        build iwx12_spi "${options[@]}"
     elif [ "$1" == 'iwx12_spi_br_ethernet' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
@@ -241,7 +250,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
         build rw612_ncp_host_spi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet,  iwx12_spi, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host_uart, rw612_ncp_host_usb, rw612_ncp_host_sdio, rw612_ncp_host_spi"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet,  iwx12_spi, iwx12_spi_iperf, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host_uart, rw612_ncp_host_usb, rw612_ncp_host_sdio, rw612_ncp_host_spi"
         # 128 for Invalid arguments
         exit 128
     fi

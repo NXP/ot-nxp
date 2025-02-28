@@ -33,6 +33,10 @@ set -exo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
+readonly OT_OPTIONS_CLI_IPERF=(
+    "-DOT_APP_CLI_FREERTOS_IPERF=ON"
+)
+
 readonly OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1170"
@@ -53,23 +57,6 @@ readonly OT_OPTIONS_TRANSCEIVER_K32W0_SPI=(
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
-    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
-    "-DOT_NXP_PLATFORM=rt1170"
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-    "-DCMAKE_BUILD_TYPE=MinSizeRel"
-    "-DSPINEL_INTERFACE_TYPE=SPI"
-    "-DOT_NXP_TRANSCEIVER=iwx12"
-)
-
-readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_NO_IPERF=(
-    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
-    "-DOT_NXP_PLATFORM=rt1170"
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-    "-DCMAKE_BUILD_TYPE=MinSizeRel"
-    "-DSPINEL_INTERFACE_TYPE=SPI"
-    "-DOT_NXP_TRANSCEIVER=iwx12"
-)
-readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_TCP=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1170"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
@@ -137,10 +124,8 @@ create_directory_and_build()
     if [ "$1" == 'all' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
-        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_NO_IPERF[@]}")
-        build iwx12_spi_no_iperf "${options[@]}"
-        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_TCP[@]}")
-        build iwx12_spi_tcp "${options[@]}"
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        build iwx12_spi_iperf "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1170_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
@@ -158,12 +143,10 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
-    elif [ "$1" == 'iwx12_spi_no_iperf' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_NO_IPERF[@]}")
-        build iwx12_spi_no_iperf "${options[@]}"
-    elif [ "$1" == 'iwx12_spi_tcp' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_TCP[@]}")
-        build iwx12_spi_tcp "${options[@]}"
+    elif [ "$1" == 'iwx12_spi_iperf' ]; then
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
+        build iwx12_spi_iperf "${options[@]}"
     elif [ "$1" == 'iwx12_spi_br_ethernet' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET[@]}")
         build iwx12_spi_br_ethernet "${options[@]}"
@@ -171,7 +154,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all , k32w0_uart_flow_control , k32w0_spi , iwx12_spi , iwx12_spi_no_iperf , iwx12_spi_tcp , iwx12_spi_br_ethernet , iwx12_spi_br_wifi"
+        echo >&2 "Unsupported action: $1. Supported: all , k32w0_uart_flow_control , k32w0_spi , iwx12_spi , iwx12_spi_iperf , iwx12_spi_br_ethernet , iwx12_spi_br_wifi"
         # 128 for Invalid arguments
         exit 128
     fi
