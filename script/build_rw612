@@ -40,6 +40,10 @@ readonly OT_OPTIONS=(
     "-DOT_NXP_PLATFORM=rw612"
 )
 
+readonly OT_OPTIONS_CLI_IPERF=(
+    "-DOT_APP_CLI_FREERTOS_IPERF=ON"
+)
+
 readonly OT_OPTIONS_BR_WIFI=(
     "-DOT_APP_BR_FREERTOS=ON"
     "-DOT_NXP_LWIP_WIFI=ON"
@@ -77,6 +81,7 @@ create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
         build_ot_cli "$@"
+        build_ot_cli_iperf "$@"
         build_otbr_wifi "$@"
         build_otbr_eth "$@"
     elif [ "$1" == 'ot_br_wifi' ]; then
@@ -85,6 +90,8 @@ create_directory_and_build()
         build_otbr_eth "$@"
     elif [ "$1" == 'ot_cli' ]; then
         build_ot_cli "$@"
+    elif [ "$1" == 'ot_cli_iperf' ]; then
+        build_ot_cli_iperf "$@"
     else
         echo >&2 "Unsupported action: $1. Supported: all, ot_br_wifi, ot_br_eth, ot_cli"
         # 128 for Invalid arguments
@@ -98,6 +105,14 @@ build_ot_cli()
     local options=("${OT_OPTIONS[@]}")
     options+=("${@:2}")
     build rw612_ot_cli "${options[@]}"
+}
+
+build_ot_cli_iperf()
+{
+    local options=("${OT_OPTIONS_CLI_IPERF[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("${@:2}")
+    build rw612_ot_cli_iperf "${options[@]}"
 }
 
 build_otbr_wifi()
