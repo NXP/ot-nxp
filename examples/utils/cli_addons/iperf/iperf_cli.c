@@ -196,7 +196,7 @@ const char *ot_report_type_str[] = {
 
 void otAppCliIperfCliInit(otInstance *aInstance)
 {
-    otPlatLwipInit(appOtLockOtTask, appOtUnlockOtTask);
+    otPlatLwipInit();
     otPlatLwipSetOtInstance(aInstance);
     otPlatLwipAddThreadInterface(NULL);
 

@@ -31,7 +31,6 @@
 /* -------------------------------------------------------------------------- */
 
 #include "ot_lwip.h"
-#include "br_rtos_manager.h"
 #include "token_bucket.h"
 
 #include <string.h>
@@ -43,6 +42,10 @@
 #include <openthread/nat64.h>
 #include <openthread/thread.h>
 #include <openthread/platform/memory.h>
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#include "br_rtos_manager.h"
+#endif
 
 #ifndef DISABLE_TCPIP_INIT
 #include "lwip_tcpip_init_once.h"
@@ -72,10 +75,13 @@ static otTokenBucket sTokenBucket;
 
 static err_t   otPlatLwipThreadNetIfInitCallback(struct netif *netif);
 static err_t   otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr);
-static void    otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr);
 static void    otPlatLwipReceivePacket(otMessage *pkt, void *context);
 static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt);
 static otError otPlatLwipCopyToBuffer(struct pbuf *lwipIpPkt, uint8_t *pBuff);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+static void otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr);
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -451,7 +457,7 @@ static err_t otPlatLwipThreadNetIfInitCallback(struct netif *netif)
 
     return ERR_OK;
 }
-
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr)
 {
     err_t lwipErr = ERR_OK;
@@ -510,6 +516,58 @@ static void otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr)
         otIp6Send(sInstance, otIpPkt);
     }
 }
+#else
+static err_t otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr)
+{
+    err_t lwipErr = ERR_IF;
+
+    /* Filter out any link local multicast traffic, like ND, that LWIP might send on this interface. */
+    VerifyOrExit(!ip6_addr_ismulticast_linklocal(ipaddr), lwipErr = ERR_OK);
+
+    /* Temporarily release the TCP/IP mutex, take OT mutex, and take back TCP/IP mutex to preserve the
+     * mutex take order as to avoid deadlock. */
+    UNLOCK_TCPIP_CORE();
+
+    // Lock OT
+    gLockTaskCb();
+
+    // Take back TCP/IP mutex which was temporarily released above
+    LOCK_TCPIP_CORE();
+
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    /* TODO: Instead of using lwIP packet length for rate limiting, calculate how many bytes
+     * would be output to Thread network with its fragmentation and different header size. */
+    if (otTokenBucketTake(&sTokenBucket, pkt->tot_len) != pkt->tot_len)
+    {
+        /* Sending the packet would exceed the rate limit. */
+        lwipErr = ERR_IF;
+    }
+    else
+    {
+#endif
+        otMessage *otIpPkt = otPlatLwipConvertToOtMsg(pkt);
+
+        if (otIpPkt != NULL)
+        {
+            /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage
+             * object regardless of whether otIp6Send() succeeds or fails. */
+            if (otIp6Send(sInstance, otIpPkt) == OT_ERROR_NONE)
+            {
+                lwipErr = ERR_OK;
+            }
+        }
+#if defined(OT_APP_THREAD_RATE_LIMIT) && (OT_APP_THREAD_RATE_LIMIT >= 8)
+    }
+#endif
+
+    // Unlock OT
+    gUnlockTaskCb();
+
+exit:
+    /* pkt is freed by LWIP stack */
+    return lwipErr;
+}
+#endif
 
 static void otPlatLwipReceivePacket(otMessage *pkt, void *context)
 {

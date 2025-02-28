@@ -12,32 +12,15 @@ The tool has been ported to ot-cli is order to run benchmarks and throughput sce
 
 **Note:** This addon is based on "lwiperf" which is a port of iPerf onto lwIP tcp/ip stack.
 
-To build ot-cli with iperf addon, following CMake flag is required:
+To build ot-cli with iperf addon, dedicated targets exist for each platform that supports this feature. For example,
+for RW612:
 
-`OT_APP_CLI_FREERTOS_IPERF`: Adds iperf_cli addon to the ot-cli application
+`ot_cli_iperf`: Adds iperf_cli addon to the ot-cli application
+
+Other platforms may have multiple iperf targets, but they can be easily identified by the `_iperf` extension.
 
 Example of a typical command:
 
 ```bash
-./script/build_<platform> -DOT_APP_CLI_FREERTOS_IPERF=ON
+./script/build_<platform> ot_cli_iperf
 ```
-
-## lwip-cli addon
-
-Allows following:
-
-- Add/remove of IPv6 addresses.
-- Reading MAC addresses.
-- Read of link state.
-
-Enable addon using `-DOT_APP_CLI_FREERTOS_LWIP=ON` compilation parameter.
-
-Type `lwip help` to the cli to get list of all available commands.
-
-## wifi-cli addon
-
-Allows connecting/disconnecting from Wi-Fi network.
-
-Enable addon using `-DOT_APP_CLI_FREERTOS_WIFI=ON` compilation parameter.
-
-Type `wifi help` to the cli to get list of all available commands.

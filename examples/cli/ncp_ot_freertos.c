@@ -45,6 +45,10 @@
 #include <assert.h>
 #include <string.h>
 
+#if OT_APP_CLI_IPERF_ADDON
+#include "ot_lwip.h"
+#endif
+
 #include "addons_cli.h"
 #include "app_ot.h"
 #include "ncp_ot.h"
@@ -66,6 +70,11 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 static otInstance       *sInstance      = NULL;
 static TaskHandle_t      sMainTask      = NULL;
 static SemaphoreHandle_t sMainStackLock = NULL;
+
+#if OT_APP_CLI_IPERF_ADDON
+otPlatLockTaskCb   gLockTaskCb   = appOtLockOtTask;
+otPlatUnlockTaskCb gUnlockTaskCb = appOtUnlockOtTask;
+#endif
 
 extern void otAppCliInit(otInstance *aInstance);
 #ifndef OT_NCP_LIBS

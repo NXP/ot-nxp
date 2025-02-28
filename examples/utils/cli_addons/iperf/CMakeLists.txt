@@ -34,6 +34,6 @@ target_include_directories(ot-cli-addons PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_compile_definitions(ot-cli-addons PRIVATE
-    -DOT_APP_CLI_IPERF_ADDON
+target_compile_definitions(ot-config INTERFACE
+    OT_APP_CLI_IPERF_ADDON
 )

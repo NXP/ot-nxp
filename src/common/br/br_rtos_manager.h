@@ -31,8 +31,9 @@
 
 #include "fsl_component_generic_list.h"
 #include "fsl_os_abstraction.h"
+
 #include "ot_lwip.h"
-#include "stdarg.h"
+
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/border_routing.h>
 #include <openthread/ip6.h>
@@ -44,47 +45,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern otPlatLockTaskCb   gLockTaskCb;
-extern otPlatUnlockTaskCb gUnlockTaskCb;
-
-/*
-This macro is intended to be used whenever OT app calls lwip API.
-A result might be needed from lwip, so this macro will let synchronous execution.
-There is no need to verify that sMainStackLock exists, as it's the first thing executed
-in appOtStart. Failure to create this mutex will lead to assert.
-*/
-#define CALL_LWIP_API_FROM_OT_CONTEXT(...) \
-    do                                     \
-    {                                      \
-        if (gLockTaskCb)                   \
-            /* release OT mutex */         \
-            gUnlockTaskCb();               \
-        LOCK_TCPIP_CORE();                 \
-        if (gLockTaskCb)                   \
-            /* acquire OT mutex */         \
-            gLockTaskCb();                 \
-        __VA_ARGS__;                       \
-        UNLOCK_TCPIP_CORE();               \
-    } while (0)
-
-/*
-This macro is intended to be used whenever OT posts a callback to lwip.
-The callback will be asynchronous executed in lwip's thread context. No result in waited by caller task.
-There is no need to verify that sMainStackLock exists, as it's the first thing executed
-in appOtStart. Failure to create this mutex will lead to assert.
-*/
-#define POST_LWIP_CALLBACK_FROM_OT_CONTEXT(...) \
-    do                                          \
-    {                                           \
-        if (gLockTaskCb)                        \
-            /* release OT mutex */              \
-            gUnlockTaskCb();                    \
-        __VA_ARGS__;                            \
-        if (gLockTaskCb)                        \
-            /* acquire OT mutex */              \
-            gLockTaskCb();                      \
-    } while (0)
 
 typedef struct brMsgContext_tag brMsgContext;
 typedef void (*brMsgCallback)(brMsgContext *aMsgContextPtr);
