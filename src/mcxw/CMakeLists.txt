@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2024, The OpenThread Authors.
+#  Copyright (c) 2021-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,4 +26,35 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include(${PROJECT_SOURCE_DIR}/src/k32w1/CMakeLists.txt)
+list(APPEND OT_PUBLIC_DEFINES
+    -Wno-unused-parameter
+    -Wno-expansion-to-defined
+)
+
+include(../platform.cmake)
+
+if (NOT NO_THREAD_1_3_FLAGS)
+    list(APPEND OT_NXP_PLATFORM_SOURCES
+        ../common/crypto/ecdsa_sss.cpp
+    )
+endif()
+
+if (NOT OT_MAC_CSL_RECEIVER_ENABLE)
+    # disable CSL receiver for now
+    list(APPEND OT_PLATFORM_DEFINES
+        OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=0
+    )
+endif()
+
+if (NO_THREAD_1_3_FLAGS)
+    list(APPEND OT_PLATFORM_DEFINES
+        "NO_THREAD_1_3_FLAGS"
+    )
+endif()
+
+set(OT_NXP_PLATFORM_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+)
+
+include(${PROJECT_SOURCE_DIR}/src/mcxw/platform/mcxw.cmake)

@@ -40,9 +40,6 @@ list(APPEND OT_PUBLIC_INCLUDES ${SdkIncludeDirs})
 get_target_property(SdkCompileDefinitions ${MCUX_SDK_PROJECT_NAME} INTERFACE_COMPILE_DEFINITIONS)
 list(APPEND OT_PLATFORM_DEFINES ${SdkCompileDefinitions})
 
-set(COMM_FLAGS
-    -I${PROJECT_SOURCE_DIR}/examples/k32w1/
-)
 #if(OT_CFLAGS MATCHES "-pedantic-errors")
 #    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
 #endif()
@@ -67,7 +64,6 @@ if (USE_NBU)
 target_link_libraries(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_MBEDTLS}
-        -L${PROJECT_SOURCE_DIR}/src/k32w1
         -L${SdkRootDirPath}/examples/_boards/${board}/wireless_examples/linker/gcc
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
@@ -99,7 +95,6 @@ target_compile_definitions(openthread-${OT_NXP_PLATFORM}
 target_compile_options(openthread-${OT_NXP_PLATFORM}
     PUBLIC
         ${OT_CFLAGS}
-        ${COMM_FLAGS}
 )
 
 target_include_directories(openthread-${OT_NXP_PLATFORM}

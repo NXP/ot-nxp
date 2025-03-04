@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, The OpenThread Authors.
+# Copyright (c) 2024-2025, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -73,10 +73,10 @@ mcux_add_include(
     openthread/include
     openthread/src/core
     openthread/third_party/mbedtls
+    src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
     src/${OT_NXP_PLATFORM}
     third_party/mbedtls/configs
 )
-
 mcux_add_macro(
     MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"
     OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${CORE_CONFIG_FILE}\\\"

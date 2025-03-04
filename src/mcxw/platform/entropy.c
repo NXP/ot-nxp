@@ -33,12 +33,12 @@
  */
 
 #include "EmbeddedTypes.h"
+#include "fsl_os_abstraction.h"
 #include <openthread/platform/entropy.h>
 #include "mbedtls/entropy_poll.h"
 #include "utils/code_utils.h"
 
 #if defined(USE_RTOS) && (USE_RTOS == 1)
-#include "fsl_os_abstraction.h"
 
 #define mutex_lock() OSA_MutexLock(trngMutexHandle, osaWaitForever_c)
 #define mutex_unlock() OSA_MutexUnlock(trngMutexHandle)

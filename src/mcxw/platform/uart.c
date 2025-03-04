@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2024, The OpenThread Authors.
+ *  Copyright (c) 2022-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 #include "fwk_platform_ot.h"
 #include "pin_mux.h"
 
-#include "platform-k32w1.h"
+#include "platform-mcxw.h"
 
 #define FLUSH_TO_MS 500
 

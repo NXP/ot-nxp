@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2024, The OpenThread Authors.
+#  Copyright (c) 2024-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ list(APPEND OT_PLATFORM_DEFINES
 )
 
 if (USE_NBU)
-    set_property(SOURCE ${PROJECT_SOURCE_DIR}/src/k32w1/startup_K32W1480.S PROPERTY LANGUAGE C)
+    set_property(SOURCE ${PROJECT_SOURCE_DIR}/src/mcxw/startup_K32W1480.S PROPERTY LANGUAGE C)
 else()
     set_property(SOURCE $ENV{NXP_K32W1_SDK_ROOT}/devices/K32W1480/gcc/startup_K32W1480.S PROPERTY LANGUAGE C)
 endif()
@@ -161,7 +161,7 @@ if (USE_NBU)
     endif()
 
     list(APPEND K32W1_SDK_SOURCES
-        ${PROJECT_SOURCE_DIR}/src/k32w1/startup_K32W1480.S
+        ${PROJECT_SOURCE_DIR}/src/mcxw/platform/startup_K32W1480.S
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
         $ENV{NXP_K32W1_SDK_ROOT}/components/rpmsg/fsl_adapter_rpmsg.c
         $ENV{NXP_K32W1_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr.c
@@ -357,7 +357,7 @@ set(K32W1_SDK_INCLUDES
 )
 
 if (SDK_RELEASE)
-    list(APPEND K32W1_SDK_INCLUDES
+    list(APPEND K32W1_SDK_INCLUDESPROJECT_SOURCE_DIR
         $ENV{NXP_K32W1_SDK_ROOT}/${DRV_DIR}
         $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}
         $ENV{NXP_K32W1_SDK_ROOT}/${UTL_DIR}/format

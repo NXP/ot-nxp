@@ -51,7 +51,7 @@
 #include "fsl_os_abstraction.h"
 #include "fwk_platform.h"
 #include "fwk_platform_ot.h"
-#include "platform-k32w1.h"
+#include "platform-mcxw.h"
 #include <stdint.h>
 #include "utils/uart.h"
 

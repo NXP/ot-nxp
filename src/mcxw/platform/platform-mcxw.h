@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef PLATFORM_K32W1_H_
-#define PLATFORM_K32W1_H_
+#ifndef PLATFORM_MCXW_H_
+#define PLATFORM_MCXW_H_
 
 #ifndef OT_EXTERNAL_BUILD
 #include <openthread-core-config.h>
@@ -94,7 +94,7 @@ void otPlatRadioProcess(otInstance *aInstance);
  */
 void K32WLogInit();
 #endif /* OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED */
-#endif // PLATFORM_K32W1_H_
+#endif // PLATFORM_MCXW_H_
 
 /**
  * This function initializes the random number service used by OpenThread.

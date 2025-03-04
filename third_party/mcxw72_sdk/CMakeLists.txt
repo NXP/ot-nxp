@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2024, The OpenThread Authors.
+#  Copyright (c) 2024-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -194,7 +194,7 @@ if (USE_NBU)
         # This is done by removing the default handler declaration for the aforementioned
         # interrupt handler. Suspecting a linking issue to be resolved.
         #$ENV{NXP_MCXW72_SDK_ROOT}/devices/MCXW727C/gcc/startup_MCXW727C_cm33_core0.S
-        ${PROJECT_SOURCE_DIR}/src/k32w1/startup_K32W1480.S
+        ${PROJECT_SOURCE_DIR}/src/mcxw/platform/startup_K32W1480.S
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/wireless/ieee-802.15.4/ieee_802_15_4/phy/source/PhyTime.c
         $ENV{NXP_MCXW72_SDK_ROOT}/components/rpmsg/fsl_adapter_rpmsg.c
         $ENV{NXP_MCXW72_SDK_ROOT}/${MIDLWR_DIR}/multicore/mcmgr/src/mcmgr.c

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2024, The OpenThread Authors.
+#  Copyright (c) 2024-2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -30,21 +30,21 @@ get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
 set(OT_NXP_PLATFORM_SOURCES "")
 
-if (OT_NXP_PLATFORM MATCHES "^(k32w1|mcxw71|mcxw72)$" OR
-    MCUX_HW_DEVICE_K32W1480 OR
+if (OT_NXP_PLATFORM MATCHES "^(mcxw71|mcxw72)$" OR
     MCUX_HW_DEVICE_MCXW716C OR
     MCUX_HW_DEVICE_MCXW727C
 )
   list(APPEND OT_NXP_PLATFORM_SOURCES
-      ${OT_NXP_ROOT}/src/k32w1/alarm.c
-      ${OT_NXP_ROOT}/src/k32w1/diag.c
-      ${OT_NXP_ROOT}/src/k32w1/entropy.c
-      ${OT_NXP_ROOT}/src/k32w1/logging.c
-      ${OT_NXP_ROOT}/src/k32w1/misc.c
-      ${OT_NXP_ROOT}/src/k32w1/radio.c
-      ${OT_NXP_ROOT}/src/k32w1/system.c
-      ${OT_NXP_ROOT}/src/k32w1/uart.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/alarm.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/diag.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/entropy.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/logging.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/misc.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/radio.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/system.c
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/uart.c
       ${OT_NXP_ROOT}/src/common/flash_nvm.c
       ${OT_NXP_ROOT}/openthread/examples/apps/cli/cli_uart.cpp
   )
 endif()
+
