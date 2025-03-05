@@ -27,14 +27,14 @@
 #
 
 add_executable(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src/k32w1/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/mcxw/main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/app_conn.c
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/ble_init.c
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/app_advertiser.c
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/app_connection.c
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/app_scanner.c
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common/app_nvm.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/app_conn.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/ble_init.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/app_advertiser.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/app_connection.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/app_scanner.c
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common/app_nvm.c
 
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell/app_config.c
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell/ble_shell.c
@@ -46,24 +46,25 @@ add_executable(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
 )
 
 target_include_directories(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell/
 )
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
-    ${SdkRootDirPath}/examples/wireless_examples/bluetooth/common
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell
+    ${SdkRootDirPath}/middleware/wireless/bluetooth/boards/${board}
 )
 
 target_compile_options(${MCUX_SDK_PROJECT_NAME}
     PRIVATE
-        -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/k32w1/app_preinclude.h
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/mcxw/app_preinclude.h
 )
 
 target_compile_options(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM}
     PRIVATE
-        -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/k32w1/ble_preinclude.h
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/mcxw/ble_preinclude.h
 )
 
 target_compile_options(ot-config INTERFACE

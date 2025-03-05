@@ -6,6 +6,7 @@
 
 #include "app.h"
 #include "app_conn.h"
+#include "fsl_component_serial_manager.h"
 #include "fsl_os_abstraction.h"
 
 #include <openthread-system.h>
