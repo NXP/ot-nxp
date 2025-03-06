@@ -68,6 +68,7 @@ typedef struct MdnsAddressInfo
     otPlatMdnsAddressInfo mAddrInfov4;
     bool                  mTransmitIp6;
     bool                  mTransmitIp4;
+    bool                  mMcastLoop;
 } MdnsAddressInfo;
 
 struct udpSendContext
@@ -257,7 +258,8 @@ static void SendMulticast(otMessage *aMessage, uint32_t aInfraIfIndex)
                                        .mAddrInfov4.mPort         = sMulticastPort,
                                        .mAddrInfov4.mInfraIfIndex = sInfraIfIndex,
                                        .mTransmitIp6              = true,
-                                       .mTransmitIp4              = true};
+                                       .mTransmitIp4              = true,
+                                       .mMcastLoop                = true};
 
         udpSendContexPtr->addressInfo = addressInfo;
         udpSendContexPtr->message     = aMessage;
@@ -353,6 +355,13 @@ static void LwipTaskCb(void *aContext)
     struct udpSendContext *udpSendContexPtr = (struct udpSendContext *)aContext;
     struct pbuf           *buffer           = NULL;
 
+    if (udpSendContexPtr->addressInfo.mMcastLoop)
+    {
+        // Enable multicast loop to cover the case where a discovery proxy
+        // query must be also be checked against BR's own services.
+        sMdnsPcb->flags |= (UDP_FLAGS_MULTICAST_LOOP);
+    }
+
     if (udpSendContexPtr->addressInfo.mTransmitIp6)
     {
         buffer = otPlatLwipConvertToLwipMsg(udpSendContexPtr->message, true);
@@ -364,6 +373,9 @@ static void LwipTaskCb(void *aContext)
             (void)udp_sendto(sMdnsPcb, buffer, &peerAddress, port);
             pbuf_free(buffer);
             buffer = NULL;
+
+            // Disable multicast loop; there is no need to send over IPv4.
+            sMdnsPcb->flags &= ~(UDP_FLAGS_MULTICAST_LOOP);
         }
     }
 
