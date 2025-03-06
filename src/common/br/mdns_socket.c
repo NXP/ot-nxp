@@ -217,7 +217,7 @@ void SendUnicast(otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
     {
         otIp4Address  ip4Address = {0};
         otMessageInfo msgInfo    = {0};
-        if (otIp4FromIp4MappedIp6Address(&aAddress->mAddress, &ip4Address))
+        if (otIp4FromIp4MappedIp6Address(&aAddress->mAddress, &ip4Address) == OT_ERROR_NONE)
         {
             msgInfo.mSockAddr = kAnyAddressv4MappedTov6;
         }
