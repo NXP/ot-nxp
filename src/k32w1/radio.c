@@ -113,6 +113,8 @@ static void stop_csl_receiver();
 
 #define CSL_UNCERT 32 ///< The Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
 
+#define DT_WAIT 100000  /* us */
+
 typedef struct
 {
     otRadioFrame RxFrame;
@@ -1175,6 +1177,12 @@ void otPlatRadioInit(void)
     macToPlmeMessage_t msg;
 
     Phy_Init();
+
+    /* wait for NBU to be ready */
+    uint64_t t = otPlatTimeGet();
+    while (((otPlatTimeGet() - t) < DT_WAIT))
+    {
+    }
 
     ot_phy_ctx = PHY_get_ctx();
 
