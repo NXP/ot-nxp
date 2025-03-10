@@ -114,7 +114,9 @@ static void appOtInit()
 static void mainloop(void *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
+    appOtLockOtTask();
     appOtInit();
+    appOtUnlockOtTask();
 
     otSysProcessDrivers(sInstance);
     while (!otSysPseudoResetWasRequested())
