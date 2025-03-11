@@ -724,7 +724,12 @@ static int get_uint(const char *arg, unsigned int *dest, unsigned int len)
 
 static void TESTAbort(void)
 {
-    iperf_test_abort((void *)&ctx);
+    /* The call of 'lwiperf_abort' in 'iperf_test_abort' function will check whether the lwip core
+     * lock holder is consistent with the current running thread. If it is inconsistent, it will
+     * assert and interrupt the system execution. Here, the call of iperf abort is moved to the TCP
+     * thread to avoid issues when checking the lwip core lock.
+     * */
+    tcpip_callback(iperf_test_abort, (void *)&ctx);
 }
 
 static void TCPServer(void)
