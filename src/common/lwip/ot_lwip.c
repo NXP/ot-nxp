@@ -75,6 +75,7 @@ static otTokenBucket sTokenBucket;
 
 static err_t   otPlatLwipThreadNetIfInitCallback(struct netif *netif);
 static err_t   otPlatLwipSendPacket(struct netif *netif, struct pbuf *pkt, const struct ip6_addr *ipaddr);
+static err_t   otPlatLwipSendIp4Packet(struct netif *netif, struct pbuf *pkt, const struct ip4_addr *ipaddr);
 static void    otPlatLwipReceivePacket(otMessage *pkt, void *context);
 static otError otPlatLwipCopyToOtMsg(struct pbuf *lwipIpPkt, otMessage *otIpPkt);
 static otError otPlatLwipCopyToBuffer(struct pbuf *lwipIpPkt, uint8_t *pBuff);
@@ -121,7 +122,7 @@ void otPlatLwipAddThreadInterface(struct netif *aNetIf)
     {
         sThreadNetIfPtr             = aNetIf;
         sThreadNetIfPtr->output_ip6 = otPlatLwipSendPacket;
-        sThreadNetIfPtr->output     = NULL;
+        sThreadNetIfPtr->output     = otPlatLwipSendIp4Packet;
     }
     else
     {
@@ -450,7 +451,7 @@ static err_t otPlatLwipThreadNetIfInitCallback(struct netif *netif)
     netif->name[0]    = 'o';
     netif->name[1]    = 't';
     netif->output_ip6 = otPlatLwipSendPacket;
-    netif->output     = NULL;
+    netif->output     = otPlatLwipSendIp4Packet;
     netif->linkoutput = NULL;
     netif->flags      = NETIF_FLAG_UP | NETIF_FLAG_LINK_UP | NETIF_FLAG_BROADCAST;
     netif->mtu        = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
@@ -568,6 +569,41 @@ exit:
     return lwipErr;
 }
 #endif
+
+static err_t otPlatLwipSendIp4Packet(struct netif *netif, struct pbuf *pkt, const struct ip4_addr *ipaddr)
+{
+    err_t lwipErr = ERR_IF;
+
+    (void)netif;
+    (void)ipaddr;
+
+    /* If IPv4 packet is to be output on Thread interface, it can only be translated to IPv6 via NAT64,
+     * otherwise it is an error */
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    switch (otPlatLwipNat64Send(pkt))
+    {
+    case OT_ERROR_NONE:
+        lwipErr = ERR_OK;
+        break;
+    case OT_ERROR_NO_BUFS:
+        lwipErr = ERR_BUF;
+        break;
+    case OT_ERROR_DROP:
+    case OT_ERROR_NO_ROUTE:
+        lwipErr = ERR_RTE;
+        break;
+    case OT_ERROR_BUSY:
+        lwipErr = ERR_WOULDBLOCK;
+        break;
+    default:
+        lwipErr = ERR_IF;
+        break;
+    }
+#endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
+
+    /* pkt is freed by LWIP stack */
+    return lwipErr;
+}
 
 static void otPlatLwipReceivePacket(otMessage *pkt, void *context)
 {
