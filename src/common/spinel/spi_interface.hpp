@@ -186,7 +186,6 @@ private:
     uint64_t mSpiRxFrameByteCount;
     uint64_t mSpiTxFrameCount;
     uint64_t mSpiTxFrameByteCount;
-    uint64_t mSpiRxDiscard;
     uint64_t mSpiRxFrameLargerCount;
 
     bool     mSpiTxIsReady;
