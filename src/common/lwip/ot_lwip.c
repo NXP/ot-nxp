@@ -505,12 +505,14 @@ exit:
 
 static void otPlatLwipProcessOtReceive(brMsgContext *aContextMsgPtr)
 {
-    const otMessageSettings msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    const otMessageSettings msgSettings = {otThreadGetDeviceRole(sInstance) != OT_DEVICE_ROLE_DISABLED,
+                                           OT_MESSAGE_PRIORITY_NORMAL};
     otMessage              *otIpPkt     = otIp6NewMessage(sInstance, &msgSettings);
 
     if (otIpPkt != NULL)
     {
         otMessageAppend(otIpPkt, aContextMsgPtr->buffAndLen.buffer, aContextMsgPtr->buffAndLen.bufferLen);
+        otMessageSetOrigin(otIpPkt, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
 
         /* Pass the packet to OpenThread to be sent.  Note that OpenThread takes care of releasing the otMessage
          * object regardless of whether otIp6Send() succeeds or fails. */
