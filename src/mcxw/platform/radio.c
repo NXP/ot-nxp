@@ -1286,6 +1286,7 @@ static void rf_rx_on_idle(uint32_t newValue)
         phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
         assert(phy_status == gPhySuccess_c);
+        (void)phy_status; // avoid compile warnings in release mode.
     }
 }
 

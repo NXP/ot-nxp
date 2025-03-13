@@ -62,9 +62,10 @@ void otPlatRandomInit(void)
 #endif
         isInitialized = true;
     }
-
+#if defined(USE_RTOS) && (USE_RTOS == 1)
 exit:
     /* In case otEXPECT returns execution to exit, interrupts must be enabled again */
+#endif
     OSA_InterruptEnable();
     return;
 }
