@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023-2024, The OpenThread Authors.
+ *  Copyright (c) 2023-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -115,7 +115,7 @@ typedef struct BorderAgentStateBitmap
 
 typedef struct MeshCopValues
 {
-    uint64_t mActiveTimestampSeconds;
+    uint64_t mActiveTimestamp;
     uint32_t mPartitionId;
     uint32_t mBitmapValue;
     uint16_t mPort;
@@ -349,11 +349,18 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     {
         otOperationalDataset dataSet;
         otDatasetGetActive(aInstance, &dataSet);
-        aMeshCopValues->mActiveTimestampSeconds = ToBE64(dataSet.mActiveTimestamp.mSeconds);
+
+        uint16_t ticksAndUpart = 0;
+        // setting ticks part; clearing all but last bit and then set the most significant 15 bits.
+        ticksAndUpart = ((ToBE16(ticksAndUpart) & ~0xFFFE)) | (dataSet.mActiveTimestamp.mTicks << 1) & 0xFFFE;
+        // setting U part;
+        ticksAndUpart = (ticksAndUpart & 0xFFFE) | dataSet.mActiveTimestamp.mAuthoritative << 0;
+
+        aMeshCopValues->mActiveTimestamp = ToBE64(dataSet.mActiveTimestamp.mSeconds << 16UL | (uint64_t)ticksAndUpart);
 
         aTxtEntries[i].mKey         = "at";
-        aTxtEntries[i].mValue       = (uint8_t *)&aMeshCopValues->mActiveTimestampSeconds;
-        aTxtEntries[i].mValueLength = sizeof(aMeshCopValues->mActiveTimestampSeconds);
+        aTxtEntries[i].mValue       = (uint8_t *)&aMeshCopValues->mActiveTimestamp;
+        aTxtEntries[i].mValueLength = sizeof(aMeshCopValues->mActiveTimestamp);
         i++;
 
         aMeshCopValues->mPartitionId = ToBE32(otThreadGetPartitionId(aInstance));
