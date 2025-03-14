@@ -184,6 +184,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     OT_UNUSED_VARIABLE(aInstance);
     otExtAddress addr;
 
+    /* Received byte order is little endian */
     for (size_t i = 0; i < sizeof(addr); i++)
     {
         addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
@@ -203,11 +204,15 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     OT_UNUSED_VARIABLE(aInstance);
     otExtAddress addr;
 
+    /* Because of a bug in Openthread stack, the received byte order is big instead of little endian.
+       As our code expects big endian, as a temporary solution until the Openthread stack gets
+       updated to contain the fix #11257 we will not reverse the order of the extended address.
+
     for (size_t i = 0; i < sizeof(addr); i++)
     {
         addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
     }
-
+    */
     return sRadioSpinel.ClearSrcMatchExtEntry(addr);
 }
 
