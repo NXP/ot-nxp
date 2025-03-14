@@ -388,6 +388,7 @@ otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress
     msg.msgData.deviceAddr.mode  = 3;
     msg.msgData.deviceAddr.panId = sPanId;
 
+    /* Received byte order is little endian */
     memcpy(msg.msgData.deviceAddr.addr, (uint8_t *)aExtAddress, 8);
 
     if (gPhySuccess_c != MAC_PLME_SapHandler(&msg, ot_phy_ctx))
@@ -432,7 +433,16 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
     msg.msgData.deviceAddr.mode  = 3;
     msg.msgData.deviceAddr.panId = sPanId;
 
-    memcpy(msg.msgData.deviceAddr.addr, (uint8_t *)aExtAddress, 8);
+    /* Because of a bug in Openthread stack, the received byte order is big instead of little endian.
+       As our code expects little endian, as a temporary solution until the Openthread stack gets
+       updated to contain the fix #11257 we will reverse the order of the extended address.
+
+    memcpy(msg.msgData.deviceAddr.addr, (uint8_t *)aExtAddress, 8); */
+
+    for (uint8_t i = 0; i < sizeof(msg.msgData.deviceAddr.addr); i++)
+    {
+        msg.msgData.deviceAddr.addr[i] = aExtAddress->m8[sizeof(msg.msgData.deviceAddr.addr) - 1 - i];
+    }
 
     if (gPhySuccess_c != MAC_PLME_SapHandler(&msg, ot_phy_ctx))
     {
