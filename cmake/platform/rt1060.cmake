@@ -36,7 +36,12 @@ set(MULTICORE_LOGGING OFF CACHE BOOL "")
 set(EVK_RT1060_BOARD "evkbmimxrt1060" CACHE STRING "")
 
 # ot-nxp transceiver config
-set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW612_BOARD_MURATA_2EL_M2" CACHE STRING "Provide information on the transceiver to use")
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+    set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW612_BOARD_MURATA_2EL_M2" CACHE STRING "Provide information on the transceiver to use")
+endif()
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iw610")
+    set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW610_BOARD_MURATA_2LL_M2" CACHE STRING "Provide information on the transceiver to use")
+endif()
 
 # Connectivity Framework CMake config
 set(CONNFWK_PLATFORM rt1060)
@@ -55,16 +60,9 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
         OTW_DIO5_PIN_PORT=1
         OTW_DIO5_PIN_NUM=26
     )
-elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
-    if(${OT_NXP_TRANSCEIVER_INTERFACE_DETAIL} STREQUAL WIFI_IW612_BOARD_MURATA_2EL_M2)
-        set(CONNFWK_COMPILE_DEFINITIONS
-            PLATFORM_RESET_PIN_PORT=3
-            PLATFORM_RESET_PIN_NUM=9
-        )
-    else()
-        set(CONNFWK_COMPILE_DEFINITIONS
-            PLATFORM_RESET_PIN_PORT=3
-            PLATFORM_RESET_PIN_NUM=9
-        )
-    endif()
+else()
+    set(CONNFWK_COMPILE_DEFINITIONS
+    PLATFORM_RESET_PIN_PORT=3
+    PLATFORM_RESET_PIN_NUM=9
+    )
 endif()

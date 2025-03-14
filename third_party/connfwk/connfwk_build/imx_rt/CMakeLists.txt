@@ -37,9 +37,23 @@ else()
             ${CONNFWK_SDK_PATH}/platform/imx_rt/k32w0/fwk_platform_coex.c
         )
     elseif(${CONNFWK_TRANSCEIVER} STREQUAL "iwx12")
-        list(APPEND SOURCES
-            ${CONNFWK_SDK_PATH}/platform/imx_rt/iw612/fwk_platform_coex.c
-        )
+        if(EXISTS ${CONNFWK_SDK_PATH}/platform/imx_rt/iw61x/fwk_platform_coex.c )
+            list(APPEND SOURCES
+                ${CONNFWK_SDK_PATH}/platform/imx_rt/iw61x/fwk_platform_coex.c
+            )
+        else()
+            list(APPEND SOURCES
+                ${CONNFWK_SDK_PATH}/platform/imx_rt/iw612/fwk_platform_coex.c
+            )
+        endif()
+    elseif(${CONNFWK_TRANSCEIVER} STREQUAL "iw610")
+        if(EXISTS ${CONNFWK_SDK_PATH}/platform/imx_rt/iw61x/fwk_platform_coex.c )
+            list(APPEND SOURCES
+                ${CONNFWK_SDK_PATH}/platform/imx_rt/iw61x/fwk_platform_coex.c
+            )
+        else()
+            message(FATAL_ERROR "SDK not supporting IW610 transceiver")
+        endif()
     endif()
 
     add_library(connfwk-platform-${CONNFWK_PLATFORM_FAMILY} ${SOURCES})

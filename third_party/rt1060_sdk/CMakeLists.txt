@@ -252,7 +252,7 @@ if(NOT OT_NCP_RTOS_HOST)
     )
 endif()
 
-if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL "iw610")
     if(OT_NXP_LWIP_WIFI)
     # Do nothing transceiver file will be added in the wifi lib
     else()
@@ -265,6 +265,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${DRIVER_SDHC_FILES_PATH}
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
         ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610
         ${MIDDLEWARE_PATH}/sdmmc/common
         ${MIDDLEWARE_PATH}/sdmmc/sdio
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
@@ -284,6 +285,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
     )
     list(APPEND SDK_SOURCES
         ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x/nw61x_cpu12_se.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610/iw610_cpu12_se.c
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
