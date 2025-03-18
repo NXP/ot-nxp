@@ -735,21 +735,24 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otError      error = OT_ERROR_NO_ADDRESS;
-    uint8_t      idx   = 0;
-    otExtAddress tmp;
+    otError error = OT_ERROR_NO_ADDRESS;
+    uint8_t idx   = 0;
 
     /* Because of a bug in Openthread stack, the received byte order is big instead of little endian.
        As our code expects big endian, as a temporary solution until the Openthread stack gets
        updated to contain the fix #11257 we will not reverse the order of the extended address.
 
+    otExtAddress tmp;
+
     /* K32WCheckIfFpRequired() uses reversed addresses (big endian) */
     /* for (size_t i = 0; i < sizeof(*aExtAddress); i++)
     {
         tmp.m8[i] = aExtAddress->m8[sizeof(*aExtAddress) - 1 - i];
-    } */
-
+    }
     uint64_t v = otEncodingReadUint64Le(tmp.m8);
+    */
+
+    uint64_t v = otEncodingReadUint64Le(aExtAddress->m8);
 
     for (; idx < MAX_FP_ADDRS; idx++)
     {
