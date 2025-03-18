@@ -352,11 +352,12 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
 
         uint16_t ticksAndUpart = 0;
         // setting ticks part; clearing all but last bit and then set the most significant 15 bits.
-        ticksAndUpart = ((ToBE16(ticksAndUpart) & ~0xFFFE)) | (dataSet.mActiveTimestamp.mTicks << 1) & 0xFFFE;
+        ticksAndUpart = ((ToBE16(ticksAndUpart) & ~0xFFFE)) | ((dataSet.mActiveTimestamp.mTicks << 1) & 0xFFFE);
         // setting U part;
-        ticksAndUpart = (ticksAndUpart & 0xFFFE) | dataSet.mActiveTimestamp.mAuthoritative << 0;
+        ticksAndUpart = (ticksAndUpart & 0xFFFE) | (dataSet.mActiveTimestamp.mAuthoritative << 0);
 
-        aMeshCopValues->mActiveTimestamp = ToBE64(dataSet.mActiveTimestamp.mSeconds << 16UL | (uint64_t)ticksAndUpart);
+        aMeshCopValues->mActiveTimestamp =
+            ToBE64((dataSet.mActiveTimestamp.mSeconds << 16UL) | (uint64_t)ticksAndUpart);
 
         aTxtEntries[i].mKey         = "at";
         aTxtEntries[i].mValue       = (uint8_t *)&aMeshCopValues->mActiveTimestamp;
