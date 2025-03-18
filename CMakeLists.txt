@@ -174,6 +174,19 @@ else()
     endif()
 endif()
 
+if(OT_NXP_LWIP_IPERF)
+    # For iperf tcp test, the tcp processing should be on the lwip side, if the OpenThread TCP
+    # implementation is not disabled, the OpenThread Stack will forward the received tcp data
+    # packets to itself for processing, which will cause the iperf tcp test to fail, so disable
+    # OpenThread TCP here.
+    # Similar discussions on github: https://github.com/orgs/openthread/discussions/8442
+    target_compile_definitions(ot-config INTERFACE
+        -DOPENTHREAD_CONFIG_TCP_ENABLE=0
+        -DOPENTHREAD_CONFIG_CLI_TCP_ENABLE=0
+        -DOPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE=0
+    )
+endif()
+
 # If OT logging is enabled add a dependency to SDK log components
 if(OT_STACK_ENABLE_LOG)
     target_link_libraries(ot-config
