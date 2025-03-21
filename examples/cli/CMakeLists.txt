@@ -96,3 +96,4 @@ if(NXP_BOARD_LIB)
         ${NXP_BOARD_LIB}
     )
 endif()
+
