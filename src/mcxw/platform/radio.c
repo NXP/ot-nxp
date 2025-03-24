@@ -1041,10 +1041,12 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         }
 #endif
 
-        sTxStatus            = OT_ERROR_NONE;
-        sState               = OT_RADIO_STATE_RECEIVE;
-        sRxAckFrame.mChannel = sChannel;
-        sRxAckFrame.mLength  = pDataMsg->msgData.dataCnf.ackLength;
+        sTxStatus                       = OT_ERROR_NONE;
+        sState                          = OT_RADIO_STATE_RECEIVE;
+        sRxAckFrame.mChannel            = sChannel;
+        sRxAckFrame.mLength             = pDataMsg->msgData.dataCnf.ackLength;
+        sRxAckFrame.mInfo.mRxInfo.mLqi  = pDataMsg->msgData.dataCnf.ppduLinkQuality;
+        sRxAckFrame.mInfo.mRxInfo.mRssi = pDataMsg->msgData.dataCnf.ppduRssi;
         FLib_MemCpy(sRxAckFrame.mPsdu, pDataMsg->msgData.dataCnf.ackData, sRxAckFrame.mLength);
         sTxDone = true;
         MSG_Free(pMsg); // for Ack we can free PHY Allocated buffer
