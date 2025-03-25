@@ -64,26 +64,6 @@ readonly OT_OPTIONS_BR_ETH=(
     "-DA2_ETH_REWORK=OFF"
 )
 
-readonly OT_OPTIONS_NCP_UART=(
-    "-DOT_NCP_RADIO=ON"
-    "-DOT_NXP_NCP_UART_INTERFACE=ON"
-)
-
-readonly OT_OPTIONS_NCP_SPI=(
-    "-DOT_NCP_RADIO=ON"
-    "-DOT_NXP_NCP_SPI_INTERFACE=ON"
-)
-
-readonly OT_OPTIONS_NCP_USB=(
-    "-DOT_NCP_RADIO=ON"
-    "-DOT_NXP_NCP_USB_INTERFACE=ON"
-)
-
-readonly OT_OPTIONS_NCP_SDIO=(
-    "-DOT_NCP_RADIO=ON"
-    "-DOT_NXP_NCP_SDIO_INTERFACE=ON"
-)
-
 build()
 {
     local builddir="${OT_CMAKE_BUILD_DIR:-build_rw612}"
@@ -104,22 +84,6 @@ create_directory_and_build()
         build_ot_cli_iperf "$@"
         build_otbr_wifi "$@"
         build_otbr_eth "$@"
-        # NCP UART apps
-        build_ot_cli_ncp_uart "$@"
-        build_otbr_wifi_ncp_uart "$@"
-        build_otbr_eth_ncp_uart "$@"
-        # NCP SPI apps
-        build_ot_cli_ncp_spi "$@"
-        build_otbr_wifi_ncp_spi "$@"
-        build_otbr_eth_ncp_spi "$@"
-        # NCP USB apps
-        build_ot_cli_ncp_usb "$@"
-        build_otbr_wifi_ncp_usb "$@"
-        build_otbr_eth_ncp_usb "$@"
-        # NCP SDIO apps
-        build_ot_cli_ncp_sdio "$@"
-        build_otbr_wifi_ncp_sdio "$@"
-        build_otbr_eth_ncp_sdio "$@"
     elif [ "$1" == 'ot_br_wifi' ]; then
         build_otbr_wifi "$@"
     elif [ "$1" == 'ot_br_eth' ]; then
@@ -128,39 +92,8 @@ create_directory_and_build()
         build_ot_cli "$@"
     elif [ "$1" == 'ot_cli_iperf' ]; then
         build_ot_cli_iperf "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_uart' ]; then
-        build_otbr_wifi_ncp_uart "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_uart' ]; then
-        build_otbr_eth_ncp_uart "$@"
-    elif [ "$1" == 'ot_cli_ncp_uart' ]; then
-        build_ot_cli_ncp_uart "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_spi' ]; then
-        build_otbr_wifi_ncp_spi "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_spi' ]; then
-        build_otbr_eth_ncp_spi "$@"
-    elif [ "$1" == 'ot_cli_ncp_spi' ]; then
-        build_ot_cli_ncp_spi "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_usb' ]; then
-        build_otbr_wifi_ncp_usb "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_usb' ]; then
-        build_otbr_eth_ncp_usb "$@"
-    elif [ "$1" == 'ot_cli_ncp_usb' ]; then
-        build_ot_cli_ncp_usb "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_sdio' ]; then
-        build_otbr_wifi_ncp_sdio "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_sdio' ]; then
-        build_otbr_eth_ncp_sdio "$@"
-    elif [ "$1" == 'ot_cli_ncp_sdio' ]; then
-        build_ot_cli_ncp_sdio "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported:
-            all
-            ot_cli_iperf
-            ot_br_wifi, ot_br_eth, ot_cli
-            ot_br_wifi_ncp_uart, ot_br_eth_ncp_uart, ot_cli_ncp_uart
-            ot_br_wifi_ncp_spi, ot_br_eth_ncp_spi, ot_cli_ncp_spi
-            ot_br_wifi_ncp_usb, ot_br_eth_ncp_usb, ot_cli_ncp_usb
-            ot_br_wifi_ncp_sdio, ot_br_eth_ncp_sdio, ot_cli_ncp_sdio"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_br_wifi, ot_br_eth, ot_cli"
         # 128 for Invalid arguments
         exit 128
     fi
@@ -196,114 +129,6 @@ build_otbr_eth()
     options+=("${OT_OPTIONS[@]}")
     options+=("${@:2}")
     build rw612_ot_br_eth "${options[@]}"
-}
-
-# NCP UART CLI applications
-build_ot_cli_ncp_uart()
-{
-    local options=("${OT_OPTIONS[@]}")
-    options+=("${OT_OPTIONS_NCP_UART[@]}")
-    options+=("${@:2}")
-    build rw612_ot_cli_ncp_uart "${options[@]}"
-}
-
-build_otbr_wifi_ncp_uart()
-{
-    local options=("${OT_OPTIONS_BR_WIFI[@]}")
-    options+=("${OT_OPTIONS_NCP_UART[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_wifi_ncp_uart "${options[@]}"
-}
-
-build_otbr_eth_ncp_uart()
-{
-    local options=("${OT_OPTIONS_BR_ETH[@]}")
-    options+=("${OT_OPTIONS_NCP_UART[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_eth_ncp_uart "${options[@]}"
-}
-
-# NCP SPI CLI applications
-build_ot_cli_ncp_spi()
-{
-    local options=("${OT_OPTIONS[@]}")
-    options+=("${OT_OPTIONS_NCP_SPI[@]}")
-    options+=("${@:2}")
-    build rw612_ot_cli_ncp_spi "${options[@]}"
-}
-
-build_otbr_wifi_ncp_spi()
-{
-    local options=("${OT_OPTIONS_BR_WIFI[@]}")
-    options+=("${OT_OPTIONS_NCP_SPI[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_wifi_ncp_spi "${options[@]}"
-}
-
-build_otbr_eth_ncp_spi()
-{
-    local options=("${OT_OPTIONS_BR_ETH[@]}")
-    options+=("${OT_OPTIONS_NCP_SPI[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_eth_ncp_spi "${options[@]}"
-}
-
-# NCP USB CLI applications
-build_ot_cli_ncp_usb()
-{
-    local options=("${OT_OPTIONS[@]}")
-    options+=("${OT_OPTIONS_NCP_USB[@]}")
-    options+=("${@:2}")
-    build rw612_ot_cli_ncp_usb "${options[@]}"
-}
-
-build_otbr_wifi_ncp_usb()
-{
-    local options=("${OT_OPTIONS_BR_WIFI[@]}")
-    options+=("${OT_OPTIONS_NCP_USB[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_wifi_ncp_usb "${options[@]}"
-}
-
-build_otbr_eth_ncp_usb()
-{
-    local options=("${OT_OPTIONS_BR_ETH[@]}")
-    options+=("${OT_OPTIONS_NCP_USB[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_eth_ncp_usb "${options[@]}"
-}
-
-# NCP SDIO CLI applications
-build_ot_cli_ncp_sdio()
-{
-    local options=("${OT_OPTIONS[@]}")
-    options+=("${OT_OPTIONS_NCP_SDIO[@]}")
-    options+=("${@:2}")
-    build rw612_ot_cli_ncp_sdio "${options[@]}"
-}
-
-build_otbr_wifi_ncp_sdio()
-{
-    local options=("${OT_OPTIONS_BR_WIFI[@]}")
-    options+=("${OT_OPTIONS_NCP_SDIO[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_wifi_ncp_sdio "${options[@]}"
-}
-
-build_otbr_eth_ncp_sdio()
-{
-    local options=("${OT_OPTIONS_BR_ETH[@]}")
-    options+=("${OT_OPTIONS_NCP_SDIO[@]}")
-    options+=("${OT_OPTIONS[@]}")
-    options+=("${@:2}")
-    build rw612_ot_br_eth_ncp_sdio "${options[@]}"
 }
 
 main()
