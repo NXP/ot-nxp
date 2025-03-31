@@ -120,8 +120,7 @@ typedef struct MeshCopValues
     uint32_t mBitmapValue;
     uint16_t mPort;
     uint8_t  mBBRSeqNo;
-    uint8_t  mOmrLength;
-    uint8_t  mTxtOmrPrefix[sizeof(otIp6Prefix)];
+    uint8_t  mTxtOmrPrefix[OT_IP6_PREFIX_SIZE + 1];
 } MeshCopValues;
 
 static otInstance *sInstance;
@@ -397,14 +396,12 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
 
     if (otBorderRoutingGetFavoredOmrPrefix(aInstance, &prefix, &preference) == OT_ERROR_NONE)
     {
-        uint8_t omrLength = (prefix.mLength + 7) / 8;
-
-        memcpy(aMeshCopValues->mTxtOmrPrefix, prefix.mPrefix.mFields.m8, omrLength);
-        aMeshCopValues->mOmrLength = omrLength;
+        aMeshCopValues->mTxtOmrPrefix[0] = prefix.mLength;
+        memcpy(aMeshCopValues->mTxtOmrPrefix + 1, prefix.mPrefix.mFields.m8, ((prefix.mLength + 7) / 8));
 
         aTxtEntries[i].mKey         = "omr";
         aTxtEntries[i].mValue       = (uint8_t *)aMeshCopValues->mTxtOmrPrefix;
-        aTxtEntries[i].mValueLength = aMeshCopValues->mOmrLength;
+        aTxtEntries[i].mValueLength = sizeof(aMeshCopValues->mTxtOmrPrefix);
         i++;
     }
 
