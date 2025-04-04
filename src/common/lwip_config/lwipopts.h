@@ -72,9 +72,17 @@
 #define LWIP_NETIF_LOOPBACK_MULTITHREADING 1
 #define LWIP_LOOPBACK_MAX_PBUFS 8
 
+/* TCP/IP task configuration */
 #define TCPIP_THREAD_NAME "tcp/ip"
+
+#ifndef TCPIP_THREAD_STACKSIZE
 #define TCPIP_THREAD_STACKSIZE 2048
+#endif
+
+#ifndef TCPIP_THREAD_PRIO
 #define TCPIP_THREAD_PRIO 2
+#endif
+
 #ifdef CONFIG_NETWORK_HIGH_PERF
 #define TCPIP_MBOX_SIZE 64
 #else
