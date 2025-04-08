@@ -401,14 +401,10 @@ void otPlatBrProcessOtEvtQueue()
                         // check to see if it was actually set
                         if (evtReceiveContextPtr->addr_set_or_changed_event.cidr.mAddress.mFields.m32 != 0)
                         {
-                            otError error =
-                                otNat64SetIp4Cidr(sInstance, &evtReceiveContextPtr->addr_set_or_changed_event.cidr);
-                            if (error != OT_ERROR_NONE)
-                            {
-                                otCliOutputFormat("otNat64SetIp4Cidr failed: %s\r\n", otThreadErrorToString(error));
-                            }
+                            // Ignore error for the call, can only fail if the cidr len is 0 but we are always setting
+                            // it to 32.
+                            (void)otNat64SetIp4Cidr(sInstance, &evtReceiveContextPtr->addr_set_or_changed_event.cidr);
                         }
-
                         otNat64SetEnabled(sInstance,
                                           evtReceiveContextPtr->addr_set_or_changed_event.nat64TranslatorState);
 #endif
