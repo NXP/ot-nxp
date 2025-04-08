@@ -26,6 +26,13 @@ void BOARD_InitHardware(void)
     BOARD_InitSleepPinConfig();
     BOARD_InitAppConsole();
 
+#if defined(gBoardUseFro32k_d) && (gBoardUseFro32k_d > 0)
+    CLOCK_AttachClk(kRC32K_to_CLK32K);
+#else
+    CLOCK_EnableXtal32K(true);
+    CLOCK_AttachClk(kXTAL32K_to_CLK32K);
+#endif
+
 #ifdef OT_STACK_ENABLE_LOG
     BOARD_InitDebugConsole();
 #endif

@@ -34,9 +34,17 @@ target_include_directories(ot-cli-addons PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_compile_definitions(ot-config INTERFACE
-    OT_APP_CLI_LOWPOWER_ADDON
-)
+if(CONFIG_FRO32K_ENABLE STREQUAL "ON")
+    message(STATUS "RTC FRO32K activated")
+endif()
+
+if(CONFIG_FRO32K_ENABLE STREQUAL "OFF")
+    message(STATUS "RTC FRO32K deactivated")
+
+    target_compile_definitions(ot-config INTERFACE
+        OT_APP_CLI_LOWPOWER_ADDON
+    )
+endif()
 
 target_link_libraries(ot-cli-addons PUBLIC
     ${NXP_DRIVER_LIB}

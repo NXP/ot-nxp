@@ -198,6 +198,10 @@ if (OT_NXP_BOARD_NAME MATCHES "rw612_frdm")
     mcux_add_macro(
         -DgBoardUseFro32k_d=1
     )
+else()
+    mcux_add_macro(
+        -DgBoardUseFro32k_d=0
+    )
 endif()
 
 if(OT_NCP_RADIO)
