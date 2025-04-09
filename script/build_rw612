@@ -40,6 +40,21 @@ readonly OT_OPTIONS=(
     "-DOT_NXP_PLATFORM=rw612"
 )
 
+readonly OT_OPTIONS_REF_DEVICE=(
+        "-DOT_REFERENCE_DEVICE=ON"
+        "-DOT_STACK_ENABLE_LOG=ON"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL='4'"
+)
+
+readonly OT_OPTIONS_REF_DEVICE_1_1=(
+        "-DOT_DUA=OFF"
+        "-DOT_MLR=OFF"
+        "-DOT_LINK_METRICS_INITIATOR=OFF"
+        "-DOT_LINK_METRICS_SUBJECT=OFF"
+        "-DOT_CSL_RECEIVER=OFF"
+        "-DOT_NETDIAG_CLIENT=ON"
+)
+
 readonly OT_OPTIONS_CLI_IPERF=(
     "-DOT_APP_CLI_FREERTOS_IPERF=ON"
 )
@@ -118,6 +133,8 @@ create_directory_and_build()
         build_ot_cli_ncp_sdio "$@"
         build_otbr_wifi_ncp_sdio "$@"
         build_otbr_eth_ncp_sdio "$@"
+        # Reference Device
+        build_ot_cli_ref_device "$@"
     elif [ "$1" == 'ot_br_wifi' ]; then
         build_otbr_wifi "$@"
     elif [ "$1" == 'ot_br_eth' ]; then
@@ -150,6 +167,8 @@ create_directory_and_build()
         build_otbr_eth_ncp_sdio "$@"
     elif [ "$1" == 'ot_cli_ncp_sdio' ]; then
         build_ot_cli_ncp_sdio "$@"
+    elif [ "$1" == 'ot_cli_ref_device' ]; then
+        build_ot_cli_ref_device "$@"
     else
         echo >&2 "Unsupported action: $1. Supported:
             all
@@ -158,11 +177,35 @@ create_directory_and_build()
             ot_br_wifi_ncp_uart, ot_br_eth_ncp_uart, ot_cli_ncp_uart
             ot_br_wifi_ncp_spi, ot_br_eth_ncp_spi, ot_cli_ncp_spi
             ot_br_wifi_ncp_usb, ot_br_eth_ncp_usb, ot_cli_ncp_usb
-            ot_br_wifi_ncp_sdio, ot_br_eth_ncp_sdio, ot_cli_ncp_sdio"
+            ot_br_wifi_ncp_sdio, ot_br_eth_ncp_sdio, ot_cli_ncp_sdio
+            ot_cli_ref_device"
         # 128 for Invalid arguments
         exit 128
     fi
 
+}
+
+
+build_ot_cli_ref_device()
+{
+    local options=("${OT_OPTIONS[@]}")
+    options+=("${OT_OPTIONS_REF_DEVICE[@]}")
+    # Extract '-DOT_THREAD_VERSION' the parameter value
+    for arg in "$@"; do
+        case "$arg" in "-DOT_THREAD_VERSION"*)
+            # extract '-DOT_THREAD_VERSION' the parameter value
+            OT_THREAD_VERSION="${arg#*-DOT_THREAD_VERSION=}"
+            break
+            ;;
+        esac
+    done
+
+    if [[ $OT_THREAD_VERSION == "1.1" ]]; then
+        options+=("${OT_OPTIONS_REF_DEVICE_1_1[@]}")
+    fi
+
+    options+=("${@:2}")
+    build rw612_ot_cli "${options[@]}"
 }
 
 build_ot_cli()
