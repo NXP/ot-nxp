@@ -41,18 +41,18 @@ readonly OT_OPTIONS=(
 )
 
 readonly OT_OPTIONS_REF_DEVICE=(
-        "-DOT_REFERENCE_DEVICE=ON"
-        "-DOT_STACK_ENABLE_LOG=ON"
-        "-DOPENTHREAD_CONFIG_LOG_LEVEL='4'"
+    "-DOT_REFERENCE_DEVICE=ON"
+    "-DOT_STACK_ENABLE_LOG=ON"
+    "-DOPENTHREAD_CONFIG_LOG_LEVEL='4'"
 )
 
 readonly OT_OPTIONS_REF_DEVICE_1_1=(
-        "-DOT_DUA=OFF"
-        "-DOT_MLR=OFF"
-        "-DOT_LINK_METRICS_INITIATOR=OFF"
-        "-DOT_LINK_METRICS_SUBJECT=OFF"
-        "-DOT_CSL_RECEIVER=OFF"
-        "-DOT_NETDIAG_CLIENT=ON"
+    "-DOT_DUA=OFF"
+    "-DOT_MLR=OFF"
+    "-DOT_LINK_METRICS_INITIATOR=OFF"
+    "-DOT_LINK_METRICS_SUBJECT=OFF"
+    "-DOT_CSL_RECEIVER=OFF"
+    "-DOT_NETDIAG_CLIENT=ON"
 )
 
 readonly OT_OPTIONS_CLI_IPERF=(
@@ -184,7 +184,6 @@ create_directory_and_build()
     fi
 
 }
-
 
 build_ot_cli_ref_device()
 {
