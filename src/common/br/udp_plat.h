@@ -36,7 +36,10 @@
 extern "C" {
 #endif
 
-void UdpPlatInit(otInstance *aInstance, struct netif *backboneNetif, struct netif *otNetif);
+void UdpPlatInit(otInstance      *aInstance,
+                 struct netif    *backboneNetif,
+                 struct netif    *otNetif,
+                 void (*aLockTaskCb)(bool));
 
 #ifdef __cplusplus
 }

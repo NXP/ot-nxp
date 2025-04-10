@@ -87,9 +87,10 @@ struct udpReceiveContext
 static uint8_t sBackboneNetifIdx;
 static uint8_t sOtNetifIdx;
 
-static otInstance   *sInstance = NULL;
-static struct netif *sBackboneNetifPtr;
-static struct netif *sOtNetifPtr;
+static otInstance      *sInstance     = NULL;
+static void (*sOtLockTaskCb)(bool) = NULL;
+static struct netif    *sBackboneNetifPtr;
+static struct netif    *sOtNetifPtr;
 
 static list_label_t sMsgList;
 static OSA_MUTEX_HANDLE_DEFINE(sMutexHandle);
@@ -101,17 +102,22 @@ static OSA_MUTEX_HANDLE_DEFINE(sMutexHandle);
 static void         recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
 static uint8_t      getInterfaceIndex(otNetifIdentifier identifier);
 static struct pbuf *convertToLwipMsg(otMessage *otIpPkt, bool bTransport);
+static otMessage   *convertToOtMsg(struct pbuf *lwipIpPkt);
 static void         lwipTaskCb(void *context);
 static ip_addr_t    convertOpenthreadToLwipAddress(const otIp6Address *aAddress);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void UdpPlatInit(otInstance *aInstance, struct netif *backboneNetif, struct netif *otNetif)
+void UdpPlatInit(otInstance      *aInstance,
+                 struct netif    *backboneNetif,
+                 struct netif    *otNetif,
+                 void (*aLockTaskCb)(bool))
 {
     sInstance         = aInstance;
     sBackboneNetifPtr = backboneNetif;
     sOtNetifPtr       = otNetif;
+    sOtLockTaskCb     = aLockTaskCb;
     sBackboneNetifIdx = netif_get_index(backboneNetif);
     sOtNetifIdx       = netif_get_index(otNetif);
 
@@ -408,7 +414,6 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     const struct ip_hdr *ip4_header = ip4_current_header();
 #endif
     struct netif *source_netif = ip_current_netif();
-    uint8_t      *data_ptr     = (uint8_t *)p->payload;
 
     udpReceiveContextPtr->socket                 = (otUdpSocket *)arg;
     udpReceiveContextPtr->message_info.mSockPort = 0;
@@ -454,11 +459,16 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 
     udpReceiveContextPtr->message_info.mIsHostInterface = (netif_get_index(source_netif) == sBackboneNetifIdx);
 
-    udpReceiveContextPtr->message = otUdpNewMessage(sInstance, NULL);
+    UNLOCK_TCPIP_CORE();
+    // Lock OT
+    sOtLockTaskCb(true);
+    // Take back TCP/IP mutex which was temporarily released above
+    LOCK_TCPIP_CORE();
+
+    udpReceiveContextPtr->message = convertToOtMsg(p);
+    sOtLockTaskCb(false);
 
     VerifyOrExit(udpReceiveContextPtr->message != NULL, otPlatFree(udpReceiveContextPtr));
-    VerifyOrExit(otMessageAppend(udpReceiveContextPtr->message, data_ptr, p->tot_len) == OT_ERROR_NONE,
-                 error = OT_ERROR_FAILED);
 
     // Ignore status as we set the list to unlimited size
     (void)OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
@@ -468,11 +478,6 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     otTaskletsSignalPending(sInstance);
 
 exit:
-    if (error == OT_ERROR_FAILED)
-    {
-        otMessageFree(udpReceiveContextPtr->message);
-        otPlatFree(udpReceiveContextPtr);
-    }
     pbuf_free(p);
 }
 
@@ -524,6 +529,35 @@ exit:
         lwipIpPkt = NULL;
     }
     return lwipIpPkt;
+}
+
+static otMessage *convertToOtMsg(struct pbuf *lwipIpPkt)
+{
+    uint16_t remainingLen;
+    otError  error = OT_ERROR_NONE;
+
+    otMessage *pOtMessage = otUdpNewMessage(sInstance, NULL);
+    VerifyOrExit(pOtMessage != NULL);
+
+    // Copy data from LwIP's packet buffer chain into the OpenThread message.
+    remainingLen = lwipIpPkt->tot_len;
+    for (struct pbuf *partialPkt = lwipIpPkt; (partialPkt != NULL) && (remainingLen > 0); partialPkt = partialPkt->next)
+    {
+        VerifyOrExit(partialPkt->len <= remainingLen, error = OT_ERROR_FAILED);
+
+        VerifyOrExit(otMessageAppend(pOtMessage, partialPkt->payload, partialPkt->len) == OT_ERROR_NONE,
+                     error = OT_ERROR_FAILED);
+        remainingLen = (uint16_t)(remainingLen - partialPkt->len);
+    }
+    VerifyOrExit(remainingLen == 0, error = OT_ERROR_FAILED);
+
+exit:
+    if (error == OT_ERROR_FAILED)
+    {
+        otMessageFree(pOtMessage);
+    }
+
+    return pOtMessage;
 }
 
 static void lwipTaskCb(void *context)

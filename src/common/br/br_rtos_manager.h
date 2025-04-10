@@ -38,7 +38,10 @@ extern "C" {
 #endif
 
 /* Must be called before BrInitServices*/
-void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif);
+void BrInitPlatform(otInstance      *aInstance,
+                    struct netif    *aExtNetif,
+                    struct netif    *aThreadNetif,
+                    void (*aLockTaskCb)(bool));
 /* Must be called after BrInitPlatform */
 void BrInitServices();
 

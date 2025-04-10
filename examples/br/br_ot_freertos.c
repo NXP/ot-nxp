@@ -480,7 +480,7 @@ static void appBrInit()
     otPlatLwipAddThreadInterface();
     otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
 
-    BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
+    BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif(), appOtLockOtTask);
     BrInitMdnsHost(CreateBaseName(sInstance, sHostName, false));
 }
 

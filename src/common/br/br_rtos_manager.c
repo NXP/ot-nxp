@@ -97,7 +97,10 @@ static bool UpdateIp6AddressList();
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
 
-void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif *aThreadNetif)
+void BrInitPlatform(otInstance      *aInstance,
+                    struct netif    *aExtNetif,
+                    struct netif    *aThreadNetif,
+                    void (*aLockTaskCb)(bool))
 {
     sInstance = aInstance;
     sExtNetif = aExtNetif;
@@ -105,7 +108,7 @@ void BrInitPlatform(otInstance *aInstance, struct netif *aExtNetif, struct netif
 #if OT_APP_BR_LWIP_HOOKS_EN
     lwipHooksInit(sInstance, sExtNetif, aThreadNetif);
 #endif
-    UdpPlatInit(sInstance, sExtNetif, aThreadNetif);
+    UdpPlatInit(sInstance, sExtNetif, aThreadNetif, aLockTaskCb);
     InfraIfInit(sInstance, sExtNetif);
     MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
     TrelPlatInit(sInstance, sExtNetif);
