@@ -330,15 +330,25 @@ static uint8_t PopulateMeshCopService(otDnsTxtEntry *aTxtEntries, MeshCopValues 
     i++;
 
     // Vendor name TXT
-    aTxtEntries[i].mKey         = "vn";
+    aTxtEntries[i].mKey = "vn";
+#ifndef OT_NXP_PLAT_BR_VENDOR_NAME
     aTxtEntries[i].mValue       = (uint8_t *)"NXP";
     aTxtEntries[i].mValueLength = strlen("NXP");
+#else
+    aTxtEntries[i].mValue       = (uint8_t *)OT_NXP_PLAT_BR_VENDOR_NAME;
+    aTxtEntries[i].mValueLength = strlen(OT_NXP_PLAT_BR_VENDOR_NAME);
+#endif
     i++;
 
     // Model name TXT
-    aTxtEntries[i].mKey         = "mn";
+    aTxtEntries[i].mKey = "mn";
+#ifndef OT_NXP_PLAT_BR_MODEL_NAME
     aTxtEntries[i].mValue       = (uint8_t *)"BorderRouter";
     aTxtEntries[i].mValueLength = strlen("BorderRouter");
+#else
+    aTxtEntries[i].mValue       = (uint8_t *)OT_NXP_PLAT_BR_MODEL_NAME;
+    aTxtEntries[i].mValueLength = strlen(OT_NXP_PLAT_BR_MODEL_NAME);
+#endif
     i++;
 
     /* Active timestamp TXT and Partition Id TXT (values binary encoded, shall be included only if Thread Interface

@@ -34,7 +34,11 @@
 
 #include "utils.h"
 
+#ifndef OT_NXP_PLAT_BR_BASE_SERVICE_NAME
 char baseServiceInstanceName[] = "NXP-BorderRouter#0000";
+#else
+char baseServiceInstanceName[] = OT_NXP_PLAT_BR_BASE_SERVICE_NAME;
+#endif
 
 const char *CreateBaseName(otInstance *aInstance, char *aBaseName, bool aIsForService)
 {
