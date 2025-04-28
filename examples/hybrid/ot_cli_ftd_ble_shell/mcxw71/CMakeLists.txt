@@ -51,13 +51,13 @@ target_include_directories(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PRIVATE
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell/
 )
 
-target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_include_directories(${OT_MCUX_SDK_TARGET} PUBLIC
     ${SdkRootDirPath}/middleware/wireless/bluetooth/application/common
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell
     ${SdkRootDirPath}/middleware/wireless/bluetooth/boards/${board}
 )
 
-target_compile_options(${MCUX_SDK_PROJECT_NAME}
+target_compile_options(${OT_MCUX_SDK_TARGET}
     PRIVATE
         -include ${CMAKE_CURRENT_SOURCE_DIR}/../src/mcxw/app_preinclude.h
 )
@@ -75,7 +75,7 @@ target_compile_options(ot-config INTERFACE
 )
 
 target_link_libraries(ot-cli-ftd-ble-shell-${OT_NXP_PLATFORM} PUBLIC
-    ${MCUX_SDK_PROJECT_NAME}
+    ${OT_MCUX_SDK_TARGET}
     # Use --start-group to account for circular dependencies
     -Wl,--start-group
     ${OT_PLATFORM_LIB}
