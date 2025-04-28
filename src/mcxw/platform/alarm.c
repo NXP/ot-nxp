@@ -38,15 +38,24 @@
 #include "fsl_device_registers.h"
 #include <stdint.h>
 
+#ifdef MCXW727C_cm33_core1_SERIES
+#include "platform-mcxw72_nbu.h"
+#else
+#include "low_power.h"
+#endif
+
 #include "fsl_os_abstraction.h"
 #include "fwk_platform.h"
-#include "low_power.h"
 #include "openthread-system.h"
 #include <common/logging.hpp>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
+
+#ifndef PLATFORM_TM_CLK_FREQ
+#define PLATFORM_TM_CLK_FREQ 32768U
+#endif
 
 static bool_t sEventFired = FALSE;
 static bool_t alreadyInit = false;

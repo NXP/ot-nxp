@@ -59,9 +59,13 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
-#include "low_power.h"
-
 #include "fwk_platform_ot.h"
+
+#ifdef MCXW727C_cm33_core1_SERIES
+#include "platform-mcxw72_nbu.h"
+#else
+#include "low_power.h"
+#endif
 
 #if USE_NBU
 void PLATFORM_RemoteActiveReq();

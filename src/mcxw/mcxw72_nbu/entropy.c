@@ -1,0 +1,79 @@
+/*
+ *  Copyright (c) 2025, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "EmbeddedTypes.h"
+#include "RNG_Interface.h"
+#include "fsl_os_abstraction.h"
+#include "platform-mcxw72_nbu.h"
+#include <openthread/platform/entropy.h>
+#include "utils/code_utils.h"
+
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+
+#define mutex_lock() OSA_MutexLock(trngMutexHandle, osaWaitForever_c)
+#define mutex_unlock() OSA_MutexUnlock(trngMutexHandle)
+
+OSA_MUTEX_HANDLE_DEFINE(trngMutexHandle);
+#else
+#define mutex_lock(...)
+#define mutex_unlock(...)
+#endif
+
+static bool_t isInitialized = false;
+
+void otPlatRandomInit(void)
+{
+    OSA_InterruptDisable();
+    if (!isInitialized)
+    {
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+        (void)OSA_MutexCreate(trngMutexHandle);
+        otEXPECT(NULL != trngMutexHandle);
+#endif
+        isInitialized = true;
+    }
+#if defined(USE_RTOS) && (USE_RTOS == 1)
+exit:
+    /* In case otEXPECT returns execution to exit, interrupts must be enabled again */
+#endif
+    OSA_InterruptEnable();
+    return;
+}
+
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    mutex_lock();
+
+    /* RNG get data */
+    RNG_GetPseudoRandomData(aOutput, aOutputLength, NULL);
+
+    mutex_unlock();
+    return error;
+}

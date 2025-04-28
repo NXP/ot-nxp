@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+#  Copyright (c) 2025, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#MIME_PATTERN="application/x-executable"
+
+set -exo pipefail
+
+OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
+BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_mcxw72_nbu}"
+
+readonly OT_SRCDIR="$(pwd)"
+readonly OT_OPTIONS=(
+    "-DBUILD_TESTING=OFF"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
+    "-DOT_NXP_EXPORT_TO_SREC=ON"
+    "-DOT_PLATFORM=external"
+    "-DOT_SLAAC=ON"
+    "-DOT_NXP_PLATFORM_FAMILY=mcxw"
+    "-DOT_NXP_PLATFORM=mcxw72_nbu"
+    "-DUSE_OT_SW_MBEDTLS=ON"
+)
+
+readonly OT_OPTIONS_NO_RCP=(
+    "-DOT_APP_NCP=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_RCP=OFF"
+    "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
+    "-DOT_APP_LOWPOWER=OFF"
+)
+
+build()
+{
+    local cmakeArgs=("${@}")
+    mkdir -p "${BUILD_DIR}"
+
+    if [ ! "$1" = "folder_not_specified" ]; then
+        cmakeArgs=("${@:2}")
+        rcp_folder_name="$1"
+        mkdir -p "${rcp_folder_name}"
+        cd "${rcp_folder_name}"
+    fi
+
+    # shellcheck disable=SC2068
+    west build -d "${BUILD_DIR}" --config release -b mcxw72evk . --no_sanity_check -Dcore_id=cm33_core1 -DSDK_GH=$SDK_GH -DUSE_NBU=0 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+}
+
+build_ot_without_rcp_image()
+{
+    echo "Building OT without RCP image ..."
+    app_folder_name="folder_not_specified"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_NO_RCP[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+
+    build "${options[@]}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
+create_directory_and_build()
+{
+    if [ "$1" == 'all' ]; then
+        build_ot_without_rcp_image "$@"
+
+    elif [ "$1" == 'ot_without_rcp_image' ]; then
+        build_ot_without_rcp_image "$@"
+    else
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image"
+        exit 128
+    fi
+}
+main()
+{
+    SDK_GH=ON
+    SDK_RELEASE=OFF
+
+    if [ $# == 0 ]; then
+        create_directory_and_build all $SDK_RELEASE "$@"
+    else
+        create_directory_and_build "$1" $SDK_RELEASE "$@"
+    fi
+
+}
+
+main "$@"
