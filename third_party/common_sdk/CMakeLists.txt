@@ -89,10 +89,13 @@ mcux_add_include(
     src/${OT_NXP_PLATFORM}
     third_party/mbedtls/configs
 )
-mcux_add_macro(
-    MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"              # includes "mbedtls-config.h" which includes "openthread-core-config.h" which includes
-    OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${OT_CORE_CONFIG_FILE_UNQUOTED}\\\"  # OPENTHREAD_PROJECT_CORE_CONFIG_FILE if defined. "mbedtls-config.h" checks for OPENTHREAD_CONFIG_*
-)
+
+if (OT_EXTERNAL_MBEDTLS)
+    mcux_add_macro(
+        MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"              # includes "mbedtls-config.h" which includes "openthread-core-config.h" which includes
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${OT_CORE_CONFIG_FILE_UNQUOTED}\\\"  # OPENTHREAD_PROJECT_CORE_CONFIG_FILE if defined. "mbedtls-config.h" checks for OPENTHREAD_CONFIG_*
+    )
+endif()
 
 if (OT_APP_CLI AND OT_FTD)
     target_link_libraries(ot-cli-ftd PRIVATE

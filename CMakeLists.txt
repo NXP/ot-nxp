@@ -94,7 +94,11 @@ if(DEFINED SdkRootDirPath)
         set(OT_MCUX_SDK_TARGET ${NXP_DRIVER_LIB} CACHE STRING "")
     endif()
 
-    set(OT_EXTERNAL_MBEDTLS ${OT_MCUX_SDK_TARGET} CACHE STRING "")
+    if (USE_OT_SW_MBEDTLS)
+        set(OT_MBEDTLS_CONFIG_FILE \"${OT_NXP_PLATFORM}-mbedtls-config.h\" CACHE STRING "")
+    else()
+        set(OT_EXTERNAL_MBEDTLS ${OT_MCUX_SDK_TARGET} CACHE STRING "")
+    endif()
 endif()
 
 # Set default log level if not set
@@ -233,6 +237,28 @@ if(DEFINED SdkRootDirPath)
     # propagate the SDK flags explicitly since these targets update CMAKE_C_FLAGS
     string(REPLACE "\\\"" "\"" REPLACED_C_FLAGS_1 ${CMAKE_C_FLAGS})
     string(REPLACE " " ";" REPLACED_C_FLAGS ${REPLACED_C_FLAGS_1})
+
+    if (NOT OT_EXTERNAL_MBEDTLS)
+        target_compile_options(mbedtls
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+
+        target_compile_options(mbedx509
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+
+        target_compile_options(mbedcrypto
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+
+        target_compile_options(everest
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+
+        target_compile_options(p256m
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+    endif()
 
     if (OT_FTD)
         target_compile_options(tcplp-ftd
