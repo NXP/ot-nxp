@@ -26,7 +26,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.30)
 
 message(STATUS "SdkRootDirPath ${SdkRootDirPath}")
 
@@ -228,6 +228,24 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(examples)
+
+if(DEFINED SdkRootDirPath)
+    # propagate the SDK flags explicitly since these targets update CMAKE_C_FLAGS
+    string(REPLACE "\\\"" "\"" REPLACED_C_FLAGS_1 ${CMAKE_C_FLAGS})
+    string(REPLACE " " ";" REPLACED_C_FLAGS ${REPLACED_C_FLAGS_1})
+
+    if (OT_FTD)
+        target_compile_options(tcplp-ftd
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+    endif()
+
+    if (OT_MTD)
+        target_compile_options(tcplp-mtd
+            PRIVATE "${REPLACED_C_FLAGS}"
+        )
+    endif()
+endif()
 
 if(OT_NXP_POST_BUILD_COMMAND)
     run_post_build_command()
