@@ -84,17 +84,17 @@ set(OT_PLATFORM_LIB openthread-${OT_NXP_PLATFORM})
 set(NXP_DRIVER_LIB nxp-${OT_NXP_PLATFORM}-driver)
 
 if(DEFINED SdkRootDirPath)
+    # For multi core platforms, the SDK target will be project name plus
+    # suffix for core id: e.g. ${NXP_DRIVER_LIB}_cm33_core0.
+    # ${MCUX_SDK_PROJECT_NAME} holds the SDK target name.
+    # Compare ${OT_MCUX_SDK_TARGET} with ${MCUX_SDK_PROJECT_NAME} later, in common_sdk
     if(DEFINED core_id)
-        set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB}_${core_id} CACHE STRING "")
+        set(OT_MCUX_SDK_TARGET ${NXP_DRIVER_LIB}_${core_id} CACHE STRING "")
     else()
-        set(OT_EXTERNAL_MBEDTLS ${NXP_DRIVER_LIB} CACHE STRING "")
+        set(OT_MCUX_SDK_TARGET ${NXP_DRIVER_LIB} CACHE STRING "")
     endif()
 
-    # This variable will be set in the SDK project. This is necessary in order
-    # to have a valid target name in other scopes, such as src/platform scope.
-    # Some platforms are dual core, in which case the SDK framework will add
-    # a suffix to the SDK target name: e.g. ${NXP_DRIVER_LIB}_cm33_core0
-    set(MCUX_SDK_PROJECT_NAME "")
+    set(OT_EXTERNAL_MBEDTLS ${OT_MCUX_SDK_TARGET} CACHE STRING "")
 endif()
 
 # Set default log level if not set
@@ -131,14 +131,14 @@ if(OT_STACK_ENABLE_LOG)
         -DOT_STACK_ENABLE_LOG)
 endif()
 
-set(CONFIG_FILE "\"openthread-core-${OT_NXP_PLATFORM}-config.h\"")
-set(CORE_CONFIG_FILE ${CONFIG_FILE})
+set(OT_CORE_CONFIG_FILE_UNQUOTED openthread-core-${OT_NXP_PLATFORM}-config.h)
+set(OT_CORE_CONFIG_FILE "\"${OT_CORE_CONFIG_FILE_UNQUOTED}\"")
 set(CORE_CONFIG_CHECK "\"openthread-core-${OT_NXP_PLATFORM}-config-check.h\"")
 set(OT_LIB_CONFIG "\"openthread-core-${OT_NXP_PLATFORM}-config.h\"")
 
 target_compile_definitions(ot-config INTERFACE
-    OPENTHREAD_CONFIG_FILE=${CONFIG_FILE}
-    OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${CORE_CONFIG_FILE}
+    OPENTHREAD_CONFIG_FILE=${OT_CORE_CONFIG_FILE}
+    OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${OT_CORE_CONFIG_FILE}
     OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=${CORE_CONFIG_CHECK}
     OPENTHREAD_PROJECT_LIB_CONFIG_FILE=${OT_LIB_CONFIG}
 )
