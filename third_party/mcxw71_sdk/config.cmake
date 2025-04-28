@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, The OpenThread Authors.
+# Copyright (c) 2024-2025, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,16 +27,16 @@
 #
 
 if (OT_APP_LOWPOWER)
-    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=1
     )
 else()
-    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=0
     )
 endif()
 
-target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
     SDK_COMPONENT_INTEGRATION=1
@@ -61,6 +61,6 @@ target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
 )
 
-target_compile_options(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_compile_options(${OT_MCUX_SDK_TARGET} PUBLIC
     -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
 )
