@@ -26,12 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-${OT_NXP_PLATFORM}-config-check.h\""
-)
-
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 # Propagate SDK deps to platform target
@@ -40,63 +34,45 @@ list(APPEND OT_PUBLIC_INCLUDES ${SdkIncludeDirs})
 get_target_property(SdkCompileDefinitions ${OT_MCUX_SDK_TARGET} INTERFACE_COMPILE_DEFINITIONS)
 list(APPEND OT_PLATFORM_DEFINES ${SdkCompileDefinitions})
 
-#if(OT_CFLAGS MATCHES "-pedantic-errors")
-#    string(REPLACE "-pedantic-errors" "" OT_CFLAGS "${OT_CFLAGS}")
-#endif()
+set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-#if(OT_CFLAGS MATCHES "-Wcast-align")
-#    string(REPLACE "-Wcast-align" "" OT_CFLAGS "${OT_CFLAGS}")
-#endif()
-
-add_library(openthread-${OT_NXP_PLATFORM}
+add_library(${OT_PLATFORM_LIB}
     ${OT_NXP_PLATFORM_SOURCES}
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(openthread-${OT_NXP_PLATFORM}
+set_target_properties(${OT_PLATFORM_LIB}
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-if (USE_NBU)
-target_link_libraries(openthread-${OT_NXP_PLATFORM}
+target_link_libraries(${OT_PLATFORM_LIB}
     PUBLIC
-        ${OT_MBEDTLS}
-        -L${SdkRootDirPath}/examples/_boards/${board}/wireless_examples/linker/gcc
+        ${OT_MCUX_SDK_TARGET}
         -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
         -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
     PRIVATE
         ot-config
 )
-else()
-target_link_libraries(openthread-${OT_NXP_PLATFORM}
-    PUBLIC
-        ${OT_MBEDTLS}
-        -Wl,--gc-sections,--defsym=gUseNVMLink_d=1
-        -Wl,-Map=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:NAME>.map,-print-memory-usage
-    PRIVATE
-        ot-config
-)
-endif()
 
 # Openthread libs need to have openthread platform dependencies
 target_link_libraries(ot-config
     INTERFACE
-        openthread-${OT_NXP_PLATFORM}
+        ${OT_PLATFORM_LIB}
 )
 
-target_compile_definitions(openthread-${OT_NXP_PLATFORM}
+target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-${OT_NXP_PLATFORM}
+target_compile_options(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-${OT_NXP_PLATFORM}
+target_include_directories(${OT_PLATFORM_LIB}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${OT_NXP_PLATFORM_INCLUDES}

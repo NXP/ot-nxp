@@ -32,9 +32,6 @@
 #if gAppLowpowerEnabled_d
 #include "PWR_Interface.h"
 
-extern void PWR_DisallowDeviceToSleep(void);
-extern void PWR_AllowDeviceToSleep(void);
-
 #else /* gAppLowpowerEnabled_d == 0 */
 
 #define PWR_DisallowDeviceToSleep()
