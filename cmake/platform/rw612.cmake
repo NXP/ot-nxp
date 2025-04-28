@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023, NXP.
+# Copyright (c) 2022-2025, NXP.
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-add_compile_options(-mcpu=cortex-m33+nodsp -mfloat-abi=hard -mthumb -mfpu=fpv5-sp-d16)
 add_link_options(-u flexspi_config)
 
 # FreeRTOS CMake config

@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NXP.
+# Copyright (c) 2022-2025, NXP.
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -98,4 +98,31 @@ else()
     set(CMAKE_EXECUTABLE_SUFFIX ".elf")
     set(CMAKE_EXECUTABLE_SUFFIX_C ${CMAKE_EXECUTABLE_SUFFIX})
     set(CMAKE_EXECUTABLE_SUFFIX_CXX ${CMAKE_EXECUTABLE_SUFFIX})
+
+    # SDK metabuild system (mcux_add_macro(), mcux_add_armgcc_configuration()) updates CMAKE_<LANG>_FLAGS
+    # set the flags as "CACHE" to preserve their values including the machine flags as set from SDK metabuild
+    set(CMAKE_C_FLAGS                  "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS                "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS                "" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS_INIT             "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_INIT           "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS_INIT           "" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_INIT    "" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS_DEBUG            "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG          "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS_DEBUG          "" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS_RELEASE          "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE        "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS_RELEASE        "" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS_MINSIZEREL       "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_MINSIZEREL     "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS_MINSIZEREL     "" CACHE STRING "" FORCE)
+
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "" CACHE STRING "" FORCE)
+    set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "" CACHE STRING "" FORCE)
 endif()
