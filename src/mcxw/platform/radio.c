@@ -42,7 +42,6 @@
 #include "Phy.h"
 #include "PhyInterface.h"
 #include "fsl_component_messaging.h"
-#include "fsl_component_timer_manager.h"
 #if defined(HDI_MODE) && (HDI_MODE == 1)
 #include "hdi.h"
 #endif
@@ -1289,7 +1288,7 @@ static void rf_rx_on_idle(uint32_t newValue)
         phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
         assert(phy_status == gPhySuccess_c);
-        (void)phy_status; // avoid compile warnings in release mode.
+        OT_UNUSED_VARIABLE(phy_status);
     }
 }
 

@@ -31,7 +31,26 @@ list(APPEND OT_PUBLIC_DEFINES
     -Wno-expansion-to-defined
 )
 
-include(../platform.cmake)
+set(OT_NXP_PLATFORM_SOURCES
+    platform/alarm.c
+    platform/diag.c
+    platform/logging.c
+    platform/misc.c
+    platform/radio.c
+    platform/system.c
+    platform/uart.c
+    ../common/flash_nvm.c
+)
+
+if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
+    list(APPEND OT_NXP_PLATFORM_SOURCES
+        mcxw30/entropy.c
+    )
+else()
+    list(APPEND OT_NXP_PLATFORM_SOURCES
+        platform/entropy.c
+    )
+endif()
 
 if (NOT NO_THREAD_1_3_FLAGS)
     list(APPEND OT_NXP_PLATFORM_SOURCES
