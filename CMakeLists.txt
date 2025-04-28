@@ -187,6 +187,15 @@ else()
     # endif()
 endif()
 
+# Flag used to determine if the RCP transceiver used is K32W0 or IW/RW. Since K32W0 RCP has 
+# a fix for the extended frame pending bit issue and IW/RW do not, the build flag is used to
+# determine in the radio spinel code the correct endianness to send to the RCP transceiver.
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
+    target_compile_definitions(ot-config INTERFACE
+        -DOT_NXP_TRANSCEIVER_k32w0
+    )
+endif()
+
 if(NOT NXP_SDK_ROOT)
     # Provide a default path to MCUXpresso SDK as if ot-nxp is located in <path to sdk>/middleware/wireless/
     set(NXP_SDK_ROOT ${PROJECT_SOURCE_DIR}/../../../)

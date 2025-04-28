@@ -203,17 +203,27 @@ otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddre
 {
     OT_UNUSED_VARIABLE(aInstance);
     /* Because of a bug in Openthread stack, the received byte order is big instead of little endian.
-       As our code expects big endian, as a temporary solution until the Openthread stack gets
-       updated to contain the fix #11257 we will not reverse the order of the extended address.
+       For platforms that use RCP, with no issue the reversing happens 2 times: one time on the host
+       and another time on the RCP. This is the reason why this code normally flips the order again
+       to big endian so that when the command is received on the RCP it is flipped again to little
+       endian and sent to the NXP radio layer.
+       As a temporary solution, because k32w0 as an RCP has a fix and IW612 and RW612 don't and
+       considering we don't want to change the RCP firmware on RW and IW we will do the flip
+       from big endian to little endian for builds that do not use K32W0 as an RCP. This way the
+       endianness will be little when received by the NXP radio layer of IW and RW RCP. */
 
+#ifndef OT_NXP_TRANSCEIVER_k32w0
     otExtAddress addr;
 
     for (size_t i = 0; i < sizeof(addr); i++)
     {
         addr.m8[i] = aExtAddress->m8[sizeof(addr) - 1 - i];
     }
-    */
+
+    return sRadioSpinel.ClearSrcMatchExtEntry(addr);
+#else
     return sRadioSpinel.ClearSrcMatchExtEntry(*aExtAddress);
+#endif
 }
 
 void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
