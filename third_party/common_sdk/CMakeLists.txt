@@ -54,6 +54,12 @@ else()
             PROJECT_BOARD_PORT_PATH examples_int/_boards/${board}/wireless_examples
             CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
         )
+    elseif (OT_NXP_PLATFORM MATCHES "nbu")
+        project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
+            PROJECT_TYPE LIBRARY_OBJECT
+            PROJECT_BOARD_PORT_PATH middleware/wireless/ieee-802.15.4/boards/mcxw72/common
+            CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
+        )
     else()
         project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
             PROJECT_TYPE LIBRARY_OBJECT
