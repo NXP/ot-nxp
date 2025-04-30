@@ -487,8 +487,6 @@ endif()
 if (OT_ZB_SUPPORT)
 
     if (SDK_RELEASE)
-         SET_SOURCE_FILES_PROPERTIES($ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/k32w061dk6/PWR_setjmp.S PROPERTIES LANGUAGE CXX)
-
          target_sources(${NXP_DRIVER_LIB} PRIVATE
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/k32w061dk6/PWRLib.c
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/k32w061dk6/PWR_setjmp.S
@@ -496,8 +494,6 @@ if (OT_ZB_SUPPORT)
         )
 
     else()
-         SET_SOURCE_FILES_PROPERTIES($ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/jn518x/PWR_setjmp.S PROPERTIES LANGUAGE CXX)
-
          target_sources(${NXP_DRIVER_LIB} PRIVATE
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/jn518x/PWRLib.c
             $ENV{NXP_K32W0_SDK_ROOT}/middleware/wireless/framework/LowPower/Source/jn518x/PWR_setjmp.S

@@ -38,8 +38,6 @@ set(ENCRYPTION_KEY 1234567890ABCDEFA1B2C3D4E5F6F1B4)
 set(MANUFACTURER_CODE 0x1037)
 set(SINGLE_CHANNEL 11)
 
-set_property(SOURCE pdum_apdu.S PROPERTY LANGUAGE C)
-
 add_executable(ot-cli-ftd-zb-ed-rx-off-${OT_NXP_PLATFORM}
     main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
