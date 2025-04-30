@@ -41,8 +41,6 @@ set(ZPSCFG "${EXAMPLE_BASE_DIR}/coordinator.zpscfg")
 
 set(SINGLE_CHANNEL 12)
 
-set_property(SOURCE pdum_apdu.S PROPERTY LANGUAGE C)
-
 add_executable(ot-cli-ftd-zc-${OT_NXP_PLATFORM}
     main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp

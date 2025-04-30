@@ -40,8 +40,6 @@ set(ZPSCFG "${EXAMPLE_BASE_DIR}/coordinator.zpscfg")
 
 set(SINGLE_CHANNEL 11)
 
-set_property(SOURCE pdum_apdu.S PROPERTY LANGUAGE C)
-
 add_executable(ot-rcp-uart-dma-zb-coprocessor-${OT_NXP_PLATFORM}
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/ncp/ncp.c
     main.c
