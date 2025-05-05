@@ -91,7 +91,9 @@ static void stop_csl_receiver();
 
 // clang-format off
 #define DEFAULT_CHANNEL                  (11)
+#ifndef DEFAULT_CCA_MODE
 #define DEFAULT_CCA_MODE                 (gPhyCCAMode1_c)
+#endif
 #define IEEE802154_ACK_REQUEST           (1 << 5)
 #define IEEE802154_MIN_LENGTH            (5)
 #define IEEE802154_FRM_CTL_LO_OFFSET     (0)
