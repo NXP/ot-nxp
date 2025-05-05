@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2023, The OpenThread Authors.
+ *  Copyright (c) 2022-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
-#include "PWR_Interface.h"
+#include "low_power.h"
 
 #include "fwk_platform_ot.h"
 
@@ -125,9 +125,6 @@ typedef struct
     extendedRadioFrame *   tail;
     extendedRadioFrame     extRxFrame[NMAX_RXRING_BUFFERS];
 } rxRingBuffer;
-
-extern void PWR_DisallowDeviceToSleep(void);
-extern void PWR_AllowDeviceToSleep(void);
 
 // clang-format on
 static otRadioState sState = OT_RADIO_STATE_DISABLED;

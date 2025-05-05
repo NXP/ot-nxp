@@ -38,9 +38,9 @@
 #include "fsl_device_registers.h"
 #include <stdint.h>
 
-#include "PWR_Interface.h"
 #include "fsl_os_abstraction.h"
 #include "fwk_platform.h"
+#include "low_power.h"
 #include "openthread-system.h"
 #include <common/logging.hpp>
 #include <openthread/platform/alarm-micro.h>
@@ -56,9 +56,6 @@ TIMER_MANAGER_HANDLE_DEFINE(sAlarmTimerHandle);
 static bool_t sEventMicroFired = FALSE;
 TIMER_MANAGER_HANDLE_DEFINE(sAlarmMicroTimerHandle);
 #endif
-
-extern void PWR_DisallowDeviceToSleep(void);
-extern void PWR_AllowDeviceToSleep(void);
 
 static void timerCallback(void *param)
 {

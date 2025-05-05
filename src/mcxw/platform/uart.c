@@ -50,6 +50,7 @@
 #include "fwk_platform_ot.h"
 #include "pin_mux.h"
 
+#include "low_power.h"
 #include "platform-mcxw.h"
 
 #define FLUSH_TO_MS 500
@@ -63,9 +64,6 @@
 #if defined(OT_APP_SERIAL_PORT_USE_DMA) && defined(OT_APP_SERIAL_PORT_USE_FC)
 #error "Need to select either FC or DMA to use"
 #endif
-
-extern void PWR_DisallowDeviceToSleep(void);
-extern void PWR_AllowDeviceToSleep(void);
 
 static SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
 static SERIAL_MANAGER_WRITE_HANDLE_DEFINE(otCliSerialWriteHandle);
