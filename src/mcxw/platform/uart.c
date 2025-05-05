@@ -188,7 +188,7 @@ otError otPlatUartEnable(void)
     CLOCK_EnableClock(OT_APP_UART_CLK);
 
 #if defined(FPGA_TARGET) && (FPGA_TARGET > 0)
-    uartConfig.clockRate = BOARD_UART_CLK;
+    uartConfig.clockRate = BOARD_APP_UART_CLK_FREQ;
 #else
     uartConfig.clockRate = CLOCK_GetIpFreq(OT_APP_UART_CLK);
 #endif

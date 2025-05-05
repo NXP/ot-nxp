@@ -47,11 +47,19 @@ project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
     CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
 )
 else()
-project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
-    PROJECT_TYPE LIBRARY_OBJECT
-    PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
-    CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
-)
+    if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
+        project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
+            PROJECT_TYPE LIBRARY_OBJECT
+            PROJECT_BOARD_PORT_PATH examples_int/_boards/${board}/wireless_examples
+            CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
+        )
+    else()
+        project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
+            PROJECT_TYPE LIBRARY_OBJECT
+            PROJECT_BOARD_PORT_PATH examples/_boards/${board}/wireless_examples
+            CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
+        )
+    endif()
 endif()
 
 set(MCUX_SDK_PROJECT_NAME ${MCUX_SDK_PROJECT_NAME} PARENT_SCOPE)

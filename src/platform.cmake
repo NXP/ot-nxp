@@ -30,14 +30,13 @@ get_filename_component(OT_NXP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../ REALPATH)
 
 set(OT_NXP_PLATFORM_SOURCES "")
 
-if (OT_NXP_PLATFORM MATCHES "^(mcxw71|mcxw72)$" OR
+if (OT_NXP_PLATFORM MATCHES "^(mcxw71|mcxw72|mcxw30)$" OR
     MCUX_HW_DEVICE_MCXW716C OR
     MCUX_HW_DEVICE_MCXW727C
 )
   list(APPEND OT_NXP_PLATFORM_SOURCES
       ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/alarm.c
       ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/diag.c
-      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/entropy.c
       ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/logging.c
       ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/misc.c
       ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/radio.c
@@ -48,3 +47,17 @@ if (OT_NXP_PLATFORM MATCHES "^(mcxw71|mcxw72)$" OR
   )
 endif()
 
+if (OT_NXP_PLATFORM MATCHES "^(mcxw71|mcxw72)$" OR
+    MCUX_HW_DEVICE_MCXW716C OR
+    MCUX_HW_DEVICE_MCXW727C
+)
+  list(APPEND OT_NXP_PLATFORM_SOURCES
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/platform/entropy.c
+  )
+endif()
+
+if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
+  list(APPEND OT_NXP_PLATFORM_SOURCES
+      ${OT_NXP_ROOT}/src/${OT_NXP_PLATFORM_FAMILY}/mcxw30/entropy.c
+  )
+endif()
