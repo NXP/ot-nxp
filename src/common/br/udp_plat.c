@@ -335,7 +335,6 @@ exit:
 static void UdpPlatLwipSockCb(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     (void)pcb;
-    otError error = OT_ERROR_NONE;
 
     brMsgContext *contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext));
     VerifyOrExit(contextMsgPtr != NULL);

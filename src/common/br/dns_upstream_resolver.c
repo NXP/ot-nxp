@@ -289,7 +289,6 @@ static void DnsUpstreamResolverUdpReceive(void            *arg,
                                           u16_t            port)
 {
     (void)pcb;
-    otError error = OT_ERROR_NONE;
 
     brMsgContext *contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext));
     VerifyOrExit(contextMsgPtr != NULL);
