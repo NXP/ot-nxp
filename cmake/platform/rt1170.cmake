@@ -37,7 +37,12 @@ set(MULTICORE_LOGGING OFF CACHE BOOL "")
 set(EVK_RT1170_BOARD "evkbmimxrt1170" CACHE STRING "")
 
 # ot-nxp transceiver config
-set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW612_BOARD_MURATA_2EL_USD" CACHE STRING "Provide information on the transceiver to use")
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+    set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW612_BOARD_MURATA_2EL_USD" CACHE STRING "Provide information on the transceiver to use")
+    endif()
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iw610")
+    set(OT_NXP_TRANSCEIVER_INTERFACE_DETAIL "WIFI_IW610_BOARD_MURATA_2LL_USD" CACHE STRING "Provide information on the transceiver to use")
+endif()
 
 # Connectivity Framework CMake config
 set(CONNFWK_PLATFORM rt1170)
@@ -62,7 +67,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "k32w0")
             -DSPINEL_UART_CLOCK_RATE=CLOCK_GetRootClockFreq\(kCLOCK_Root_Lpuart7\)
         )
     endif()
-elseif(${OT_NXP_TRANSCEIVER} STREQUAL "iwx12")
+else()
     set(CONNFWK_COMPILE_DEFINITIONS
         -DPLATFORM_RESET_PIN_PORT=3
         -DPLATFORM_RESET_PIN_NUM=9

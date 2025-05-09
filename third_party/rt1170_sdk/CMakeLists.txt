@@ -220,7 +220,7 @@ list(APPEND SDK_COMPILE_DEFINITIONS
 )
 message(STATUS "==> 1 OT_NXP_TRANSCEIVER RT1170 ${OT_NXP_TRANSCEIVER}")
 
-if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
+if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL "iw610")
     message(STATUS "==> 2 OT_NXP_TRANSCEIVER RT1170 ${OT_NXP_TRANSCEIVER}")
 
     if(OT_NXP_LWIP_WIFI)
@@ -235,6 +235,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${DRIVER_SDHC_FILES_PATH}
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
         ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610
         ${MIDDLEWARE_PATH}/sdmmc/common
         ${MIDDLEWARE_PATH}/sdmmc/sdio
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
@@ -258,6 +259,7 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12")
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
         ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
         ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x/nw61x_cpu12_se.c
+        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610/iw610_cpu12_se.c
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c

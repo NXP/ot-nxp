@@ -56,6 +56,15 @@ readonly OT_OPTIONS_TRANSCEIVER_K32W0_SPI=(
     "-DOT_NXP_TRANSCEIVER_BIN_PATH=build_k32w061/rcp_only_spi/bin/ot-rcp.elf.bin.h"
 )
 
+readonly OT_OPTIONS_TRANSCEIVER_IW610_SPI=(
+    "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
+    "-DOT_NXP_PLATFORM=rt1170"
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DSPINEL_INTERFACE_TYPE=SPI"
+    "-DOT_NXP_TRANSCEIVER=iw610"
+)
+
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1170"
@@ -140,6 +149,13 @@ create_directory_and_build()
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_SPI[@]}")
         build k32w0_spi "${options[@]}"
+    elif [ "$1" == 'iw610_spi' ]; then
+        options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
+        build iw610_spi "${options[@]}"
+    elif [ "$1" == 'iw610_spi_iperf' ]; then
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
+        build iw610_spi_iperf "${options[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"
@@ -154,7 +170,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all , k32w0_uart_flow_control , k32w0_spi , iwx12_spi , iwx12_spi_iperf , iwx12_spi_br_ethernet , iwx12_spi_br_wifi"
+        echo >&2 "Unsupported action: $1. Supported: all , k32w0_uart_flow_control , k32w0_spi , iw610_spi , iw610_spi_iperf , iwx12_spi , iwx12_spi_iperf , iwx12_spi_br_ethernet , iwx12_spi_br_wifi"
         # 128 for Invalid arguments
         exit 128
     fi
