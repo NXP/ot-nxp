@@ -141,7 +141,9 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
         sIcmp6RawPcb->chksum_offset = 2;
 
         // Register to all routers multicast address to recive RS messages
-        assert(ERR_OK == mld6_joingroup_netif(netif, &ip6_allrouters_ll));
+        err_t joinError = mld6_joingroup_netif(netif, &ip6_allrouters_ll);
+        assert(joinError == ERR_OK);
+        (void)joinError; // avoid possible warining in release mode
     });
 }
 
