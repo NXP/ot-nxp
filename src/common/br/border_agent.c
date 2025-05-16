@@ -268,9 +268,17 @@ static void PublishMeshCopService(otInstance *aInstance)
     sMeshCopService.mTxtData       = txtBuffer;
     sMeshCopService.mTxtDataLength = txtBufferOffset;
 
+    // While Thread interface status is different from '2' (interface active), Border Agent will be stopped.
+    // In this case, publish the service with BORDER_AGENT_PORT (49152, min value of ephemeral ports range).
+    // Store the first allocated port using 'otBorderAgentGetUdpPort()', as ephemeral key service will require
+    // an ephemeral port, and in that case, 'otBorderAgentGetUdpPort()' will return the port value obtained by ephemeral
+    // key service.
     if (otBorderAgentGetState(aInstance) != OT_BORDER_AGENT_STATE_STOPPED)
     {
-        sMeshCopService.mPort = otBorderAgentGetUdpPort(aInstance);
+        if (sMeshCopService.mPort == BORDER_AGENT_PORT)
+        {
+            sMeshCopService.mPort = otBorderAgentGetUdpPort(aInstance);
+        }
     }
     else
     {
@@ -531,10 +539,20 @@ static void PublishEpskcService(void)
         init                           = true;
     }
 
-    sEpskcService.mPort = otBorderAgentGetUdpPort(sInstance);
+    SuccessOrExit(GenerateEphemeralKey());
+    (void)otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                       sEpskcService.mPort);
+
+    if (sEpskcService.mPort == 0)
+    {
+        sEpskcService.mPort = otBorderAgentGetUdpPort(sInstance);
+    }
 
     sEpskcServiceAdvertisementActive =
         (otMdnsRegisterService(sInstance, &sEpskcService, 0, HandleEpskcRegistrationCallback) == OT_ERROR_NONE);
+
+exit:
+    return;
 }
 
 static void UnpublishEpskcService(void)
@@ -548,17 +566,8 @@ exit:
 
 static void HandleEpskcRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
 {
-    if (aError == OT_ERROR_NONE)
-    {
-        if (otBorderAgentGetState(sInstance) != OT_BORDER_AGENT_STATE_STOPPED && !sEpskcActive)
-        {
-            SuccessOrExit(GenerateEphemeralKey());
-            (void)otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
-                                               otBorderAgentGetUdpPort(sInstance));
-        }
-    }
-exit:
-    return;
+    // Do nothing here, the service instance name is the same as the one used by the meschop service
+    // so there is no reason to fail the registration.
 }
 
 static otError GenerateEphemeralKey(void)
@@ -583,6 +592,7 @@ exit:
 
 static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
 {
+    char formattedEpskc[12];
     sEpskcActive                     = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
     bool candidateSessionEstablished = (otBorderAgentGetState(sInstance) == OT_BORDER_AGENT_STATE_ACTIVE);
 
@@ -590,7 +600,6 @@ static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
     {
         if (!candidateSessionEstablished)
         {
-            char formattedEpskc[12];
             snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey, sEphemeralKey + 3,
                      sEphemeralKey + 6);
             PrintEphemeralKey(formattedEpskc, (uint32_t)(sEphemeralKeyTimeout / 1000UL));
