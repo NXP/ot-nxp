@@ -80,7 +80,9 @@ void otTokenBucketInit(otTokenBucket *aBucket, uint32_t rate)
     aBucket->timer = xTimerCreate("tokenTimer", timerPeriodTicks, pdTRUE, (void *)aBucket, otTokenBucketCallback);
     assert(aBucket->timer != NULL);
 
-    assert(xTimerStart(aBucket->timer, 0) == pdPASS);
+    BaseType_t timerStarted = xTimerStart(aBucket->timer, 0);
+    assert(timerStarted == pdPASS);
+    (void)timerStarted; // avoid possible warining in release mode
 }
 
 uint32_t otTokenBucketTake(otTokenBucket *aBucket, uint32_t tokens)
