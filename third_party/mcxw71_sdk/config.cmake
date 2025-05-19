@@ -56,7 +56,6 @@ target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     gMemManagerLightExtendHeapAreaUsage=1
     gAppHighSystemClockFrequency_d=1
     DBG_IO_ENABLE
-    gHwParamsProdDataPlacement_c=gHwParamsProdDataPlacementLegacyMode_c
     DEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
     SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\"
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
