@@ -14,7 +14,8 @@ necessarily highlight the platform's full capabilities.
 Here are listed configurations that allow to support Openthread on RT1060:
 
 - RT1060 + K32W0
-- **Experimental** RT1060-EVKC + IWX12
+- RT1060-EVKC + IWX12
+- **Experimental** RT1060-EVKC + IW610
 
 ## Prerequisites
 
@@ -96,7 +97,7 @@ After a successful build, application binaries will be generated in
 [k32w061-readme]: ../../k32w0/k32w061/README.md
 [sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
 
-### Experimental RT1060-EVKC + IWX12
+### RT1060-EVKC + IW612
 
 #### Hardware requirements RT1060-EVKC + IW612
 
@@ -109,7 +110,7 @@ Host part:
   - populate R93, R96, R2155, R2156, R2157, R2158, R2159 with 0Ohm resistors
   - J76 and J107 jumpers in 2-3 position.
   - J109 and J110 jumpers in 1-2 position.
-  - disconnect pin15 of component U9
+  - most of MIMXRT1060-EVK-C board would already have the re-work, but if not already done, the following modification is required: disconnect pin15 of component U9
 
 ![rt1060_evkc_IW612_hw_rework](../../../doc/img/imxrt1060/rt1060_evkc_IW612_hw_rework.jpg)
 
@@ -120,6 +121,25 @@ Transceiver part :
 - 1 IW612 ( Firecrest) 2EL M.2 Module (rev A1)
 
 The Iw612 module should be plugged to the M.2 connector on RT1060-EVKC board.
+
+### Experimental RT1060-EVKC + IW610
+
+#### Hardware requirements RT1060-EVKC + IW610
+
+Host part:
+
+- 1 MIMXRT1060-EVKC
+
+  Same hardware rework as done to support IW612 is required.
+
+Transceiver part :
+
+- 1 IW610 ( NightHawk ) 2LL M.2 Module
+
+  Need to populate R9 with a 10kOhm resistor:
+
+![IW610_2LL_m2_module](../../../doc/img/imxrt1060/iw610_2LL.jpg) ![IW610_hw_rework](../../../doc/img/imxrt1060/iw610_hw_rework.jpg)
+The IW610 module should be plugged to the M.2 connector on RT1060-EVKC board.
 
 ## Building examples
 
@@ -218,6 +238,26 @@ $ ./script/build_rt1060 <app_name> #example: ./script/build_rt1060
 
 After a successful build, the generated binary can be found in
 `build_rt1060/<app_name>/bin`.
+
+### Building only RT1060+IW610 applications
+
+Supported application(s):
+
+1. OT CLI application
+
+- app_name: `iw610_spi`
+- Description: The target application will be an openthread CLI running on freeRTOS and include support of the FTD (Full Thread Device) role. In the mode the host and the IW610 transceiver will exchange message over a SPI interface.
+- Status: experimental
+
+How to build it ?
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rt1060 iw610_spi
+```
+
+After a successful build, the generated binary can be found in
+`build_rt1060/iw610_spi/bin`.
 
 ## Example: Flashing the IMXRT Openthread rt1060 image using MCUXpresso IDE
 
