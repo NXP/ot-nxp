@@ -36,6 +36,12 @@ target_include_directories(ot-cli-addons PRIVATE
 
 if(CONFIG_FRO32K_ENABLE STREQUAL "ON")
     message(STATUS "RTC FRO32K activated")
+
+    if(OT_NCP_RADIO)
+        target_compile_definitions(ot-config INTERFACE
+            OT_APP_CLI_LOWPOWER_ADDON
+        )
+    endif()
 endif()
 
 if(CONFIG_FRO32K_ENABLE STREQUAL "OFF")
