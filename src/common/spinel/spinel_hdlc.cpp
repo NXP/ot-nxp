@@ -395,6 +395,14 @@ void HdlcInterface::OnRcpReset(void)
     mHdlcSpinelDecoder.Reset();
 }
 
+otError HdlcInterface::HardwareReset(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    error = otPlatResetOt();
+    return error;
+}
+
 } // namespace NXP
 
 } // namespace ot

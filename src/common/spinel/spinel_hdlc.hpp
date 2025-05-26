@@ -149,7 +149,7 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  The hardware reset is not implemented.
      *
      */
-    otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError HardwareReset(void);
 
 private:
     enum
