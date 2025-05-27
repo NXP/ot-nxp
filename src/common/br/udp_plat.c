@@ -405,6 +405,9 @@ static void recv_fcn(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     (void)pcb;
     otError error = OT_ERROR_NONE;
 
+    // Ensure UDP platfrom is properly init
+    VerifyOrExit(NULL != sOtLockTaskCb);
+
     struct udpReceiveContext *udpReceiveContextPtr =
         (struct udpReceiveContext *)otPlatCAlloc(1, sizeof(struct udpReceiveContext));
     VerifyOrExit(NULL != udpReceiveContextPtr);
