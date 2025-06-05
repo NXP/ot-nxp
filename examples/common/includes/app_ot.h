@@ -36,7 +36,9 @@
 #ifndef APP_OT
 #define APP_OT
 
+#if !defined(CONFIG_NCP_OT)
 #include <openthread/instance.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -11,10 +11,10 @@
 
 #include "ot_ncp_host_cli.h"
 #include "board.h"
-#include "crc.h"
 #include "fsl_adapter_gpio.h"
 #include "fsl_lpuart_freertos.h"
 #include "ncp_adapter.h"
+#include "ncp_crc.h"
 #include "ncp_tlv_adapter.h"
 #include "ot_ncp_cmd.h"
 #include "otopcode.h"
@@ -314,7 +314,7 @@ static void ot_ncp_host_input_task(void *pvParameters)
 
             command->size += OT_OPCODE_SIZE + cli_input_len - otcommandlen;
 #if CONFIG_NCP_USB
-            if (opcode == ot_get_opcode("ncp-usb-pm2", strlen("ncp-usb-pm2")))
+            if (opcode == ot_get_opcode((uint8_t *)"ncp-usb-pm2", strlen("ncp-usb-pm2")))
             {
                 if (*((uint8_t *)command + NCP_CMD_HEADER_LEN + 2) == USB_PM2_ENTER_PARAM)
                 {
@@ -343,15 +343,15 @@ static void ot_ncp_host_input_task(void *pvParameters)
 
 #if (CONFIG_NCP_SDIO)
                 /* Reset sdio host if command is reset/factoryreset */
-                if (opcode == ot_get_opcode("reset", strlen("reset")) ||
-                    opcode == ot_get_opcode("factoryreset", strlen("factoryreset")))
+                if (opcode == ot_get_opcode((uint8_t *)"reset", strlen("reset")) ||
+                    opcode == ot_get_opcode((uint8_t *)"factoryreset", strlen("factoryreset")))
                 {
                     PRINTF("\nSDIO reseting...\n");
                     vTaskDelay(pdMS_TO_TICKS(2000));
                     sdhost_rescan_set_event(SDHOST_RESCAN_START);
                 }
 #endif
-                if (opcode == ot_get_opcode("ncp-wake-cfg", strlen("ncp-wake-cfg")))
+                if (opcode == ot_get_opcode((uint8_t *)"ncp-wake-cfg", strlen("ncp-wake-cfg")))
                 {
                     wakeup_mode = *((uint8_t *)command + NCP_CMD_HEADER_LEN + 2);
 

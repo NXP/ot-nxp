@@ -45,6 +45,6 @@ if(FREERTOS_PORT)
     add_subdirectory(freertos-kernel)
 endif()
 
-if(CONNFWK_PLATFORM)
+if(CONNFWK_PLATFORM AND NOT OT_NCP_RTOS_HOST)
     add_subdirectory(connfwk)
 endif()

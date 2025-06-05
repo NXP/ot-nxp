@@ -40,10 +40,8 @@
 /* -------------------------------------------------------------------------- */
 
 #include "FreeRTOS.h"
-#include "task.h"
-#if !defined(CONFIG_NCP_OT)
 #include "app_ot.h"
-#endif
+#include "task.h"
 
 /* -------------------------------------------------------------------------- */
 /*                              Public prototypes                             */

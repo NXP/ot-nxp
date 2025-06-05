@@ -47,6 +47,9 @@
 #include "fsl_pm_device.h"
 #include "ncp_cmd_ot.h"
 #include "ncp_lpm.h"
+#if CONFIG_NCP_USB
+#include "fsl_pm_core.h"
+#endif
 #endif
 
 /* -------------------------------------------------------------------------- */

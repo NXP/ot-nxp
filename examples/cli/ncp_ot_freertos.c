@@ -129,6 +129,7 @@ static void appNcpInit()
 #ifndef OT_NCP_LIBS
     ncp_sleep_init();
 #endif
+    (void)result; // avoid build warning
 }
 
 static void mainloop(void *aContext)
