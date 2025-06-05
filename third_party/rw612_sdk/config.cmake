@@ -208,7 +208,7 @@ if(OT_NCP_RADIO)
     mcux_add_source(
         BASE_PATH ${SdkRootDirPath}/examples/ncp_examples/common
         SOURCES
-        crc/crc.c
+        crc/ncp_crc.c
         ncp_glue_common.c
         ncp_adapter/ncp_intf/ncp_intf_pm.c
         ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
