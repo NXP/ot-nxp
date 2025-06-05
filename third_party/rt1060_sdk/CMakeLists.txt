@@ -316,7 +316,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
         ${FREERTOS_LPUART_FILE_PATH}/fsl_lpuart_freertos.c
         ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
-        ${NCP_COMMON_FILES_PATH}/crc/crc.c
+        ${NCP_COMMON_FILES_PATH}/crc/ncp_crc.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
         ${NCP_COMMON_FILES_PATH}/mbedtls/mbedtls_common.c
@@ -368,6 +368,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${MIDDLEWARE_PATH}/mbedtls/include
         # The ksdk_mbedtls_config.h should be used when compiling ncp host.
         ${MIDDLEWARE_PATH}/mbedtls/port/ksdk
+        ${MIDDLEWARE_PATH}/wireless/framework/platform/imx_rt/configs
     )
 
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
@@ -443,6 +444,13 @@ target_compile_definitions(${NXP_DRIVER_LIB}
     ${SDK_COMPILE_DEFINITIONS}
 )
 
+if(OT_NCP_RTOS_HOST)
+target_link_libraries(${NXP_DRIVER_LIB}
+    PUBLIC
+    freertos_kernel
+    ${NXP_BOARD_LIB}
+)
+else()
 target_link_libraries(${NXP_DRIVER_LIB}
     PUBLIC
     freertos_kernel
@@ -453,6 +461,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}
 )
+endif()
 
 target_link_options(${NXP_DRIVER_LIB}
     PUBLIC
