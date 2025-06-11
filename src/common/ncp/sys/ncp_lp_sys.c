@@ -43,11 +43,12 @@ typedef struct
 } uart_clock_context_t;
 
 uint8_t                     suspend_notify_flag = 0;
-uint8_t                     ncp_wake_up_mode    = 0;
 static uart_clock_context_t s_uartClockCtx;
 #if CONFIG_NCP_USB
 bool usb_allow_pm2_lowpower = false;
 #endif
+
+power_cfg_t global_power_config;
 
 OSA_SEMAPHORE_HANDLE_DEFINE(hs_cfm);
 
@@ -152,7 +153,7 @@ AT_QUICKACCESS_SECTION_CODE(void host_sleep_post_hook(uint32_t mode, void *param
 int host_sleep_pre_cfg(int mode)
 {
     /* when outband mode is selected, set GPIO as wake up source */
-    if (ncp_wake_up_mode == 1)
+    if (global_power_config.wake_mode == WAKE_MODE_GPIO)
     {
         POWER_ConfigWakeupPin(kPOWER_WakeupPin1, kPOWER_WakeupEdgeLow);
         NVIC_ClearPendingIRQ(PIN1_INT_IRQn);
@@ -323,6 +324,9 @@ void ncp_gpio_init()
 int ncp_sleep_init(void)
 {
     osa_status_t status = KOSA_StatusSuccess;
+
+    /* Set inband mode as the default wake-up mode */
+    global_power_config.wake_mode = WAKE_MODE_INTF;
 
     ncp_pm_init();
 

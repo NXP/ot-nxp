@@ -45,6 +45,7 @@
 #include "PWR_Interface.h"
 #ifdef OT_NCP_RADIO
 #include "fsl_pm_device.h"
+#include "ncp_cmd_ot.h"
 #include "ncp_lpm.h"
 #endif
 
@@ -222,8 +223,8 @@ otError ProcessLowPower(void *aContext, uint8_t aArgsLength, char *aArgs[])
 #if CONFIG_NCP_USB
 extern bool usb_allow_pm2_lowpower;
 #endif
-extern uint8_t ncp_wake_up_mode;
-otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[])
+extern power_cfg_t global_power_config;
+otError            ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     otError status = OT_ERROR_NONE;
     int     arg    = 0;
@@ -247,7 +248,7 @@ otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[
         if (!strcmp(aArgs[arg], "0"))
         {
             otCliOutputFormat("inband mode selected\r\n");
-            ncp_wake_up_mode = 0;
+            global_power_config.wake_mode = WAKE_MODE_INTF;
 #if CONFIG_NCP_USB
             usb_allow_pm2_lowpower = true;
 #endif
@@ -255,7 +256,7 @@ otError        ProcessLpConfig(void *aContext, uint8_t aArgsLength, char *aArgs[
         else if (!strcmp(aArgs[arg], "1"))
         {
             otCliOutputFormat("outband mode selected\r\n");
-            ncp_wake_up_mode = 1;
+            global_power_config.wake_mode = WAKE_MODE_GPIO;
 #if CONFIG_NCP_USB
             usb_allow_pm2_lowpower = false;
 #endif
