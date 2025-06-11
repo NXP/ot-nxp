@@ -26,31 +26,54 @@ $ ./script/bootstrap
 Download the MCXW71 SDK using the west tool.
 
 ```bash
-$ cd third_party/github_sdk
-$ west init -l manifest --mf west.yml
-$ west update
+$ cd <path-to-ot-nxp>
+$ ./third_party/nxp_matter_support/scripts/update_nxp_sdk.py --platform common
 ```
 
 In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
 ```bash
-$ cd third_party/github_sdk
+$ cd third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk
 $ west forall -c "git reset --hard && git clean -xdf" -a
-```
-
-Some files permission need to be changed to executable :
-
-```bash
-$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/middleware/wireless/zigbee/tools/ZPSConfig/Source/ZPSConfig
-$ chmod +x <path-to-ot-nxp>/third_party/github_sdk/middleware/wireless/zigbee/tools/PDUMConfig/Source/PDUMConfig
-
 ```
 
 ## Building the examples
 
+### Set the compilation parameters
+
+Please set the ARMGCC_DIR and ZEPHYR_BASE parameters using the following commands:
+
+- Linux
+
+```bash
+$ cd <path-to-ot-nxp>
+$ export ARMGCC_DIR='your-own-armgcc-dir-path'
+$ source ./third_party/nxp_matter_support/github_sdk/sdk_next/repo/mcuxsdk/mcux-env.sh
+$ west mcuxsdk-export
+```
+
+- Windows
+
+```cmd
+> cd <path-to-ot-nxp>
+> set ARMGCC_DIR=<path to ARMGCC>
+> <SDK_path>mcuxsdk/mcux-env.cmd
+```
+
+Then run the build script:
+
+- Linux
+
 ```bash
 $ cd <path-to-ot-nxp>
 $ ./script/build_mcxw71
+```
+
+- Windows
+
+```cmd
+> cd <path-to-ot-nxp>
+> sh script/build_mcxw71
 ```
 
 After a successful build, the `elf` and `srec` files are found in `build_mcxw71/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications.
