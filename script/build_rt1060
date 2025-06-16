@@ -227,6 +227,11 @@ create_directory_and_build()
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
         build rw612_ncp_host_spi "${options[@]}"
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
+        options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
+        build iw610_spi "${options[@]}"
+        options+=("${OT_OPTIONS_CLI_IPERF[@]}")
+        build iw610_spi_iperf "${options[@]}"
     elif [ "$1" == 'k32w0_uart_flow_control' ]; then
         echo "Warning: No longer maintain"
         options+=("${OT_OPTIONS_TRANSCEIVER_K32W0_UART_FLOW_CONTROL[@]}")
