@@ -75,7 +75,11 @@ LOG_MODULE_DEFINE(LOG_MODULE_NAME, kLOG_LevelDebug);
 #define configUSE_DAEMON_TASK_STARTUP_HOOK 0
 #define configCPU_CLOCK_HZ (SystemCoreClock)
 #define configTICK_RATE_HZ ((TickType_t)1000)
+#if defined(config_COEX_RTOS_MAX_PRIO)
+#define configMAX_PRIORITIES config_COEX_RTOS_MAX_PRIO
+#else
 #define configMAX_PRIORITIES (10)
+#endif
 #define configMINIMAL_STACK_SIZE ((uint16_t)1024)
 #ifndef configAPPLICATION_ALLOCATED_HEAP
 #define configAPPLICATION_ALLOCATED_HEAP 1

@@ -85,6 +85,7 @@ mcux_add_source(
 if(OT_NXP_BUILD_APP_AS_LIB)
     mcux_add_macro(
         -DconfigAPPLICATION_ALLOCATED_HEAP=0
+        -Dconfig_COEX_RTOS_MAX_PRIO=${COEX_RTOS_MAX_PRIO}
     )
 
     # ethermind/coex_app_cli include

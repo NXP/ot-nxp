@@ -55,8 +55,13 @@
 #ifndef OT_NCP_LIBS
 #include "app_notify.h"
 #endif
+
 #ifndef OT_MAIN_TASK_PRIORITY
+#if defined(config_COEX_RTOS_MAX_PRIO)
+#define OT_MAIN_TASK_PRIORITY ((configMAX_PRIORITIES - 2))
+#else
 #define OT_MAIN_TASK_PRIORITY 3
+#endif
 #endif
 
 #ifndef OT_MAIN_TASK_SIZE

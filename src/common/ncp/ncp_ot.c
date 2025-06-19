@@ -25,7 +25,11 @@
 #endif
 
 #ifndef OT_NCP_TASK_PRIORITY
+#if defined(config_COEX_RTOS_MAX_PRIO)
+#define OT_NCP_TASK_PRIORITY ((configMAX_PRIORITIES - 2))
+#else
 #define OT_NCP_TASK_PRIORITY 3
+#endif
 #endif
 
 #ifndef OT_NCP_TASK_SIZE
