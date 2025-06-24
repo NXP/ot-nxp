@@ -558,6 +558,7 @@ exit:
     if (error == OT_ERROR_FAILED)
     {
         otMessageFree(pOtMessage);
+        pOtMessage = NULL;
     }
 
     return pOtMessage;
