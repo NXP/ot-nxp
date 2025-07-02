@@ -232,6 +232,8 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     otError error       = OT_ERROR_NONE;
     err_t   postCbError = ERR_OK;
 
+    VerifyOrExit(sUdpPlatInit, error = OT_ERROR_INVALID_STATE);
+
     struct udpSendContext *udpSendContexPtr = (struct udpSendContext *)otPlatCAlloc(1, sizeof(struct udpSendContext));
     VerifyOrExit(NULL != udpSendContexPtr, error = OT_ERROR_FAILED);
 
@@ -256,6 +258,11 @@ exit:
         if (aMessage != NULL)
         {
             otMessageFree(aMessage);
+        }
+
+        if (OT_ERROR_INVALID_ARGS == error)
+        {
+            otPlatFree(udpSendContexPtr);
         }
     }
     return error;
@@ -335,6 +342,9 @@ exit:
 static void UdpPlatLwipSockCb(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
     (void)pcb;
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(sUdpPlatInit, error = OT_ERROR_INVALID_STATE);
 
     brMsgContext *contextMsgPtr = (brMsgContext *)otPlatCAlloc(1, sizeof(brMsgContext));
     VerifyOrExit(contextMsgPtr != NULL);
@@ -369,7 +379,7 @@ static void UdpPlatLwipSockCb(void *arg, struct udp_pcb *pcb, struct pbuf *p, co
     BrPostOtMessage(contextMsgPtr);
 
 exit:
-    if (contextMsgPtr == NULL)
+    if ((OT_ERROR_INVALID_STATE == error) || (NULL == contextMsgPtr))
     {
         pbuf_free(p);
     }
