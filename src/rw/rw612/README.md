@@ -92,11 +92,14 @@ $ cd <path-to-ot-nxp>
 $ ./script/build_rw612 ot_br_eth
 ```
 
-To build ncp adapter support with specific interface such as UART(if use USB, SPI or SDIO interface, the _OT_NXP_NCP_UART_INTERFACE_ should be replaced by _OT_NXP_NCP_USB_INTERFACE_, _OT_NXP_NCP_SPI_INTERFACE_ or _OT_NXP_NCP_SDIO_INTERFACE_):
+To build ot ncp support with specific interface:
+
+1.  _ot_xxx_ should be selected as one of: _ot_cli_, _ot_br_wifi_ or _ot_br_eth_.
+2.  _OT_NXP_NCP_xxx_INTERFACE_ should be selected as one of: _OT_NXP_NCP_UART_INTERFACE_, _OT_NXP_NCP_USB_INTERFACE_, _OT_NXP_NCP_SPI_INTERFACE_ or _OT_NXP_NCP_SDIO_INTERFACE_.
 
 ```bash
 $ cd <path-to-ot-nxp>
-$ ./script/build_rw612 ot_cli -DOT_NCP_RADIO=ON -DOT_NXP_NCP_UART_INTERFACE=ON
+$ ./script/build_rw612 ot_xxx -DOT_NCP_RADIO=ON -DOT_NXP_NCP_xxx_INTERFACE=ON
 ```
 
 To build for a specific device revision such as A0:
@@ -129,21 +132,79 @@ $ cd <path-to-ot-nxp>
 $ ./script/build_rw612 ot_br_eth -DOT_NXP_BOARD_NAME=rw612_frdm
 ```
 
+To build ot ncp support with specific interface:
+
+1.  _ot_xxx_ should be selected as one of: _ot_cli_, _ot_br_wifi_ or _ot_br_eth_.
+2.  _OT_NXP_NCP_xxx_INTERFACE_ should be selected as one of: _OT_NXP_NCP_UART_INTERFACE_, _OT_NXP_NCP_USB_INTERFACE_, _OT_NXP_NCP_SPI_INTERFACE_ or _OT_NXP_NCP_SDIO_INTERFACE_.
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rw612 ot_xxx -DOT_NCP_RADIO=ON -DOT_NXP_NCP_xxx_INTERFACE=ON -DOT_NXP_BOARD_NAME=rw612_frdm
+```
+
+### To build coex library:
+
+- Build ot coex library for non-ncp:  
+  Note: The value of '_COEX_RTOS_MAX_PRIO_' is used to configure _configMAX_PRIORITIES_, the minimum value is 5.
+
+For embedded supplicant OT lib build:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rw612 ot_cli  -DOT_NXP_BUILD_APP_AS_LIB=ON -DBOARD_APP_UART_INSTANCE=0 -DOT_NXP_DISABLE_TCP=ON -DOT_NXP_LWIP_IPERF=ON -DOT_APP_CLI_FREERTOS_IPERF=ON -DOT_APP_BR_FREERTOS=OFF -DOT_NXP_ENABLE_WPA_SUPP_MBEDTLS=OFF -DCMAKE_BUILD_TYPE=Debug -DCOEX_RTOS_MAX_PRIO=<value_for_configMAX_PRIORITIES>
+```
+
+For wpa supplicant OT lib build:
+
+```bash
+$ cd <path-to-ot-nxp>
+# This wpa supplicant ot lib is only used to compile with -DCOEX_ENABLE_WIFI=ON and -DCONFIG_WPA_SUPPLICANT=ON
+$ ./script/build_rw612 ot_cli  -DOT_NXP_BUILD_APP_AS_LIB=ON -DBOARD_APP_UART_INSTANCE=0 -DOT_NXP_DISABLE_TCP=ON -DOT_NXP_LWIP_IPERF=ON -DOT_APP_CLI_FREERTOS_IPERF=ON -DOT_APP_BR_FREERTOS=OFF -DOT_NXP_ENABLE_WPA_SUPP_MBEDTLS=ON -DCMAKE_BUILD_TYPE=Debug -DCOEX_RTOS_MAX_PRIO=<value_for_configMAX_PRIORITIES>
+```
+
+- Build ot coex library for ncp:
+
+1.  If compile ot ncp library for USB, SDIO or SPI interface, the _OT_NXP_NCP_UART_INTERFACE_ should be replaced by _OT_NXP_NCP_USB_INTERFACE_, _OT_NXP_NCP_SDIO_INTERFACE_ or _OT_NXP_NCP_SPI_INTERFACE_.
+2.  The value of '_COEX_RTOS_MAX_PRIO_' is used to configure _configMAX_PRIORITIES_, the minimum value is 5.
+
+For embedded supplicant OT lib build:
+
+```bash
+$ cd <path-to-ot-nxp>
+$ ./script/build_rw612 ot_cli -DOT_NXP_BUILD_APP_AS_LIB=ON -DOT_APP_CLI_FREERTOS_LOWPOWER=OFF -DOT_NCP_RADIO=ON -DCOEX_RTOS_MAX_PRIO=<value_for_configMAX_PRIORITIES> -DOT_NXP_ENABLE_WPA_SUPP_MBEDTLS=OFF -DOT_NXP_NCP_UART_INTERFACE=ON
+```
+
+For wpa supplicant OT lib build:
+
+```bash
+$ cd <path-to-ot-nxp>
+# This wpa supplicant ot lib is only used to compile with CONFIG_NCP_WIFI=1 and CONFIG_WPA_SUPPLICANT=1
+$ ./script/build_rw612 ot_cli -DOT_NXP_BUILD_APP_AS_LIB=ON -DOT_APP_CLI_FREERTOS_LOWPOWER=OFF -DOT_NCP_RADIO=ON -DCOEX_RTOS_MAX_PRIO=<value_for_configMAX_PRIORITIES> -DOT_NXP_ENABLE_WPA_SUPP_MBEDTLS=ON -DOT_NXP_NCP_UART_INTERFACE=ON
+```
+
 After a successful ot-cli build, the `elf` and `binary` files are found in `build_rw612/rw612_ot_cli/bin`:
 
-- ot-cli-rw612 (the elf image)
+- ot-cli-rw612.elf (the elf image)
 - ot-cli-rw612.bin (the binary)
 
-After a successful ot-br build, the `elf` and `binary` files are found in:
-`build_rw612/rw612_ot_br_wifi/bin` : for Wi-Fi configuration
+After a successful ot-br build, the `elf` and `binary` files are found in:  
+`build_rw612/rw612_ot_br_wifi/bin` : for Wi-Fi configuration  
 `build_rw612/rw612_ot_br_eth/bin` : for Ethernet configuration
 
-- ot-br-rw612 (the elf image)
-- ot-br-rw612.bin (the binary)
+- ot-br-rw612-eth.elf and ot-br-rw612-wifi.elf (the elf image)
+- ot-br-rw612-eth.bin and ot-br-rw612-wifi.bin (the binary)
 
 For border router features see dedicated [README][otbr-readme-page] file.
 
 [otbr-readme-page]: ../../../examples/br/README-OTBR.md
+
+After a successful ot ncp build, the `elf` and `binary` files are found in('_xxx_' should be replaced by specific interface name):  
+`build_rw612/rw612_ot_cli_ncp_xxx/bin` : for ot-cli ncp configuration  
+`build_rw612/rw612_ot_br_wifi_ncp_xxx/bin` : for ot-br ncp with Wi-Fi configuration  
+`build_rw612/rw612_ot_br_eth_ncp_xxx/bin` : for ot-br ncp with Ethernet configuration
+
+- ot-cli-rw612-ncp-xxx.elf, ot-br-rw612-wifi-ncp-xxx.elf and ot-br-rw612-eth-ncp-xxx.elf (the elf image)
+- ot-cli-rw612-ncp-xxx.bin, ot-br-rw612-wifi-ncp-xxx.bin and ot-br-rw612-eth-ncp-xxx.bin (the binary)
 
 ## Flash Binaries
 
