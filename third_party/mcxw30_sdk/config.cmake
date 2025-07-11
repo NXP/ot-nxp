@@ -27,16 +27,16 @@
 #
 
 if (OT_APP_LOWPOWER)
-    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=1
     )
 else()
-    target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=0
     )
 endif()
 
-target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     SERIAL_MANAGER_NON_BLOCKING_MODE=1
     USE_NBU=${USE_NBU}
     gMemManagerLightExtendHeapAreaUsage=1
@@ -44,7 +44,7 @@ target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     DEFAULT_CCA_MODE=4
 )
 
-target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
     SDK_COMPONENT_INTEGRATION=1
@@ -69,10 +69,6 @@ target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     # SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
 )
 
-target_compile_options(${MCUX_SDK_PROJECT_NAME} PUBLIC
+target_compile_options(${OT_MCUX_SDK_TARGET} PUBLIC
     -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
-)
-target_include_directories(ot-config
-    INTERFACE
-    ../../openthread/third_party/mbedtls/repo/library
 )
