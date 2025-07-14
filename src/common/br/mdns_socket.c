@@ -36,12 +36,15 @@
 #include <openthread/nat64.h>
 #include <openthread/platform/mdns_socket.h>
 #include <openthread/platform/memory.h>
+#include <openthread/platform/messagepool.h>
 #include <openthread/platform/udp.h>
 #include "lwip/dns.h"
 #include "lwip/igmp.h"
 #include "lwip/ip_addr.h"
 #include "lwip/mld6.h"
 #include "lwip/udp.h"
+
+#include "openthread-core-config.h"
 
 /* -------------------------------------------------------------------------- */
 /*                                 Definitions                                */
@@ -151,12 +154,33 @@ exit:
 
 static void MdnsProcessOtReceive(brMsgContext *aContextMsgPtr)
 {
-    otMessage *message = NULL;
+    otMessage   *message = NULL;
+    uint16_t     requiredBuffNo;
+    otBufferInfo bufferInfo;
 
     VerifyOrExit(sMdnsIsEnabled);
 
-    message = otPlatLwipConvertToOtMsg(aContextMsgPtr->pbuf);
-    VerifyOrExit(message != NULL);
+    /* In large networks with high traffic, we have observed that mDNS module might jump to assert when trying to
+       allocate OT message buffers for a new query/response that has to be sent. Here, we calculate the approximate
+       number of OT message buffers that will be required to hold the incoming mDNS packet. If the number of free OT
+       message buffers will drop below the imposed limit after the conversion has been perfomed, the incoming packet
+       will be silently dropped. A possible scenario would be when multipackets (TC bit set) are received from multiple
+       hosts, as mDNS module stores the incoming messages for a period of time. This mechanism tries to make sure that
+       there are enough free buffers for mDNS module to perform it's execution.
+    */
+    requiredBuffNo =
+        (aContextMsgPtr->pbuf->tot_len / (OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE - sizeof(otMessageBuffer))) + 1;
+
+    otMessageGetBufferInfo(sInstance, &bufferInfo);
+    if ((bufferInfo.mFreeBuffers - requiredBuffNo) >= ((40 * OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS) / 100))
+    {
+        message = otPlatLwipConvertToOtMsg(aContextMsgPtr->pbuf);
+        VerifyOrExit(message != NULL);
+    }
+    else
+    {
+        ExitNow();
+    }
 
     // message is owned by OT, no need to free it explicitly
     otPlatMdnsHandleReceive(sInstance, message, /* aInUnicast */ false, &aContextMsgPtr->addrInfo);
