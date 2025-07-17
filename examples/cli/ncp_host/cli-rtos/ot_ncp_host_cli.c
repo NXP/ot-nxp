@@ -152,6 +152,12 @@ static uint32_t ot_get_input(uint8_t *inbuf, uint8_t *inlen)
             }
         }
 
+        /* Ignore '\n' received via the serial */
+        if (*ot_recv_buffer == '\n')
+        {
+            continue;
+        }
+
         if (!front_space && *ot_recv_buffer == ' ')
         {
             PRINTF(" ");
