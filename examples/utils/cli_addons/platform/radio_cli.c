@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2023, The OpenThread Authors.
+ *  Copyright (c) 2025, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -68,6 +69,7 @@
 #define MFG_CMD_GET_SET_LATENCY 0x3C       // 60
 #define MFG_CMD_BRIC_ENCRYPT 0x46          // 70
 #define MFG_CMD_BRIC_DECRYPT 0x47          // 71
+#define MFG_CMD_CRASH_SIMULATION 0x48      // 72
 #define MFG_CMD_GENERIC 0xFF               // 255
 #define MAX_VERSION_STRING_SIZE 128        //< Max size of version string.
 
@@ -664,6 +666,11 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                     }
                 }
             }
+
+            case MFG_CMD_CRASH_SIMULATION:
+                error = ProcessMfgGetInt8(aContext, MFG_CMD_CRASH_SIMULATION, aArgsLength);
+                break;
+
             case MFG_CMD_GENERIC:
             {
                 error = mfgGenericCommand(aContext, aArgsLength, aArgs);
