@@ -33,6 +33,7 @@
 #include "ot_platform_common.h"
 #include <openthread/cli.h>
 #include "common/logging.hpp"
+#include "lib/spinel/radio_spinel_metrics.h"
 
 /* -------------------------------------------------------------------------- */
 /*                             Private definitions                            */
@@ -43,14 +44,14 @@
 /* -------------------------------------------------------------------------- */
 
 static otError ProcessSpiCmd(void *aContext, uint8_t aArgsLength, char *aArgs[]);
+static otError ProcessSpinelMetrics(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 
-static const otCliCommand debugCommands[] = {
-    {"spi", ProcessSpiCmd}, //
-};
+static const otCliCommand debugCommands[] = {{"spi", ProcessSpiCmd}, //
+                                             {"spinelMetrics", ProcessSpinelMetrics}};
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -101,5 +102,19 @@ static otError ProcessSpiCmd(void *aContext, uint8_t aArgsLength, char *aArgs[])
     otLogInfoPlat("ProcessSpiCmd");
     error = otPlatRadioSpiDiag();
 
+    return error;
+}
+
+static otError ProcessSpinelMetrics(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    otError                     error   = OT_ERROR_NONE;
+    const otRadioSpinelMetrics *metrics = (const otRadioSpinelMetrics *)otPlatGetRadioSpinelMetrics();
+    if (metrics != NULL)
+    {
+        otCliOutputFormat("mRcpTimeoutCount = %d\r\n", metrics->mRcpTimeoutCount);
+        otCliOutputFormat("mRcpUnexpectedResetCount = %d\r\n", metrics->mRcpUnexpectedResetCount);
+        otCliOutputFormat("mRcpRestorationCount = %d\r\n", metrics->mRcpRestorationCount);
+        otCliOutputFormat("mSpinelParseErrorCount = %d\r\n", metrics->mSpinelParseErrorCount);
+    }
     return error;
 }

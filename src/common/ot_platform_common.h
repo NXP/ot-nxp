@@ -271,6 +271,8 @@ void otSysRunIdleTask(void);
  */
 otError otPlatRadioSpiDiag(void);
 
+const void *otPlatGetRadioSpinelMetrics(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
