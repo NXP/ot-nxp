@@ -628,6 +628,11 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
 }
 #endif
 
+const void *otPlatGetRadioSpinelMetrics(void)
+{
+    return (const void *)&sRadioSpinel.GetRadioSpinelMetrics();
+}
+
 otError otPlatRadioSpiDiag(void)
 {
     otError error;
