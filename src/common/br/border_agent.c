@@ -178,7 +178,7 @@ void BorderAgentInit(otInstance *aInstance, const char *aHostName)
         otSetStateChangedCallback(aInstance, HandleThreadStateChanged, aInstance);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-        otBorderAgentSetEphemeralKeyCallback(aInstance, HandleBorderAgentEphemeralKeyCallback, aInstance);
+        otBorderAgentSetMeshCoPServiceChangedCallback(aInstance, HandleBorderAgentEphemeralKeyCallback, aInstance);
 #endif
         sBorderAgentIsInit = true;
     }
@@ -273,7 +273,7 @@ static void PublishMeshCopService(otInstance *aInstance)
     // Store the first allocated port using 'otBorderAgentGetUdpPort()', as ephemeral key service will require
     // an ephemeral port, and in that case, 'otBorderAgentGetUdpPort()' will return the port value obtained by ephemeral
     // key service.
-    if (otBorderAgentGetState(aInstance) != OT_BORDER_AGENT_STATE_STOPPED)
+    if (otBorderAgentIsActive(sInstance))
     {
         if (sMeshCopService.mPort == BORDER_AGENT_PORT)
         {
@@ -540,8 +540,8 @@ static void PublishEpskcService(void)
     }
 
     SuccessOrExit(GenerateEphemeralKey());
-    (void)otBorderAgentSetEphemeralKey(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
-                                       sEpskcService.mPort);
+    (void)otBorderAgentEphemeralKeyStart(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout,
+                                        sEpskcService.mPort);
 
     if (sEpskcService.mPort == 0)
     {
@@ -593,8 +593,9 @@ exit:
 static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
 {
     char formattedEpskc[12];
-    sEpskcActive                     = otBorderAgentIsEphemeralKeyActive((otInstance *)aContext);
-    bool candidateSessionEstablished = (otBorderAgentGetState(sInstance) == OT_BORDER_AGENT_STATE_ACTIVE);
+    otBorderAgentEphemeralKeyState epKeyState = otBorderAgentEphemeralKeyGetState((otInstance *)aContext);
+    sEpskcActive                     = (OT_BORDER_AGENT_STATE_STARTED == epKeyState);
+    bool candidateSessionEstablished = (OT_BORDER_AGENT_STATE_CONNECTED == epKeyState);
 
     if (sEpskcActive)
     {

@@ -73,7 +73,7 @@ static const otIp6Address kAnyAddress = {
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 
-static void            GetDnsServerList(void);
+static void            UpdateDnsServerList(void);
 static void            SendQuery(otPlatDnsUpstreamQuery *aTxn, const otMessage *aMessage);
 static void            SendResponse(otPlatDnsUpstreamQuery *aTxn, otMessage *aMessage);
 static otUdpSocket    *CreateTransaction(otPlatDnsUpstreamQuery *aTxn);
@@ -110,11 +110,18 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
     CancelTransaction(aTxn);
 }
 
+bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance)
+{
+    UpdateDnsServerList();
+
+    return (sUpstreamDnsServerCount > 0);
+}
+
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
 
-void GetDnsServerList()
+void UpdateDnsServerList()
 {
     sUpstreamDnsServerCount = 0;
     for (uint8_t i = 0; i < DNS_MAX_SERVERS; i++)
@@ -148,7 +155,6 @@ static void SendQuery(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 
     VerifyOrExit(otMessageRead(aQuery, 0, packetToSend, length) == length, error = OT_ERROR_NO_BUFS);
 
-    GetDnsServerList();
     txn = CreateTransaction(aTxn);
     VerifyOrExit(txn != NULL, error = OT_ERROR_NO_BUFS);
 
