@@ -49,7 +49,7 @@
  * The iwx12 platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+#define OPENTHREAD_CONFIG_LOG_OUTPUT 0
 #endif
 
 /**
