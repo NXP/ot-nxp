@@ -41,6 +41,7 @@ target_compile_options(ot-config INTERFACE
     -Wno-sign-compare
     -Wno-pedantic
     -Wno-unused-function
+    -Wno-undef
 )
 
 #Add a dependeny to SDK files with app_pre_include
