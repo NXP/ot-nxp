@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022, The OpenThread Authors.
+ *  Copyright (c) 2021-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,8 @@
 
 #ifndef RT_MBEDTLS_CONFIG_H
 #define RT_MBEDTLS_CONFIG_H
+
+#include "get_mbedtls_version.h"
 
 /* FreeRTOS is always supported for RT platform so enable threading */
 #define MBEDTLS_MCUX_FREERTOS_THREADING_ALT

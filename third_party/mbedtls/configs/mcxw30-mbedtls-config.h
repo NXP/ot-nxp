@@ -29,6 +29,8 @@
 #ifndef MCXW30_MBEDTLS_CONFIG_H
 #define MCXW30_MBEDTLS_CONFIG_H
 
+#include "get_mbedtls_version.h"
+
 #define TRNG0 TRNG_0
 
 // #define MBEDTLS_ENTROPY_HARDWARE_ALT

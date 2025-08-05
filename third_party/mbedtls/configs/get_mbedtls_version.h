@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024-2025, The OpenThread Authors.
+ *  Copyright (c) 2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MCXW71_MBEDTLS_CONFIG_H
-#define MCXW71_MBEDTLS_CONFIG_H
+#ifndef MBEDTLS_VERSION_NUMBER
 
-#include "get_mbedtls_version.h"
+/* force include of "mbedtls/version.h" */
+#pragma push_macro("MBEDTLS_VERSION_H")
+#pragma push_macro("MBEDTLS_CONFIG_FILE")
+#pragma push_macro("MBEDTLS_VERSION_C")
 
-#define MBEDTLS_ENTROPY_HARDWARE_ALT
-#undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+#undef MBEDTLS_VERSION_H
+#undef MBEDTLS_CONFIG_FILE
+#define MBEDTLS_CONFIG_FILE "dummy-mbedtls-config.h"
+#undef MBEDTLS_VERSION_C
 
-// For BLE WirelessUART project
-#define MBEDTLS_ECDH_C
+#include "mbedtls/version.h"
 
-/* Openthread mbetdls config include */
-#include "mbedtls-config.h"
+#pragma pop_macro("MBEDTLS_VERSION_H")
+#pragma pop_macro("MBEDTLS_CONFIG_FILE")
+#pragma pop_macro("MBEDTLS_VERSION_C")
 
 #endif

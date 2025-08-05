@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2023, NXP.
+ *  Copyright (c) 2022-2025, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,8 @@
 
 #ifndef RW612_MBEDTLS_CONFIG_H
 #define RW612_MBEDTLS_CONFIG_H
+
+#include "get_mbedtls_version.h"
 
 /* FreeRTOS is always supported for RW612 platform so enable threading */
 #define MBEDTLS_MCUX_FREERTOS_THREADING_ALT

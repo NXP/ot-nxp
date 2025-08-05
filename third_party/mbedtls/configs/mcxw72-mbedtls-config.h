@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024, The OpenThread Authors.
+ *  Copyright (c) 2024-2025, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,8 @@
 
 #ifndef MCXW72_MBEDTLS_CONFIG_H
 #define MCXW72_MBEDTLS_CONFIG_H
+
+#include "get_mbedtls_version.h"
 
 #define MBEDTLS_ENTROPY_HARDWARE_ALT
 #undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
