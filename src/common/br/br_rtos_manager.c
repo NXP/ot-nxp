@@ -386,7 +386,6 @@ void otPlatBrProcessOtEvtQueue()
                     else
                     {
                         BorderAgentDeInit();
-                        TrelOnExternalNetifDown();
                     }
                     break;
                 case eAddrSetOrChanged:
@@ -517,7 +516,6 @@ static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aR
     {
         BrMdnsHostSetInitialized(true);
         BorderAgentInit(aInstance, sHost.mHostName);
-        TrelOnAppReady(sHost.mHostName);
     }
     else
     {

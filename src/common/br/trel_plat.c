@@ -44,48 +44,24 @@
 #include <string.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
-#include <openthread/mdns.h>
-#include <openthread/tasklet.h>
-#include <openthread/trel.h>
-#include <openthread/platform/dnssd.h>
+
 #include <openthread/platform/memory.h>
 #include <openthread/platform/trel.h>
 #include <openthread/platform/udp.h>
 #include "common/code_utils.hpp"
+
 #include "config/mle.h"
 #include "lwip/api.h"
 #include "lwip/sockets.h"
 #include "lwip/tcpip.h"
 #include "lwip/udp.h"
 
-#include "fsl_component_generic_list.h"
+// #include "fsl_component_generic_list.h"
 #include "fsl_os_abstraction.h"
 
 /* -------------------------------------------------------------------------- */
 /*                                 Definitions                                */
 /* -------------------------------------------------------------------------- */
-
-// TXT consists of two entries, ExtAddr and ExtPanID
-//  length field + key field + "=" + data
-//      LEN                   KEY             =                DATA
-//  sizeof(uint8_t) + sizeof("xa") - 1 + sizeof(char) + sizeof(otExtAddress) +
-//  sizeof(uint8_t) + sizeof("xp") - 1 + sizeof(char) + sizeof(otExtendedPanId);
-
-#define TXT_DATA_SIZE 24
-
-struct Peer
-{
-    list_element_t        link;
-    const char           *mPeerServiceInstance;
-    const char           *mPeerHostName;
-    uint8_t               mTxtData[TXT_DATA_SIZE];
-    uint8_t               mTxtLength;
-    uint16_t              mPort;
-    otSockAddr            mSockAddr;
-    otMdnsSrvResolver     mSrvResolver;
-    otMdnsTxtResolver     mTxtResolver;
-    otMdnsAddressResolver mAddrResolver;
-};
 
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -94,17 +70,8 @@ struct Peer
 static otUdpSocket        sTrelSocket;
 static otInstance        *sInstance;
 static struct netif      *sBackboneNetifPtr;
-static otMdnsService      sTrelService;
 static bool               sTrelEnabled;
-static bool               sBrowsingEnabled;
-static otMdnsBrowser      trelBrowser;
-static const char         sTrelServiceLabel[] = "_trel._udp";
-static uint8_t            sTrelTxtData[TXT_DATA_SIZE];
 static otPlatTrelCounters sCounters;
-static uint8_t            sPeerNumber;
-
-static list_label_t sPeerList;
-static OSA_MUTEX_HANDLE_DEFINE(sMutexHandle);
 
 static const otIp6Address kAnyAddress = {
     .mFields.m8 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
@@ -112,26 +79,7 @@ static const otIp6Address kAnyAddress = {
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
-
-static void HandleServiceBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult);
-static void HandleIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResult *aResolver);
-static void HandleServiceTxtResolveResult(otInstance *aInstance, const otMdnsTxtResult *aResult);
-static void HandleServiceResolveResult(otInstance *aInstance, const otMdnsSrvResult *aResult);
-
-static bool TrelStartBrowser();
 static void TrelSocketReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-
-static void         removeAndFreeInternalPeerListEntry(list_element_handle_t aListElement);
-static otError      createAndAppendPeerListEntry(struct Peer aPeer);
-static struct Peer *findPeerByServiceInstance(const char *aServiceInstanceName);
-static struct Peer *findPeerByHostName(const char *aHostName);
-static struct Peer *findPeerBySockAddr(const otSockAddr *aSockAddr);
-static void         RemoveAllPeersAndNotify();
-static void         RemoveTrelServiceInstance(struct Peer *aElement);
-static void         AddTrelServiceInstance(const char *aServiceInstanceName);
-static void         CheckTrelPeerStorage();
-static void         HandleTrelRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
-static void         StopAllPeerResolvers();
 
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -142,45 +90,15 @@ void TrelPlatInit(otInstance *aInstance, struct netif *backboneNetif)
     sInstance         = aInstance;
     sBackboneNetifPtr = backboneNetif;
 
-    sTrelService.mServiceInstance = CreateBaseName(aInstance, baseServiceInstanceName, true);
-    sTrelService.mServiceType     = sTrelServiceLabel;
-
     (void)otPlatUdpBindToNetif(&sTrelSocket, OT_NETIF_BACKBONE);
-}
-
-void TrelOnAppReady(const char *aHostName)
-{
-    // start browsing
-    if (!sBrowsingEnabled)
-    {
-        sBrowsingEnabled = TrelStartBrowser();
-    }
-
-    // register TREL service
-    sTrelService.mHostName = aHostName;
-    otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
-}
-
-void TrelOnExternalNetifDown()
-{
-    // mDNS core stops browsing operation as 'otPlatInfraIfStateChanged` was called before this
-    // only change browsing state in this module
-    sBrowsingEnabled = false;
-
-    RemoveAllPeersAndNotify();
 }
 
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    LIST_Init(&sPeerList, MAX_PEER_NUMBER);
-    if (KOSA_StatusSuccess != OSA_MutexCreate((osa_mutex_handle_t)sMutexHandle))
-    {
-        assert(true);
-    }
-    sTrelSocket.mHandler = TrelSocketReceive;
 
-    struct udp_pcb *pcb = NULL;
+    sTrelSocket.mHandler = TrelSocketReceive;
+    struct udp_pcb *pcb  = NULL;
 
     VerifyOrExit(!sTrelEnabled);
 
@@ -192,17 +110,6 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
     *aUdpPort                   = pcb->local_port;
     sTrelSocket.mSockName.mPort = pcb->local_port;
     sTrelEnabled                = true;
-
-    if (BrMdnsHostIsInitialized())
-    {
-        // start browsing
-        if (!sBrowsingEnabled)
-        {
-            sBrowsingEnabled = TrelStartBrowser();
-        }
-
-        otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
-    }
 
     otPlatTrelResetCounters(aInstance);
 exit:
@@ -217,20 +124,7 @@ void otPlatTrelDisable(otInstance *aInstance)
 
     // close UDP socket
     otPlatUdpClose(&sTrelSocket);
-
-    // stop browsing
-    otMdnsStopBrowser(sInstance, &trelBrowser);
-    sBrowsingEnabled = false;
-
-    // unregister service
-    (void)otMdnsUnregisterService(sInstance, &sTrelService);
-
-    (void)OSA_MutexDestroy((osa_mutex_handle_t)sMutexHandle);
-
     sTrelEnabled = false;
-
-    StopAllPeerResolvers();
-    RemoveAllPeersAndNotify();
 
 exit:
     return;
@@ -279,21 +173,6 @@ exit:
     return;
 }
 
-void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength)
-{
-    memset(sTrelTxtData, 0, sizeof(sTrelTxtData));
-    memcpy(sTrelTxtData, aTxtData, aTxtLength);
-
-    sTrelService.mPort          = aPort;
-    sTrelService.mTxtData       = sTrelTxtData;
-    sTrelService.mTxtDataLength = aTxtLength;
-
-    if (BrMdnsHostIsInitialized())
-    {
-        otMdnsRegisterService(aInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
-    }
-}
-
 const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -306,37 +185,16 @@ void otPlatTrelResetCounters(otInstance *aInstance)
     memset(&sCounters, 0, sizeof(sCounters));
 }
 
+// This function is needed as a stub even if peer discovery is handled in the core
+// stack until the stack version is at least 08efcda
 void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
                                                  const otSockAddr *aPeerSockAddr,
                                                  const otSockAddr *aRxSockAddr)
 {
-    struct Peer *element = findPeerBySockAddr(aPeerSockAddr);
-    if (element)
-    {
-        otMdnsStopSrvResolver(sInstance, &(element->mSrvResolver));
-        otMdnsStopTxtResolver(sInstance, &(element->mTxtResolver));
-        otMdnsStopIp6AddressResolver(sInstance, &element->mAddrResolver);
-
-        // restart srv resolver; this will trigger all other resolvers (txt, address) when results are received
-        otMdnsStartSrvResolver(sInstance, &(element->mSrvResolver));
-    }
 }
-
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
-
-static bool TrelStartBrowser()
-{
-    memset(&trelBrowser, 0, sizeof(trelBrowser));
-
-    trelBrowser.mServiceType  = sTrelServiceLabel;
-    trelBrowser.mSubTypeLabel = NULL;
-    trelBrowser.mInfraIfIndex = netif_get_index(sBackboneNetifPtr);
-    trelBrowser.mCallback     = HandleServiceBrowseResult;
-    return otMdnsStartBrowser(sInstance, &trelBrowser) == OT_ERROR_NONE ? true : false;
-}
-
 static void TrelSocketReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aContext);
@@ -351,268 +209,4 @@ static void TrelSocketReceive(void *aContext, otMessage *aMessage, const otMessa
     senderAddr.mPort    = aMessageInfo->mPeerPort;
     otPlatTrelHandleReceived(sInstance, rxPacketBuffer, messageLen, &senderAddr);
     otPlatFree(rxPacketBuffer);
-}
-
-static void HandleServiceBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult)
-{
-    VerifyOrExit(sTrelEnabled);
-    struct Peer *element = findPeerByServiceInstance(aResult->mServiceInstance);
-    if (element)
-    {
-        if (aResult->mTtl)
-        {
-            otMdnsStartSrvResolver(sInstance, &(element->mSrvResolver));
-        }
-        else
-        {
-            RemoveTrelServiceInstance(element);
-        }
-    }
-    else
-    {
-        AddTrelServiceInstance(aResult->mServiceInstance);
-    }
-exit:
-    return;
-}
-
-static void HandleServiceResolveResult(otInstance *aInstance, const otMdnsSrvResult *aResult)
-{
-    VerifyOrExit(sTrelEnabled);
-    struct Peer *element = findPeerByServiceInstance(aResult->mServiceInstance);
-    if (element)
-    {
-        element->mPeerHostName           = aResult->mHostName;
-        element->mAddrResolver.mHostName = aResult->mHostName;
-        element->mPort                   = aResult->mPort;
-        otMdnsStartTxtResolver(sInstance, &element->mTxtResolver);
-    }
-exit:
-    return;
-}
-
-static void HandleServiceTxtResolveResult(otInstance *aInstance, const otMdnsTxtResult *aResult)
-{
-    VerifyOrExit(sTrelEnabled);
-    struct Peer *element = findPeerByServiceInstance(aResult->mServiceInstance);
-    if (element)
-    {
-        memset(element->mTxtData, 0, sizeof(element->mTxtData));
-        memcpy(element->mTxtData, aResult->mTxtData, aResult->mTxtDataLength);
-        element->mTxtLength = aResult->mTxtDataLength;
-        otMdnsStartIp6AddressResolver(sInstance, &element->mAddrResolver);
-    }
-exit:
-    return;
-}
-
-static void HandleIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResult *aResult)
-{
-    VerifyOrExit(sTrelEnabled);
-    struct Peer       *element         = findPeerByHostName(aResult->mHostName);
-    otIp6Address       selectedAddress = {.mFields = 0};
-    otPlatTrelPeerInfo peer;
-
-    if (element)
-    {
-        otMdnsStopIp6AddressResolver(sInstance, &element->mAddrResolver);
-
-        for (uint8_t i = 0; i < aResult->mAddressesLength; i++)
-        {
-            if (aResult->mAddresses[i].mTtl &&
-                (otIp6IsAddressUnspecified(&selectedAddress) ||
-                 (memcmp(selectedAddress.mFields.m8, aResult->mAddresses[i].mAddress.mFields.m8, sizeof(otIp6Address)) >
-                  0)))
-            {
-                selectedAddress = aResult->mAddresses[i].mAddress;
-            }
-        }
-        memcpy(&element->mSockAddr, &selectedAddress, sizeof(peer.mSockAddr.mAddress));
-
-        peer.mRemoved        = false;
-        peer.mSockAddr.mPort = element->mPort;
-        memcpy(&peer.mSockAddr.mAddress, &element->mSockAddr.mAddress, sizeof(peer.mSockAddr.mAddress));
-        peer.mTxtData   = element->mTxtData;
-        peer.mTxtLength = element->mTxtLength;
-
-        otPlatTrelHandleDiscoveredPeerInfo(sInstance, &peer);
-    }
-exit:
-    return;
-}
-
-static otError createAndAppendPeerListEntry(struct Peer aPeer)
-{
-    list_status_t result  = kLIST_Ok;
-    struct Peer  *newPeer = (struct Peer *)otPlatCAlloc(1, sizeof(struct Peer));
-    VerifyOrExit(newPeer != NULL);
-
-    memcpy(newPeer, &aPeer, sizeof(aPeer));
-
-    (void)OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
-    result = LIST_AddTail(&sPeerList, (list_element_handle_t)newPeer);
-    (void)OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
-
-    sPeerNumber++;
-
-exit:
-    return (result == kLIST_Ok) ? OT_ERROR_NONE : OT_ERROR_FAILED;
-}
-
-static struct Peer *findPeerByServiceInstance(const char *aServiceInstanceName)
-{
-    list_element_handle_t element = LIST_GetHead(&sPeerList);
-    while (element != NULL)
-    {
-        struct Peer *peer = (struct Peer *)element;
-        if (!strcmp(peer->mPeerServiceInstance, aServiceInstanceName))
-        {
-            return peer;
-        }
-        element = LIST_GetNext(element);
-    }
-    return NULL;
-}
-
-static struct Peer *findPeerByHostName(const char *aHostName)
-{
-    list_element_handle_t element = LIST_GetHead(&sPeerList);
-
-    while (element != NULL)
-    {
-        struct Peer *peer = (struct Peer *)element;
-        if (!strcmp(peer->mPeerHostName, aHostName))
-        {
-            return peer;
-        }
-        element = LIST_GetNext(element);
-    }
-    return NULL;
-}
-
-static struct Peer *findPeerBySockAddr(const otSockAddr *aSockAddr)
-{
-    list_element_handle_t element = LIST_GetHead(&sPeerList);
-
-    while (element != NULL)
-    {
-        struct Peer *peer = (struct Peer *)element;
-        if (!memcmp(&(peer->mSockAddr), aSockAddr, sizeof(otSockAddr)))
-        {
-            return peer;
-        }
-        element = LIST_GetNext(element);
-    }
-    return NULL;
-}
-
-static void removeAndFreeInternalPeerListEntry(list_element_handle_t aListElement)
-{
-    if (sTrelEnabled)
-    {
-        (void)OSA_MutexLock((osa_mutex_handle_t)sMutexHandle, osaWaitForever_c);
-        (void)LIST_RemoveElement(aListElement);
-        (void)OSA_MutexUnlock((osa_mutex_handle_t)sMutexHandle);
-    }
-    else
-    {
-        (void)LIST_RemoveElement(aListElement);
-    }
-
-    otPlatFree(aListElement);
-    sPeerNumber--;
-}
-
-static void RemoveAllPeersAndNotify()
-{
-    list_element_handle_t element = LIST_GetHead(&sPeerList);
-
-    while (element != NULL)
-    {
-        if (otTrelIsEnabled(sInstance))
-        {
-            struct Peer *peer = (struct Peer *)element;
-            // notify OpenThread;
-            otPlatTrelPeerInfo peerInfo;
-            peerInfo.mRemoved   = true;
-            peerInfo.mSockAddr  = peer->mSockAddr;
-            peerInfo.mTxtData   = peer->mTxtData;
-            peerInfo.mTxtLength = peer->mTxtLength;
-
-            otPlatTrelHandleDiscoveredPeerInfo(sInstance, &peerInfo);
-        }
-        // remove from internal list
-        removeAndFreeInternalPeerListEntry(element);
-
-        element = LIST_GetHead(&sPeerList);
-    }
-}
-
-static void RemoveTrelServiceInstance(struct Peer *aElement)
-{
-    otPlatTrelPeerInfo peerInfo;
-    peerInfo.mRemoved   = true;
-    peerInfo.mSockAddr  = aElement->mSockAddr;
-    peerInfo.mTxtData   = aElement->mTxtData;
-    peerInfo.mTxtLength = aElement->mTxtLength;
-
-    otPlatTrelHandleDiscoveredPeerInfo(sInstance, &peerInfo);
-
-    otMdnsStopSrvResolver(sInstance, &(aElement->mSrvResolver));
-    otMdnsStopTxtResolver(sInstance, &(aElement->mTxtResolver));
-
-    removeAndFreeInternalPeerListEntry((list_element_handle_t)aElement);
-}
-
-static void AddTrelServiceInstance(const char *aServiceInstanceName)
-{
-    struct Peer peer;
-    memset(&peer, 0, sizeof(peer));
-    peer.mPeerServiceInstance = aServiceInstanceName;
-
-    peer.mSrvResolver.mServiceInstance = aServiceInstanceName;
-    peer.mSrvResolver.mServiceType     = sTrelServiceLabel;
-    peer.mSrvResolver.mInfraIfIndex    = netif_get_index(sBackboneNetifPtr);
-    peer.mSrvResolver.mCallback        = HandleServiceResolveResult;
-
-    peer.mTxtResolver.mServiceInstance = aServiceInstanceName;
-    peer.mTxtResolver.mServiceType     = sTrelServiceLabel;
-    peer.mTxtResolver.mInfraIfIndex    = netif_get_index(sBackboneNetifPtr);
-    peer.mTxtResolver.mCallback        = HandleServiceTxtResolveResult;
-
-    peer.mAddrResolver.mCallback     = HandleIp6AddressResolver;
-    peer.mAddrResolver.mInfraIfIndex = netif_get_index(sBackboneNetifPtr);
-
-    if (createAndAppendPeerListEntry(peer) == OT_ERROR_NONE)
-    {
-        otMdnsStartSrvResolver(sInstance, &peer.mSrvResolver);
-    }
-}
-
-static void CheckTrelPeerStorage()
-{
-    VerifyOrExit(sPeerNumber >= MAX_PEER_NUMBER);
-exit:
-    return;
-}
-
-static void HandleTrelRegistrationCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
-{
-    if (aError != OT_ERROR_NONE)
-    {
-        sTrelService.mServiceInstance = CreateAlternativeBaseName(aInstance, sTrelService.mServiceInstance);
-        otMdnsRegisterService(sInstance, &sTrelService, 0, HandleTrelRegistrationCallback);
-    }
-}
-
-static void StopAllPeerResolvers()
-{
-    list_element_handle_t element = LIST_GetHead(&sPeerList);
-    while (element != NULL)
-    {
-        struct Peer *peer = (struct Peer *)element;
-        otMdnsStopSrvResolver(sInstance, &(peer->mSrvResolver));
-        otMdnsStopTxtResolver(sInstance, &(peer->mTxtResolver));
-        element = LIST_GetNext(element);
-    }
 }
