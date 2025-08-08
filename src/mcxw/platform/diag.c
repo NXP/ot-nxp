@@ -38,6 +38,7 @@
 #include <string.h>
 
 #ifndef OT_EXTERNAL_BUILD
+#include <openthread-core-config.h>
 #include <openthread/config.h>
 #endif
 #include <openthread/platform/alarm-milli.h>
