@@ -81,7 +81,7 @@ static serial_port_uart_config_t uartConfig = {
     .stopBitCount = kSerialManager_UartOneStopBit,
     .enableRx     = 1,
     .enableTx     = 1,
-#if (OT_APP_SERIAL_PORT_USE_FC == 1)
+#if defined(OT_APP_SERIAL_PORT_USE_FC) && (OT_APP_SERIAL_PORT_USE_FC == 1)
     .enableRxRTS = 1,
     .enableTxCTS = 1,
 #endif
@@ -196,13 +196,13 @@ otError otPlatUartEnable(void)
 #if (OT_APP_UART_INSTANCE == 1U)
     BOARD_InitPinLPUART1_TX();
     BOARD_InitPinLPUART1_RX();
-#if (OT_APP_SERIAL_PORT_USE_FC == 1)
+#if defined(OT_APP_SERIAL_PORT_USE_FC) && (OT_APP_SERIAL_PORT_USE_FC == 1)
 #error "Flow control not supported on LPUART instance 1"
 #endif
 #elif (OT_APP_UART_INSTANCE == 0U)
     BOARD_InitPinLPUART0_TX();
     BOARD_InitPinLPUART0_RX();
-#if (OT_APP_SERIAL_PORT_USE_FC == 1)
+#if defined(OT_APP_SERIAL_PORT_USE_FC) && (OT_APP_SERIAL_PORT_USE_FC == 1)
     BOARD_InitPinLPUART0_RTS();
     BOARD_InitPinLPUART0_CTS();
 #endif
