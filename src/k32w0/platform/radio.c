@@ -33,7 +33,8 @@
  */
 
 /* Openthread configuration */
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 /* memcpy */
 #include "string.h"
