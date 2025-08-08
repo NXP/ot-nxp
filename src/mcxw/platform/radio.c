@@ -35,7 +35,8 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#include <openthread-core-config.h>
+#include <openthread/config.h>
 
 #include "EmbeddedTypes.h"
 #include "FunctionLib.h"
