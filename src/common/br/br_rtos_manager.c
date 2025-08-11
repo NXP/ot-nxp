@@ -202,6 +202,8 @@ void BrInitServices()
 
 void BrInitMdnsHost(const char *aHostName)
 {
+    otMdnsSetLocalHostName(sInstance, aHostName);
+
     sHost.mHostName        = aHostName;
     sHost.mAddressesLength = 0;
     sHost.mTtl             = 120;
@@ -515,7 +517,7 @@ static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aR
     if (aError == OT_ERROR_NONE)
     {
         BrMdnsHostSetInitialized(true);
-        BorderAgentInit(aInstance, sHost.mHostName);
+        BorderAgentInit(aInstance);
     }
     else
     {

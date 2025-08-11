@@ -481,7 +481,7 @@ static void appBrInit()
     otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
 
     BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
-    BrInitMdnsHost(CreateBaseName(sInstance, sHostName, false));
+    BrInitMdnsHost(CreateBaseName(sInstance, sHostName));
 }
 
 static void mainloop(void *aContext)

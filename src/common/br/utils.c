@@ -34,21 +34,8 @@
 
 #include "utils.h"
 
-#ifndef OT_NXP_PLAT_BR_BASE_SERVICE_NAME
-char baseServiceInstanceName[] = "NXP-BorderRouter#0000";
-#else
-char baseServiceInstanceName[] = OT_NXP_PLAT_BR_BASE_SERVICE_NAME;
-#endif
-
-const char *CreateBaseName(otInstance *aInstance, char *aBaseName, bool aIsForService)
+const char *CreateBaseName(otInstance *aInstance, char *aBaseName)
 {
-    static bool createdForService = false;
-
-    if (createdForService && aIsForService)
-    {
-        return (const char *)baseServiceInstanceName;
-    }
-
     char *replace = strstr(aBaseName, "#");
 
     if (replace != NULL)
@@ -61,10 +48,7 @@ const char *CreateBaseName(otInstance *aInstance, char *aBaseName, bool aIsForSe
     }
     const otExtAddress *extAddress = otLinkGetExtendedAddress(aInstance);
     sprintf(replace, "%02x%02x", extAddress->m8[6], extAddress->m8[7]);
-    if (aIsForService)
-    {
-        createdForService = true;
-    }
+
     return aBaseName;
 }
 
