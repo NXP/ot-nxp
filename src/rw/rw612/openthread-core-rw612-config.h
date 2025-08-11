@@ -579,4 +579,15 @@
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL "www.nxp.com"
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+ *
+ * The maximum number of state-changed callback handlers (set using `otSetStateChangedCallback()`).
+ */
+#ifdef OT_NCP_RADIO
+#ifndef OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS 4
+#endif
+#endif
+
 #endif // OPENTHREAD_CORE_RW612_CONFIG_H_

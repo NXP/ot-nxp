@@ -71,6 +71,7 @@ endif()
 if(OT_NCP_RADIO)
     list(APPEND PLATFORM_FILES
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_glue_ot.c
+        ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_glue_matter.c
         ${PROJECT_SOURCE_DIR}/src/common/ncp/ncp_ot.c
         platform/ncp.c
     )
