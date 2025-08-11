@@ -75,7 +75,6 @@ typedef enum otEventType_tag
 {
     eLinkChangedEvent = 0,
     eAddrSetOrChanged,
-    eDhcp6PrefixChanged,
     eBrInitPlatform
 } otEventType;
 

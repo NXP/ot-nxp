@@ -38,6 +38,7 @@
 
 #include "br_rtos_manager.h"
 #include "border_agent.h"
+#include "dhcp6pd_socket.h"
 #include "dns_upstream_resolver.h"
 #include "infra_if.h"
 #include "mdns_socket.h"
@@ -112,10 +113,6 @@ struct brMdnsHostInitContext
 static void HandleMulticastListenerCallback(void                                  *aContext,
                                             otBackboneRouterMulticastListenerEvent aEvent,
                                             const otIp6Address                    *aAddress);
-
-static void Dhcp6PrefixChangedCb(struct netif *netif, const struct dhcp6_delegated_prefix *prefix, u8_t valid);
-static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext);
-
 static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
 static bool UpdateIp6AddressList();
 static void BrMdnsHostInitLwipCb(void *aContext);
@@ -188,7 +185,6 @@ void BrInitServices()
         otBackboneRouterSetEnabled(sInstance, true);
         otBackboneRouterSetMulticastListenerCallback(sInstance, HandleMulticastListenerCallback, sExtNetif);
         otSrpServerSetAutoEnableMode(sInstance, true);
-        otBorderRoutingDhcp6PdSetRequestCallback(sInstance, otDhcpPdCb, NULL);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         otNat64SetEnabled(sInstance, true);
@@ -411,10 +407,6 @@ void otPlatBrProcessOtEvtQueue()
 #endif
                     }
                     break;
-                case eDhcp6PrefixChanged:
-                    otPlatBorderRoutingProcessDhcp6PdPrefix(
-                        sInstance, &evtReceiveContextPtr->dhcp6_prefix_changed_event.prefixEntry);
-                    break;
 
                 case eBrInitPlatform:
 #if OT_APP_BR_LWIP_HOOKS_EN
@@ -423,6 +415,7 @@ void otPlatBrProcessOtEvtQueue()
                     UdpPlatInit(sInstance, sExtNetif, sThreadNetif);
                     InfraIfInit(sInstance, sExtNetif);
                     MdnsSocketInit(sInstance, netif_get_index(sExtNetif));
+                    Dhcp6PdSocketInit(sInstance, netif_get_index(sExtNetif));
                     TrelPlatInit(sInstance, sExtNetif);
 
                     CALL_LWIP_API_FROM_OT_CONTEXT(netif_add_ext_callback(&sNetifCallback, &BrNetifExtCb));
@@ -438,65 +431,6 @@ void otPlatBrProcessOtEvtQueue()
 /* -------------------------------------------------------------------------- */
 /*                              Private functions                             */
 /* -------------------------------------------------------------------------- */
-static void Dhcp6PrefixChangedCb(struct netif *netif, const struct dhcp6_delegated_prefix *prefix, u8_t valid)
-{
-    if ((netif != NULL) && (prefix != NULL) && (valid == true))
-    {
-        brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
-        VerifyOrExit(context != NULL);
-
-        context->type = eDhcp6PrefixChanged;
-        memset(&context->dhcp6_prefix_changed_event.prefixEntry, 0, sizeof(otBorderRoutingPrefixTableEntry));
-
-        context->dhcp6_prefix_changed_event.prefixEntry.mIsOnLink          = true;
-        context->dhcp6_prefix_changed_event.prefixEntry.mValidLifetime     = prefix->prefix_valid;
-        context->dhcp6_prefix_changed_event.prefixEntry.mPreferredLifetime = prefix->prefix_valid;
-
-        // Use only 64 long pref to allow SLAAC even if we got smaller prefix. The remainig bits until 64
-        // legth will be 0s.
-        context->dhcp6_prefix_changed_event.prefixEntry.mPrefix.mLength = 64;
-        memcpy(context->dhcp6_prefix_changed_event.prefixEntry.mPrefix.mPrefix.mFields.m8, prefix->prefix.addr,
-               sizeof(otIp6Address));
-
-        BrPostOtEvent(context);
-    }
-exit:
-    return;
-}
-
-static void otDhcpPdCb(otBorderRoutingDhcp6PdState aState, void *aContext)
-{
-    const struct dhcp6_delegated_prefix *prefix;
-
-    switch (aState)
-    {
-    case OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED:
-    case OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED:
-        CALL_LWIP_API_FROM_OT_CONTEXT(dhcp6_disable(sExtNetif));
-        break;
-
-    case OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING:
-        CALL_LWIP_API_FROM_OT_CONTEXT({
-            dhcp6_enable(sExtNetif);
-            dhcp6_register_pd_callback(sExtNetif, &Dhcp6PrefixChangedCb);
-
-            prefix = dhcp6_get_delegated_prefix(sExtNetif);
-        });
-        if (prefix->prefix_valid > 0)
-        {
-            Dhcp6PrefixChangedCb(sExtNetif, prefix, true);
-        }
-        else
-        {
-            dhcp6_nd6_ra_trigger(sExtNetif, 0, 1);
-        }
-        break;
-
-    default:
-        break;
-    }
-}
-
 static void HandleMulticastListenerCallback(void                                  *aContext,
                                             otBackboneRouterMulticastListenerEvent aEvent,
                                             const otIp6Address                    *aAddress)

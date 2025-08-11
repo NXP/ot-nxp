@@ -50,12 +50,8 @@
 
 #define LWIP_IPV6_SEND_ROUTER_SOLICIT 1
 
-#define LWIP_IPV6_DHCP6 1
-#define LWIP_IPV6_DHCP6_STATEFUL 1
-#define LWIP_IPV6_DHCP6_PD 1
-
 #define CONFIG_NETWORK_HIGH_PERF 1
-//#define LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT 1
+// #define LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT 1
 
 #define MAX_SOCKETS_TCP 8
 #define MAX_LISTENING_SOCKETS_TCP 4
@@ -302,7 +298,7 @@
  * MEMP_NUM_REASSDATA: the number of IP packets simultaneously queued for
  * reassembly (whole packets, not fragments!)
  */
-//#define MEMP_NUM_REASSDATA 8 FIXME
+// #define MEMP_NUM_REASSDATA 8 FIXME
 #define MEMP_NUM_REASSDATA 8
 
 /**
@@ -320,7 +316,7 @@
  * When IPv4 *and* IPv6 are enabled, this even changes to
  * (PBUF_POOL_SIZE > 2 * IP_REASS_MAX_PBUFS)!
  */
-//#define IP_REASS_MAX_PBUFS 16 FIXME
+// #define IP_REASS_MAX_PBUFS 16 FIXME
 #define IP_REASS_MAX_PBUFS 16
 
 /**
@@ -469,7 +465,7 @@
 #define LWIP_PROVIDE_ERRNO 1
 #define ERRNO 1
 
-//#define LWIP_SNMP 1
+// #define LWIP_SNMP 1
 
 /*
    ------------------------------------------------
