@@ -44,7 +44,7 @@
 #define OT_PLAT_SAVE_NVM_DATA_ON_IDLE 1
 #endif
 
-//#define DEBUG_NVM
+// #define DEBUG_NVM
 
 #ifdef DEBUG_NVM
 #include "fsl_debug_console.h"
