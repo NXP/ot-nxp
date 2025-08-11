@@ -7,21 +7,26 @@
  *  Licensed under the LA_OPT_NXP_Software_License.txt (the "Agreement")
  */
 
+#include "ncp_ot.h"
 #include "app_ot.h"
 #include "board.h"
 #include "fsl_debug_console.h"
 #include "fsl_os_abstraction.h"
+#include "ncp_glue_matter.h"
 #include "ncp_glue_ot.h"
 #include "ot_platform_common.h"
 #include <stdio.h>
 #include <stdlib.h>
-
 /* -------------------------------------------------------------------------- */
 /*                                Definitions                                 */
 /* -------------------------------------------------------------------------- */
 
 #ifndef OT_NCP_COMMAND_QUEUE_NUM
 #define OT_NCP_COMMAND_QUEUE_NUM 16
+#endif
+
+#ifndef OT_NCP_MATTER_QUEUE_NUM
+#define OT_NCP_MATTER_QUEUE_NUM 16
 #endif
 
 #ifndef OT_NCP_TASK_PRIORITY
@@ -37,6 +42,8 @@
 #endif
 
 #define OT_NCP_RSP_MAX_SIZE (1024)
+
+#define NCP_TLV_HDR_LEN 12
 
 /* -------------------------------------------------------------------------- */
 /*                                 Prototypes                                 */
@@ -62,6 +69,8 @@ static SemaphoreHandle_t sNcpLock       = NULL;
 volatile uint8_t OtNcpDataHandle = OT_NCP_RSP_FLAG_INIT;
 
 extern void Ot_Data_TxDone(void);
+
+QueueHandle_t sOtmatterNcpCmdQueue;
 
 /* -------------------------------------------------------------------------- */
 /*                                 Functions                                  */
@@ -112,7 +121,7 @@ int system_ncp_send_response(uint8_t *pbuf)
 
 #endif
 
-ncp_status_t ot_ncp_command_handle_input(uint8_t *cmd)
+ncp_status_t ot_ncp_command_handle_input(uint8_t *cmd, uint32_t payloadsize)
 {
     NCP_COMMAND  *input_cmd = (NCP_COMMAND *)cmd;
     struct cmd_t *command   = NULL;
@@ -122,6 +131,12 @@ ncp_status_t ot_ncp_command_handle_input(uint8_t *cmd)
     uint32_t cmd_subclass = GET_CMD_SUBCLASS(input_cmd->cmd);
     uint32_t cmd_id       = GET_CMD_ID(input_cmd->cmd);
     void    *cmd_tlv      = GET_CMD_TLV(input_cmd);
+
+    if (cmd_class == NCP_CMD_15D4_CLASS && cmd_subclass == NCP_CMD_15D4_MATTER_SUBCLASS)
+    {
+        ret = ncp_matter_ot_cmd_handle(cmd_tlv, payloadsize);
+        return ret;
+    }
 
     command = lookup_class(cmd_class, cmd_subclass, cmd_id);
     if (NULL == command)
@@ -180,7 +195,7 @@ static void otNcpTask(void *pvParameters)
             cmd_buf = cmd_item.cmd_buff;
 
             // should parse the tlv structure and entry ot commands handle
-            ot_ncp_command_handle_input(cmd_buf);
+            ot_ncp_command_handle_input(cmd_buf, (cmd_item.command_sz - NCP_TLV_HDR_LEN));
 
             vPortFree(cmd_buf);
             cmd_buf = NULL;
@@ -255,6 +270,13 @@ ncp_status_t ot_ncp_init(void)
     if (sOtNcpCmdQueue == NULL)
     {
         OT_PLAT_ERR("failed to create ot ncp command queue.\r\n");
+        goto fail;
+    }
+
+    sOtmatterNcpCmdQueue = xQueueCreate(OT_NCP_MATTER_QUEUE_NUM, sizeof(ot_ncp_command_t));
+    if (sOtmatterNcpCmdQueue == NULL)
+    {
+        OT_PLAT_ERR("failed to create ot matter ncp command queue.\r\n");
         goto fail;
     }
 

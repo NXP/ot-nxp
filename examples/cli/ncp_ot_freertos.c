@@ -51,6 +51,7 @@
 
 #include "addons_cli.h"
 #include "app_ot.h"
+#include "ncp_glue_matter.h"
 #include "ncp_ot.h"
 #ifndef OT_NCP_LIBS
 #include "app_notify.h"
@@ -72,7 +73,7 @@
 uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #endif
 
-static otInstance       *sInstance      = NULL;
+otInstance              *gInstance      = NULL;
 static TaskHandle_t      sMainTask      = NULL;
 static SemaphoreHandle_t sMainStackLock = NULL;
 
@@ -103,18 +104,18 @@ static void appOtInit()
     assert(otInstanceBuffer);
 
     // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    gInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInitSingle();
+    gInstance = otInstanceInitSingle();
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
+    otDiagInit(gInstance);
 #endif
     /* Init the CLI */
-    otAppCliInit(sInstance);
+    otAppCliInit(gInstance);
     /* Init CLI addons */
-    otAppCliAddonsInit(sInstance);
+    otAppCliAddonsInit(gInstance);
 }
 
 static void appNcpInit()
@@ -143,19 +144,20 @@ static void mainloop(void *aContext)
     appOtInit();
     appNcpInit();
 
-    otSysProcessDrivers(sInstance);
+    otSysProcessDrivers(gInstance);
     while (!otSysPseudoResetWasRequested())
     {
         /* Aqquired the task mutex lock and release after OT processing is done */
         appOtLockOtTask();
-        otTaskletsProcess(sInstance);
-        otSysProcessDrivers(sInstance);
+        ncp_ot_fct_process();
+        otTaskletsProcess(gInstance);
+        otSysProcessDrivers(gInstance);
         appOtUnlockOtTask();
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 
-    otInstanceFinalize(sInstance);
+    otInstanceFinalize(gInstance);
     vTaskDelete(NULL);
 }
 

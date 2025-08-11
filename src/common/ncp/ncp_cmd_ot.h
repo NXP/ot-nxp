@@ -2,7 +2,7 @@
  *
  *  @brief This file contains ncp command/response/event definitions
  *
- *  Copyright 2008-2024 NXP
+ *  Copyright 2008-2025 NXP
  *
  *  Licensed under the LA_OPT_NXP_Software_License.txt (the "Agreement")
  */
@@ -14,11 +14,13 @@
 
 /*OT NCP subclass*/
 #define NCP_15d4_CMD_FORWARD 0x00100000
+#define NCP_15d4_CMD_MATTER 0x00200000
 #define NCP_CMD_OT_OTHER 0x00f00000
 
 /*NCP Command definitions*/
 #define NCP_OT_CMD_FORWARD (NCP_CMD_15D4 | NCP_15d4_CMD_FORWARD | NCP_MSG_TYPE_RESP | 0x00000001)
 #define NCP_CMD_INVALID_CMD (NCP_CMD_15D4 | NCP_CMD_OT_OTHER | NCP_MSG_TYPE_RESP | 0x00000001)
+#define NCP_OT_CMD_MATTER (NCP_CMD_15D4 | NCP_15d4_CMD_MATTER | NCP_MSG_TYPE_RESP | 0x00000001)
 
 /* System NCP subclass */
 /** subclass type for system configure */

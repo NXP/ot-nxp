@@ -161,6 +161,12 @@ uint8_t __attribute__((section(".heap"))) ucHeap[configTOTAL_HEAP_SIZE];
 #endif
 
 /* -------------------------------------------------------------------------- */
+/*                               Public memory                               */
+/* -------------------------------------------------------------------------- */
+
+otInstance *gInstance = NULL;
+
+/* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
 /* -------------------------------------------------------------------------- */
 static TaskHandle_t sMainTask = NULL;
@@ -178,8 +184,7 @@ static struct netif sExtNetif;
 static SemaphoreHandle_t sMainStackLock;
 static struct netif     *sExtNetifPtr;
 
-static otInstance *sInstance   = NULL;
-static char        sHostName[] = "NXP-BR#0000";
+static char sHostName[] = "NXP-BR#0000";
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -444,17 +449,17 @@ static void appOtInit()
     assert(otInstanceBuffer);
 
     // Initialize OpenThread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    gInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInitSingle();
+    gInstance = otInstanceInitSingle();
 #endif
 
 #if OPENTHREAD_ENABLE_DIAG
-    otDiagInit(sInstance);
+    otDiagInit(gInstance);
 #endif
     /* Init the CLI */
-    otAppCliInit(sInstance);
-    otAppCliAddonsInit(sInstance);
+    otAppCliInit(gInstance);
+    otAppCliAddonsInit(gInstance);
 }
 
 static void appBrExternalIpv6InterfaceInit()
@@ -476,12 +481,12 @@ static void appBrExternalIpv6InterfaceInit()
 
 static void appBrInit()
 {
-    otPlatLwipSetOtInstance(sInstance);
+    otPlatLwipSetOtInstance(gInstance);
     otPlatLwipAddThreadInterface(NULL);
-    otSetStateChangedCallback(sInstance, otPlatLwipUpdateState, NULL);
+    otSetStateChangedCallback(gInstance, otPlatLwipUpdateState, NULL);
 
-    BrInitPlatform(sInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
-    BrInitMdnsHost(CreateBaseName(sInstance, sHostName));
+    BrInitPlatform(gInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
+    BrInitMdnsHost(CreateBaseName(gInstance, sHostName));
 }
 
 static void mainloop(void *aContext)
@@ -495,7 +500,7 @@ static void mainloop(void *aContext)
     appNcpInit();
 #endif
 
-    otSysProcessDrivers(sInstance);
+    otSysProcessDrivers(gInstance);
 
     // Notify BR manager about OpenThread task lock and unlock functions.
     BrInitAppLock(appOtLockOtTask, appOtUnlockOtTask);
@@ -504,14 +509,14 @@ static void mainloop(void *aContext)
     {
         /* Aqquired the task mutex lock and release after OT processing is done */
         appOtLockOtTask();
-        otTaskletsProcess(sInstance);
-        otSysProcessDrivers(sInstance);
+        otTaskletsProcess(gInstance);
+        otSysProcessDrivers(gInstance);
         appOtUnlockOtTask();
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 
-    otInstanceFinalize(sInstance);
+    otInstanceFinalize(gInstance);
     vTaskDelete(NULL);
 }
 
