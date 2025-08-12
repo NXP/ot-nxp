@@ -328,13 +328,6 @@ SECTIONS
     . = ALIGN(4);
   } > m_sqram_cpu31_txq
 
-  .NVM :
-  {
-    FILL(0xFFFFFFFF);
-    . = ORIGIN(m_nvm_region) + LENGTH(m_nvm_region) - 1;
-    BYTE(0xFF);
-  } > m_nvm_region
-
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
