@@ -79,6 +79,11 @@ include(${SdkRootDirPath}/CMakeLists.txt)
 # SDK platform specific configuration
 include(${OT_NXP_ROOT}/third_party/${OT_NXP_PLATFORM}_sdk/config.cmake OPTIONAL)
 
+# application specific configuration
+if(DEFINED APP_CONF_CMAKE)
+    include(${APP_CONF_CMAKE} OPTIONAL)
+endif()
+
 # SDK mbedtls configuration.
 # Since each platform mbedtls config file includes the openthread
 # mbedtls config file, add the dependencies here to avoid issues
