@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, The OpenThread Authors.
+# Copyright (c) 2025, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,20 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_BR_FREERTOS)
-    add_subdirectory(br)
-endif()
+mcux_add_macro(
+    FSL_RTOS_THREADX
+    TX_INCLUDE_USER_DEFINE_FILE
+)
 
-if(NOT OT_NCP_RTOS_HOST)
-    add_subdirectory(utils)
-endif()
+mcux_add_source(
+    BASE_PATH ${SdkRootDirPath}/middleware/wireless/ble_controller/src/KW4x
+    SOURCES
+        board.h
+        board.c
+        armgcc/nbu_ble_wrap.s
+)
 
-if(OT_APP_CLI_FREERTOS)
-    add_subdirectory(cli)
-endif()
-
-if(OT_APP_OT_CLI_FTD_OSA)
-    add_subdirectory(ot_cli_ftd_osa)
-endif()
-
-add_subdirectory(hybrid)
+mcux_add_include(
+    BASE_PATH ${SdkRootDirPath}/middleware/wireless/ble_controller/src/KW4x
+    INCLUDES .
+)
