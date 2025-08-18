@@ -66,8 +66,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     HAL_RPMSG_SELECT_ROLE=1
     LPTMR_USE_FREE_RUNNING=1
     FSL_OSA_TASK_ENABLE=1
-    gMemManagerLightExtendHeapAreaUsage=0
-    MinimalHeapSize_c=2048
+    gMemManagerLightExtendHeapAreaUsage=1
     SERIAL_MANAGER_NON_BLOCKING_MODE=1
     gPlatformUseLptmr_d=1
 )

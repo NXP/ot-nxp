@@ -48,8 +48,11 @@
 #endif /*gAppLowpowerEnabled_d*/
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 
-#define SMU2_CM33_BASE_ADDR 0xb0000000ULL
-#define SMU2_CM33_END_ADDR 0xb0014000ULL
+extern uint32_t m_shared_ram_start[];
+extern uint32_t m_shared_ram_end[];
+
+#define SMU2_CM33_BASE_ADDR ((uint32_t)(&m_shared_ram_start))
+#define SMU2_CM33_END_ADDR ((uint32_t)(&m_shared_ram_end) + 1)
 #define SMU2_MAIR_IDX 1
 
 #define SVC_CMD_RST 0
@@ -205,41 +208,32 @@ static void plat_init_mpu()
 
 void otSysInit(int argc, char *argv[])
 {
-    bool alreadyInit = false;
-#if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
-    status_t status;
-#endif /* defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0) */
-
-    plat_init_mpu();
-
-    if ((argc == 1) && (!strcmp(argv[0], "sdk_app")))
+    if (argc != 1)
     {
-        alreadyInit = true;
-    }
-
-    if (!alreadyInit)
-    {
+        /* do basic init */
 #if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
         /* Called from OSA main() */
         OSA_Init();
 #endif
-        /* init framework */
+
         MEM_Init();
-
-        HAL_RpmsgMcmgrInit();
-        PLATFORM_FwkSrvInit();
-        RNG_Init();
-
-        PLATFORM_InitTimerManager();
-
-        /* enable LPTRM counter used by otPlatTimeGet() */
-        TM_Open(tmp_timer_handle);
-        TM_InstallCallback(tmp_timer_handle, tmp_timer_callback, NULL);
-        TM_Start(tmp_timer_handle, kTimerModeSingleShot, TMP_TMR_DELTA);
-
-        /* Hook used to call OT repo application functions */
-        APP_SysInitHook();
     }
+
+    plat_init_mpu();
+
+    HAL_RpmsgMcmgrInit();
+    PLATFORM_FwkSrvInit();
+    RNG_Init();
+
+    PLATFORM_InitTimerManager();
+
+    /* enable LPTRM counter used by otPlatTimeGet() */
+    TM_Open(tmp_timer_handle);
+    TM_InstallCallback(tmp_timer_handle, tmp_timer_callback, NULL);
+    TM_Start(tmp_timer_handle, kTimerModeSingleShot, TMP_TMR_DELTA);
+
+    /* Hook used to call OT repo application functions */
+    APP_SysInitHook();
 
     otPlatRandomInit();
     otPlatRadioInit();
@@ -316,4 +310,11 @@ void PWR_AllowDeviceToSleep()
 
 void PWR_DisallowDeviceToSleep()
 {
+}
+
+void SystemInitHook()
+{
+    /* Configure NBU memory mapping as early as possible in the SystemInitHook()
+       to prevent any potential issues */
+    PLATFORM_ConfigureSmuDmemMapping();
 }
