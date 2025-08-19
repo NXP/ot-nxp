@@ -82,7 +82,6 @@ static uint8_t sEphemeralKey[10]; ///< Byte values, 9 bytes for the key, one for
 
 static uint32_t sEphemeralKeyTimeout;
 static bool     sEpskcActive;
-static bool     sEpskcServiceAdvertisementActive;
 #endif
 
 /* -------------------------------------------------------------------------- */

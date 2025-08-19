@@ -84,7 +84,6 @@ void Dhcp6PdSocketInit(otInstance *aInstance, uint32_t aInfraIfIndex)
 
 void otPlatInfraIfDhcp6PdClientSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {
-    otError error = OT_ERROR_NONE;
 
     if (aEnable)
     {
@@ -216,7 +215,6 @@ exit:
 
 static void SocketDeInit(uint32_t aInfraIfIndex)
 {
-    otError error = OT_ERROR_NONE;
     VerifyOrExit(aInfraIfIndex == sInfraIfIndex);
     VerifyOrExit(sDhcpPdIsEnabled);
 

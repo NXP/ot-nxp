@@ -56,7 +56,6 @@
 #include "lwip/tcpip.h"
 #include "lwip/udp.h"
 
-// #include "fsl_component_generic_list.h"
 #include "fsl_os_abstraction.h"
 
 /* -------------------------------------------------------------------------- */
