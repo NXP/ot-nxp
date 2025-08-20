@@ -27,6 +27,7 @@
 #
 
 add_executable(ot-cli-ftd-osa-${OT_NXP_PLATFORM}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init_ot_task.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
     ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
 )
