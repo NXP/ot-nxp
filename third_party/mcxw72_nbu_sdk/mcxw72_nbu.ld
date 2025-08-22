@@ -156,11 +156,11 @@ dbg_ext_logging_start             = rpmsg_sh_mem_end + 1;
 dbg_ext_logging_end               = dbg_ext_logging_start + dbg_ext_logging_size - 1;
 
 m_sqram_btblesqbuf_start          = dbg_ext_logging_end + 1;
-m_sqram_btblesqbuf_size           = 0x5500;
+m_sqram_btblesqbuf_size           = 0x3500;
 m_sqram_btblesqbuf_end            = m_sqram_btblesqbuf_start + m_sqram_btblesqbuf_size - 1;
 
 m_sqram_btbleaesqbuf_start        = m_sqram_btblesqbuf_end + 1;
-m_sqram_btbleaesqbuf_size         = 0x2700;     /* was 0xF00 but was increased to hold 2 x 3 x 1650 bytes for advertising.*/
+m_sqram_btbleaesqbuf_size         = 0;     /* was 0xF00 but was increased to hold 2 x 3 x 1650 bytes for advertising.*/
 m_sqram_btbleaesqbuf_end          = m_sqram_btbleaesqbuf_start + m_sqram_btbleaesqbuf_size -1;
 
 m_sqram_rldat_ae_start            = m_sqram_btbleaesqbuf_end + 1;
@@ -171,9 +171,14 @@ m_sqram_rldat_start               = m_sqram_rldat_ae_end + 1;
 m_sqram_rldat_size                = 0x005dc;  /*to hold 24 connection contexts*/
 m_sqram_rldat_end                 = m_sqram_rldat_start + m_sqram_rldat_size -1;
 
+/* OT heap */
+m_ot_heap_area_size = 0x4700;
+m_ot_heap_area_start = m_sqram_rldat_end + 1;
+m_ot_heap_area_end = m_ot_heap_area_start + m_ot_heap_area_size - 1;
+
 /* PLATFORM_GetIeee802_15_4Addr() */
 m_154_addr_size = 0xa;
-m_154_addr_start = m_sqram_rldat_end + 1;
+m_154_addr_start = m_ot_heap_area_end + 1;
 m_154_addr_end = m_154_addr_start + m_154_addr_size - 1;
 
 /* settings buffer */
@@ -206,6 +211,7 @@ MEMORY
   rpmsg_sh_mem_region (RW): ORIGIN = rpmsg_sh_mem_start, LENGTH = rpmsg_sh_mem_size
   sqram_dbg_ext_logging_region (RW):ORIGIN = dbg_ext_logging_start, LENGTH = dbg_ext_logging_size
   m_free_data_region (RW):ORIGIN = m_free_data_start, LENGTH = m_free_data_size
+  m_ot_heap_area            (RW) : ORIGIN = m_ot_heap_area_start, LENGTH = m_ot_heap_area_size
   m_154_addr_region         (RW) : ORIGIN = m_154_addr_start, LENGTH = m_154_addr_size
   m_settings_buffer_region  (RW) : ORIGIN = m_settings_buffer_start, LENGTH = m_settings_buffer_size
 }
@@ -376,10 +382,10 @@ SECTIONS
   } > m_data1
 
 
-  __DATA_END = __DATA_RAM + (__data_end__ - __data_start__);
+  __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
 
   text_end = ORIGIN(m_text) + LENGTH(m_text);
-  /*ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")*/
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   .stack :
   {
@@ -402,9 +408,15 @@ SECTIONS
   __StackLimit = m_cstack_start;
   PROVIDE(__stack = __StackTop);
 
+  .m_ot_heap_area (NOLOAD) :
+  {
+    KEEP(lib/libopenthread-ftd.a:instance.cpp.obj (.bss._ZN2ot8sHeapRaw*))
+  } > m_ot_heap_area
+
   /* Uninitialized data section */
   .bss :
   {
+    *(EXCLUDE_FILE (lib/libopenthread-ftd.a:instance.cpp.obj) .bss._ZN2ot8sHeap*)
     /* This is used by the startup in order to initialize the .bss section */
     . = ALIGN(4);
     __START_BSS = .;

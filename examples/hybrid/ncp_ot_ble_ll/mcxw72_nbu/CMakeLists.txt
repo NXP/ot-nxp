@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022-2024, The OpenThread Authors.
+#  Copyright (c) 2025, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_APP_RCP_BLE_HCI_BB)
-    add_subdirectory(ot_rcp_ble_hci_bb)
-endif()
+add_executable(ncp-ot-ble-ll-${OT_NXP_PLATFORM}
+    ${CMAKE_CURRENT_SOURCE_DIR}/init_threadx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../ot_cli_ftd_osa/src/init_ot_task.c
+    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+)
 
-if(OT_APP_FTD_ZB_ED_RX_OFF)
-    add_subdirectory(ot_cli_ftd_zb_ed_rx_off)
-endif()
+target_include_directories(ncp-ot-ble-ll-${OT_NXP_PLATFORM} PRIVATE
+    ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+)
 
-if(OT_APP_RCP_UART_FC_ZB_ED_RX_OFF)
-    add_subdirectory(ot_rcp_uart_fc_zb_ed_rx_off)
-endif()
+target_link_libraries(ncp-ot-ble-ll-${OT_NXP_PLATFORM} PUBLIC
+    ${OT_MCUX_SDK_TARGET}
+    # Use --start-group to account for circular dependencies
+    -Wl,--start-group
+    ${OT_PLATFORM_LIB}
+    openthread-cli-ftd
+    openthread-ftd
+    ot-config
+    ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libbtu2_5x.a
+    ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libcommon.a
+    -Wl,--end-group
 
-if(OT_APP_RCP_UART_FC_BLE_HCI_BB_ZB_ED_RX_OFF)
-    add_subdirectory(ot_rcp_uart_fc_ble_hci_bb_zb_ed_rx_off)
-endif()
-
-if(OT_APP_FTD_ZC)
-    add_subdirectory(ot_cli_ftd_zc)
-endif()
-
-if(OT_APP_RCP_UART_DMA_ZB_COPROCESSOR)
-    add_subdirectory(ot_rcp_uart_dma_zb_coprocessor)
-endif()
-
-if(OT_APP_FTD_BLE_SHELL)
-    add_subdirectory(ot_cli_ftd_ble_shell)
-endif()
-
-if(OT_APP_NCP_OT_BLE_LL)
-    add_subdirectory(ncp_ot_ble_ll)
-endif()
+    -Wl,--wrap=tx_application_define
+)

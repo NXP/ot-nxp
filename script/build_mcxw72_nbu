@@ -68,6 +68,20 @@ readonly OT_OPTIONS_CLI_FTD_OSA=(
     "-DAPP_CONF_CMAKE=${OT_SRCDIR}/examples/ot_cli_ftd_osa/mcxw72_nbu/app_conf.cmake"
 )
 
+readonly OT_OPTIONS_NCP_OT_BLE_LL=(
+    "-DOT_NCP_SPI=OFF"
+    "-DOT_APP_CLI=OFF"
+    "-DOT_APP_NCP=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_FTD=ON"
+    "-DOT_MTD=OFF"
+    "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
+    "-DOT_APP_LOWPOWER=OFF"
+    "-DOT_APP_NCP_OT_BLE_LL=ON"
+    "-DCONF_FILE=${OT_SRCDIR}/examples/hybrid/ncp_ot_ble_ll/mcxw72_nbu/prj.conf"
+    "-DAPP_CONF_CMAKE=${OT_SRCDIR}/examples/hybrid/ncp_ot_ble_ll/mcxw72_nbu/app_conf.cmake"
+)
+
 build()
 {
     local cmakeArgs=("${@}")
@@ -115,17 +129,36 @@ build_ot_cli_ftd_osa()
     fi
 }
 
+build_ncp_ot_ble_ll()
+{
+    echo "Building NCP_OT_BLE_LL ..."
+    app_folder_name="ncp_ot_ble_ll"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_NCP_OT_BLE_LL[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
         build_ot_without_rcp_image "$@"
         build_ot_cli_ftd_osa "$@"
+        build_ncp_ot_ble_ll "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
     elif [ "$1" == 'ot_cli_ftd_osa' ]; then
         build_ot_cli_ftd_osa "$@"
+    elif [ "$1" == 'ncp_ot_ble_ll' ]; then
+        build_ncp_ot_ble_ll "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, ot_cli_ftd_osa"
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, ot_cli_ftd_osa, ncp_ot_ble_ll"
         exit 128
     fi
 }

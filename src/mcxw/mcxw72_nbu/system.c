@@ -74,7 +74,7 @@ struct svc_req
     uint32_t addr;
 } __attribute__((packed));
 
-const NbuInfo_t nbu_version;
+OT_TOOL_WEAK const NbuInfo_t nbu_version;
 
 static TIMER_MANAGER_HANDLE_DEFINE(tmp_timer_handle);
 
@@ -312,9 +312,11 @@ void PWR_DisallowDeviceToSleep()
 {
 }
 
+#ifndef gMWS_Enabled_d
 void SystemInitHook()
 {
     /* Configure NBU memory mapping as early as possible in the SystemInitHook()
        to prevent any potential issues */
     PLATFORM_ConfigureSmuDmemMapping();
 }
+#endif
