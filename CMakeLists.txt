@@ -236,7 +236,8 @@ add_subdirectory(examples)
 if(DEFINED SdkRootDirPath)
     # propagate the SDK flags explicitly since these targets update CMAKE_C_FLAGS
     string(REPLACE "\\\"" "\"" REPLACED_C_FLAGS_1 ${CMAKE_C_FLAGS})
-    string(REPLACE " " ";" REPLACED_C_FLAGS ${REPLACED_C_FLAGS_1})
+    string(REGEX REPLACE "-include [^ ]+ " "" REPLACED_C_FLAGS_2 ${REPLACED_C_FLAGS_1})
+    string(REPLACE " " ";" REPLACED_C_FLAGS ${REPLACED_C_FLAGS_2})
 
     if (NOT OT_EXTERNAL_MBEDTLS)
         target_compile_options(mbedtls
