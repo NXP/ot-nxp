@@ -26,6 +26,7 @@ To learn more about building and running the examples please check:
 - [OpenThread on RW612 examples][rw612-page]
 - [OpenThread on MCX W71x examples][mcxw71-page]
 - [OpenThread on MCX W72x examples][mcxw72-page]
+- [OpenThread on MCX W72x_NBU examples][mcxw72_NBU-page]
 
 [k32w061-page]: src/k32w0/k32w061/README.md
 [jn5189-page]: src/k32w0/jn5189/README.md
@@ -34,6 +35,7 @@ To learn more about building and running the examples please check:
 [rw612-page]: src/rw/rw612/README.md
 [mcxw71-page]: src/mcxw/mcxw71/README.md
 [mcxw72-page]: src/mcxw/mcxw72/README.md
+[mcxw72_NBU-page]: src/mcxw/mcxw72_nbu/README.md
 
 # NXP OpenThread Border Router
 
