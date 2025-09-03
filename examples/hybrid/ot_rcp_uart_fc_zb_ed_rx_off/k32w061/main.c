@@ -1,5 +1,5 @@
 /*! *********************************************************************************
- * Copyright 2022 NXP
+ * Copyright 2022, 2025 NXP
  * All rights reserved.
  *
  * \file
@@ -37,6 +37,7 @@
 #include <openthread/instance.h>
 #include <openthread/ncp.h>
 #include <openthread/tasklet.h>
+#include <openthread/platform/radio.h>
 
 #include "app_main.h"
 

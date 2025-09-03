@@ -1,6 +1,6 @@
 /*! *********************************************************************************
  *
- * Copyright 2022 NXP
+ * Copyright 2022, 2025 NXP
  * All rights reserved.
  *
  * \file
@@ -35,6 +35,7 @@
 
 /* OT includes */
 #include <openthread-system.h>
+#include <openthread/platform/radio.h>
 #include "openthread/cli.h"
 #include "openthread/tasklet.h"
 #include "openthread/thread.h"

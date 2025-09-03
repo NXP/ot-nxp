@@ -1,6 +1,6 @@
 #
 #  Copyright (c) 2021, The OpenThread Authors.
-#  Copyright 2024 NXP
+#  Copyright 2024-2025 NXP
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -254,6 +254,7 @@ target_compile_options(${NXP_DRIVER_LIB}
         -Wno-missing-field-initializers
         -Wno-clobbered
         -fno-strict-aliasing
+        -Wno-implicit-function-declaration
     PUBLIC
         -imacros "${PROJECT_SOURCE_DIR}/src/k32w0/k32w061/k32w061-sdk-config.h"
 )

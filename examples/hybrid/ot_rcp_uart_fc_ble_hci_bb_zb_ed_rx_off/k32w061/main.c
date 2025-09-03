@@ -1,6 +1,6 @@
 /*! *********************************************************************************
  * Copyright (c) 2015, Freescale Semiconductor, Inc.
- * Copyright 2016-2022 NXP
+ * Copyright 2016-2022, 2025 NXP
  * All rights reserved.
  *
  * \file
@@ -41,6 +41,7 @@
 #include <openthread/instance.h>
 #include <openthread/ncp.h>
 #include <openthread/tasklet.h>
+#include <openthread/platform/radio.h>
 
 #include "controller_interface.h"
 
@@ -92,6 +93,8 @@ extern void otAppNcpInit(otInstance *aInstance);
 extern void vAppMain(bool_t bColdStart);
 /* DualPAN stuff */
 extern void sched_enable(void);
+
+void BleAppInactivityCallback(uint32_t);
 
 /************************************************************************************
 *************************************************************************************
