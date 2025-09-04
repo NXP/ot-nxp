@@ -56,7 +56,10 @@
  */
 
 #ifndef OT_STACK_ENABLE_LOG
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT
+/* Disable logs by default */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT 0
+#endif
 #endif
 
 /**
