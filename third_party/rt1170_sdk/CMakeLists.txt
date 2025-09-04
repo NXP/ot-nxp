@@ -353,6 +353,7 @@ target_compile_options(${NXP_DRIVER_LIB}
     PUBLIC
     ${SDK_TARGET_COMPILE_OPTIONS}
     -Wno-unused-parameter
+    -Wno-missing-field-initializers
     PRIVATE
     ${OT_CFLAGS}
     -Wno-unknown-pragmas

@@ -233,6 +233,8 @@ SECTIONS
     . = ALIGN(4);
     __DATA_RAM = .;
     __data_start__ = .;      /* create a global symbol at data start */
+    *(CodeQuickAccess)       /* CodeQuickAccess sections */
+    *(DataQuickAccess)       /* DataQuickAccess sections */
     *(m_usb_dma_init_data)
     *(.data)                 /* .data sections */
     *(.data*)                /* .data* sections */
@@ -319,6 +321,7 @@ SECTIONS
     . += HEAP_SIZE;
     __HeapLimit = .;
     __heap_limit = .; /* Add for _sbrk */
+    *(.heap)
   } > m_data
 
   .stack :

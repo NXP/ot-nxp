@@ -96,6 +96,7 @@ target_compile_definitions(wifi
     PRIVATE
     vApplicationIdleHook=vApplicationIdleHook_wifi # hack to prevent definition of multiple idle tasks (OT has one)
     tcpip_init=tcpip_init_once
+    -DCONFIG_NXP_WIFI_SOFTAP_SUPPORT=1
 )
 
 target_include_directories(wifi
