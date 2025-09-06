@@ -316,6 +316,7 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
         ${FREERTOS_LPUART_FILE_PATH}/fsl_lpuart_freertos.c
         ${DRIVER_COMMON_FILES_PATH}/fsl_common.c
+        ${NCP_COMMON_FILES_PATH}/ncp_utils.c
         ${NCP_COMMON_FILES_PATH}/crc/ncp_crc.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/ncp_intf_pm.c
         ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_tlv/ncp_tlv_adapter.c
