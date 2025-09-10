@@ -85,13 +85,9 @@ static struct netif        *sExtNetif    = NULL;
 static struct netif        *sThreadNetif = NULL;
 static netif_ext_callback_t sNetifCallback;
 
-static bool sDnsHostInitialized    = false;
 static bool sBrIsInitialized       = false;
 static bool sExternalNetifState    = false;
 static bool sNat64TranslatorEnable = true;
-
-static otMdnsHost   sHost;
-static otIp6Address sHostAddresses[MAX_HOST_IPV6_ADDRESSES];
 
 // MSG system
 static list_label_t sBrMsgList;
@@ -100,7 +96,6 @@ static OSA_MUTEX_HANDLE_DEFINE(sBrMutex);
 // Event system
 static list_label_t sBrEvtList;
 static OSA_MUTEX_HANDLE_DEFINE(sBrEvtMutex);
-
 struct brMdnsHostInitContext
 {
     netif_nsc_reason_t        reason;
@@ -114,7 +109,6 @@ static void HandleMulticastListenerCallback(void                                
                                             otBackboneRouterMulticastListenerEvent aEvent,
                                             const otIp6Address                    *aAddress);
 static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
-static bool UpdateIp6AddressList();
 static void BrMdnsHostInitLwipCb(void *aContext);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
@@ -193,18 +187,13 @@ void BrInitServices()
         otDnssdUpstreamQuerySetEnabled(sInstance, true);
         DnsResolverInit(sInstance, sExtNetif);
 #endif
+        BorderAgentInit(sInstance);
     }
 }
 
 void BrInitMdnsHost(const char *aHostName)
 {
-    otMdnsSetLocalHostName(sInstance, aHostName);
-
-    sHost.mHostName        = aHostName;
-    sHost.mAddressesLength = 0;
-    sHost.mTtl             = 120;
-    sHost.mInfraIfIndex    = netif_get_index(sExtNetif);
-    sHost.mAddresses       = sHostAddresses;
+    (void)otMdnsSetLocalHostName(sInstance, aHostName);
 
     if (netif_is_link_up(sExtNetif))
     {
@@ -223,16 +212,6 @@ void BrInitMdnsHost(const char *aHostName)
     }
 }
 
-void BrMdnsHostSetInitialized(bool aState)
-{
-    sDnsHostInitialized = aState;
-}
-
-bool BrMdnsHostIsInitialized()
-{
-    return sDnsHostInitialized;
-}
-
 void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ext_callback_args_t *args)
 {
     if (netif == sExtNetif)
@@ -249,14 +228,11 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
         }
         if ((reason & (LWIP_NSC_IPV6_SET | LWIP_NSC_IPV6_ADDR_STATE_CHANGED)) && sExternalNetifState)
         {
-            if (UpdateIp6AddressList())
-            {
-                brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
-                VerifyOrExit(context != NULL);
-                context->type                            = eAddrSetOrChanged;
-                context->addr_set_or_changed_event.isIp6 = true;
-                BrPostOtEvent(context);
-            }
+            brEvtContext *context = (brEvtContext *)otPlatCAlloc(1, sizeof(brEvtContext));
+            VerifyOrExit(context != NULL);
+            context->type                            = eAddrSetOrChanged;
+            context->addr_set_or_changed_event.isIp6 = true;
+            BrPostOtEvent(context);
         }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         if ((reason & LWIP_NSC_IPV4_ADDRESS_CHANGED))
@@ -296,7 +272,7 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
             else
             {
                 // Disable the default interface, with no default gateway or IPv4 address it cannot be used.
-                netif_set_default(sExtNetif);
+                netif_set_default(NULL);
             }
 
             context->addr_set_or_changed_event.nat64TranslatorState = bNat64TranslatorState;
@@ -376,10 +352,6 @@ void otPlatBrProcessOtEvtQueue()
                             BrInitServices();
                             sBrIsInitialized = true;
                         }
-                        else
-                        {
-                            otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
-                        }
                     }
                     else
                     {
@@ -389,7 +361,7 @@ void otPlatBrProcessOtEvtQueue()
                 case eAddrSetOrChanged:
                     if (evtReceiveContextPtr->addr_set_or_changed_event.isIp6)
                     {
-                        otMdnsRegisterHost(sInstance, &sHost, 0, HandleMdnsRegisterCallback);
+                        mdnsPlatMonitorInterface(sExtNetif);
                     }
                     else // isIp4
                     {
@@ -443,57 +415,6 @@ static void HandleMulticastListenerCallback(void                                
     {
         CALL_LWIP_API_FROM_OT_CONTEXT(lwipMcastUnsubscribe((otIp6Address *)aAddress, (struct netif *)aContext));
     }
-}
-
-static void HandleMdnsRegisterCallback(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError)
-{
-    (void)aRequestId;
-    if (aError == OT_ERROR_NONE)
-    {
-        BrMdnsHostSetInitialized(true);
-        BorderAgentInit(aInstance);
-    }
-    else
-    {
-        // rename
-        sHost.mHostName = CreateAlternativeBaseName(aInstance, sHost.mHostName);
-        otMdnsRegisterHost(aInstance, &sHost, 0, HandleMdnsRegisterCallback);
-    }
-}
-
-static bool UpdateIp6AddressList()
-{
-    const ip6_addr_t *addr6         = NULL;
-    bool              bAddrChange   = false;
-    uint32_t          newIp6AddrNum = 0;
-    uint32_t          lwipIterator, addrListIterator;
-
-    for (lwipIterator = 0; lwipIterator < LWIP_IPV6_NUM_ADDRESSES && newIp6AddrNum < MAX_HOST_IPV6_ADDRESSES;
-         lwipIterator++)
-    {
-        if (ip6_addr_ispreferred(netif_ip6_addr_state(sExtNetif, lwipIterator)))
-        {
-            addr6 = netif_ip6_addr(sExtNetif, lwipIterator);
-            for (addrListIterator = 0; addrListIterator < MAX_HOST_IPV6_ADDRESSES; addrListIterator++)
-            {
-                if (0 == memcmp(&sHostAddresses[addrListIterator].mFields.m32, addr6->addr,
-                                sizeof(sHostAddresses[addrListIterator].mFields.m32)))
-                {
-                    break;
-                }
-            }
-            if (addrListIterator == MAX_HOST_IPV6_ADDRESSES)
-            {
-                bAddrChange |= true;
-            }
-            memcpy(&sHostAddresses[newIp6AddrNum++].mFields.m32, addr6->addr, sizeof(sHostAddresses[0].mFields.m32));
-        }
-    }
-
-    bAddrChange |= (newIp6AddrNum != sHost.mAddressesLength) ? true : false;
-    sHost.mAddressesLength = newIp6AddrNum;
-
-    return bAddrChange;
 }
 
 static void BrMdnsHostInitLwipCb(void *aContext)

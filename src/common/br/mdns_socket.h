@@ -40,6 +40,7 @@ extern "C" {
 #endif
 
 void MdnsSocketInit(otInstance *aInstance, uint32_t aInfraIfIndex);
+void mdnsPlatMonitorInterface(struct netif *aExtNetif);
 
 #ifdef __cplusplus
 }

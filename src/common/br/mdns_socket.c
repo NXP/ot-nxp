@@ -374,6 +374,29 @@ exit:
     return;
 }
 
+void mdnsPlatMonitorInterface(struct netif *aExtNetif)
+{
+    const ip6_addr_t *addr6 = NULL;
+    otIp6Address otAddress = {0};
+    uint32_t          lwipIterator;
+
+    VerifyOrExit(netif_get_index(aExtNetif) == sInfraIfIndex);
+
+    otPlatMdnsHandleHostAddressRemoveAll(sInstance, sInfraIfIndex);
+
+    for (lwipIterator = 0; lwipIterator < LWIP_IPV6_NUM_ADDRESSES; lwipIterator++)
+    {
+        if (ip6_addr_ispreferred(netif_ip6_addr_state(aExtNetif, lwipIterator)))
+        {
+            addr6 = netif_ip6_addr(aExtNetif, lwipIterator);
+            memcpy(&otAddress.mFields.m32, addr6->addr, sizeof(otIp6Address));
+            otPlatMdnsHandleHostAddressEvent(sInstance, &otAddress, true, sInfraIfIndex);
+        }
+    }
+exit:
+    return;
+}
+
 static void LwipTaskCb(void *aContext)
 {
     struct udpSendContext *udpSendContexPtr = (struct udpSendContext *)aContext;

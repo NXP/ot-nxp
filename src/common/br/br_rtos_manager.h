@@ -121,8 +121,6 @@ void BrSetNat64TranslatorState(bool aEnable);
 
 void BrInitAppLock(otPlatLockTaskCb aLockTaskCb, otPlatUnlockTaskCb aUnlockTaskCb);
 void BrInitMdnsHost(const char *aHostName);
-void BrMdnsHostSetInitialized(bool aState);
-bool BrMdnsHostIsInitialized();
 
 void BrPostOtMessage(brMsgContext *aContextMsgPtr);
 void BrPostOtEvent(brEvtContext *aContextEvtPtr);

@@ -185,6 +185,9 @@ static SemaphoreHandle_t sMainStackLock;
 static struct netif     *sExtNetifPtr;
 
 static char sHostName[] = "NXP-BR#0000";
+#ifdef OT_APP_BR_WIFI_EN
+static bool bWifiMdnsHostInit = false;
+#endif
 
 /* -------------------------------------------------------------------------- */
 /*                             Private prototypes                             */
@@ -215,7 +218,7 @@ static void mainloop(void *aContext);
 /* -------------------------------------------------------------------------- */
 
 #ifdef OT_APP_BR_WIFI_EN
-extern void wifiLinkCB(bool state);
+void wifiLinkCB(bool state);
 #endif
 
 extern void otAppCliInit(otInstance *aInstance);
@@ -343,7 +346,16 @@ void wifiLinkCB(bool state)
     otCliOutputFormat("Wi-fi link is now %s\r\n", state ? "up" : "down");
     netif_ext_callback_args_t args = {0};
     args.link_changed.state        = state;
-    BrNetifExtCb(sExtNetifPtr, LWIP_NSC_LINK_CHANGED, &args);
+    if (!bWifiMdnsHostInit && state)
+    {
+        bWifiMdnsHostInit = true;
+        // BrNetifExtCb will be called inside BrInitMdnsHost
+        BrInitMdnsHost(CreateBaseName(gInstance, sHostName));
+    }
+    else
+    {
+        BrNetifExtCb(sExtNetifPtr, LWIP_NSC_LINK_CHANGED, &args);
+    }
 }
 
 #ifdef WIFI_SSID
@@ -486,7 +498,9 @@ static void appBrInit()
     otSetStateChangedCallback(gInstance, otPlatLwipUpdateState, NULL);
 
     BrInitPlatform(gInstance, sExtNetifPtr, otPlatLwipGetOtNetif());
+#ifndef OT_APP_BR_WIFI_EN
     BrInitMdnsHost(CreateBaseName(gInstance, sHostName));
+#endif
 }
 
 static void mainloop(void *aContext)
