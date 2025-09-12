@@ -94,10 +94,11 @@ static void stop_csl_receiver();
 #define TX_ENCRYPT_DELAY_SYM 200
 
 // clang-format off
-#define DEFAULT_CHANNEL                  (11)
 #ifndef DEFAULT_CCA_MODE
 #define DEFAULT_CCA_MODE                 (gPhyCCAMode1_c)
 #endif
+
+#define IEEE802154_FP                    (1 << 4)
 #define IEEE802154_ACK_REQUEST           (1 << 5)
 #define IEEE802154_MIN_LENGTH            (5)
 #define IEEE802154_FRM_CTL_LO_OFFSET     (0)
@@ -111,49 +112,60 @@ static void stop_csl_receiver();
 #define IEEE802154_IMM_ACK_WAIT_SYM      (54)
 #define IEEE802154_ENH_ACK_WAIT_SYM      (90)
 
-#define NMAX_RXRING_BUFFERS              (8)
-#define RX_ON_IDLE_START                 (1)
-#define RX_ON_IDLE_STOP                  (0)
-
 #define PHY_TMR_MAX_VALUE                (0x00FFFFFF)
+// clang-format on
 
-#define CSL_UNCERT 32 ///< The Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
+#ifndef MCXW_RADIO_NUM_OF_RX_BUFS
+#define MCXW_RADIO_NUM_OF_RX_BUFS (8) /* max number of RX buffers */
+#endif
+
+#if (MCXW_RADIO_NUM_OF_RX_BUFS) & (MCXW_RADIO_NUM_OF_RX_BUFS - 1)
+#error "MCXW_RADIO_NUM_OF_RX_BUFS must be power of 2"
+#endif
+
+#define CSL_UNCERT 20 ///< The Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
+
+#define RX_TIME_POLL (((uint32_t)OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT * 1000) / IEEE802154_SYMBOL_TIME_US)
 
 typedef struct
 {
     otRadioFrame RxFrame;
-    void * pPhyBuffer; // keep in this pointer variable the pointer to Phy allocated buffer to be free after receive processing of the frame
+    void        *pPhyBuffer; /* PHY allocated frame. Free it after rx done */
 } extendedRadioFrame;
 
 typedef struct
 {
-    extendedRadioFrame *   head;
-    extendedRadioFrame *   tail;
-    extendedRadioFrame     extRxFrame[NMAX_RXRING_BUFFERS];
+    extendedRadioFrame r[MCXW_RADIO_NUM_OF_RX_BUFS];
+    volatile uint8_t   head;
+    volatile uint8_t   tail;
+    volatile uint8_t   next;
+    volatile uint8_t   last;
 } rxRingBuffer;
 
-// clang-format on
 static otRadioState sState = OT_RADIO_STATE_DISABLED;
 static uint16_t     sPanId;
-static uint8_t      sChannel = DEFAULT_CHANNEL;
+static uint8_t      sChannel = 0;
 static int8_t       sMaxED;
 static bool_t       sPromiscuousEnable = FALSE;
 static int8_t       sAutoTxPwrLevel    = 0;
 
-/* ISR Signaling Flags */
-static bool    sTxDone     = false;
-static bool    sRxDone     = false;
-static bool    sEdScanDone = false;
+/* internal state flags */
+static bool_t  rx_on_idle_disabled = FALSE;
+static bool_t  is_rx_on_idle       = FALSE;
+static bool_t  is_ed_scan          = FALSE;
+static bool_t  sTxDone             = FALSE;
+static bool_t  sEdScanDone         = FALSE;
+static bool_t  is_tx_poll          = FALSE;
+static bool_t  is_rx_after_poll    = FALSE;
+static bool_t  is_radio_event      = FALSE;
 static otError sTxStatus;
 
 static otRadioFrame sTxFrame;
 static uint8_t      sTxData[sizeof(macToPdDataMessage_t) + OT_RADIO_FRAME_MAX_SIZE];
 
-static volatile uint32_t sunRxMode = RX_ON_IDLE_START;
-static rxRingBuffer      sRxRing;     /* Receive Ring Buffer */
-static otRadioFrame      sRxAckFrame; /* RX Ack Buffers */
-static uint8_t           sRxAckData[OT_RADIO_FRAME_MAX_SIZE];
-static otRadioCaps       caps;
+static rxRingBuffer sRxRing;     /* Receive Ring Buffer */
+static otRadioFrame sRxAckFrame; /* RX Ack Buffers */
+static uint8_t      sRxAckData[OT_RADIO_FRAME_MAX_SIZE];
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 static uint32_t sCslPeriod;
@@ -167,30 +179,82 @@ static void     rf_set_channel(uint8_t channel);
 static void     rf_set_tx_power(int8_t tx_power);
 static uint64_t rf_adjust_tstamp_from_phy(uint64_t ts);
 static uint32_t rf_adjust_tstamp_from_ot(uint32_t time);
+static void     rf_set_rx_on_idle(bool_t val);
+static void     rf_set_rx_time_poll(uint32_t t);
 
-static void                rf_rx_on_idle(uint32_t newValue);
-static void                ResetRxRingBuffer(rxRingBuffer *aRxRing);
-static void                PushRxRingBuffer(rxRingBuffer *aRxRing);
-static extendedRadioFrame *PopRxRingBuffer(rxRingBuffer *aRxRing);
-static bool                IsEmptyRxRingBuffer(rxRingBuffer *aRxRing);
-static unsigned char       NAvailableRxBuffers(rxRingBuffer *aRxRing);
+/* lockless rx ring buffer */
+static void                reset_rx_ring();
+static void                push_free_frame_rx_ring();
+static void                pop_frame_rx_ring();
+static extendedRadioFrame *get_frame_rx_ring();
+static extendedRadioFrame *get_free_frame_rx_ring();
+static bool_t              is_rx_ring_full();
 
 static uint8_t ot_phy_ctx = (uint8_t)(-1);
 
-/**
- * Stub function used for controlling low power mode
- *
- */
-WEAK void App_AllowDeviceToSleep()
+/* rx ring buffer reset */
+static void reset_rx_ring()
 {
+    sRxRing.head = MCXW_RADIO_NUM_OF_RX_BUFS - 1;
+    sRxRing.tail = MCXW_RADIO_NUM_OF_RX_BUFS - 1;
+    sRxRing.next = 0;
+    sRxRing.last = 0;
 }
 
-/**
- * Stub function used for controlling low power mode
- *
- */
-WEAK void App_DisallowDeviceToSleep()
+/* push a newly received frame to the rx ring buffer */
+static void push_free_frame_rx_ring()
 {
+    sRxRing.head = sRxRing.next;
+}
+
+/* pop the oldest received frame from the rx ring buffer */
+static void pop_frame_rx_ring()
+{
+    sRxRing.tail = sRxRing.last;
+}
+
+/* get the reference to the oldest received frame from the rx ring buffer */
+static extendedRadioFrame *get_frame_rx_ring()
+{
+    extendedRadioFrame *f    = NULL;
+    uint8_t             tail = sRxRing.tail;
+
+    if (tail == sRxRing.head)
+    {
+        /* ring is empty */
+        return NULL;
+    }
+
+    tail         = (tail + 1) & (MCXW_RADIO_NUM_OF_RX_BUFS - 1);
+    f            = &sRxRing.r[tail];
+    sRxRing.last = tail;
+
+    return f;
+}
+
+/* get the reference to the first free frame from the rx ring buffer */
+static extendedRadioFrame *get_free_frame_rx_ring()
+{
+    extendedRadioFrame *f    = NULL;
+    uint8_t             next = (sRxRing.head + 1) & (MCXW_RADIO_NUM_OF_RX_BUFS - 1);
+
+    if (next == sRxRing.tail)
+    {
+        /* ring is full */
+        return NULL;
+    }
+
+    f            = &sRxRing.r[next];
+    sRxRing.next = next;
+
+    return f;
+}
+
+static bool_t is_rx_ring_full()
+{
+    uint8_t next = (sRxRing.head + 1) & (MCXW_RADIO_NUM_OF_RX_BUFS - 1);
+
+    return (next == sRxRing.tail);
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -255,7 +319,11 @@ otError otPlatRadioEnable(otInstance *aInstance)
 #if !USE_NBU
     PHY_Enable();
 #endif
+    /* disable rx on idle */
+    otPlatRadioSetRxOnWhenIdle(aInstance, false);
+
     sState = OT_RADIO_STATE_SLEEP;
+    reset_rx_ring();
 
 exit:
     return OT_ERROR_NONE;
@@ -265,6 +333,8 @@ otError otPlatRadioDisable(otInstance *aInstance)
 {
     otEXPECT(otPlatRadioIsEnabled(aInstance));
 
+    /* disable rx on idle */
+    otPlatRadioSetRxOnWhenIdle(aInstance, false);
     stop_csl_receiver();
 
 #if !USE_NBU
@@ -292,16 +362,54 @@ otError otPlatRadioSleep(otInstance *aInstance)
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     status = OT_ERROR_INVALID_STATE);
 
-    rf_abort();
-
     stop_csl_receiver();
 
-    App_AllowDeviceToSleep();
+    if (is_rx_after_poll)
+    {
+        is_rx_after_poll = FALSE;
+        sState           = OT_RADIO_STATE_SLEEP;
+        return status;
+    }
+
+    otEXPECT(sState != OT_RADIO_STATE_SLEEP);
+
+    rf_abort();
 
     sState = OT_RADIO_STATE_SLEEP;
 
 exit:
     return status;
+}
+
+void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    rx_on_idle_disabled = FALSE;
+
+    if (aEnable)
+    {
+        is_rx_on_idle = TRUE;
+        rf_set_rx_on_idle(TRUE);
+
+        if (sState != OT_RADIO_STATE_TRANSMIT)
+        {
+            sState = OT_RADIO_STATE_RECEIVE;
+        }
+        return;
+    }
+
+    is_rx_on_idle = FALSE;
+
+    if (!is_ed_scan && (sState != OT_RADIO_STATE_TRANSMIT))
+    {
+        rf_abort();
+        sState = OT_RADIO_STATE_SLEEP;
+    }
+    else
+    {
+        rf_set_rx_on_idle(FALSE);
+    }
 }
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
@@ -313,33 +421,27 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError     status = OT_ERROR_NONE;
     phyStatus_t phy_status;
 
-    App_DisallowDeviceToSleep();
+    otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
+                    status = OT_ERROR_INVALID_STATE);
 
-    otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED), status = OT_ERROR_INVALID_STATE);
+    /* already in rx on the same channel */
+    otEXPECT((sState != OT_RADIO_STATE_RECEIVE) || (sChannel != aChannel));
 
     sState = OT_RADIO_STATE_RECEIVE;
 
-    if (sChannel != aChannel)
+    rf_set_channel(aChannel);
+
+    msg.msgType                           = gPlmeRxReq_c;
+    msg.msgData.setTRxStateReq.state      = gPhySetRxOn_c;
+    msg.msgData.setTRxStateReq.rxDuration = 0xFFFFFFFFU;
+    msg.msgData.setTRxStateReq.startTime  = gPhySeqStartAsap_c;
+
+    phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
+    if (phy_status != gPhySuccess_c)
     {
-        rf_abort();
-        rf_set_channel(aChannel);
+        status = OT_ERROR_INVALID_STATE;
     }
 
-    if (sunRxMode)
-    {
-        start_csl_receiver();
-
-        // restart Rx on idle only if it was enabled
-        msg.msgType                          = gPlmeSetReq_c;
-        msg.msgData.setReq.PibAttribute      = gPhyPibRxOnWhenIdle;
-        msg.msgData.setReq.PibAttributeValue = (uint64_t)1;
-
-        phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
-        if (phy_status != gPhySuccess_c)
-        {
-            status = OT_ERROR_INVALID_STATE;
-        }
-    }
 exit:
     return status;
 }
@@ -473,9 +575,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     macToPdDataMessage_t *msg = (macToPdDataMessage_t *)sTxData;
     phyStatus_t           phy_status;
 
-    App_DisallowDeviceToSleep();
-
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED), status = OT_ERROR_INVALID_STATE);
+
+    is_tx_poll       = otMacFrameIsDataRequest(aFrame);
+    is_rx_after_poll = FALSE;
 
     rf_set_channel(aFrame->mChannel);
 
@@ -512,20 +615,18 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         msg->msgData.dataReq.txDuration  = 0xFFFFFFFFU;
     }
 
-    if ((aFrame->mInfo.mTxInfo.mTxDelay > 0) && (caps & OT_RADIO_CAPS_TRANSMIT_TIMING))
+    msg->msgData.dataReq.flags     = 0;
+    msg->msgData.dataReq.startTime = gPhySeqStartAsap_c;
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if (aFrame->mInfo.mTxInfo.mTxDelay)
     {
         msg->msgData.dataReq.startTime =
             rf_adjust_tstamp_from_ot(aFrame->mInfo.mTxInfo.mTxDelayBaseTime + aFrame->mInfo.mTxInfo.mTxDelay);
         msg->msgData.dataReq.startTime /= IEEE802154_SYMBOL_TIME_US;
-    }
-    else
-    {
-        msg->msgData.dataReq.startTime = gPhySeqStartAsap_c;
+        msg->msgData.dataReq.startTime -= IEEE802154_PHY_SHR_LEN_SYM;
     }
 
-    msg->msgData.dataReq.flags = 0;
-
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     if (otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame))
     {
         if (!aFrame->mInfo.mTxInfo.mIsSecurityProcessed)
@@ -552,6 +653,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
                     hdrTimeUs = otPlatTimeGet() +
                                 (TX_ENCRYPT_DELAY_SYM + IEEE802154_PHY_SHR_LEN_SYM) * IEEE802154_SYMBOL_TIME_US;
                     otMacFrameSetCslIe(aFrame, sCslPeriod, rf_compute_csl_phase(hdrTimeUs));
+
+                    is_tx_poll = FALSE;
                 }
 #endif
             }
@@ -592,10 +695,11 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_SLEEP_TO_TX | OT_RADIO_CAPS_ENERGY_SCAN;
+    otRadioCaps caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_SLEEP_TO_TX | OT_RADIO_CAPS_ENERGY_SCAN |
+                       OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    caps |= OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING;
+    caps |= OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING | OT_RADIO_CAPS_RECEIVE_TIMING;
 #endif
 
     return caps;
@@ -630,12 +734,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     phyStatus_t        phy_status;
     macToPlmeMessage_t msg;
 
-    App_DisallowDeviceToSleep();
-
     otEXPECT_ACTION(((sState != OT_RADIO_STATE_TRANSMIT) && (sState != OT_RADIO_STATE_DISABLED)),
                     status = OT_ERROR_INVALID_STATE);
 
-    rf_abort();
+    otEXPECT_ACTION(!is_ed_scan, status = OT_ERROR_BUSY);
 
     sMaxED = -128;
     rf_set_channel(aScanChannel);
@@ -648,6 +750,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     if (phy_status != gPhySuccess_c)
     {
         status = OT_ERROR_INVALID_STATE;
+    }
+    else
+    {
+        is_ed_scan = TRUE;
     }
 exit:
     return status;
@@ -813,7 +919,6 @@ uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
     return CSL_UNCERT;
 }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -821,24 +926,26 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     otError            status = OT_ERROR_NONE;
 
     otEXPECT_ACTION((sState == OT_RADIO_STATE_SLEEP), status = OT_ERROR_FAILED);
-    sState = OT_RADIO_STATE_RECEIVE;
 
-    /* checks internally if the channel needs to be changed */
+    start_csl_receiver();
+
     rf_set_channel(aChannel);
 
-    aStart = rf_adjust_tstamp_from_ot(aStart);
+    aStart = rf_adjust_tstamp_from_ot(aStart + (uint32_t)otPlatTimeGet());
 
-    msg.msgType                           = gPlmeSetTRxStateReq_c;
+    msg.msgType                           = gPlmeRxReq_c;
     msg.msgData.setTRxStateReq.state      = gPhySetRxOn_c;
     msg.msgData.setTRxStateReq.rxDuration = aDuration / IEEE802154_SYMBOL_TIME_US;
     msg.msgData.setTRxStateReq.startTime  = aStart / IEEE802154_SYMBOL_TIME_US;
 
     (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
+    stop_csl_receiver();
 exit:
     return status;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              uint32_t            aCslPeriod,
                              otShortAddress      aShortAddr,
@@ -847,6 +954,15 @@ otError otPlatRadioEnableCsl(otInstance         *aInstance,
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aExtAddr);
     OT_UNUSED_VARIABLE(aShortAddr);
+
+    if (aCslPeriod)
+    {
+        rf_set_rx_time_poll(0);
+    }
+    else
+    {
+        rf_set_rx_time_poll(RX_TIME_POLL);
+    }
 
     sCslPeriod = aCslPeriod;
 
@@ -950,13 +1066,6 @@ static void rf_abort(void)
 {
     macToPlmeMessage_t msg;
 
-    sunRxMode                            = RX_ON_IDLE_START;
-    msg.msgType                          = gPlmeSetReq_c;
-    msg.msgData.setReq.PibAttribute      = gPhyPibRxOnWhenIdle;
-    msg.msgData.setReq.PibAttributeValue = (uint64_t)0;
-
-    (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
-
     msg.msgType                      = gPlmeSetTRxStateReq_c;
     msg.msgData.setTRxStateReq.state = gPhyForceTRxOff_c;
 
@@ -1022,7 +1131,7 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
     assert(pMsg != NULL);
 
-    PWR_DisallowDeviceToSleep();
+    start_csl_receiver();
 
     switch (pDataMsg->msgType)
     {
@@ -1037,21 +1146,35 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 #endif
 
         sTxStatus                       = OT_ERROR_NONE;
-        sState                          = OT_RADIO_STATE_RECEIVE;
         sRxAckFrame.mChannel            = sChannel;
         sRxAckFrame.mLength             = pDataMsg->msgData.dataCnf.ackLength;
         sRxAckFrame.mInfo.mRxInfo.mLqi  = pDataMsg->msgData.dataCnf.ppduLinkQuality;
         sRxAckFrame.mInfo.mRxInfo.mRssi = pDataMsg->msgData.dataCnf.ppduRssi;
         FLib_MemCpy(sRxAckFrame.mPsdu, pDataMsg->msgData.dataCnf.ackData, sRxAckFrame.mLength);
-        sTxDone = true;
+        sTxDone = TRUE;
+
+        if (is_tx_poll && (sRxAckFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FP))
+        {
+            is_rx_after_poll = TRUE;
+        }
         MSG_Free(pMsg); // for Ack we can free PHY Allocated buffer
         break;
 
     case gPdDataInd_c:
+        if (is_rx_after_poll &&
+            !(pDataMsg->msgData.dataInd.pPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST))
+        {
+            /* ignore broadcast packets */
+            MSG_Free(pMsg);
+
+            stop_csl_receiver();
+            return gPhySuccess_c;
+        }
+
+        is_rx_after_poll = FALSE;
+
         /* RX activity is done */
-        sRxDone = true;
-        OSA_InterruptDisable();
-        pRxFrame = sRxRing.head;
+        pRxFrame = get_free_frame_rx_ring();
 
         if (pRxFrame)
         {
@@ -1076,26 +1199,60 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
             }
 #endif
             // Push received frame
-            PushRxRingBuffer(&sRxRing);
+            push_free_frame_rx_ring();
         }
         else
         {
-            /*
-             * Since RxOnIdle is stopped when ring buffer is almost full should never happen
-             */
+            MSG_Free(pMsg);
         }
-        OSA_InterruptEnable();
+
+        if (is_rx_on_idle && (!pRxFrame || is_rx_ring_full()))
+        {
+            /* no room to receive more */
+            rf_abort();
+            rx_on_idle_disabled = TRUE;
+        }
         break;
+
     default:
-        PWR_AllowDeviceToSleep();
         MSG_Free(pMsg);
         break;
     }
 
-    otSysEventSignalPending();
+    is_tx_poll = FALSE;
+
+    if (is_ed_scan)
+    {
+        /* Scan done */
+        sEdScanDone = TRUE;
+        is_ed_scan  = FALSE;
+    }
+
+    if (is_rx_on_idle || is_rx_after_poll)
+    {
+        sState = OT_RADIO_STATE_RECEIVE;
+
+        if (sTxDone)
+        {
+            rf_set_channel(sTxFrame.mInfo.mTxInfo.mRxChannelAfterTxDone);
+        }
+    }
+    else
+    {
+        sState = OT_RADIO_STATE_SLEEP;
+    }
 
     stop_csl_receiver();
 
+    OSA_InterruptDisable();
+    if (!is_radio_event)
+    {
+        is_radio_event = TRUE;
+        PWR_DisallowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
+    otSysEventSignalPending();
     return gPhySuccess_c;
 }
 
@@ -1107,8 +1264,6 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
     assert(pMsg != NULL);
 
-    PWR_DisallowDeviceToSleep();
-
     switch (pPlmeMsg->msgType)
     {
     case gPlmeCcaCnf_c:
@@ -1116,19 +1271,18 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         {
             /* Channel is busy */
             sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
-            sState    = OT_RADIO_STATE_RECEIVE;
-            sTxDone   = true;
+            sTxDone   = TRUE;
         }
         break;
+
     case gPlmeEdCnf_c:
-        /* Scan done */
-        sEdScanDone = true;
-        sMaxED      = pPlmeMsg->msgData.edCnf.maxEnergyLeveldB;
+        sMaxED = pPlmeMsg->msgData.edCnf.maxEnergyLeveldB;
         break;
+
     case gPlmeTimeoutInd_c:
+    case gPlmeAbortInd_c:
         if (OT_RADIO_STATE_TRANSMIT == sState)
         {
-            /* Ack timeout */
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
             if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
                 !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
@@ -1136,43 +1290,61 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
                 otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
             }
 #endif
+            sTxStatus = OT_ERROR_NO_ACK; /* Ack timeout */
 
-            sState    = OT_RADIO_STATE_RECEIVE;
-            sTxStatus = OT_ERROR_NO_ACK;
-            sTxDone   = true;
-        }
-        else if (OT_RADIO_STATE_RECEIVE == sState)
-        {
-            /* CSL Receive AT state has ended with timeout and we are returning to SLEEP state */
-            sState = OT_RADIO_STATE_SLEEP;
-            PWR_AllowDeviceToSleep();
+            if (pPlmeMsg->msgType == gPlmeAbortInd_c)
+            {
+                /* TX Packet was loaded into TX Packet RAM but the TX/TR seq did not ended ok */
+                sTxStatus = OT_ERROR_ABORT;
+            }
+            sTxDone = TRUE;
         }
         break;
-    case gPlmeAbortInd_c:
-        /* TX Packet was loaded into TX Packet RAM but the TX/TR seq did not ended ok */
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
-            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
-        {
-            otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
-        }
-#endif
 
-        sState    = OT_RADIO_STATE_RECEIVE;
-        sTxStatus = OT_ERROR_ABORT;
-        sTxDone   = true;
-        break;
     default:
-        PWR_AllowDeviceToSleep();
         break;
     }
     /* The message has been allocated by the Phy, we have to free it */
     MSG_Free(pMsg);
 
-    otSysEventSignalPending();
+    is_tx_poll       = FALSE;
+    is_rx_after_poll = FALSE;
+
+    if (is_ed_scan)
+    {
+        /* Scan done */
+        sEdScanDone = TRUE;
+        is_ed_scan  = FALSE;
+    }
+
+    if (is_rx_on_idle)
+    {
+        sState = OT_RADIO_STATE_RECEIVE;
+
+        if (sTxDone)
+        {
+            rf_set_channel(sTxFrame.mInfo.mTxInfo.mRxChannelAfterTxDone);
+        }
+    }
+    else
+    {
+        sState = OT_RADIO_STATE_SLEEP;
+    }
 
     stop_csl_receiver();
 
+    if (sTxDone || sEdScanDone)
+    {
+        OSA_InterruptDisable();
+        if (!is_radio_event)
+        {
+            is_radio_event = TRUE;
+            PWR_DisallowDeviceToSleep();
+        }
+        OSA_InterruptEnable();
+
+        otSysEventSignalPending();
+    }
     return gPhySuccess_c;
 }
 
@@ -1192,21 +1364,60 @@ void otPlatRadioInit(void)
     msg.msgType = gPlmeEnableEncryption_c;
     (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
-    rf_set_channel(sChannel);
+    rf_set_rx_time_poll(RX_TIME_POLL);
 
     sTxFrame.mLength = 0;
     /* Make the mPsdu point to the space after macToPdDataMessage_t in the data buffer. OT will put
        the data packet in this zone when requesting a data transmission */
     sTxFrame.mPsdu = sTxData + sizeof(macToPdDataMessage_t);
 
-    ResetRxRingBuffer(&sRxRing);
-
     memset(&sRxAckFrame, 0, sizeof(sRxAckFrame));
     sRxAckFrame.mPsdu = sRxAckData;
 }
 
+static void radio_rx_process(otInstance *aInstance)
+{
+    extendedRadioFrame *f;
+    bool                diag_mode = false;
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    diag_mode = otPlatDiagModeGet();
+#endif
+
+    while ((f = get_frame_rx_ring()) != NULL)
+    {
+        if (diag_mode)
+        {
+            otPlatDiagRadioReceiveDone(aInstance, &f->RxFrame, OT_ERROR_NONE);
+        }
+        else
+        {
+            otPlatRadioReceiveDone(aInstance, &f->RxFrame, OT_ERROR_NONE);
+        }
+
+        MSG_Free(f->pPhyBuffer); // free PHY Allocated buffer
+        f->pPhyBuffer = NULL;
+
+        pop_frame_rx_ring();
+    }
+
+    if (rx_on_idle_disabled)
+    {
+        rf_set_rx_on_idle(TRUE);
+        rx_on_idle_disabled = FALSE;
+    }
+}
+
 void otPlatRadioProcess(otInstance *aInstance)
 {
+    OSA_InterruptDisable();
+    if (is_radio_event)
+    {
+        is_radio_event = FALSE;
+        PWR_AllowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
     if (sTxDone)
     {
         if (sTxFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
@@ -1218,154 +1429,40 @@ void otPlatRadioProcess(otInstance *aInstance)
             otPlatRadioTxDone(aInstance, &sTxFrame, NULL, sTxStatus);
         }
 
-        sTxDone = false;
-        PWR_AllowDeviceToSleep();
+        sTxDone = FALSE;
     }
 
-    if (sRxDone)
-    {
-        extendedRadioFrame *pRxFrmProcessing = NULL;
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otPlatDiagModeGet())
-        {
-            while ((pRxFrmProcessing = PopRxRingBuffer(&sRxRing)) != NULL)
-            {
-                otPlatDiagRadioReceiveDone(aInstance, pRxFrmProcessing->RxFrame, OT_ERROR_NONE);
-                MSG_Free(pRxFrmProcessing->pPhyBuffer); // free PHY Allocated buffer
-                pRxFrmProcessing->pPhyBuffer = NULL;
-            }
-        }
-        else
-#endif
-        {
-            while ((pRxFrmProcessing = PopRxRingBuffer(&sRxRing)) != NULL)
-            {
-                otPlatRadioReceiveDone(aInstance, &pRxFrmProcessing->RxFrame, OT_ERROR_NONE);
-                MSG_Free(pRxFrmProcessing->pPhyBuffer); // free PHY Allocated buffer
-                pRxFrmProcessing->pPhyBuffer = NULL;
-            }
-        }
-
-        if (NAvailableRxBuffers(&sRxRing) >= 2) // at least one Rx slot should be always free
-        {
-            // we need to rely on this function
-            // for single protocol this function instruct PHY layer that RX On Idle MUST be started
-            // for multi protocol this function instruct PHY layer that RX On Idle MUST be started for this protocol
-            // and any incoming messages on this protocol should be received and acknowledged
-            // but is the PHY job to ensure that
-            rf_rx_on_idle(RX_ON_IDLE_START); // restart rx on idle
-        }
-
-        sRxDone = false;
-        PWR_AllowDeviceToSleep();
-    }
+    radio_rx_process(aInstance);
 
     if (sEdScanDone)
     {
         otPlatRadioEnergyScanDone(aInstance, sMaxED);
-        sEdScanDone = false;
-        PWR_AllowDeviceToSleep();
+        sEdScanDone = FALSE;
     }
 }
 
-static void rf_rx_on_idle(uint32_t newValue)
+static void rf_set_rx_on_idle(bool_t val)
 {
     macToPlmeMessage_t msg;
     phyStatus_t        phy_status;
 
-    newValue %= 2;
-    if (sunRxMode != newValue)
-    {
-        sunRxMode                            = newValue;
-        msg.msgType                          = gPlmeSetReq_c;
-        msg.msgData.setReq.PibAttribute      = gPhyPibRxOnWhenIdle;
-        msg.msgData.setReq.PibAttributeValue = (uint64_t)sunRxMode;
+    msg.msgType                          = gPlmeSetReq_c;
+    msg.msgData.setReq.PibAttribute      = gPhyPibRxOnWhenIdle;
+    msg.msgData.setReq.PibAttributeValue = val;
 
-        phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
+    phy_status = MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
-        assert(phy_status == gPhySuccess_c);
-        OT_UNUSED_VARIABLE(phy_status);
-    }
+    assert(phy_status == gPhySuccess_c);
+    OT_UNUSED_VARIABLE(phy_status);
 }
 
-static void ResetRxRingBuffer(rxRingBuffer *aRxRing)
+static void rf_set_rx_time_poll(uint32_t t)
 {
-    memset(aRxRing, 0, sizeof(rxRingBuffer));
-    aRxRing->head = aRxRing->extRxFrame;
-    aRxRing->tail = aRxRing->extRxFrame;
-}
+    macToPlmeMessage_t msg;
 
-static void PushRxRingBuffer(rxRingBuffer *aRxRing)
-{
-    OSA_InterruptDisable();
+    msg.msgType                          = gPlmeSetReq_c;
+    msg.msgData.setReq.PibAttribute      = gPhyPibRxTimePoll_c;
+    msg.msgData.setReq.PibAttributeValue = t;
 
-    // increment head
-    aRxRing->head++;
-
-    // check were are still in place or need roll-over
-    if (aRxRing->head >= aRxRing->extRxFrame + NMAX_RXRING_BUFFERS)
-        aRxRing->head -= NMAX_RXRING_BUFFERS;
-
-    // check available slots
-    unsigned int h = aRxRing->head - aRxRing->extRxFrame;
-    unsigned int t = aRxRing->tail - aRxRing->extRxFrame;
-
-    assert(h < NMAX_RXRING_BUFFERS);
-    assert(t < NMAX_RXRING_BUFFERS);
-
-    // if available slots more than one is ok else (i.e. <=1 ) stop rx
-    h += ((h >= t) ? 0 : NMAX_RXRING_BUFFERS);
-    if (NMAX_RXRING_BUFFERS - (h - t) <= 1)
-    {
-        // we need to rely on this function
-        // for single protocol this function instruct PHY layer that RX MUST be stopped
-        // for multi protocol this function instruct PHY layer that RX MUST be stopped for this protocol
-        // and any incoming messages on this protocol should not be received and/or acknowledged
-        // but is the PHY job to enforce & ensure that
-        rf_rx_on_idle(RX_ON_IDLE_STOP); // stop rx on idle
-    }
-
-    OSA_InterruptEnable();
-}
-
-static extendedRadioFrame *PopRxRingBuffer(rxRingBuffer *aRxRing)
-{
-    extendedRadioFrame *rxFrame = NULL;
-
-    OSA_InterruptDisable();
-    if (!IsEmptyRxRingBuffer(aRxRing))
-    {
-        rxFrame = aRxRing->tail;
-        aRxRing->tail++;
-        // check were are still in place or need roll-over
-        if (aRxRing->tail >= aRxRing->extRxFrame + NMAX_RXRING_BUFFERS)
-            aRxRing->tail -= NMAX_RXRING_BUFFERS;
-    }
-    OSA_InterruptEnable();
-
-    return rxFrame;
-}
-
-static bool IsEmptyRxRingBuffer(rxRingBuffer *aRxRing)
-{
-    return (aRxRing->head == aRxRing->tail);
-}
-
-static unsigned char NAvailableRxBuffers(rxRingBuffer *aRxRing)
-{
-    OSA_InterruptDisable();
-    unsigned char N = 0;
-    unsigned int  h = aRxRing->head - aRxRing->extRxFrame;
-    unsigned int  t = aRxRing->tail - aRxRing->extRxFrame;
-
-    assert(h < NMAX_RXRING_BUFFERS);
-    assert(t < NMAX_RXRING_BUFFERS);
-
-    h += ((h >= t) ? 0 : NMAX_RXRING_BUFFERS);
-    N = NMAX_RXRING_BUFFERS - (h - t);
-
-    assert(N <= NMAX_RXRING_BUFFERS);
-    OSA_InterruptEnable();
-
-    return N;
+    MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 }
