@@ -68,16 +68,32 @@ TIMER_MANAGER_HANDLE_DEFINE(sAlarmMicroTimerHandle);
 
 static void timerCallback(void *param)
 {
-    sEventFired = TRUE;
-    PWR_DisallowDeviceToSleep();
+    OT_UNUSED_VARIABLE(param);
+
+    OSA_InterruptDisable();
+    if (!sEventFired)
+    {
+        sEventFired = TRUE;
+        PWR_DisallowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
     otSysEventSignalPending();
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 static void timerMicroCallback(void *param)
 {
-    sEventMicroFired = TRUE;
-    PWR_DisallowDeviceToSleep();
+    OT_UNUSED_VARIABLE(param);
+
+    OSA_InterruptDisable();
+    if (!sEventMicroFired)
+    {
+        sEventMicroFired = TRUE;
+        PWR_DisallowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
     otSysEventSignalPending();
 }
 #endif
@@ -109,18 +125,35 @@ void otPlatAlarmInit(void)
 
 void otPlatAlarmProcess(otInstance *aInstance)
 {
+    bool_t is_ev = FALSE;
+
+    OSA_InterruptDisable();
     if (sEventFired == TRUE)
     {
+        is_ev       = TRUE;
         sEventFired = FALSE;
         PWR_AllowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
+    if (is_ev)
+    {
         otPlatAlarmMilliFired(aInstance);
+        is_ev = FALSE;
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+    OSA_InterruptDisable();
     if (sEventMicroFired == TRUE)
     {
+        is_ev            = TRUE;
         sEventMicroFired = FALSE;
         PWR_AllowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
+    if (is_ev)
+    {
         otPlatAlarmMicroFired(aInstance);
     }
 #endif
@@ -149,6 +182,10 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     if (aDt >= timestamp)
     {
         aDt -= timestamp;
+    }
+    else
+    {
+        aDt = 0;
     }
 
     if (aDt > 0)
@@ -207,6 +244,10 @@ void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     if (aDt >= timestamp)
     {
         aDt -= timestamp;
+    }
+    else
+    {
+        aDt = 0;
     }
 
     if (aDt > 0)
