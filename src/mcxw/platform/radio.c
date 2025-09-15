@@ -1378,19 +1378,20 @@ void otPlatRadioInit(void)
 static void radio_rx_process(otInstance *aInstance)
 {
     extendedRadioFrame *f;
-    bool                diag_mode = false;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    diag_mode = otPlatDiagModeGet();
+    bool diag_mode = otPlatDiagModeGet();
 #endif
 
     while ((f = get_frame_rx_ring()) != NULL)
     {
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (diag_mode)
         {
             otPlatDiagRadioReceiveDone(aInstance, &f->RxFrame, OT_ERROR_NONE);
         }
         else
+#endif
         {
             otPlatRadioReceiveDone(aInstance, &f->RxFrame, OT_ERROR_NONE);
         }
