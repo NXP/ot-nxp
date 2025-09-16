@@ -47,6 +47,29 @@ mcux_add_macro(
 )
 
 mcux_add_source(
+    BASE_PATH ${SdkRootDirPath}/middleware/wireless/XCVR
+    SOURCES
+        drv/nb2p4ghz/nxp2p4_xcvr.c
+        drv/nb2p4ghz/nxp2p4_xcvr.h
+        drv/nb2p4ghz/nxp_xcvr_trim.c
+        drv/nb2p4ghz/nxp_xcvr_trim.h
+        drv/rfmc_ctrl.c
+        drv/rfmc_ctrl.h
+        drv/dbg_ram_capture.c
+        drv/dbg_ram_capture.h
+        drv/nb2p4ghz/configs/gen47/*.c
+        drv/nb2p4ghz/configs/gen47/*.h
+)
+
+mcux_add_include(
+    BASE_PATH ${SdkRootDirPath}/middleware/wireless/XCVR
+    INCLUDES
+        drv/.
+        drv/nb2p4ghz/.
+        drv/nb2p4ghz/configs/gen47/.
+)
+
+mcux_add_source(
     BASE_PATH ${SdkRootDirPath}/middleware/wireless/ble_controller
     SOURCES
         src/KW4x/nbu_version.c

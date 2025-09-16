@@ -95,6 +95,11 @@ OT_TOOL_WEAK bool Controller_EnableSecurityFeature()
     return false;
 }
 
+OT_TOOL_WEAK int PLATFORM_Nbu2HostFaultIndication()
+{
+    return 0;
+}
+
 OT_TOOL_WEAK void APP_SysInitHook(void)
 {
     /* Intentionally left empty */
