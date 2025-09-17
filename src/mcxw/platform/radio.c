@@ -112,7 +112,7 @@ static void stop_csl_receiver();
 #define IEEE802154_IMM_ACK_WAIT_SYM      (54)
 #define IEEE802154_ENH_ACK_WAIT_SYM      (90)
 
-#define PHY_TMR_MAX_VALUE                (0x00FFFFFF)
+#define PHY_TMR_MAX_VALUE                (gPhyTimeMask_c)
 // clang-format on
 
 #ifndef MCXW_RADIO_NUM_OF_RX_BUFS
