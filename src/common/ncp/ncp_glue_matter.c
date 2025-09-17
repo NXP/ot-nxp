@@ -43,8 +43,8 @@ struct ptr_to_eventid_mapping
 
 struct address_mapping_32_to_64
 {
-    uint32_t addr32; // address used at ncp device
     uint64_t addr64; // address from HOST
+    uint32_t addr32; // address used at ncp device
 };
 
 extern otInstance *gInstance;
@@ -171,10 +171,8 @@ static void     remove_64_mapped_addr(void *addr32bit);
 static void     remove_ptr_eventid(int eventid);
 static void    *get_ptr_from_eventid(int eventid);
 
-void ncp_ot_fct_process(void)
+bool ncp_ot_fct_process(void)
 {
-    int ret_val = 0;
-
     uint32_t           ret = 0;
     otmatter_payload_t payload_item;
     uint8_t           *payload_buf = NULL;
@@ -192,6 +190,12 @@ void ncp_ot_fct_process(void)
 
         vPortFree(payload_buf);
         payload_buf = NULL;
+
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
@@ -199,12 +203,14 @@ int ncp_matter_ot_cmd_handle(void *cmd, int payloadsize)
 {
     uint32_t           ret = 0;
     otmatter_payload_t payload_item;
+
     payload_item.payload_sz   = payloadsize;
     payload_item.payload_buff = (ncp_tlv_qelem_t *)pvPortMalloc(payloadsize);
 
     if (!payload_item.payload_buff)
     {
         OT_PLAT_ERR("failed to allocate memory for ncp matter ot queue element.\r\n");
+
         return NCP_STATUS_ERROR;
     }
 
@@ -214,6 +220,9 @@ int ncp_matter_ot_cmd_handle(void *cmd, int payloadsize)
     if (ret != pdPASS)
     {
         OT_PLAT_ERR("send to ncp matter ot queue failed.\r\n");
+        vPortFree(payload_item.payload_buff); // Free memory on failure
+
+        return NCP_STATUS_ERROR;
     }
 
     otTaskletsSignalPending(gInstance);
@@ -701,11 +710,9 @@ static void process_otDatasetSetActiveTlvs(int opCode, uint8_t *payloadIdx)
     ncp_memcpy((uint8_t *)&(ncpDatasetTlvs.mTlvs), (p_payload_param + payloadsaved), ncpDatasetTlvs.mLength,
                &payloadsaved);
 
-    device_otInstance = gInstance;
-
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetSetActiveTlvs(device_otInstance, &ncpDatasetTlvs);
+        error = otDatasetSetActiveTlvs(gInstance, &ncpDatasetTlvs);
     }
     else
     {
@@ -738,10 +745,9 @@ static void process_otThreadGetDeviceRole(int opCode, uint8_t *payloadIdx)
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    device_otInstance = gInstance;
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        devicerole = otThreadGetDeviceRole(device_otInstance);
+        devicerole = otThreadGetDeviceRole(gInstance);
     }
     else
     {
@@ -778,10 +784,9 @@ static void process_SetThreadEnabled(int opCode, uint8_t *payloadIdx)
 
     user_val = (bool)(*(uint8_t *)(p_payload_param + payloadsaved++));
 
-    device_otInstance = gInstance;
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadSetEnabled(device_otInstance, user_val);
+        error = otThreadSetEnabled(gInstance, user_val);
     }
     else
     {
@@ -818,10 +823,9 @@ static void process_otIp6SetEnabled(int opCode, uint8_t *payloadIdx)
 
     user_val = (bool)(*(uint8_t *)(p_payload_param + payloadsaved++));
 
-    device_otInstance = gInstance;
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otIp6SetEnabled(device_otInstance, user_val);
+        error = otIp6SetEnabled(gInstance, user_val);
     }
     else
     {
@@ -854,11 +858,9 @@ static void process_otIp6IsEnabled(int opCode, uint8_t *payloadIdx)
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    device_otInstance = gInstance;
-
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otIp6IsEnabled(device_otInstance);
+        error = otIp6IsEnabled(gInstance);
     }
     else
     {
@@ -889,11 +891,10 @@ static void process_otIp6GetUnicastAddresses(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(device_otInstance);
+        const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(gInstance);
         //  otIp6Address mAddress;                ///< The IPv6 unicast address.
         // uint8_t      mPrefixLength;           ///< The Prefix length (in bits).
         // uint8_t      mAddressOrigin;          ///< The IPv6 address origin.
@@ -964,11 +965,10 @@ static void process_otDatasetGetActiveTlvs(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetGetActiveTlvs(device_otInstance, &get_ncpDatasetTlvs);
+        error = otDatasetGetActiveTlvs(gInstance, &get_ncpDatasetTlvs);
     }
     else
     {
@@ -1011,11 +1011,10 @@ static void process_otDatasetIsCommissioned(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetIsCommissioned(device_otInstance);
+        error = otDatasetIsCommissioned(gInstance);
     }
     else
     {
@@ -1048,11 +1047,10 @@ static void process_otDatasetGetActive(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetGetActive(device_otInstance, &get_ncpDataset);
+        error = otDatasetGetActive(gInstance, &get_ncpDataset);
     }
     else
     {
@@ -1228,11 +1226,10 @@ static void process_otDatasetGetPendingTlvs(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetGetPendingTlvs(device_otInstance, &get_ncpDatasetTlvs);
+        error = otDatasetGetPendingTlvs(gInstance, &get_ncpDatasetTlvs);
     }
     else
     {
@@ -1278,7 +1275,6 @@ static void process_otDatasetSetPendingTlvs(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncpDatasetTlvs.mLength = (*(uint8_t *)(p_payload_param + payloadsaved++));
 
@@ -1286,9 +1282,9 @@ static void process_otDatasetSetPendingTlvs(int opCode, uint8_t *payloadIdx)
     ncp_memcpy((uint8_t *)&(ncpDatasetTlvs.mTlvs), (p_payload_param + payloadsaved), ncpDatasetTlvs.mLength,
                &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDatasetSetPendingTlvs(device_otInstance, &ncpDatasetTlvs);
+        error = otDatasetSetPendingTlvs(gInstance, &ncpDatasetTlvs);
     }
     else
     {
@@ -1320,11 +1316,10 @@ static void process_otInstanceErasePersistentInfo(int opCode, uint8_t *payloadId
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otInstanceErasePersistentInfo(device_otInstance);
+        error = otInstanceErasePersistentInfo(gInstance);
     }
     else
     {
@@ -1356,11 +1351,10 @@ static void process_otThreadIsRouterEligible(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadIsRouterEligible(device_otInstance);
+        error = otThreadIsRouterEligible(gInstance);
     }
     else
     {
@@ -1392,12 +1386,11 @@ static void process_otLinkGetCslPeriod(int opCode, uint8_t *payloadIdx)
     otInstance *device_otInstance;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        error = otLinkGetCslPeriod(device_otInstance);
+        error = otLinkGetCslPeriod(gInstance);
 #endif
     }
     else
@@ -1434,14 +1427,13 @@ static void process_otThreadSetRouterEligible(int opCode, uint8_t *payloadIdx)
     uint8_t    *p_payload_param = (uint8_t *)payloadIdx;
 
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // user value
     ncp_val_mem_copy((uint8_t *)(&user_val), *(uint8_t *)(p_payload_param + payloadsaved), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadSetRouterEligible(device_otInstance, user_val);
+        error = otThreadSetRouterEligible(gInstance, user_val);
     }
     else
     {
@@ -1473,11 +1465,10 @@ static void process_otThreadGetRloc16(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetRloc16(device_otInstance);
+        error = otThreadGetRloc16(gInstance);
     }
     else
     {
@@ -1512,11 +1503,10 @@ static void process_otThreadGetLeaderRouterId(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetLeaderRouterId(device_otInstance);
+        error = otThreadGetLeaderRouterId(gInstance);
     }
     else
     {
@@ -1551,11 +1541,10 @@ static void process_otThreadGetPartitionId(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetPartitionId(device_otInstance);
+        error = otThreadGetPartitionId(gInstance);
     }
     else
     {
@@ -1590,11 +1579,10 @@ static void process_otPlatRadioGetRssi(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otPlatRadioGetRssi(device_otInstance);
+        error = otPlatRadioGetRssi(gInstance);
     }
     else
     {
@@ -1629,11 +1617,10 @@ static void process_otThreadGetLeaderWeight(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetLeaderWeight(device_otInstance);
+        error = otThreadGetLeaderWeight(gInstance);
     }
     else
     {
@@ -1668,11 +1655,10 @@ static void process_otThreadGetLocalLeaderWeight(int opCode, uint8_t *payloadIdx
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetLocalLeaderWeight(device_otInstance);
+        error = otThreadGetLocalLeaderWeight(gInstance);
     }
     else
     {
@@ -1734,11 +1720,10 @@ static void process_otLinkGetPollPeriod(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otLinkGetPollPeriod(device_otInstance);
+        error = otLinkGetPollPeriod(gInstance);
     }
     else
     {
@@ -1775,15 +1760,14 @@ static void process_otLinkSetCslPeriod(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // cslperiod
     ncp_memcpy((uint8_t *)&cslperiod, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        error = otLinkSetCslPeriod(device_otInstance, cslperiod);
+        error = otLinkSetCslPeriod(gInstance, cslperiod);
 #endif
     }
     else
@@ -1818,14 +1802,13 @@ static void process_otLinkSetPollPeriod(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // pollperiod
     ncp_memcpy((uint8_t *)&pollperiod, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otLinkSetPollPeriod(device_otInstance, pollperiod);
+        error = otLinkSetPollPeriod(gInstance, pollperiod);
     }
     else
     {
@@ -1857,11 +1840,10 @@ static void process_otLinkGetPanId(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otLinkGetPanId(device_otInstance);
+        error = otLinkGetPanId(gInstance);
     }
     else
     {
@@ -1896,11 +1878,10 @@ static void process_otNetDataGetStableVersion(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otNetDataGetStableVersion(device_otInstance);
+        error = otNetDataGetStableVersion(gInstance);
     }
     else
     {
@@ -1936,14 +1917,13 @@ static void process_otSrpClientSetLeaseInterval(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aInterval
     ncp_memcpy((uint8_t *)&aInterval, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otSrpClientSetLeaseInterval(device_otInstance, aInterval);
+        otSrpClientSetLeaseInterval(gInstance, aInterval);
     }
     else
     {
@@ -1974,14 +1954,13 @@ static void process_otSrpClientSetKeyLeaseInterval(int opCode, uint8_t *payloadI
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aInterval
     ncp_memcpy((uint8_t *)&aInterval, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otSrpClientSetKeyLeaseInterval(device_otInstance, aInterval);
+        otSrpClientSetKeyLeaseInterval(gInstance, aInterval);
     }
     else
     {
@@ -2014,7 +1993,6 @@ void process_otSrpClientRemoveHostAndServices(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aRemoveKeyLease
     ncp_val_mem_copy((uint8_t *)(&aRemoveKeyLease), *(uint8_t *)(p_payload_param + payloadsaved), &payloadsaved);
@@ -2022,9 +2000,9 @@ void process_otSrpClientRemoveHostAndServices(int opCode, uint8_t *payloadIdx)
     // aSendUnregToServer
     ncp_val_mem_copy((uint8_t *)(&aSendUnregToServer), *(uint8_t *)(p_payload_param + payloadsaved), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otSrpClientRemoveHostAndServices(device_otInstance, aRemoveKeyLease, aSendUnregToServer);
+        error = otSrpClientRemoveHostAndServices(gInstance, aRemoveKeyLease, aSendUnregToServer);
     }
     else
     {
@@ -2059,11 +2037,10 @@ void process_otSrpClientEnableAutoHostAddress(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otSrpClientEnableAutoHostAddress(device_otInstance);
+        error = otSrpClientEnableAutoHostAddress(gInstance);
     }
     else
     {
@@ -2098,7 +2075,6 @@ void process_otThreadSetLinkMode(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // linkMode.mRxOnWhenIdle
     linkMode.mRxOnWhenIdle = *(uint8_t *)(p_payload_param + payloadsaved++);
@@ -2109,9 +2085,9 @@ void process_otThreadSetLinkMode(int opCode, uint8_t *payloadIdx)
     // linkMode.mNetworkData
     linkMode.mNetworkData = *(uint8_t *)(p_payload_param + payloadsaved++);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadSetLinkMode(device_otInstance, linkMode);
+        error = otThreadSetLinkMode(gInstance, linkMode);
     }
     else
     {
@@ -2144,11 +2120,10 @@ void process_otThreadGetLinkMode(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        linkMode = otThreadGetLinkMode(device_otInstance);
+        linkMode = otThreadGetLinkMode(gInstance);
     }
     else
     {
@@ -2189,11 +2164,10 @@ void process_otThreadGetParentAverageRssi(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetParentAverageRssi(device_otInstance, &averageRssi);
+        error = otThreadGetParentAverageRssi(gInstance, &averageRssi);
     }
     else
     {
@@ -2233,11 +2207,10 @@ void process_otThreadGetParentLastRssi(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetParentLastRssi(device_otInstance, &lastRssi);
+        error = otThreadGetParentLastRssi(gInstance, &lastRssi);
     }
     else
     {
@@ -2275,11 +2248,10 @@ void process_otThreadGetNetworkKey(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otThreadGetNetworkKey(device_otInstance, &networkKey);
+        otThreadGetNetworkKey(gInstance, &networkKey);
     }
     else
     {
@@ -2349,12 +2321,11 @@ static void process_otBorderAgentGetId(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        error = otBorderAgentGetId(device_otInstance, &br_agentId);
+        error = otBorderAgentGetId(gInstance, &br_agentId);
 #endif
     }
     else
@@ -2397,11 +2368,10 @@ static void process_otThreadGetNetworkName(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        p_to_string = otThreadGetNetworkName(device_otInstance);
+        p_to_string = otThreadGetNetworkName(gInstance);
 
         stringlen = strlen(p_to_string) + 1; // string plus null uint8_tacter
     }
@@ -2440,11 +2410,10 @@ static void process_otLinkGetExtendedAddress(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        p_to_string = otLinkGetExtendedAddress(device_otInstance);
+        p_to_string = otLinkGetExtendedAddress(gInstance);
 
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)p_to_string->m8, OT_EXT_ADDRESS_SIZE, &ncp_cmd_size);
     }
@@ -2476,11 +2445,10 @@ static void process_otThreadGetExtendedPanId(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        p_to_string = otThreadGetExtendedPanId(device_otInstance);
+        p_to_string = otThreadGetExtendedPanId(gInstance);
 
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)p_to_string->m8, OT_EXT_PAN_ID_SIZE, &ncp_cmd_size);
     }
@@ -2512,11 +2480,10 @@ static void process_otThreadGetMeshLocalPrefix(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        p_to_string = otThreadGetMeshLocalPrefix(device_otInstance);
+        p_to_string = otThreadGetMeshLocalPrefix(gInstance);
 
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)p_to_string->m8, OT_IP6_PREFIX_SIZE, &ncp_cmd_size);
     }
@@ -2550,11 +2517,10 @@ static void process_otThreadGetLeaderRloc(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetLeaderRloc(device_otInstance, &address);
+        error = otThreadGetLeaderRloc(gInstance, &address);
     }
     else
     {
@@ -2595,16 +2561,15 @@ static void process_otNetDataGet(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&aStable, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
     ncp_memcpy((uint8_t *)&datalen, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
 
     data = (uint8_t *)pvPortMalloc(datalen);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otNetDataGet(device_otInstance, aStable, data, &datalen);
+        error = otNetDataGet(gInstance, aStable, data, &datalen);
     }
     else
     {
@@ -2645,13 +2610,12 @@ static void process_otIp6SubscribeMulticastAddress(int opCode, uint8_t *payloadI
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&address, (p_payload_param + payloadsaved), sizeof(otIp6Address), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otIp6SubscribeMulticastAddress(device_otInstance, &address);
+        error = otIp6SubscribeMulticastAddress(gInstance, &address);
     }
     else
     {
@@ -2685,13 +2649,12 @@ static void process_otIp6UnsubscribeMulticastAddress(int opCode, uint8_t *payloa
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&address, (p_payload_param + payloadsaved), sizeof(otIp6Address), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otIp6UnsubscribeMulticastAddress(device_otInstance, &address);
+        error = otIp6UnsubscribeMulticastAddress(gInstance, &address);
     }
     else
     {
@@ -2726,13 +2689,12 @@ static void process_otThreadGetNextNeighborInfo(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&iterator, (p_payload_param + payloadsaved), sizeof(otNeighborInfoIterator), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetNextNeighborInfo(device_otInstance, &iterator, &neighborInfo);
+        error = otThreadGetNextNeighborInfo(gInstance, &iterator, &neighborInfo);
     }
     else
     {
@@ -2797,13 +2759,12 @@ static void process_otNetDataGetNextRoute(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&iterator, (p_payload_param + payloadsaved), sizeof(otNeighborInfoIterator), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otNetDataGetNextRoute(device_otInstance, &iterator, &routeConfig);
+        error = otNetDataGetNextRoute(gInstance, &iterator, &routeConfig);
     }
     else
     {
@@ -2854,11 +2815,10 @@ static void process_otLinkGetCounters(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        macCounters = otLinkGetCounters(device_otInstance);
+        macCounters = otLinkGetCounters(gInstance);
 
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)macCounters, sizeof(otMacCounters), &ncp_cmd_size);
     }
@@ -2891,11 +2851,10 @@ static void process_otThreadGetIp6Counters(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        ipCounters = otThreadGetIp6Counters(device_otInstance);
+        ipCounters = otThreadGetIp6Counters(gInstance);
 
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)ipCounters, sizeof(otIpCounters), &ncp_cmd_size);
     }
@@ -2913,7 +2872,7 @@ static void process_otSetStateChangedCallback(int opCode, uint8_t *payloadIdx)
 {
     otStateChangedCallback *aCallback = NULL;
     uint64_t                aContext;
-    void                   *tempaContext = pvPortMalloc(sizeof(uint32_t));
+    void                   *tempaContext = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint8_t                 error        = 0;
 
     int      payloadsaved    = 0;
@@ -2931,7 +2890,6 @@ static void process_otSetStateChangedCallback(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // context
     ncp_memcpy((uint8_t *)&aContext, (p_payload_param + payloadsaved), sizeof(uint64_t), &payloadsaved);
@@ -2939,10 +2897,10 @@ static void process_otSetStateChangedCallback(int opCode, uint8_t *payloadIdx)
     /*call ot API for otSetStateChangedCallback, we are assuming only one ot instance
      *processStateChange is the callback function on ncp device
      */
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
         /*Need to check this if have buff issues -->OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS*/
-        error = otSetStateChangedCallback(device_otInstance, processStateChange, tempaContext);
+        error = otSetStateChangedCallback(gInstance, processStateChange, tempaContext);
     }
     else
     {
@@ -2963,8 +2921,6 @@ static void process_otSetStateChangedCallback(int opCode, uint8_t *payloadIdx)
 
         map_32_to_64_addr(tempaContext, aContext);
     }
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -3070,11 +3026,10 @@ static void process_otNetDataGetVersion(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otNetDataGetVersion(device_otInstance);
+        error = otNetDataGetVersion(gInstance);
     }
     else
     {
@@ -3112,13 +3067,12 @@ static void process_otThreadGetChildInfoById(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&childId, (p_payload_param + payloadsaved), sizeof(uint16_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadGetChildInfoById(device_otInstance, childId, &childInfo);
+        error = otThreadGetChildInfoById(gInstance, childId, &childInfo);
     }
     else
     {
@@ -3181,11 +3135,10 @@ static void process_otIp6GetMulticastAddresses(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        const otNetifMulticastAddress *multicastAddrs = otIp6GetMulticastAddresses(device_otInstance);
+        const otNetifMulticastAddress *multicastAddrs = otIp6GetMulticastAddresses(gInstance);
 
         for (const otNetifMulticastAddress *addr = multicastAddrs; addr; addr = addr->mNext)
         {
@@ -3247,7 +3200,7 @@ static void process_otThreadDiscover(int opCode, uint8_t *payloadIdx)
 {
     otStateChangedCallback *aCallback = NULL;
     uint64_t                aContext;
-    void                   *tempaContext = pvPortMalloc(sizeof(uint32_t));
+    void                   *tempaContext = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint32_t                ScanChannels;
     uint16_t                PanId;
     bool                    aJoiner;
@@ -3269,7 +3222,6 @@ static void process_otThreadDiscover(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&ScanChannels, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
     ncp_memcpy((uint8_t *)&PanId, (p_payload_param + payloadsaved), sizeof(uint16_t), &payloadsaved);
@@ -3279,10 +3231,10 @@ static void process_otThreadDiscover(int opCode, uint8_t *payloadIdx)
     ncp_memcpy((uint8_t *)&aContext, (p_payload_param + payloadsaved), sizeof(uint64_t), &payloadsaved);
 
     /*HandleActiveScanResult is the callback function on ncp device*/
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otThreadDiscover(device_otInstance, ScanChannels, PanId, aJoiner, aEnableEui64Filtering,
-                                 HandleActiveScanResult, tempaContext);
+        error = otThreadDiscover(gInstance, ScanChannels, PanId, aJoiner, aEnableEui64Filtering, HandleActiveScanResult,
+                                 tempaContext);
     }
     else
     {
@@ -3304,8 +3256,6 @@ static void process_otThreadDiscover(int opCode, uint8_t *payloadIdx)
         map_32_to_64_addr(tempaContext, aContext);
     }
 
-    vPortFree(tempaContext);
-
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
 
@@ -3313,7 +3263,7 @@ static void process_otUdpOpen(int opCode, uint8_t *payloadIdx)
 {
     otUdpReceive *aCallback = NULL;
     uint64_t      aContext;
-    void         *tempaContext = pvPortMalloc(sizeof(uint32_t)); // need rework or free this on udp close
+    void         *tempaContext = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint64_t      recv_device_socket;
     uint8_t       error = 0;
 
@@ -3332,7 +3282,6 @@ static void process_otUdpOpen(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&recv_device_socket, (p_payload_param + payloadsaved), sizeof(uint64_t), &payloadsaved);
 
@@ -3364,9 +3313,9 @@ static void process_otUdpOpen(int opCode, uint8_t *payloadIdx)
     /*call ot API for udpopen, we are assuming only one ot instance
      *HandleUdpReceive is the callback function on ncp device
      */
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otUdpOpen(device_otInstance, &device_mSocket, HandleUdpReceive, tempaContext);
+        error = otUdpOpen(gInstance, &device_mSocket, HandleUdpReceive, tempaContext);
     }
     else
     {
@@ -3393,8 +3342,6 @@ static void process_otUdpOpen(int opCode, uint8_t *payloadIdx)
         uint32_t device_socket_addr = &device_mSocket;
         ncp_memcpy(&ncp_cmd_buf[ncp_cmd_size], (uint8_t *)&(device_socket_addr), sizeof(uint32_t), &ncp_cmd_size);
     }
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -3479,7 +3426,6 @@ static void process_otUdpBind(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&device_recv_mSocket, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
@@ -3492,9 +3438,9 @@ static void process_otUdpBind(int opCode, uint8_t *payloadIdx)
     // aNetif
     netif = *(uint8_t *)(p_payload_param + payloadsaved++);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otUdpBind(device_otInstance, device_recv_mSocket, &sockaddr, netif);
+        error = otUdpBind(gInstance, device_recv_mSocket, &sockaddr, netif);
     }
     else
     {
@@ -3526,13 +3472,12 @@ static void process_otUdpIsOpen(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&device_recv_mSocket, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otUdpIsOpen(device_otInstance, device_recv_mSocket);
+        error = otUdpIsOpen(gInstance, device_recv_mSocket);
     }
     else
     {
@@ -3565,14 +3510,13 @@ static void process_otudpClose(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // socket
     ncp_memcpy((uint8_t *)&device_recv_mSocket, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otUdpClose(device_otInstance, device_recv_mSocket);
+        error = otUdpClose(gInstance, device_recv_mSocket);
         if (error == OT_ERROR_NONE)
         {
             remove_64_mapped_addr(device_recv_mSocket);
@@ -3613,7 +3557,6 @@ static void process_otUdpSend(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // socket
     ncp_memcpy((uint8_t *)&device_recv_mSocket, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
@@ -3650,9 +3593,9 @@ static void process_otUdpSend(int opCode, uint8_t *payloadIdx)
     aMessageInfo.mMulticastLoop = *(uint8_t *)(p_payload_param + payloadsaved++);
 
     // Call ot API's to send message
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otUdpSend(device_otInstance, device_recv_mSocket, message, &aMessageInfo);
+        error = otUdpSend(gInstance, device_recv_mSocket, message, &aMessageInfo);
         if (error == OT_ERROR_NONE)
         {
             remove_64_mapped_addr(message); // if not executed here, host need to call otMessageFree
@@ -3693,7 +3636,6 @@ static void process_otUdpNewMessage(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // otMessageSettings
     isNULL_aSettings = *(uint8_t *)(p_payload_param + payloadsaved++);
@@ -3709,9 +3651,9 @@ static void process_otUdpNewMessage(int opCode, uint8_t *payloadIdx)
         p_messageSettings         = &messageSettings;
     }
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        message = otUdpNewMessage(device_otInstance, p_messageSettings);
+        message = otUdpNewMessage(gInstance, p_messageSettings);
     }
     else
     {
@@ -3832,17 +3774,16 @@ static void process_otSrpClientSetHostName(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&hostname_len, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
 
-    hostName = otSrpClientBuffersGetHostNameString(device_otInstance, &size);
+    hostName = otSrpClientBuffersGetHostNameString(gInstance, &size);
 
     ncp_memcpy((uint8_t *)hostName, (p_payload_param + payloadsaved), hostname_len, &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otSrpClientSetHostName(device_otInstance, hostName);
+        error = otSrpClientSetHostName(gInstance, hostName);
     }
     else
     {
@@ -3882,11 +3823,10 @@ static void process_otSrpClientAddService(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        entry = otSrpClientBuffersAllocateService(device_otInstance);
+        entry = otSrpClientBuffersAllocateService(gInstance);
         if (entry == NULL)
         {
             error = OT_ERROR_NO_BUFS;
@@ -3970,11 +3910,11 @@ static void process_otSrpClientAddService(int opCode, uint8_t *payloadIdx)
         ncp_memcpy((uint8_t *)&entry->mService.mKeyLease, (p_payload_param + payloadsaved), sizeof(uint32_t),
                    &payloadsaved);
 
-        error = otSrpClientAddService(device_otInstance, &entry->mService);
+        error = otSrpClientAddService(gInstance, &entry->mService);
 
         if (error != OT_ERROR_NONE && entry != NULL)
         {
-            otSrpClientBuffersFreeService(device_otInstance, entry);
+            otSrpClientBuffersFreeService(gInstance, entry);
         }
     }
     else
@@ -4015,14 +3955,13 @@ static void process_otSrpClientRemoveService(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&entry, (p_payload_param + payloadsaved), sizeof(entry), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
         error = otSrpClientRemoveService(
-            device_otInstance,
+            gInstance,
             &entry->mService); // need to check deletion of entry instance during otSrpClientCallback.
     }
     else
@@ -4058,16 +3997,15 @@ static void process_otSrpClientClearService(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&entry, (p_payload_param + payloadsaved), sizeof(entry), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otSrpClientClearService(device_otInstance, &entry->mService);
+        error = otSrpClientClearService(gInstance, &entry->mService);
         if (error == OT_ERROR_NONE && ret_val != -1)
         {
-            otSrpClientBuffersFreeService(device_otInstance, entry);
+            otSrpClientBuffersFreeService(gInstance, entry);
         }
     }
     else
@@ -4113,12 +4051,11 @@ static void process_otSrpClientEnableAutoStartMode(int opCode, uint8_t *payloadI
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     /*ncp_OnSrpClientStateChange is the callback function on ncp device*/
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otSrpClientEnableAutoStartMode(device_otInstance, ncp_OnSrpClientStateChange, NULL);
+        otSrpClientEnableAutoStartMode(gInstance, ncp_OnSrpClientStateChange, NULL);
     }
     else
     {
@@ -4246,12 +4183,11 @@ static void process_otSrpClientSetCallback(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     /*ncp_SrpClientCallback is the callback function on ncp device*/
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otSrpClientSetCallback(device_otInstance, ncp_SrpClientCallback, NULL);
+        otSrpClientSetCallback(gInstance, ncp_SrpClientCallback, NULL);
     }
     else
     {
@@ -4316,7 +4252,7 @@ static void process_otDnsBrowseResponseGetServiceName(int opCode, uint8_t *paylo
 static void process_otDnsClientBrowse(int opCode, uint8_t *payloadIdx)
 {
     uint64_t aContext;
-    void    *tempaContext     = pvPortMalloc(sizeof(uint32_t));
+    void    *tempaContext     = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint8_t  error            = 0;
     uint8_t  len_aServiceName = 0;
 
@@ -4335,7 +4271,6 @@ static void process_otDnsClientBrowse(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // length of aServiceName
     ncp_memcpy((uint8_t *)&len_aServiceName, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
@@ -4350,9 +4285,9 @@ static void process_otDnsClientBrowse(int opCode, uint8_t *payloadIdx)
     /*call ot API for otDnsClientBrowse, we are assuming only one ot instance
      *ncp_OnDnsBrowseResult is the callback function on ncp device
      */
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDnsClientBrowse(device_otInstance, aServiceName, ncp_OnDnsBrowseResult, tempaContext, NULL);
+        error = otDnsClientBrowse(gInstance, aServiceName, ncp_OnDnsBrowseResult, tempaContext, NULL);
     }
     else
     {
@@ -4373,8 +4308,6 @@ static void process_otDnsClientBrowse(int opCode, uint8_t *payloadIdx)
 
         map_32_to_64_addr(tempaContext, aContext);
     }
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -4527,11 +4460,10 @@ static void process_otDnsClientGetDefaultConfig(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        defaultConfig = otDnsClientGetDefaultConfig(device_otInstance);
+        defaultConfig = otDnsClientGetDefaultConfig(gInstance);
     }
     else
     {
@@ -4580,7 +4512,6 @@ static void process_otDnsClientSetDefaultConfig(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // ncp_memcpy((uint8_t *)&defaultConfig, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
@@ -4597,9 +4528,9 @@ static void process_otDnsClientSetDefaultConfig(int opCode, uint8_t *payloadIdx)
     Config.mServiceMode    = *(uint8_t *)(p_payload_param + payloadsaved++);
     Config.mTransportProto = *(uint8_t *)(p_payload_param + payloadsaved++);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otDnsClientSetDefaultConfig(device_otInstance, &Config);
+        otDnsClientSetDefaultConfig(gInstance, &Config);
     }
     else
     {
@@ -4778,7 +4709,7 @@ static void ncp_otDnsService_cb(otError aError, const otDnsServiceResponse *aRes
 static void process_otDnsClientResolveService(int opCode, uint8_t *payloadIdx)
 {
     uint64_t          aContext;
-    void             *tempaContext       = pvPortMalloc(sizeof(uint32_t));
+    void             *tempaContext       = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint8_t           error              = 0;
     uint8_t           len_aInstanceLabel = 0;
     uint8_t           len_aServiceName   = 0;
@@ -4799,7 +4730,6 @@ static void process_otDnsClientResolveService(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // len_aInstanceLabel
     ncp_memcpy((uint8_t *)&len_aInstanceLabel, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
@@ -4823,10 +4753,10 @@ static void process_otDnsClientResolveService(int opCode, uint8_t *payloadIdx)
     /*call ot API for otDnsClientResolveService, we are assuming only one ot instance
      *ncp_otDnsService_cb is the callback function on ncp device
      */
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otDnsClientResolveService(device_otInstance, aInstanceLabel, aServiceName, ncp_otDnsService_cb,
-                                          tempaContext, defaultConfig);
+        error = otDnsClientResolveService(gInstance, aInstanceLabel, aServiceName, ncp_otDnsService_cb, tempaContext,
+                                          defaultConfig);
     }
     else
     {
@@ -4846,8 +4776,6 @@ static void process_otDnsClientResolveService(int opCode, uint8_t *payloadIdx)
 
         map_32_to_64_addr(tempaContext, aContext);
     }
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -4923,7 +4851,7 @@ static void ncp_otDnsAddress_cb(otError aError, const otDnsAddressResponse *aRes
 static void process_otDnsClientResolveAddress(int opCode, uint8_t *payloadIdx)
 {
     uint64_t          aContext;
-    void             *tempaContext  = pvPortMalloc(sizeof(uint32_t));
+    void             *tempaContext  = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint8_t           error         = 0;
     uint8_t           len_aHostName = 0;
     otDnsQueryConfig *defaultConfig = NULL;
@@ -4943,7 +4871,6 @@ static void process_otDnsClientResolveAddress(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // len_aHostName
     ncp_memcpy((uint8_t *)&len_aHostName, (p_payload_param + payloadsaved), sizeof(len_aHostName), &payloadsaved);
@@ -4960,10 +4887,9 @@ static void process_otDnsClientResolveAddress(int opCode, uint8_t *payloadIdx)
     /*call ot API for otDnsClientResolveAddress, we are assuming only one ot instance
      *ncp_otDnsAddress_cb is the callback function on ncp device
      */
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error =
-            otDnsClientResolveAddress(device_otInstance, aHostName, ncp_otDnsAddress_cb, tempaContext, defaultConfig);
+        error = otDnsClientResolveAddress(gInstance, aHostName, ncp_otDnsAddress_cb, tempaContext, defaultConfig);
     }
     else
     {
@@ -4983,8 +4909,6 @@ static void process_otDnsClientResolveAddress(int opCode, uint8_t *payloadIdx)
 
         map_32_to_64_addr(tempaContext, aContext);
     }
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -5008,14 +4932,13 @@ static void process_otIcmp6SetEchoMode(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aMode
     ncp_memcpy((uint8_t *)&aMode, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otIcmp6SetEchoMode(device_otInstance, (otIcmp6EchoMode)aMode);
+        otIcmp6SetEchoMode(gInstance, (otIcmp6EchoMode)aMode);
     }
     else
     {
@@ -5046,14 +4969,13 @@ static void process_otIp6SetReceiveFilterEnabled(int opCode, uint8_t *payloadIdx
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aEnabled
     ncp_memcpy((uint8_t *)&aEnabled, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otIp6SetReceiveFilterEnabled(device_otInstance, (bool)aEnabled);
+        otIp6SetReceiveFilterEnabled(gInstance, (bool)aEnabled);
     }
     else
     {
@@ -5084,14 +5006,13 @@ static void process_otIp6SetSlaacEnabled(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // aEnabled
     ncp_memcpy((uint8_t *)&aEnabled, (p_payload_param + payloadsaved), sizeof(uint8_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        otIp6SetSlaacEnabled(device_otInstance, (bool)aEnabled);
+        otIp6SetSlaacEnabled(gInstance, (bool)aEnabled);
     }
     else
     {
@@ -5126,7 +5047,7 @@ static void ncp_otIp6Receive_cb(otMessage *aMessage, void *aContext)
 static void process_otIp6SetReceiveCallback(int opCode, uint8_t *payloadIdx)
 {
     uint64_t          aContext;
-    void             *tempaContext  = pvPortMalloc(sizeof(uint32_t));
+    void             *tempaContext  = ((uint32_t)rand() << 16) | (uint32_t)rand();
     uint8_t           error         = 0;
     uint8_t           len_aHostName = 0;
     otDnsQueryConfig *defaultConfig = NULL;
@@ -5146,7 +5067,6 @@ static void process_otIp6SetReceiveCallback(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // context
     ncp_memcpy((uint8_t *)&aContext, (p_payload_param + payloadsaved), sizeof(uint64_t), &payloadsaved);
@@ -5155,7 +5075,7 @@ static void process_otIp6SetReceiveCallback(int opCode, uint8_t *payloadIdx)
      *? is the callback function on ncp device
      */
 
-    otIp6SetReceiveCallback(device_otInstance, ncp_otIp6Receive_cb, tempaContext);
+    otIp6SetReceiveCallback(gInstance, ncp_otIp6Receive_cb, tempaContext);
 
     *(tlv_response + 1) = (int)ret_val; // return: ret_val
 
@@ -5165,8 +5085,6 @@ static void process_otIp6SetReceiveCallback(int opCode, uint8_t *payloadIdx)
      */
 
     map_32_to_64_addr(tempaContext, aContext);
-
-    vPortFree(tempaContext);
 
     ot_send_response(NCP_OT_CMD_MATTER, NCP_CMD_RESULT_OK, ncp_cmd_buf, ncp_cmd_size);
 }
@@ -5191,16 +5109,15 @@ static void process_otIp6NewMessage(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     // otMessageSettings
     messageSettings.mLinkSecurityEnabled = *(uint8_t *)(p_payload_param + payloadsaved++);
 
     messageSettings.mPriority = *(uint8_t *)(p_payload_param + payloadsaved++);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        message = otIp6NewMessage(device_otInstance, &messageSettings);
+        message = otIp6NewMessage(gInstance, &messageSettings);
     }
     else
     {
@@ -5240,13 +5157,12 @@ static void process_otIp6Send(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
     ncp_memcpy((uint8_t *)&message, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otIp6Send(device_otInstance, message);
+        error = otIp6Send(gInstance, message);
     }
     else
     {
@@ -5280,11 +5196,10 @@ static void process_otLinkGetChannel(int opCode, uint8_t *payloadIdx)
     // otInstance
     otInstance *device_otInstance;
     ncp_memcpy((uint8_t *)&device_otInstance, (p_payload_param + payloadsaved), sizeof(uint32_t), &payloadsaved);
-    device_otInstance = gInstance;
 
-    if (device_otInstance != NULL)
+    if (gInstance != NULL)
     {
-        error = otLinkGetChannel(device_otInstance);
+        error = otLinkGetChannel(gInstance);
     }
     else
     {

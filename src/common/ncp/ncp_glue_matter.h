@@ -150,6 +150,6 @@ typedef struct
 
 int ncp_matter_ot_cmd_handle(void *cmd, int payloadsize);
 
-void ncp_ot_fct_process(void);
+bool ncp_ot_fct_process(void);
 
 #endif /* __NCP_GLUE_MATTER_H__ */

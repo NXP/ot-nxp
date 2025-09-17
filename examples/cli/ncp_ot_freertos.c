@@ -149,9 +149,11 @@ static void mainloop(void *aContext)
     {
         /* Aqquired the task mutex lock and release after OT processing is done */
         appOtLockOtTask();
-        ncp_ot_fct_process();
-        otTaskletsProcess(gInstance);
-        otSysProcessDrivers(gInstance);
+        do
+        {
+            otTaskletsProcess(gInstance);
+            otSysProcessDrivers(gInstance);
+        } while (ncp_ot_fct_process());
         appOtUnlockOtTask();
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
