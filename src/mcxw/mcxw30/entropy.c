@@ -36,19 +36,25 @@
 #include "EmbeddedTypes.h"
 #include <openthread/platform/entropy.h>
 
+#include "RNG_Interface.h"
+
 void otPlatRandomInit(void)
 {
+    RNG_Init();
 }
 
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
-    uint8_t seed = 0;
+    int ret;
 
-    for (uint16_t i = 0; i < aOutputLength; i++)
+    ret = RNG_GetPseudoRandomData(aOutput, aOutputLength, NULL);
+    /*
+     * RNG_GetPseudoRandomData() returns on success the number of
+     * pseudorandom bytes.
+     */
+    if (ret >= 0)
     {
-        aOutput[i] = seed;
-        seed++;
+        ret = OT_ERROR_NONE;
     }
-
-    return OT_ERROR_NONE;
+    return ret;
 }
