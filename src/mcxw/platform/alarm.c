@@ -42,9 +42,12 @@
 #include "platform-mcxw72_nbu.h"
 #else
 #include "low_power.h"
-#endif
+/* Currently not existing for MCXW72 NBU ... */
+#include "fwk_platform_definitions.h"
+#endif /* MCXW727C_cm33_core1_SERIES */
 
 #include "fsl_os_abstraction.h"
+
 #include "fwk_platform.h"
 #include "openthread-system.h"
 #include <common/logging.hpp>
