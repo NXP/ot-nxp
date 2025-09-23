@@ -187,11 +187,15 @@ m_settings_buffer_start = m_154_addr_end + 1;
 m_settings_buffer_end = m_settings_buffer_start + m_settings_buffer_size - 1;
 
 m_free_data_start                 = m_settings_buffer_end + 1;
-m_free_data_size                  = m_shared_ram_end - m_sqram_rldat_end;
+m_free_data_size                  = m_shared_ram_end - m_settings_buffer_end;
 m_free_data_end                   = m_shared_ram_end;
 
+m_heap_start = DEFINED(gNBU_loc_d) ? (m_free_data_start + m_free_data_size / 2) : m_free_data_start;
+m_heap_size  = DEFINED(gNBU_loc_d) ? (m_free_data_size / 2) : m_free_data_size;
+m_heap_end   = m_free_data_end;
+
 /* The heap (if used) is using all the free_data section */
-__HEAP_end__                        = m_free_data_end;
+__HEAP_end__                        = m_heap_end;
 
 /* Specify the memory areas */
 MEMORY
@@ -210,7 +214,7 @@ MEMORY
   sqram_rldat_region (RW): ORIGIN = m_sqram_rldat_start, LENGTH = m_sqram_rldat_size
   rpmsg_sh_mem_region (RW): ORIGIN = rpmsg_sh_mem_start, LENGTH = rpmsg_sh_mem_size
   sqram_dbg_ext_logging_region (RW):ORIGIN = dbg_ext_logging_start, LENGTH = dbg_ext_logging_size
-  m_free_data_region (RW):ORIGIN = m_free_data_start, LENGTH = m_free_data_size
+  m_heap_region (RW):ORIGIN = m_heap_start, LENGTH = m_heap_size
   m_ot_heap_area            (RW) : ORIGIN = m_ot_heap_area_start, LENGTH = m_ot_heap_area_size
   m_154_addr_region         (RW) : ORIGIN = m_154_addr_start, LENGTH = m_154_addr_size
   m_settings_buffer_region  (RW) : ORIGIN = m_settings_buffer_start, LENGTH = m_settings_buffer_size
@@ -438,7 +442,7 @@ SECTIONS
     . += HEAP_SIZE;
     PROVIDE(__HeapLimit = .);
     *(.heap)
-  } > m_free_data_region
+  } > m_heap_region
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 
