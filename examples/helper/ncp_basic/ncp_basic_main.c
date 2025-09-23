@@ -26,21 +26,57 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
+#include "app.h"
+#include "fsl_os_abstraction.h"
+#include "ncp_serial_intf.h"
 
-void  serial_uart_init();
-void  serial_uart_process();
-void  serial_uart_tx(uint8_t *data, uint32_t len);
-void *serial_uart_get_write_handle();
+static void ncp_process()
+{
+    ncp_process_events();
 
-void  serial_rpmsg_init();
-void  serial_rpmsg_process();
-void  serial_rpmsg_tx(uint8_t *data, uint32_t len);
-void *serial_rpmsg_get_write_handle();
+#if !USE_RTOS
+#if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
+    /* Called from OSA main() */
+    OSA_ProcessTasks();
+#endif
 
-void plat_cmd_process(uint8_t *data, uint32_t len);
+    /* NvIdle(); */
+#endif
 
-void ncp_basic_init_1();
-void ncp_basic_init_2();
+    /* PWR_EnterLowPower(0); */ /* not necessary */
+}
 
-void ncp_process_events();
+static void ncp_basic_init()
+{
+#if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
+    /* Called from OSA main() */
+    /* Init clock config */
+    BOARD_InitHardware();
+#endif
+
+    ncp_basic_init_1();
+
+    /* APP_InitServices needs to be called before PLATFORM_InitOT because of function
+     *  PLATFORM_FwkSrvRegisterLowPowerCallbacks which needs to register callbacks before NBU is started.
+     *  [APP_InitServices=>APP_ServiceInitLowpower=>PWR_Init=>PLATFORM_LowPowerInit=>PLATFORM_FwkSrvRegisterLowPowerCallbacks]
+     *  When low power is enabled on the host core, the radio core may need to set/release low power constraints
+     *  as some resources needed by it are in the host power domain.
+     *  This callback registration needs to be done before starting the radio core to avoid any race condition. */
+    /* Usually called from main function but in case it is compiled for OT repo applications
+     *  then we call it here in case any hardware like buttons or leds are needed */
+    APP_InitServices();
+
+    ncp_basic_init_2();
+}
+
+int main()
+{
+    ncp_basic_init();
+
+    while (1)
+    {
+        ncp_process();
+    }
+
+    return 0;
+}

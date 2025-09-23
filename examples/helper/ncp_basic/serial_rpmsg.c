@@ -141,3 +141,8 @@ void serial_rpmsg_tx(uint8_t *data, uint32_t len)
         SerialManager_WriteBlocking(serial_write_handle, data, len);
     }
 }
+
+void *serial_rpmsg_get_write_handle()
+{
+    return &serial_write_handle;
+}

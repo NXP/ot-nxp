@@ -56,7 +56,9 @@ mcux_add_armgcc_configuration(
 mcux_add_source(
     BASE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
     SOURCES
+            ncp_basic_main.c
             ncp_basic.c
             serial_uart.c
             serial_rpmsg.c
+            ncp_serial_intf.h
 )

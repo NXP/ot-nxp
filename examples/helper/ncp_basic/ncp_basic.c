@@ -28,10 +28,8 @@
 
 #include "NVM_Interface.h"
 #include "RNG_Interface.h"
-#include "app.h"
 #include "fsl_adapter_rpmsg.h"
 #include "fsl_component_mem_manager.h"
-#include "fsl_os_abstraction.h"
 #include "fwk_platform.h"
 #include "fwk_platform_ot.h"
 #include "ncp_serial_intf.h"
@@ -205,57 +203,26 @@ static void plat_restore_plat_settings()
     }
 }
 
-static void process_events()
+void ncp_process_events()
 {
     serial_uart_process();
     serial_rpmsg_process();
-
-#if !USE_RTOS
-#if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
-    /* Called from OSA main() */
-    OSA_ProcessTasks();
-#endif
-
-    /* NvIdle(); */
-#endif
-
-    /* PWR_EnterLowPower(0); */ /* not necessary */
 }
 
-int main()
+void ncp_basic_init_1()
 {
-#if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
-    /* Called from OSA main() */
-    /* Init clock config */
-    BOARD_InitHardware();
-#endif
-
     MEM_Init();
 
     /* restore NVM before NBU init to have the data available for it */
     plat_restore_plat_settings();
+}
 
-    /* APP_InitServices needs to be called before PLATFORM_InitOT because of function
-     *  PLATFORM_FwkSrvRegisterLowPowerCallbacks which needs to register callbacks before NBU is started.
-     *  [APP_InitServices=>APP_ServiceInitLowpower=>PWR_Init=>PLATFORM_LowPowerInit=>PLATFORM_FwkSrvRegisterLowPowerCallbacks]
-     *  When low power is enabled on the host core, the radio core may need to set/release low power constraints
-     *  as some resources needed by it are in the host power domain.
-     *  This callback registration needs to be done before starting the radio core to avoid any race condition. */
-    /* Usually called from main function but in case it is compiled for OT repo applications
-     *  then we call it here in case any hardware like buttons or leds are needed */
-    APP_InitServices();
-
+void ncp_basic_init_2()
+{
     PLATFORM_InitOT();
 
     RNG_Init();
 
     serial_uart_init();
     serial_rpmsg_init();
-
-    while (1)
-    {
-        process_events();
-    }
-
-    return 0;
 }
