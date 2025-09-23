@@ -121,7 +121,7 @@ create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
         build_ot_without_rcp_image "$@"
-        build_ot_cli_ftd_ble_shell "$@"
+#        build_ot_cli_ftd_ble_shell "$@"
     elif [ "$1" == 'ot_without_rcp_image' ]; then
         build_ot_without_rcp_image "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
