@@ -931,7 +931,7 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 
     rf_set_channel(aChannel);
 
-    aStart = rf_adjust_tstamp_from_ot(aStart + (uint32_t)otPlatTimeGet());
+    aStart = rf_adjust_tstamp_from_ot(aStart);
 
     msg.msgType                           = gPlmeRxReq_c;
     msg.msgData.setTRxStateReq.state      = gPhySetRxOn_c;
@@ -940,7 +940,6 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
 
     (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 
-    stop_csl_receiver();
 exit:
     return status;
 }
@@ -1130,8 +1129,6 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
     extendedRadioFrame   *pRxFrame = NULL;
 
     assert(pMsg != NULL);
-
-    start_csl_receiver();
 
     switch (pDataMsg->msgType)
     {
