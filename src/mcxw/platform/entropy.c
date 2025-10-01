@@ -35,7 +35,14 @@
 #include "EmbeddedTypes.h"
 #include "fsl_os_abstraction.h"
 #include <openthread/platform/entropy.h>
+#include "mbedtls/version.h"
+// Needed for mbedtls_hardware_poll. For Mbedtls 3.x the path has changed
+// Also we could consider replacig mbedtls_hardware_poll with a more generic API.
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+#include "entropy_poll.h"
+#else
 #include "mbedtls/entropy_poll.h"
+#endif
 #include "utils/code_utils.h"
 
 #if defined(USE_RTOS) && (USE_RTOS == 1)
