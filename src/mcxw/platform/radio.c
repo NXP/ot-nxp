@@ -116,7 +116,11 @@ static void stop_csl_receiver();
 // clang-format on
 
 #ifndef MCXW_RADIO_NUM_OF_RX_BUFS
-#define MCXW_RADIO_NUM_OF_RX_BUFS (8) /* max number of RX buffers */
+#if USE_NBU
+#define MCXW_RADIO_NUM_OF_RX_BUFS (16) /* max number of RX buffers */
+#else
+#define MCXW_RADIO_NUM_OF_RX_BUFS (8)
+#endif
 #endif
 
 #if (MCXW_RADIO_NUM_OF_RX_BUFS) & (MCXW_RADIO_NUM_OF_RX_BUFS - 1)
@@ -1132,31 +1136,6 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
     switch (pDataMsg->msgType)
     {
-    case gPdDataCnf_c:
-        /* TX activity is done */
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
-            !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
-        {
-            otMacFrameSetFrameCounter(&sTxFrame, pDataMsg->fc);
-        }
-#endif
-
-        sTxStatus                       = OT_ERROR_NONE;
-        sRxAckFrame.mChannel            = sChannel;
-        sRxAckFrame.mLength             = pDataMsg->msgData.dataCnf.ackLength;
-        sRxAckFrame.mInfo.mRxInfo.mLqi  = pDataMsg->msgData.dataCnf.ppduLinkQuality;
-        sRxAckFrame.mInfo.mRxInfo.mRssi = pDataMsg->msgData.dataCnf.ppduRssi;
-        FLib_MemCpy(sRxAckFrame.mPsdu, pDataMsg->msgData.dataCnf.ackData, sRxAckFrame.mLength);
-        sTxDone = TRUE;
-
-        if (is_tx_poll && (sRxAckFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FP))
-        {
-            is_rx_after_poll = TRUE;
-        }
-        MSG_Free(pMsg); // for Ack we can free PHY Allocated buffer
-        break;
-
     case gPdDataInd_c:
         if (is_rx_after_poll &&
             !(pDataMsg->msgData.dataInd.pPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST))
@@ -1203,20 +1182,49 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
             MSG_Free(pMsg);
         }
 
-        if (is_rx_on_idle && (!pRxFrame || is_rx_ring_full()))
+        if (!rx_on_idle_disabled && is_rx_on_idle && (!pRxFrame || is_rx_ring_full()))
         {
             /* no room to receive more */
-            rf_abort();
+            rf_set_rx_on_idle(FALSE);
             rx_on_idle_disabled = TRUE;
         }
         break;
 
+    case gPdDataCnf_c:
     default:
-        MSG_Free(pMsg);
+        if (sState == OT_RADIO_STATE_TRANSMIT)
+        {
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+            if (otMacFrameIsSecurityEnabled(&sTxFrame) && otMacFrameIsKeyIdMode1(&sTxFrame) &&
+                !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed && !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
+            {
+                otMacFrameSetFrameCounter(&sTxFrame, pDataMsg->fc);
+            }
+#endif
+            sTxStatus = OT_ERROR_ABORT;
+
+            if (pDataMsg->msgType == gPdDataCnf_c)
+            {
+                sTxStatus                       = OT_ERROR_NONE;
+                sRxAckFrame.mChannel            = sChannel;
+                sRxAckFrame.mLength             = pDataMsg->msgData.dataCnf.ackLength;
+                sRxAckFrame.mInfo.mRxInfo.mLqi  = pDataMsg->msgData.dataCnf.ppduLinkQuality;
+                sRxAckFrame.mInfo.mRxInfo.mRssi = pDataMsg->msgData.dataCnf.ppduRssi;
+                FLib_MemCpy(sRxAckFrame.mPsdu, pDataMsg->msgData.dataCnf.ackData, sRxAckFrame.mLength);
+
+                if (is_tx_poll && (sRxAckFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FP))
+                {
+                    is_rx_after_poll = TRUE;
+                }
+            }
+
+            /* TX activity is done */
+            sTxDone    = TRUE;
+            is_tx_poll = FALSE;
+        }
+        MSG_Free(pMsg); // for Ack we can free PHY Allocated buffer
         break;
     }
-
-    is_tx_poll = FALSE;
 
     if (is_ed_scan)
     {
@@ -1225,18 +1233,21 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
         is_ed_scan  = FALSE;
     }
 
-    if (is_rx_on_idle || is_rx_after_poll)
+    if (sTxDone || (sState != OT_RADIO_STATE_TRANSMIT))
     {
-        sState = OT_RADIO_STATE_RECEIVE;
-
-        if (sTxDone)
+        if (is_rx_on_idle || is_rx_after_poll)
         {
-            rf_set_channel(sTxFrame.mInfo.mTxInfo.mRxChannelAfterTxDone);
+            sState = OT_RADIO_STATE_RECEIVE;
+
+            if (sTxDone)
+            {
+                rf_set_channel(sTxFrame.mInfo.mTxInfo.mRxChannelAfterTxDone);
+            }
         }
-    }
-    else
-    {
-        sState = OT_RADIO_STATE_SLEEP;
+        else
+        {
+            sState = OT_RADIO_STATE_SLEEP;
+        }
     }
 
     stop_csl_receiver();
@@ -1274,10 +1285,10 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
     case gPlmeEdCnf_c:
         sMaxED = pPlmeMsg->msgData.edCnf.maxEnergyLeveldB;
-        break;
 
     case gPlmeTimeoutInd_c:
     case gPlmeAbortInd_c:
+    default:
         if (OT_RADIO_STATE_TRANSMIT == sState)
         {
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1287,25 +1298,21 @@ phyStatus_t PLME_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
                 otMacFrameSetFrameCounter(&sTxFrame, pPlmeMsg->fc);
             }
 #endif
-            sTxStatus = OT_ERROR_NO_ACK; /* Ack timeout */
+            sTxStatus = OT_ERROR_ABORT;
 
-            if (pPlmeMsg->msgType == gPlmeAbortInd_c)
+            if (pPlmeMsg->msgType == gPlmeTimeoutInd_c)
             {
-                /* TX Packet was loaded into TX Packet RAM but the TX/TR seq did not ended ok */
-                sTxStatus = OT_ERROR_ABORT;
+                sTxStatus = OT_ERROR_NO_ACK; /* Ack timeout */
             }
-            sTxDone = TRUE;
+            sTxDone          = TRUE;
+            is_tx_poll       = FALSE;
+            is_rx_after_poll = FALSE;
         }
         break;
-
-    default:
-        break;
     }
+
     /* The message has been allocated by the Phy, we have to free it */
     MSG_Free(pMsg);
-
-    is_tx_poll       = FALSE;
-    is_rx_after_poll = FALSE;
 
     if (is_ed_scan)
     {
