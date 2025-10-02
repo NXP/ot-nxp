@@ -41,7 +41,7 @@ $ pip3 install pycryptodome
 Download the K32W0 SDK using the west tool.
 
 ```bash
-$ cd third_party/k32w0_sdk/repo
+$ cd third_party/k32w061_sdk/repo
 $ west init -l manifest --mf west.yml
 $ west update
 ```
@@ -49,7 +49,7 @@ $ west update
 In case there are local modification to the already installed git NXP SDK. Use the west forall command instead of the west init to reset the west workspace before running the west update command. Warning: all local changes will be lost after running this command.
 
 ```bash
-$ cd third_party/k32w0_sdk/repo
+$ cd third_party/k32w061_sdk/repo
 $ west forall -c "git reset --hard && git clean -xdf" -a
 ```
 
