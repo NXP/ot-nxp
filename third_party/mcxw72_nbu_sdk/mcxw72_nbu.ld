@@ -33,6 +33,8 @@ GROUP (
 /* Entry Point */
 ENTRY(Reset_Handler)
 /* Stack and Heap Sizes */
+__stack_size__ = 0x1000;
+
 __size_cstack__        = DEFINED(__stack_size__)?__stack_size__:0x0400;
 __size_heap__          = DEFINED(__heap_size__)?__heap_size__:0x000;
 m_flash_start                       = 0x00000000;
@@ -65,14 +67,9 @@ m_interrupts_ram_end                = m_interrupts_ram_start + m_ram_vector_tabl
 __VECTOR_RAM                        = m_interrupts_ram_start;
 __RAM_VECTOR_TABLE_SIZE_BYTES       = m_ram_vector_table_size;
 
-m_cstack_start                      = m_dmem_start;
-m_cstack_end                        = m_cstack_start + __size_cstack__ - 1;
-m_data1_size                        = m_dmem_size - __size_cstack__;
-m_data1_start                       = m_cstack_end + 1;
+m_data1_size                        = m_dmem_size;
+m_data1_start                       = m_dmem_start;
 m_data1_end                         = m_dmem_end;
-
-firmware_ram_lower_limit            = DEFINED(lp_ram_lower_limit) ? lp_ram_lower_limit : m_cstack_start;
-firmware_ram_upper_limit            = DEFINED(lp_ram_upper_limit) ? lp_ram_upper_limit : m_data1_end;
 
 /********************************************** NBU shared memory **********************************************
 
@@ -172,13 +169,17 @@ m_sqram_rldat_size                = 0x005dc;  /*to hold 24 connection contexts*/
 m_sqram_rldat_end                 = m_sqram_rldat_start + m_sqram_rldat_size -1;
 
 /* OT heap */
-m_ot_heap_area_size = 0x4700;
+m_ot_heap_area_size = 0x407c;
 m_ot_heap_area_start = m_sqram_rldat_end + 1;
 m_ot_heap_area_end = m_ot_heap_area_start + m_ot_heap_area_size - 1;
 
+/* stack, must be aligned to 8 */
+m_cstack_start                      = m_ot_heap_area_end + 1;
+m_cstack_end                        = m_cstack_start + __size_cstack__ - 1;
+
 /* PLATFORM_GetIeee802_15_4Addr() */
 m_154_addr_size = 0xa;
-m_154_addr_start = m_ot_heap_area_end + 1;
+m_154_addr_start = m_cstack_end + 1;
 m_154_addr_end = m_154_addr_start + m_154_addr_size - 1;
 
 /* settings buffer */
