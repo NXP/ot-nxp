@@ -104,7 +104,7 @@ static bool    GetAddrFromRa(const uint8_t *aBuffer,
                              uint32_t      *valid_t,
                              uint32_t      *pref_t);
 static void    SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_t valid_t, uint32_t pref_t);
-static void    RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint16_t aBufferLength);
+static void RaFromOtToLwip(struct netif *aNetif, const uint8_t *aBuffer, uint16_t aBufferLength);
 static uint8_t ReceiveIcmp6Message(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr);
 static void    InfraIfProcessOtReceive(brMsgContext *aContextMsgPtr);
 
@@ -304,6 +304,7 @@ exit:
 static void LwipTaskCb(void *context)
 {
     struct ndSendContext *ndSendContexPtr = (struct ndSendContext *)context;
+    struct netif *netif = netif_get_by_index(ndSendContexPtr->infraIfIndex);
 
     /* Parse RA and extract prefix form PIO to allow LWIP to configure IP from announced prefix. */
     /* This must be executed before raw_sendto_if_src because the payload from pktBuffer is modified
@@ -313,9 +314,11 @@ static void LwipTaskCb(void *context)
     VerifyOrExit(ndBuffer != NULL);
     memcpy(ndBuffer->payload, ndSendContexPtr->buffer, ndSendContexPtr->bufferLen);
 
-    RaFromOtToLwip(ndSendContexPtr->infraIfIndex, ndBuffer->payload, ndSendContexPtr->bufferLen);
-
-    raw_sendto_if_src(sIcmp6RawPcb, ndBuffer, &ndSendContexPtr->dstIp, sNetifPtr, &ndSendContexPtr->srcIp);
+    if (NULL != netif)
+    {
+        RaFromOtToLwip(netif, ndBuffer->payload, ndSendContexPtr->bufferLen);
+        raw_sendto_if_src(sIcmp6RawPcb, ndBuffer, &ndSendContexPtr->dstIp, sNetifPtr, &ndSendContexPtr->srcIp);
+    }
 
 exit:
     pbuf_free(ndBuffer);
@@ -443,11 +446,11 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
 /**
  *  Parses icmp6 packet and sets ip based on prefix to infra netif if found.
  *
- * @param aInfraIfIndex Index of infrastructure netif
+ * @param aNetif        Infrastructure netif
  * @param aBuffer       Buffer with icmp6 packet
  * @param aBufferLength Lenght of packet
  */
-static void RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint16_t aBufferLength)
+static void RaFromOtToLwip(struct netif *aNetif, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
     ip6_addr_t addr;
     uint32_t   valid_t;
@@ -455,8 +458,7 @@ static void RaFromOtToLwip(uint32_t aInfraIfIndex, const uint8_t *aBuffer, uint1
 
     if (GetAddrFromRa(aBuffer, aBufferLength, &addr, &valid_t, &pref_t))
     {
-        struct netif *netif = netif_get_by_index(aInfraIfIndex);
-        SetOrUpdateAddrFromRa(netif, &addr, valid_t, pref_t);
+        SetOrUpdateAddrFromRa(aNetif, &addr, valid_t, pref_t);
     }
 }
 
