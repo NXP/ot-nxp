@@ -55,6 +55,7 @@ readonly OT_OPTIONS_RCP_ONLY_UART_FLOW_CONTROL=(
     "-DUART_BAUD_RATE=1000000"
     "-DUART_INSTANCE=0"
     "-DOT_APP_LOWPOWER=OFF"
+    "-DOT_NXP_NVS=OFF"
 )
 
 readonly OT_OPTIONS_CLI_FTD_ZC=(
@@ -69,6 +70,7 @@ readonly OT_OPTIONS_CLI_FTD_ZC=(
     "-DOT_PING_SENDER=ON"
     "-DUART_INSTANCE=1"
     "-DNO_THREAD_1_3_FLAGS=ON"
+    "-DOT_NXP_NVS=OFF"
 )
 
 readonly OT_OPTIONS_RCP_ONLY_UART_DMA=(
@@ -78,6 +80,7 @@ readonly OT_OPTIONS_RCP_ONLY_UART_DMA=(
     "-DOT_MTD=OFF"
     "-DUART_BAUD_RATE=1000000"
     "-DOT_APP_LOWPOWER=OFF"
+    "-DOT_NXP_NVS=OFF"
 )
 
 readonly OT_OPTIONS_RCP_UART_DMA_ZB_COPROCESSOR=(
@@ -95,6 +98,7 @@ readonly OT_OPTIONS_RCP_UART_DMA_ZB_COPROCESSOR=(
     "-DUART_BAUD_RATE=1000000"
     "-DUART_INSTANCE=1"
     "-DOT_APP_LOWPOWER=OFF"
+    "-DOT_NXP_NVS=OFF"
 )
 
 readonly OT_OPTIONS_NO_RCP=(
@@ -103,6 +107,7 @@ readonly OT_OPTIONS_NO_RCP=(
     "-DOT_RCP=OFF"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
     "-DOT_APP_LOWPOWER=ON"
+    "-DOT_NXP_NVS=OFF"
 )
 
 readonly OT_OPTIONS_CLI_FTD_BLE_SHELL=(
@@ -119,6 +124,38 @@ readonly OT_OPTIONS_CLI_FTD_BLE_SHELL=(
     "-DCONF_FILE=${OT_SRCDIR}/examples/hybrid/ot_cli_ftd_ble_shell/prj.conf"
 )
 
+readonly OT_OPTIONS_CLI_NVS=(
+    "-DOT_APP_NCP=OFF"
+    "-DOT_APP_RCP=OFF"
+    "-DOT_RCP=OFF"
+    "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
+    "-DOT_APP_LOWPOWER=ON"
+    "-DOT_NXP_NVS=ON"
+)
+
+# Add this function after the readonly declarations
+get_conf_file_for_build() {
+    local build_options=("$@")
+    local nvs_status="missing"  # Can be "on", "off", or "missing"
+
+    # Check if NVS is enabled in the build options
+    for option in "${build_options[@]}"; do
+        if [[ "$option" == "-DOT_NXP_NVS=ON" ]]; then
+            nvs_status="on"
+            break
+        elif [[ "$option" == "-DOT_NXP_NVS=OFF" ]]; then
+            nvs_status="off"
+            break
+        fi
+    done
+
+    if [[ "$nvs_status" == "on" ]]; then
+        echo "-DCONF_FILE=${OT_SRCDIR}/src/mcxw/platform/prj_nvs.conf"
+    elif [[ "$nvs_status" == "off" ]]; then
+        echo "-DCONF_FILE=${OT_SRCDIR}/src/mcxw/platform/prj_nvm.conf"
+    fi
+}
+
 build()
 {
     local cmakeArgs=("${@}")
@@ -127,6 +164,10 @@ build()
         cmakeArgs=("${@:2}")
         rcp_folder_name="/$1"
     fi
+
+    # Add conditional CONF_FILE based on NVS setting
+    local conf_file_option=$(get_conf_file_for_build "${cmakeArgs[@]}")
+    cmakeArgs+=("$conf_file_option")
 
     # shellcheck disable=SC2068
     west build -d "${BUILD_DIR}${rcp_folder_name}" --config release -b frdmmcxw71 . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
@@ -229,6 +270,22 @@ build_ot_cli_ftd_ble_shell()
     fi
 }
 
+build_ot_cli_nvs()
+{
+    echo "Building OT CLI with NVS support ..."
+    app_folder_name="ot_cli_nvs"
+    local options=("${app_folder_name}")
+    options+=("${OT_OPTIONS_CLI_NVS[@]}")
+    options+=("${OT_OPTIONS[@]}")
+    options+=("$@")
+    options+=(" -DSDK_RELEASE=$SDK_RELEASE")
+    build "${options[@]}"
+
+    if [ $? -eq 1 ]; then
+        exit 1
+    fi
+}
+
 create_directory_and_build()
 {
     if [ "$1" == 'all' ]; then
@@ -236,6 +293,7 @@ create_directory_and_build()
         build_ot_rcp_only_uart_flow_control "$@"
         build_ot_rcp_only_uart_dma "$@"
         build_ot_cli_ftd_ble_shell "$@"
+        build_ot_cli_nvs "$@"
         # build_ot_cli_ftd_zc "$@"
         # build_ot_rcp_uart_dma_zb_coprocessor "$@"
 
@@ -251,8 +309,10 @@ create_directory_and_build()
         exit 128 # build_ot_rcp_uart_dma_zb_coprocessor "$@"
     elif [ "$1" == 'ot_cli_ftd_ble_shell' ]; then
         build_ot_cli_ftd_ble_shell "$@"
+    elif [ "$1" == 'ot_cli_nvs' ]; then
+        build_ot_cli_nvs "$@"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, ot_cli_ftd_ble_shell, ot_rcp_only_uart_dma, ot_rcp_only_uart_flow_control, "
+        echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, ot_cli_ftd_ble_shell, ot_rcp_only_uart_dma, ot_rcp_only_uart_flow_control, build_ot_cli_nvs"
         # echo >&2 "Unsupported action: $1. Supported: all, ot_without_rcp_image, ot_cli_ftd_zc, ot_rcp_uart_dma_zb_coprocessor, ot_cli_ftd_ble_shell"
         # 128 for Invalid arguments
         exit 128

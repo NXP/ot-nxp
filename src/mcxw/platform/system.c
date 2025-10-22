@@ -41,7 +41,7 @@
 #include "hdi.h"
 #endif
 #if !USE_RTOS
-#include "NVM_Interface.h"
+#include "ot_platform_common.h"
 #endif
 #include "RNG_Interface.h"
 #include "SecLib.h"
@@ -218,7 +218,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     OSA_ProcessTasks();
 #endif
 
-    NvIdle();
+    otPlatSaveSettingsIdle();
 #endif
 
 #if !defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE == 0))
