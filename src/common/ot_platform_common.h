@@ -147,7 +147,7 @@ otError otPlatResetOt(void);
  * This function process radio events.
  *
  */
-void otPlatRadioProcess(const otInstance *aInstance);
+void otPlatRadioProcess(otInstance *aInstance);
 
 /**
  * This function process cli event.

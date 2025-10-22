@@ -546,7 +546,7 @@ void otPlatRadioDeinit(void)
     sSpinelDriver.Deinit();
 }
 
-void otPlatRadioProcess(const otInstance *aInstance)
+void otPlatRadioProcess(otInstance *aInstance)
 {
     sSpinelDriver.Process(aInstance);
     sRadioSpinel.Process(aInstance);

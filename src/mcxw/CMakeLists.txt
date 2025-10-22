@@ -40,8 +40,17 @@ if (NOT OT_NXP_PLATFORM MATCHES "nbu")
         platform/radio.c
         platform/system.c
         platform/uart.c
-        ../common/flash_nvm.c
     )
+
+    if (OT_NXP_NVS MATCHES "ON")
+        list(APPEND OT_NXP_PLATFORM_SOURCES
+            ../common/flash_nvs.c
+        )
+    else()
+        list(APPEND OT_NXP_PLATFORM_SOURCES
+            ../common/flash_nvm.c
+        )
+    endif()
 
     if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
         list(APPEND OT_NXP_PLATFORM_SOURCES
@@ -78,6 +87,7 @@ endif()
 set(OT_NXP_PLATFORM_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/openthread/examples/platforms
+    ../common
 )
 
 include(${PROJECT_SOURCE_DIR}/src/mcxw/platform/mcxw.cmake)

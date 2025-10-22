@@ -26,6 +26,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+if((NOT DEFINED OT_NXP_NVS) OR (DEFINED OT_NXP_NVS AND OT_NXP_NVS MATCHES OFF))
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
+        gNvStorageIncluded_d=1
+        gUnmirroredFeatureSet_d=1
+        gNvFragmentation_Enabled_d=1
+    )
+endif()
+
 if (OT_APP_LOWPOWER)
     target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=1
@@ -47,9 +55,6 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     TM_ENABLE_TIME_STAMP=1
     FSL_OSA_TASK_ENABLE=1
     gAspCapability_d=1
-    gNvStorageIncluded_d=1
-    gUnmirroredFeatureSet_d=1
-    gNvFragmentation_Enabled_d=1
     gAppButtonCnt_c=2
     gBleBondIdentityHeaderSize_c=56
     gPlatformShutdownEccRamInLowPower=0
