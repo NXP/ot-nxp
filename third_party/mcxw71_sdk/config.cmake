@@ -59,6 +59,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     DEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1
     SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\"
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
+    gFro192mDisableTrim_d=1
 )
 
 target_compile_options(${OT_MCUX_SDK_TARGET} PUBLIC
