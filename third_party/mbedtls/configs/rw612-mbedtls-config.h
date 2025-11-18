@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2025, NXP.
+ *  Copyright (c) 2022-2026, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -48,9 +48,11 @@
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_ENTROPY_FORCE_SHA256
-
-/* SDK mbetdls config include */
-#include "els_pkc_mbedtls_config.h"
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#define MBEDTLS_MCUX_ENTROPY 1
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
 
 #ifdef CONFIG_WPA_SUPP_MBEDTLS
 /* wpa_supplicant mbedtls extend config */
@@ -76,5 +78,8 @@
 
 /* Undef this flag to make sure to use hardware entropy */
 #undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+
+#undef MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
+#undef MBEDTLS_ECP_MAX_BITS
 
 #endif // RW612_MBEDTLS_CONFIG_H

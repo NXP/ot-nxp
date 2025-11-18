@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021-2022, The OpenThread Authors.
- *  Copyright 2024 NXP
+ *  Copyright 2024, 2026 NXP
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,10 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/settings.h>
 #include "common/logging.hpp"
+#include "psa/crypto.h"
+#if defined(MBEDTLS_THREADING_C)
+#include "mbedtls/threading.h"
+#endif
 
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0))
 #include "fsl_component_log_backend_debugconsole.h"
@@ -110,6 +114,12 @@ void otSysInit(int argc, char *argv[])
 
 #ifdef OT_PLAT_SYS_CRYPTO_INIT
     CRYPTO_InitHardware();
+#elif defined(OT_PLAT_SYS_CRYPTO_PSA_INIT)
+#if defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_ALT)
+    config_mbedtls_threading_alt();
+#endif /* (MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_ALT) */
+    psa_status_t status = psa_crypto_init();
+    assert(status == PSA_SUCCESS);
 #endif
 
     otPlatSettingsInit(NULL, NULL, 0);

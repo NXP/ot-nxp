@@ -1,6 +1,6 @@
 #
 #  Copyright (c) 2021-2023, The OpenThread Authors.
-#  Copyright 2024 NXP
+#  Copyright 2024, 2026 NXP
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -201,8 +201,7 @@ target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
         ${OT_PLATFORM_DEFINES}
         -DOT_PLAT_SPINEL_OVER_HDLC
-        -DOT_PLAT_SYS_CRYPTO_INIT
-        -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"els_pkc_mbedtls.h\"
+        -DOT_PLAT_SYS_CRYPTO_PSA_INIT
         -DLOG_BUFFER_ENABLED
 )
 
