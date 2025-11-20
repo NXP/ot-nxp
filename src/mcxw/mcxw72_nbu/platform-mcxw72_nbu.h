@@ -33,6 +33,7 @@
 #include <openthread/config.h>
 #include <openthread/instance.h>
 
+#include "EmbeddedTypes.h"
 #include <stdint.h>
 
 #define PLAT_SETTINGS_BUFF_SIZE 1028
@@ -93,8 +94,9 @@ void otPlatLogInit();
 
 void PLATFORM_GetIeee802_15_4Addr(uint8_t *eui64);
 
-void PWR_AllowDeviceToSleep();
-void PWR_DisallowDeviceToSleep();
+void   PWR_AllowDeviceToSleep();
+void   PWR_DisallowDeviceToSleep();
+bool_t plat_lp_allowed();
 
 void plat_settings_load(void *data);
 void plat_settings_save(void *data);
