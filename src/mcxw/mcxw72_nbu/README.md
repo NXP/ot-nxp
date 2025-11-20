@@ -68,6 +68,8 @@ Then run the build scripts:
 $ cd <path-to-ot-nxp>
 $ ./script/build_mcxw72_nbu ot_without_rcp_image
 $ west build -d build_ncp_basic -b mcxw72evk examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
+$ ./script/build_mcxw72_nbu ncp_ot_ble_ll
+$ west build -d build_ncp_advanced -b mcxw72evk examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
 ```
 
 - Windows
@@ -76,14 +78,19 @@ $ west build -d build_ncp_basic -b mcxw72evk examples/helper/ncp_basic -Dcore_id
 > cd <path-to-ot-nxp>
 > sh script/build_mcxw72_nbu ot_without_rcp_image
 > west build -d build_ncp_basic -b mcxw72evk examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
+> sh script/build_mcxw72_nbu ncp_ot_ble_ll
+> west build -d build_ncp_advanced -b mcxw72evk examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
 ```
 
 After a successful build, the `elf` files are found in `build_mcxw72_nbu/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications.
 In `build_ncp_basic` folder there is `ncp-basic_cm33_core0.elf`.
+In `build_mcxw72_nbu/ncp_ot_ble_ll/bin` folder there is `ncp-ot-ble-ll-mcxw72_nbu.elf`.
+In `build_ncp_advanced` folder there is `ncp-advanced_cm33_core0.elf`.
 
 ## Flashing
 
 Two images must be written to the board: one for the host (CM33) (`ncp-basic_cm33_core0.elf`) and one for the NBU (CM33) (`ot-cli-ftd.elf`).
+For NCP demo, you have to use `ncp-advanced_cm33_core0.elf` and `ncp-ot-ble-ll-mcxw72_nbu.elf`.
 
 - Plug MCXW72 to the USB port
 
@@ -94,7 +101,7 @@ $  jlink -AutoConnect 1 -If SWD -Speed 4000 -NoGui 1 -Device KW47B42ZB7_CORE0 -S
 $ reset
 $ halt
 $ erase
-$ loadfile ncp-basic_cm33_core0.elf
+$ loadfile ncp-basic_cm33_core0.elf (or ncp-advanced_cm33_core0.elf)
 $ r
 $ g
 $ q
@@ -106,7 +113,7 @@ $ q
 $  jlink -AutoConnect 1 -If SWD -Speed 4000 -NoGui 1 -Device KW47B42ZB7_CORE1 -SelectEmuBySN <SN>
 $ reset
 $ halt
-$ loadfile ot-cli-ftd.elf
+$ loadfile ot-cli-ftd.elf (or ncp-ot-ble-ll-mcxw72_nbu.elf)
 $ r
 $ g
 $ q
@@ -197,3 +204,9 @@ fe80:0:0:0:5c91:c61:b67c:271c
 For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
 [cli]: https://github.com/openthread/openthread/blob/main/src/cli/README.md
+
+## NCP demo
+
+Same as above for the OpenThread.
+You can also connect to the board over BLE from the IoT Toolbox phone app using Wireless UART option.
+By doing so, you can type commands for the OpenThread CLI.
