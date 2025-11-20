@@ -63,6 +63,7 @@ readonly OT_OPTIONS_CLI_FTD_OSA=(
     "-DOT_MTD=OFF"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
     "-DOT_APP_LOWPOWER=OFF"
+    "-DOT_PING_SENDER=ON"
     "-DOT_APP_OT_CLI_FTD_OSA=ON"
     "-DCONF_FILE=${OT_SRCDIR}/examples/ot_cli_ftd_osa/mcxw72_nbu/prj.conf"
     "-DAPP_CONF_CMAKE=${OT_SRCDIR}/examples/ot_cli_ftd_osa/mcxw72_nbu/app_conf.cmake"
