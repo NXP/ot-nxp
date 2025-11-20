@@ -10,7 +10,7 @@
 #include "openthread/tasklet.h"
 
 #undef OT_TASK_STACK_SIZE
-#define OT_TASK_STACK_SIZE 3072
+#define OT_TASK_STACK_SIZE 3712
 
 void otAppCliInit(otInstance *aInstance);
 
@@ -21,7 +21,7 @@ static bool        ot_task_init_done = false;
 
 static OSA_SEMAPHORE_HANDLE_DEFINE(ot_sem);
 static OSA_TASK_HANDLE_DEFINE(ot_task_handle);
-static OSA_TASK_DEFINE(ot_task, gMainThreadPriority_c, 1, OT_TASK_STACK_SIZE, 0);
+static OSA_TASK_DEFINE(ot_task, gMainThreadPriority_c + 1, 1, OT_TASK_STACK_SIZE, 0);
 
 void ot_sys_init()
 {
@@ -49,6 +49,8 @@ static void ot_task()
     {
         if (OSA_SemaphoreWait((osa_semaphore_handle_t)ot_sem, osaWaitForever_c) == KOSA_StatusSuccess)
         {
+            otSysProcessDrivers(ot_instance);
+
             while (otTaskletsArePending(ot_instance))
             {
                 otTaskletsProcess(ot_instance);

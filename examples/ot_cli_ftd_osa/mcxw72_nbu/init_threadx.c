@@ -12,6 +12,7 @@
 #endif
 
 uint32_t BOARD_GetSystemCoreClockFreq();
+void     ot_sys_init();
 void     create_ot_task();
 
 static void init_sys_tick()
@@ -26,8 +27,8 @@ void tx_application_define(void *p)
 {
     (void)p;
 
+    ot_sys_init();
     create_ot_task();
-
     init_sys_tick();
 }
 

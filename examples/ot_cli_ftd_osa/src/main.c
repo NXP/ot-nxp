@@ -15,9 +15,8 @@ int main()
     OSA_Init();
     MEM_Init();
 
-    ot_sys_init();
-
 #ifndef FSL_RTOS_THREADX
+    ot_sys_init();
     create_ot_task();
 #endif
 
