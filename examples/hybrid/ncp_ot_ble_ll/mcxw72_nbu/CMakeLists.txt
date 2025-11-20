@@ -48,5 +48,5 @@ target_link_libraries(ncp-ot-ble-ll-${OT_NXP_PLATFORM} PUBLIC
     ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libcommon.a
     -Wl,--end-group
 
-    -Wl,--wrap=tx_application_define
+    -Wl,--wrap=fsciBleRegister,--wrap=tx_application_define
 )
