@@ -11,6 +11,20 @@
 extern "C" {
 #endif
 
+#undef advState_tag
+#define advState_tag                                                                             \
+    my_dummy_tag                                                                                 \
+    {                                                                                            \
+        uint8_t tmp;                                                                             \
+    }                                                                                            \
+    my_dummy_t;                                                                                  \
+    static void hsdkObserverGATTClientRegisterIndicationCallback(bleEvtContainer_t *pContainer); \
+    void        my_f()                                                                           \
+    {                                                                                            \
+        hsdkObserverGATTClientRegisterIndicationCallback(NULL);                                  \
+    };                                                                                           \
+    typedef struct advState_tag
+
 #undef gAppLedCnt_c
 #undef gAppButtonCnt_c
 #undef gAppUseSerialManager_c

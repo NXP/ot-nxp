@@ -26,7 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "PWR_Interface.h"
 #include "fsl_component_serial_manager.h"
+#include "host_hsdk_interface.h"
 #include "ncp_serial_intf.h"
 #include "w_uart_application.h"
 
@@ -34,9 +36,10 @@
 
 void                    __real_APP_InitServices();
 void                    __real_OSA_ProcessTasks();
-void                    __real_serial_rpmsg_tx(uint8_t *data, uint32_t len);
+uint8_t                 __real_OSA_TaskShouldYield();
 serial_manager_status_t __real_SerialManager_WriteBlocking(serial_write_handle_t wh, uint8_t *b, uint32_t l);
 serial_manager_status_t __real_SerialManager_WriteNonBlocking(serial_write_handle_t wh, uint8_t *b, uint32_t l);
+bool_t                  __real_RegisterRemovableObserver(bleFsciIds_t fsciIds, eventCallback_t pCallback);
 
 static void *uart_write_handle  = NULL;
 static void *rpmsg_write_handle = NULL;
@@ -62,19 +65,14 @@ void __wrap_OSA_ProcessTasks()
     __real_OSA_ProcessTasks();
 }
 
-void __wrap_serial_rpmsg_tx(uint8_t *data, uint32_t len)
+uint8_t __wrap_OSA_TaskShouldYield()
 {
-    /* send data (OT command) over BLE too */
-    BleApp_SendUartStream(data, len);
-
-    __real_serial_rpmsg_tx(data, len);
+    return PWR_IsDeviceAllowedToSleep() || __real_OSA_TaskShouldYield();
 }
 
 static serial_manager_status_t write_ble_msg(uint8_t *data, uint32_t len)
 {
-    serial_uart_tx((uint8_t *)"\nble: ", BLE_CMD_PREFIX_SIZE);
-    serial_uart_tx(data, len);
-    serial_uart_tx((uint8_t *)"\n", 1);
+    serial_rpmsg_tx(data, len);
 
     /* the BLE app frees the buffer if error is returned */
     return kStatus_SerialManager_Busy;
@@ -126,4 +124,28 @@ serial_manager_status_t __wrap_SerialManager_InstallTxCallback(serial_write_hand
 void ScanningTimerCallback(void *p)
 {
     (void)p;
+}
+
+static bleFsciIds_t    last_fsci_id;
+static eventCallback_t last_cb;
+
+bool_t __wrap_RegisterRemovableObserver(bleFsciIds_t fsciIds, eventCallback_t pCallback)
+{
+    last_fsci_id = fsciIds;
+    last_cb      = pCallback;
+
+    return __real_RegisterRemovableObserver(fsciIds, pCallback);
+}
+
+mem_status_t __wrap_GATTClientRegisterProcedureCallbackRequest(uint8_t fsciInterface)
+{
+    if (last_cb)
+    {
+        RemoveObserver(last_fsci_id, last_cb);
+    }
+
+    void my_f();
+    my_f(); /* hsdkObserverGATTClientRegisterIndicationCallback(NULL) */
+
+    return kStatus_MemSuccess;
 }

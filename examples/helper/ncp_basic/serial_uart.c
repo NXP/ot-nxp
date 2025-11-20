@@ -28,6 +28,7 @@
 
 #include "EmbeddedTypes.h"
 
+#include "PWR_Interface.h"
 #include "fsl_component_serial_manager.h"
 #include "fsl_os_abstraction.h"
 #include "ncp_serial_intf.h"
@@ -65,7 +66,7 @@ static void rx_cb(void *pData, serial_manager_callback_message_t *message, seria
     if (!rx_data_pending)
     {
         rx_data_pending = TRUE;
-        // PWR_DisallowDeviceToSleep();
+        PWR_DisallowDeviceToSleep();
     }
     OSA_InterruptEnable();
 }
@@ -114,7 +115,7 @@ void serial_uart_process()
     {
         read_data       = TRUE;
         rx_data_pending = FALSE;
-        // PWR_AllowDeviceToSleep();
+        PWR_AllowDeviceToSleep();
     }
     OSA_InterruptEnable();
 
