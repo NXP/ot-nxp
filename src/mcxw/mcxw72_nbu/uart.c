@@ -46,9 +46,6 @@
 #error "mcxw72_nbu serial rx buffer is to small"
 #endif
 
-#define PWR_AllowDeviceToSleep()
-#define PWR_DisallowDeviceToSleep()
-
 static SERIAL_MANAGER_HANDLE_DEFINE(otCliSerialHandle);
 static SERIAL_MANAGER_WRITE_HANDLE_DEFINE(otCliSerialWriteHandle);
 static SERIAL_MANAGER_READ_HANDLE_DEFINE(otCliSerialReadHandle);

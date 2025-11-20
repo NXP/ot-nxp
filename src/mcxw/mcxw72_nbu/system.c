@@ -199,7 +199,7 @@ void otPlatReset(otInstance *aInstance)
     }
 }
 
-static void plat_init_mpu()
+void plat_init_mpu()
 {
     /* add SMU2 as regular memory to avoid unaligned access exception */
     ARM_MPU_SetRegion(SMU2_MAIR_IDX, SMU2_CM33_BASE_ADDR,
@@ -215,6 +215,8 @@ void otSysInit(int argc, char *argv[])
 {
     if (argc != 1)
     {
+        plat_init_mpu();
+
         /* do basic init */
 #if !defined(FSL_OSA_MAIN_FUNC_ENABLE) || (FSL_OSA_MAIN_FUNC_ENABLE == 0)
         /* Called from OSA main() */
@@ -223,8 +225,6 @@ void otSysInit(int argc, char *argv[])
 
         MEM_Init();
     }
-
-    plat_init_mpu();
 
     HAL_RpmsgMcmgrInit();
     PLATFORM_FwkSrvInit();
@@ -309,12 +309,27 @@ void otSysProcessDrivers(otInstance *aInstance)
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 }
 
+static uint8_t lp_cnt = 0; /* 0 allows low power entry */
+
+bool_t plat_lp_allowed()
+{
+    return !lp_cnt;
+}
+
 void PWR_AllowDeviceToSleep()
 {
+    if (lp_cnt)
+    {
+        lp_cnt--;
+    }
 }
 
 void PWR_DisallowDeviceToSleep()
 {
+    if (lp_cnt != (uint8_t)UINT8_MAX)
+    {
+        lp_cnt++;
+    }
 }
 
 #ifndef gMWS_Enabled_d
