@@ -6,19 +6,23 @@
 
 #include "fsl_component_mem_manager.h"
 
-void ot_sys_init();
+void plat_init_mpu();
 void create_ot_task();
 void __real_tx_application_define(void *p);
+void __real_fsciBleRegister(uint32_t t);
 
 void __wrap_tx_application_define(void *p)
 {
-    (void)p;
-
-    MEM_Init();
-    ot_sys_init();
-    create_ot_task();
-
-    RADIO_CTRL->RF_CLK_CTRL |= RADIO_CTRL_RF_CLK_CTRL_ZBLL_CLK_EN_OVRD(1);
+    plat_init_mpu();
 
     __real_tx_application_define(p);
+}
+
+void __wrap_fsciBleRegister(uint32_t t)
+{
+    RADIO_CTRL->RF_CLK_CTRL |= RADIO_CTRL_RF_CLK_CTRL_ZBLL_CLK_EN_OVRD(1);
+
+    create_ot_task();
+
+    __real_fsciBleRegister(t);
 }
