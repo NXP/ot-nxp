@@ -578,6 +578,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     /* sTxData bufer has reserved memory for both macToPdDataMessage_t and actual data frame after */
     macToPdDataMessage_t *msg = (macToPdDataMessage_t *)sTxData;
     phyStatus_t           phy_status;
+    otRadioState          tmp_state;
 
     otEXPECT_ACTION((sState != OT_RADIO_STATE_DISABLED), status = OT_ERROR_INVALID_STATE);
 
@@ -666,15 +667,17 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
 #endif
 
+    tmp_state = sState;
+    sState    = OT_RADIO_STATE_TRANSMIT;
+
     phy_status = MAC_PD_SapHandler(msg, ot_phy_ctx);
     if (phy_status == gPhySuccess_c)
     {
-        sTxStatus = OT_ERROR_NONE;
-        sState    = OT_RADIO_STATE_TRANSMIT;
         otPlatRadioTxStarted(aInstance, aFrame);
     }
     else
     {
+        sState = tmp_state;
         status = OT_ERROR_INVALID_STATE;
     }
 exit:
