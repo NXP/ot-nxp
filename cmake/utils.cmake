@@ -45,14 +45,17 @@ function(export_target_to_bin target)
     if(type MATCHES "EXECUTABLE")
         # message(STATUS "Target ${target} will be exported to raw binary format")
         set(target_bin_filename ${target}.bin)
-        add_custom_command(
-            OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
-            COMMAND ${CMAKE_OBJCOPY} ARGS -v -O binary ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}${CMAKE_EXECUTABLE_SUFFIX_C} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
-            DEPENDS ${target}
-        )
-        add_custom_target(export_${target}_to_bin ALL
-            DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
-        )
+        set(export_target_name export_${target}_to_bin)        # Check if the custom target already exists
+        if(NOT TARGET ${export_target_name})
+            add_custom_command(
+                OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
+                COMMAND ${CMAKE_OBJCOPY} ARGS -v -O binary ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}${CMAKE_EXECUTABLE_SUFFIX_C} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
+                DEPENDS ${target}
+            )
+            add_custom_target(${export_target_name} ALL
+                DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_bin_filename}
+            )
+        endif()
     endif()
 endfunction()
 
@@ -61,14 +64,17 @@ function(export_target_to_srec target)
     if(type MATCHES "EXECUTABLE")
         # message(STATUS "Target ${target} will be exported to srec format")
         set(target_srec_filename ${target}.srec)
-        add_custom_command(
-            OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
-            COMMAND ${CMAKE_OBJCOPY} ARGS -v -O srec ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}${CMAKE_EXECUTABLE_SUFFIX_C} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
-            DEPENDS ${target}
-        )
-        add_custom_target(export_${target}_to_srec ALL
-            DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
-        )
+        set(export_target_name export_${target}_to_srec)        # Check if the custom target already exists
+        if(NOT TARGET ${export_target_name})
+            add_custom_command(
+                OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
+                COMMAND ${CMAKE_OBJCOPY} ARGS -v -O srec ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}${CMAKE_EXECUTABLE_SUFFIX_C} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
+                DEPENDS ${target}
+            )
+            add_custom_target(export_${target}_to_srec ALL
+                DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target_srec_filename}
+            )
+        endif()
     endif()
 endfunction()
 
