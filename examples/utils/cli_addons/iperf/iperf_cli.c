@@ -208,11 +208,6 @@ void otAppCliIperfCliInit(otInstance *aInstance)
 
     iperfTimer = xTimerCreate("UDP Poll Timer", 1 / portTICK_PERIOD_MS, pdTRUE, (void *)0, timer_poll_udp_client);
     assert(iperfTimer != NULL);
-
-    if (xTimerStart(iperfTimer, 0) != pdPASS)
-    {
-        assert(0);
-    }
 }
 
 otError ProcessIperf(void *aContext, uint8_t aArgsLength, char *aArgs[])
@@ -558,6 +553,7 @@ static void iperf_test_abort(void *arg)
     }
 
     (void)memset(&ctx, 0, sizeof(struct iperf_test_context));
+    xTimerStop(iperfTimer, 0);
 }
 
 static void iperf_test_start(void *arg)
@@ -581,6 +577,15 @@ static void iperf_test_start(void *arg)
     }
     iperf_disable_tickless_hook(true);
 #endif
+
+    if ((ctx->server_mode == false) ||
+        ((ctx->server_mode == true) && ((ctx->client_type == LWIPERF_REVERSE) || (ctx->client_type == LWIPERF_DUAL))))
+    {
+        if (xTimerStart(iperfTimer, 0) != pdPASS)
+        {
+            assert(0);
+        }
+    }
 
     if (!(ctx->tcp) && ctx->client_type == LWIPERF_DUAL)
     {
@@ -679,6 +684,8 @@ static void lwiperf_report(void                    *arg,
                            uint32_t                 ms_duration,
                            uint32_t                 bandwidth_kbitpsec)
 {
+    struct iperf_test_context *test_ctx = (struct iperf_test_context *)arg;
+
     otCliOutputFormat("-------------------------------------------------\r\n");
     if (report_type < (sizeof(ot_report_type_str) / sizeof(ot_report_type_str[0])))
     {
@@ -698,6 +705,21 @@ static void lwiperf_report(void                    *arg,
         otCliOutputFormat(" IPERF Report error\r\n");
     }
     otCliOutputFormat("\r\n");
+
+    if (test_ctx->server_mode == 0 && test_ctx->client_type != LWIPERF_DUAL)
+    {
+        xTimerStop(iperfTimer, 0);
+    }
+    (void)PRINTF("\r\n");
+    /*When do UDP individual bidirectional test,  DUT server should active ptimer to send packages after RX done.*/
+    if (test_ctx->server_mode != 0 && test_ctx->client_type == LWIPERF_TRADEOFF)
+    {
+        if (report_type == LWIPERF_UDP_DONE_SERVER_RX)
+        {
+            xTimerStart(iperfTimer, 0);
+        }
+    }
+
     iperf_free_ctx_iperf_session(arg, report_type);
 
 #ifdef DISABLE_TCPIP_INIT
