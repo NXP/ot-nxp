@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2025, The OpenThread Authors.
+ *  Copyright (c) 2022-2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 
 #include "EmbeddedTypes.h"
 #include "FunctionLib.h"
+#include "MacInterface.h"
 #include "Phy.h"
 #include "PhyInterface.h"
 #include "fsl_component_messaging.h"
@@ -59,6 +60,10 @@
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+#include <openthread/platform/poll_accelerator.h>
+#endif
 
 #include "fwk_platform_ot.h"
 
@@ -174,6 +179,22 @@ static uint8_t      sRxAckData[OT_RADIO_FRAME_MAX_SIZE];
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 static uint32_t sCslPeriod;
 static uint32_t sCslSampleTimeUs;
+#endif
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+static bool_t poll_done = FALSE;
+
+static uint8_t        ext_cmd_storage[sizeof(ext_phy_cmd_t) + OT_RADIO_FRAME_MAX_SIZE];
+static ext_phy_cmd_t *ext_poll_req = (ext_phy_cmd_t *)(&ext_cmd_storage[0]);
+
+static extendedRadioFrame *ext_rx_frame;
+static otRadioFrame       *rx_frame;
+static otRadioFrame       *curr_ack;
+static otRadioFrame       *prev_ack;
+static otRadioFrame        prev_ack_frame;
+static uint8_t             prev_ack_data[OT_RADIO_FRAME_MIN_SIZE];
+
+void poll_accell_cb(phyMessageHeader_t *msg, instanceId_t instance_id);
 #endif
 
 /* Private functions */
@@ -572,6 +593,87 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     return &sTxFrame;
 }
 
+static void set_tx_req(pdDataReq_t *tx_req, otRadioFrame *aFrame)
+{
+    rf_set_channel(aFrame->mChannel);
+
+    tx_req->psduLength  = aFrame->mLength;
+    tx_req->CCABeforeTx = DEFAULT_CCA_MODE;
+
+    /* aFrame->mPsdu will point to sTxData data buffer after macToPdDataMessage_t structure */
+    tx_req->pPsdu = aFrame->mPsdu;
+
+    if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
+    {
+        tx_req->ackRequired = gPhyRxAckRqd_c;
+        /* The 3 bytes are 1 byte frame length and 2 bytes FCS */
+        tx_req->txDuration = IEEE802154_CCA_LEN_SYM + IEEE802154_PHY_SHR_LEN_SYM +
+                             (3 + aFrame->mLength) * OT_RADIO_SYMBOLS_PER_OCTET + IEEE802154_TURNAROUND_LEN_SYM;
+
+        if (otMacFrameIsVersion2015(aFrame))
+        {
+            /* Because enhaced ack can be of variable length we need to set the timeout value to
+               account for the FCF and addressing fields only, and stop the timeout timer after
+               they are received and validated as a valid ACK */
+            tx_req->txDuration += IEEE802154_ENH_ACK_WAIT_SYM;
+        }
+        else
+        {
+            tx_req->txDuration += IEEE802154_IMM_ACK_WAIT_SYM;
+        }
+    }
+    else
+    {
+        tx_req->ackRequired = gPhyNoAckRqd_c;
+        tx_req->txDuration  = 0xFFFFFFFFU;
+    }
+
+    tx_req->flags     = 0;
+    tx_req->startTime = gPhySeqStartAsap_c;
+
+    if (aFrame->mInfo.mTxInfo.mTxDelay)
+    {
+        tx_req->startTime =
+            rf_adjust_tstamp_from_ot(aFrame->mInfo.mTxInfo.mTxDelayBaseTime + aFrame->mInfo.mTxInfo.mTxDelay);
+        tx_req->startTime /= IEEE802154_SYMBOL_TIME_US;
+        tx_req->startTime -= IEEE802154_PHY_SHR_LEN_SYM;
+    }
+
+    if (otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame))
+    {
+        if (!aFrame->mInfo.mTxInfo.mIsSecurityProcessed)
+        {
+            tx_req->flags |= gPhyEncFrame;
+
+            if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
+            {
+                tx_req->flags |= gPhyUpdHDr;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+                /* Previously aFrame->mInfo.mTxInfo.mCslPresent was used to determine if the radio code should update
+                   the IE header. This field is no longer set by the OT stack. Until the issue is fixed in OT stack
+                   check if CSL period is > 0 and always update CSL IE in that case. */
+                if (sCslPeriod)
+                {
+                    uint32_t hdrTimeUs;
+
+                    start_csl_receiver();
+
+                    /* Add TX_ENCRYPT_DELAY_SYM symbols delay to allow encryption to finish */
+                    tx_req->startTime = PhyTime_ReadClock() + TX_ENCRYPT_DELAY_SYM;
+
+                    hdrTimeUs = otPlatTimeGet() +
+                                (TX_ENCRYPT_DELAY_SYM + IEEE802154_PHY_SHR_LEN_SYM) * IEEE802154_SYMBOL_TIME_US;
+                    otMacFrameSetCslIe(aFrame, sCslPeriod, rf_compute_csl_phase(hdrTimeUs));
+
+                    is_tx_poll = FALSE;
+                }
+#endif
+            }
+        }
+    }
+}
+
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
     otError status = OT_ERROR_NONE;
@@ -585,87 +687,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     is_tx_poll       = otMacFrameIsDataRequest(aFrame);
     is_rx_after_poll = FALSE;
 
-    rf_set_channel(aFrame->mChannel);
+    msg->msgType = gPdDataReq_c;
 
-    msg->msgType                     = gPdDataReq_c;
-    msg->msgData.dataReq.psduLength  = aFrame->mLength;
-    msg->msgData.dataReq.CCABeforeTx = DEFAULT_CCA_MODE;
-
-    /* aFrame->mPsdu will point to sTxData data buffer after macToPdDataMessage_t structure */
-    msg->msgData.dataReq.pPsdu = aFrame->mPsdu;
-
-    if (aFrame->mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST)
-    {
-        msg->msgData.dataReq.ackRequired = gPhyRxAckRqd_c;
-        /* The 3 bytes are 1 byte frame length and 2 bytes FCS */
-        msg->msgData.dataReq.txDuration = IEEE802154_CCA_LEN_SYM + IEEE802154_PHY_SHR_LEN_SYM +
-                                          (3 + aFrame->mLength) * OT_RADIO_SYMBOLS_PER_OCTET +
-                                          IEEE802154_TURNAROUND_LEN_SYM;
-
-        if (otMacFrameIsVersion2015(aFrame))
-        {
-            /* Because enhaced ack can be of variable length we need to set the timeout value to
-               account for the FCF and addressing fields only, and stop the timeout timer after
-               they are received and validated as a valid ACK */
-            msg->msgData.dataReq.txDuration += IEEE802154_ENH_ACK_WAIT_SYM;
-        }
-        else
-        {
-            msg->msgData.dataReq.txDuration += IEEE802154_IMM_ACK_WAIT_SYM;
-        }
-    }
-    else
-    {
-        msg->msgData.dataReq.ackRequired = gPhyNoAckRqd_c;
-        msg->msgData.dataReq.txDuration  = 0xFFFFFFFFU;
-    }
-
-    msg->msgData.dataReq.flags     = 0;
-    msg->msgData.dataReq.startTime = gPhySeqStartAsap_c;
-
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    if (aFrame->mInfo.mTxInfo.mTxDelay)
-    {
-        msg->msgData.dataReq.startTime =
-            rf_adjust_tstamp_from_ot(aFrame->mInfo.mTxInfo.mTxDelayBaseTime + aFrame->mInfo.mTxInfo.mTxDelay);
-        msg->msgData.dataReq.startTime /= IEEE802154_SYMBOL_TIME_US;
-        msg->msgData.dataReq.startTime -= IEEE802154_PHY_SHR_LEN_SYM;
-    }
-
-    if (otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame))
-    {
-        if (!aFrame->mInfo.mTxInfo.mIsSecurityProcessed)
-        {
-            msg->msgData.dataReq.flags |= gPhyEncFrame;
-
-            if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
-            {
-                msg->msgData.dataReq.flags |= gPhyUpdHDr;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-                /* Previously aFrame->mInfo.mTxInfo.mCslPresent was used to determine if the radio code should update
-                   the IE header. This field is no longer set by the OT stack. Until the issue is fixed in OT stack
-                   check if CSL period is > 0 and always update CSL IE in that case. */
-                if (sCslPeriod)
-                {
-                    uint32_t hdrTimeUs;
-
-                    start_csl_receiver();
-
-                    /* Add TX_ENCRYPT_DELAY_SYM symbols delay to allow encryption to finish */
-                    msg->msgData.dataReq.startTime = PhyTime_ReadClock() + TX_ENCRYPT_DELAY_SYM;
-
-                    hdrTimeUs = otPlatTimeGet() +
-                                (TX_ENCRYPT_DELAY_SYM + IEEE802154_PHY_SHR_LEN_SYM) * IEEE802154_SYMBOL_TIME_US;
-                    otMacFrameSetCslIe(aFrame, sCslPeriod, rf_compute_csl_phase(hdrTimeUs));
-
-                    is_tx_poll = FALSE;
-                }
-#endif
-            }
-        }
-    }
-#endif
+    set_tx_req(&msg->msgData.dataReq, aFrame);
 
     tmp_state = sState;
     sState    = OT_RADIO_STATE_TRANSMIT;
@@ -876,32 +900,26 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
     if (OT_KEY_TYPE_LITERAL_KEY == aKeyType)
     {
-         memcpy(msg.msgData.MacKeyData.prevKey, aPrevKey, 16);
-         memcpy(msg.msgData.MacKeyData.currKey, aCurrKey, 16);
-         memcpy(msg.msgData.MacKeyData.nextKey, aNextKey, 16);
+        memcpy(msg.msgData.MacKeyData.prevKey, aPrevKey, 16);
+        memcpy(msg.msgData.MacKeyData.currKey, aCurrKey, 16);
+        memcpy(msg.msgData.MacKeyData.nextKey, aNextKey, 16);
     }
 
 #if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
     else if (OT_KEY_TYPE_KEY_REF == aKeyType)
     {
-        size_t keyLength;
+        size_t  keyLength;
         otError status = OT_ERROR_NONE;
 
-        status = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef,
-                                       msg.msgData.MacKeyData.prevKey,
-                                       16, &keyLength);
+        status = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, msg.msgData.MacKeyData.prevKey, 16, &keyLength);
         if (OT_ERROR_NONE != status || 16 != keyLength)
             return;
 
-        status = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef,
-                                       msg.msgData.MacKeyData.currKey,
-                                       16, &keyLength);
+        status = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, msg.msgData.MacKeyData.currKey, 16, &keyLength);
         if (OT_ERROR_NONE != status || 16 != keyLength)
             return;
 
-        status = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef,
-                                       msg.msgData.MacKeyData.nextKey,
-                                       16, &keyLength);
+        status = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, msg.msgData.MacKeyData.nextKey, 16, &keyLength);
         if (OT_ERROR_NONE != status || 16 != keyLength)
             return;
     }
@@ -1157,6 +1175,34 @@ static uint32_t rf_adjust_tstamp_from_ot(uint32_t time)
     return (uint32_t)(ts + delta);
 }
 
+static void convert_ack(otRadioFrame *ack, pdDataCnf_t *cnf)
+{
+    ack->mChannel            = sChannel;
+    ack->mLength             = cnf->ackLength;
+    ack->mInfo.mRxInfo.mLqi  = cnf->ppduLinkQuality;
+    ack->mInfo.mRxInfo.mRssi = cnf->ppduRssi;
+    memcpy(ack->mPsdu, cnf->ackData, ack->mLength);
+}
+
+static void convert_rx_frame(otRadioFrame *rx_frm, pdDataInd_t *rx_ind)
+{
+    /* Retrieve frame information and data */
+    rx_frm->mChannel                             = sChannel;
+    rx_frm->mInfo.mRxInfo.mLqi                   = rx_ind->ppduLinkQuality;
+    rx_frm->mInfo.mRxInfo.mRssi                  = rx_ind->ppduRssi;
+    rx_frm->mInfo.mRxInfo.mTimestamp             = rf_adjust_tstamp_from_phy(rx_ind->timeStamp);
+    rx_frm->mInfo.mRxInfo.mAckedWithFramePending = rx_ind->rxAckFp;
+    rx_frm->mLength                              = rx_ind->psduLength;
+    rx_frm->mPsdu                                = rx_ind->pPsdu;
+    rx_frm->mInfo.mRxInfo.mAckedWithSecEnhAck    = rx_ind->ackedWithSecEnhAck;
+
+    if (true == rx_ind->ackedWithSecEnhAck)
+    {
+        rx_frm->mInfo.mRxInfo.mAckFrameCounter = rx_ind->ackFrameCounter;
+        rx_frm->mInfo.mRxInfo.mAckKeyId        = rx_ind->ackKeyId;
+    }
+}
+
 /* Phy Data Service Access Point handler
  * Called by Phy to notify when Tx has been done or Rx data is available */
 phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
@@ -1186,26 +1232,12 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
         if (pRxFrame)
         {
-            /* Retrieve frame information and data */
-            pRxFrame->RxFrame.mChannel                 = sChannel;
-            pRxFrame->RxFrame.mInfo.mRxInfo.mLqi       = pDataMsg->msgData.dataInd.ppduLinkQuality;
-            pRxFrame->RxFrame.mInfo.mRxInfo.mRssi      = pDataMsg->msgData.dataInd.ppduRssi;
-            pRxFrame->RxFrame.mInfo.mRxInfo.mTimestamp = rf_adjust_tstamp_from_phy(pDataMsg->msgData.dataInd.timeStamp);
-            pRxFrame->RxFrame.mInfo.mRxInfo.mAckedWithFramePending = pDataMsg->msgData.dataInd.rxAckFp;
-            pRxFrame->RxFrame.mLength                              = pDataMsg->msgData.dataInd.psduLength;
-            pRxFrame->RxFrame.mPsdu                                = pDataMsg->msgData.dataInd.pPsdu;
+            convert_rx_frame(&pRxFrame->RxFrame, &pDataMsg->msgData.dataInd);
+
             // keep Phy Allocated buffer and free it after OT process the packet in otPlatRadioProcess
             // after otPlatRadioReceiveDone is completed
             pRxFrame->pPhyBuffer = (void *)pMsg;
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-            pRxFrame->RxFrame.mInfo.mRxInfo.mAckedWithSecEnhAck = pDataMsg->msgData.dataInd.ackedWithSecEnhAck;
-            if (true == pDataMsg->msgData.dataInd.ackedWithSecEnhAck)
-            {
-                pRxFrame->RxFrame.mInfo.mRxInfo.mAckFrameCounter = pDataMsg->msgData.dataInd.ackFrameCounter;
-                pRxFrame->RxFrame.mInfo.mRxInfo.mAckKeyId        = pDataMsg->msgData.dataInd.ackKeyId;
-            }
-#endif
             // Push received frame
             push_free_frame_rx_ring();
         }
@@ -1237,12 +1269,9 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
 
             if (pDataMsg->msgType == gPdDataCnf_c)
             {
-                sTxStatus                       = OT_ERROR_NONE;
-                sRxAckFrame.mChannel            = sChannel;
-                sRxAckFrame.mLength             = pDataMsg->msgData.dataCnf.ackLength;
-                sRxAckFrame.mInfo.mRxInfo.mLqi  = pDataMsg->msgData.dataCnf.ppduLinkQuality;
-                sRxAckFrame.mInfo.mRxInfo.mRssi = pDataMsg->msgData.dataCnf.ppduRssi;
-                FLib_MemCpy(sRxAckFrame.mPsdu, pDataMsg->msgData.dataCnf.ackData, sRxAckFrame.mLength);
+                sTxStatus = OT_ERROR_NONE;
+
+                convert_ack(&sRxAckFrame, &pDataMsg->msgData.dataCnf);
 
                 if (is_tx_poll && (sRxAckFrame.mPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_FP))
                 {
@@ -1409,6 +1438,14 @@ void otPlatRadioInit(void)
 
     memset(&sRxAckFrame, 0, sizeof(sRxAckFrame));
     sRxAckFrame.mPsdu = sRxAckData;
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    PHY_register_ext_cmd_handler(poll_accell_cb, ot_phy_ctx);
+
+    memset(&prev_ack_frame, 0, sizeof(prev_ack_frame));
+    prev_ack_frame.mPsdu    = prev_ack_data;
+    prev_ack_frame.mPsdu[0] = IEEE802154_FRM_TYPE_ACK;
+#endif
 }
 
 static void radio_rx_process(otInstance *aInstance)
@@ -1476,6 +1513,21 @@ void otPlatRadioProcess(otInstance *aInstance)
         otPlatRadioEnergyScanDone(aInstance, sMaxED);
         sEdScanDone = FALSE;
     }
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+    if (poll_done)
+    {
+        poll_done = FALSE;
+        otPlatPollAcceleratorDone(aInstance, ext_poll_req->count, prev_ack, &sTxFrame, curr_ack, sTxStatus, rx_frame,
+                                  OT_ERROR_NONE);
+
+        if (ext_rx_frame)
+        {
+            MSG_Free(ext_rx_frame->pPhyBuffer);
+            ext_rx_frame->pPhyBuffer = NULL;
+        }
+    }
+#endif
 }
 
 static void rf_set_rx_on_idle(bool_t val)
@@ -1503,3 +1555,138 @@ static void rf_set_rx_time_poll(uint32_t t)
 
     MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 }
+
+#if OPENTHREAD_CONFIG_POLL_ACCELERATOR_ENABLE
+otError otPlatPollAcceleratorStart(otInstance *aInstance, otRadioFrame *aFrame, const otPollAcceleratorConfig *aConfig)
+{
+    ext_phy_cmd_t *m = ext_poll_req;
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    m->msgType            = gPhyExtCmd;
+    m->cmd                = gMlmePollReq_c;
+    m->io.in.min_be       = aConfig->mCsmaMinBe;
+    m->io.in.max_be       = aConfig->mCsmaMaxBe;
+    m->io.in.max_backoffs = aFrame->mInfo.mTxInfo.mMaxCsmaBackoffs;
+    m->io.in.max_retries  = aFrame->mInfo.mTxInfo.mMaxFrameRetries;
+    m->io.in.rx_after_tx  = TRUE;
+    m->io.in.rx_duration  = (aConfig->mWaitForDataDuration * OT_US_PER_MS) / IEEE802154_SYMBOL_TIME_US;
+    m->io.in.period       = aConfig->mPollPeriod;
+    m->count              = aConfig->mMaxIterations;
+    // m->io.in.min_rssi = aConfig->mRssThreshold;
+
+    set_tx_req(&m->io.in.req, aFrame);
+
+    m->io.in.req.pPsdu = ext_cmd_storage + sizeof(ext_phy_cmd_t);
+    memcpy(m->io.in.req.pPsdu, aFrame->mPsdu, aFrame->mLength);
+
+    m->io.in.req.startTime = rf_adjust_tstamp_from_ot(aConfig->mStartTime) / IEEE802154_SYMBOL_TIME_US;
+
+    PHY_ext_cmd((phyMessageHeader_t *)m, ot_phy_ctx);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatPollAcceleratorStop(otInstance *aInstance)
+{
+    ext_phy_cmd_t *m = ext_poll_req;
+
+    OT_UNUSED_VARIABLE(aInstance);
+
+    m->msgType = gPhyExtCmd;
+    m->cmd     = gMlmeResetReq_c;
+
+    PHY_ext_cmd((phyMessageHeader_t *)m, ot_phy_ctx);
+
+    return OT_ERROR_NONE;
+}
+
+void poll_accell_cb(phyMessageHeader_t *msg, instanceId_t instance_id)
+{
+    ext_phy_cmd_t *m = (ext_phy_cmd_t *)msg;
+
+    OT_UNUSED_VARIABLE(instance_id);
+
+    ext_rx_frame = NULL;
+    rx_frame     = NULL;
+    curr_ack     = NULL;
+    prev_ack     = NULL;
+    sTxStatus    = OT_ERROR_ABORT;
+
+    ext_poll_req->count = m->count;
+    otEXPECT(m->count);
+
+    switch (m->cmd)
+    {
+    case gPdDataInd_c:
+        ext_rx_frame = get_free_frame_rx_ring();
+        if (ext_rx_frame)
+        {
+            ext_rx_frame->pPhyBuffer = msg;
+
+            rx_frame = &ext_rx_frame->RxFrame;
+        }
+
+    case gPdDataCnf_c:
+        curr_ack  = &sRxAckFrame;
+        sTxStatus = OT_ERROR_NONE;
+        break;
+
+    case gPlmeCcaCnf_c:
+        sTxStatus = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+        break;
+
+    case gPlmeTimeoutInd_c:
+        sTxStatus = OT_ERROR_NO_ACK;
+        break;
+
+    case gPlmeAbortInd_c:
+    default:
+        sTxStatus = OT_ERROR_ABORT;
+    }
+
+    if (((m->count > 1) || (m->cmd != gPlmeCcaCnf_c)) && otMacFrameIsSecurityEnabled(&sTxFrame) &&
+        otMacFrameIsKeyIdMode1(&sTxFrame) && !sTxFrame.mInfo.mTxInfo.mIsSecurityProcessed &&
+        !sTxFrame.mInfo.mTxInfo.mIsHeaderUpdated)
+    {
+        otMacFrameSetFrameCounter(&sTxFrame, m->io.out.fc);
+    }
+
+    if (m->count > 1)
+    {
+        prev_ack                      = &prev_ack_frame;
+        prev_ack->mInfo.mRxInfo.mLqi  = m->io.out.cnf.ppduLinkQuality; // m->lqi
+        prev_ack->mInfo.mRxInfo.mRssi = m->io.out.cnf.ppduRssi;        // m->rssi
+    }
+
+    if (curr_ack)
+    {
+        convert_ack(curr_ack, &m->io.out.cnf);
+    }
+
+    if (rx_frame)
+    {
+        convert_rx_frame(rx_frame, &m->io.out.rx_ind);
+    }
+
+    ext_poll_req->count = m->count - 1;
+
+exit:
+    if (!ext_rx_frame)
+    {
+        MSG_Free(msg);
+    }
+
+    poll_done = TRUE;
+
+    OSA_InterruptDisable();
+    if (!is_radio_event)
+    {
+        is_radio_event = TRUE;
+        PWR_DisallowDeviceToSleep();
+    }
+    OSA_InterruptEnable();
+
+    otSysEventSignalPending();
+}
+#endif
