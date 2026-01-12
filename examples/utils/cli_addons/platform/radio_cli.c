@@ -273,15 +273,30 @@ otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aContext);
     otError error        = OT_ERROR_INVALID_ARGS;
     uint8_t txPowerLimit = 0;
+	uint8_t ch26Clamp    = 1;
 
     otLogInfoPlat("TxPowerLimit");
 
-    if (aArgsLength == 1) // set tx power limit
+    if ((aArgsLength > 0) && (aArgsLength <= 2)) // set tx power limit
     {
         txPowerLimit = (uint8_t)atoi(aArgs[0]);
 
         if ((txPowerLimit >= 1) && (txPowerLimit <= OT_NXP_PLAT_TX_PWR_LIMIT_MAX))
         {
+            if( aArgsLength == 2 )
+            {
+                if(strcmp(aArgs[1],"disableRFCH26Clamp") == 0)
+                {
+                    ch26Clamp = 0;
+                }
+                else if(strcmp(aArgs[1],"enableRFCH26Clamp") == 0)
+                {
+                    ch26Clamp = 1;
+                }
+
+            }
+
+            txPowerLimit = (txPowerLimit & 0x7F) | (ch26Clamp << 7);
             otLogInfoPlat("Set TX power limit: %d", txPowerLimit);
             error = otPlatRadioSendSetPropVendorUint8Cmd(SPINEL_PROP_VENDOR_NXP_GET_SET_TXPOWERLIMIT_CMD, txPowerLimit);
         }
@@ -293,9 +308,10 @@ otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
     else if (aArgsLength == 0) // get tx power limit
     {
         error = otPlatRadioSendGetPropVendorUint8Cmd(SPINEL_PROP_VENDOR_NXP_GET_SET_TXPOWERLIMIT_CMD, &txPowerLimit);
-        otLogInfoPlat("Get TX power limit: %d", txPowerLimit);
 
-        otCliOutputFormat("%d\r\n", txPowerLimit);
+        // Print value as ot-cli output
+        otCliOutputFormat("Tx Power Limit: %d\r\n", txPowerLimit & 0x7F);
+        otCliOutputFormat("Tx Power Clamping at 0dBm for CH 26: %s\r\n", ((txPowerLimit >> 7) & 0x01)? "enabled":"disabled");
     }
 
     return error;
