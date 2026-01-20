@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2023, The OpenThread Authors.
- *  Copyright (c) 2025, NXP.
+ *  Copyright (c) 2025-2026, NXP.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #define MFG_CMD_GET_SET_CHANNEL 0x0b       // 11
 #define MFG_CMD_GET_SET_TXPOWER 0x0f       // 15
 #define MFG_CMD_CONTINUOUS_TX 0x11         // 17
+#define MFG_CMD_UNMODULATED_CW_TX 0x12     // 18
 #define MFG_CMD_GET_SET_PAYLOAD_SIZE 0x14  // 20
 #define MFG_CMD_GET_RX_RESULT 0x1f         // 31
 #define MFG_CMD_START_RX_TEST 0x20         // 32
@@ -471,6 +472,37 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
 
             case MFG_CMD_CONTINUOUS_TX:
                 error = ProcessMfgSetInt8(aContext, MFG_CMD_CONTINUOUS_TX, aArgsLength, aArgs, 0, 1);
+                break;
+
+            case MFG_CMD_UNMODULATED_CW_TX:
+                {
+                    uint8_t state, power=0, channel=11;
+
+                    state   = (uint8_t)atoi(aArgs[1]);
+
+                    if ((state==1) && (aArgsLength == 4) ||
+                        ((state==0) && ((aArgsLength >= 2) && (aArgsLength <= 4)))
+                       )
+                    {
+                        payload[1] = MFG_CMD_UNMODULATED_CW_TX;
+                        payload[2] = MFG_CMD_ACTION_SET;
+
+                        if (state==1)
+                        {
+                            power   = (uint8_t)atoi(aArgs[2]);
+                            channel = (uint8_t)atoi(aArgs[3]);
+                        }
+
+                        if (state < 2)
+                        {
+                            payload[4] = state;
+                            payload[5] = power;
+                            payload[6] = channel;
+                            error = otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
+                                                &outputLen);
+                        }
+                    }
+                }
                 break;
 
             case MFG_CMD_GET_SET_PAYLOAD_SIZE: // get
