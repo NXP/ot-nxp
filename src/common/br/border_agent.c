@@ -78,7 +78,7 @@ static const char *sModelValue                = OT_NXP_PLAT_BR_MODEL_NAME;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-static uint8_t sEphemeralKey[10]; ///< Byte values, 9 bytes for the key, one for null terminator.
+static otBorderAgentEphemeralKeyTap sEphemeralKey;
 
 static uint32_t sEphemeralKeyTimeout;
 static bool     sEpskcActive;
@@ -88,8 +88,7 @@ static bool     sEpskcActive;
 /*                             Private prototypes                             */
 /* -------------------------------------------------------------------------- */
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-static otError GenerateEphemeralKey(void);
-static void    HandleBorderAgentEphemeralKeyCallback(void *aContext);
+static void HandleBorderAgentEphemeralKeyCallback(void *aContext);
 #endif
 
 static void CreateVendorTxtData(uint8_t *aTxtBuffer, uint16_t *aTxtDataLen);
@@ -137,8 +136,10 @@ otError BorderAgentEnableEpskcService(uint32_t aTimeout)
                                ? aTimeout
                                : OT_BORDER_AGENT_DEFAULT_EPHEMERAL_KEY_TIMEOUT;
 
-    VerifyOrExit((GenerateEphemeralKey() == OT_ERROR_NONE), error = OT_ERROR_FAILED);
-    error = otBorderAgentEphemeralKeyStart(sInstance, (const char *)sEphemeralKey, sEphemeralKeyTimeout, 0);
+    VerifyOrExit(otBorderAgentEphemeralKeyGenerateTap(&sEphemeralKey) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
+    VerifyOrExit(otBorderAgentEphemeralKeyValidateTap(&sEphemeralKey) == OT_ERROR_NONE, error = OT_ERROR_FAILED);
+
+    error = otBorderAgentEphemeralKeyStart(sInstance, (const char *)sEphemeralKey.mTap, sEphemeralKeyTimeout, 0);
 
 exit:
     return error;
@@ -198,26 +199,6 @@ static void CreateVendorTxtData(uint8_t *aTxtBuffer, uint16_t *aTxtDataLen)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-static otError GenerateEphemeralKey(void)
-{
-    otError  error = OT_ERROR_NONE;
-    uint8_t  i     = 0;
-    uint32_t randomResult;
-    char     verhoeffChecksum;
-
-    memset(sEphemeralKey, 0, sizeof(sEphemeralKey));
-
-    VerifyOrExit(otPlatEntropyGet((uint8_t *)&randomResult, sizeof(randomResult)) == OT_ERROR_NONE,
-                 error = OT_ERROR_FAILED);
-    randomResult %= 100000000;
-    i += snprintf((char *)sEphemeralKey, sizeof(sEphemeralKey), "%08lu", randomResult);
-    VerifyOrExit(otVerhoeffChecksumCalculate((const char *)sEphemeralKey, &verhoeffChecksum) == OT_ERROR_NONE,
-                 error = OT_ERROR_FAILED);
-    i += snprintf((char *)&sEphemeralKey[i], sizeof(sEphemeralKey) - i, "%c", verhoeffChecksum);
-exit:
-    return error;
-}
-
 static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
 {
     char                           formattedEpskc[12];
@@ -238,8 +219,8 @@ static void HandleBorderAgentEphemeralKeyCallback(void *aContext)
         break;
 
     case OT_BORDER_AGENT_STATE_STARTED:
-        snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey, sEphemeralKey + 3,
-                 sEphemeralKey + 6);
+        snprintf(formattedEpskc, sizeof(formattedEpskc), "%.3s %.3s %.3s", sEphemeralKey.mTap, sEphemeralKey.mTap + 3,
+                 sEphemeralKey.mTap + 6);
         PrintEphemeralKey(formattedEpskc, (uint32_t)(sEphemeralKeyTimeout / 1000UL));
         sEpskcActive = true;
         break;
