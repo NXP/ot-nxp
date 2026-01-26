@@ -274,7 +274,7 @@ otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aContext);
     otError error        = OT_ERROR_INVALID_ARGS;
     uint8_t txPowerLimit = 0;
-	uint8_t ch26Clamp    = 1;
+    uint8_t ch26Clamp    = 1;
 
     otLogInfoPlat("TxPowerLimit");
 
@@ -284,17 +284,16 @@ otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
         if ((txPowerLimit >= 1) && (txPowerLimit <= OT_NXP_PLAT_TX_PWR_LIMIT_MAX))
         {
-            if( aArgsLength == 2 )
+            if (aArgsLength == 2)
             {
-                if(strcmp(aArgs[1],"disableRFCH26Clamp") == 0)
+                if (strcmp(aArgs[1], "disableRFCH26Clamp") == 0)
                 {
                     ch26Clamp = 0;
                 }
-                else if(strcmp(aArgs[1],"enableRFCH26Clamp") == 0)
+                else if (strcmp(aArgs[1], "enableRFCH26Clamp") == 0)
                 {
                     ch26Clamp = 1;
                 }
-
             }
 
             txPowerLimit = (txPowerLimit & 0x7F) | (ch26Clamp << 7);
@@ -312,7 +311,8 @@ otError ProcessTxPowerLimit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
         // Print value as ot-cli output
         otCliOutputFormat("Tx Power Limit: %d\r\n", txPowerLimit & 0x7F);
-        otCliOutputFormat("Tx Power Clamping at 0dBm for CH 26: %s\r\n", ((txPowerLimit >> 7) & 0x01)? "enabled":"disabled");
+        otCliOutputFormat("Tx Power Clamping at 0dBm for CH 26: %s\r\n",
+                          ((txPowerLimit >> 7) & 0x01) ? "enabled" : "disabled");
     }
 
     return error;
@@ -475,35 +475,33 @@ static otError ProcessMfgCommands(void *aContext, uint8_t aArgsLength, char *aAr
                 break;
 
             case MFG_CMD_UNMODULATED_CW_TX:
+            {
+                uint8_t state, power = 0, channel = 11;
+
+                state = (uint8_t)atoi(aArgs[1]);
+
+                if ((state == 1 && aArgsLength == 4) || (state == 0 && aArgsLength >= 2 && aArgsLength <= 4))
                 {
-                    uint8_t state, power=0, channel=11;
+                    payload[1] = MFG_CMD_UNMODULATED_CW_TX;
+                    payload[2] = MFG_CMD_ACTION_SET;
 
-                    state   = (uint8_t)atoi(aArgs[1]);
-
-                    if ((state==1) && (aArgsLength == 4) ||
-                        ((state==0) && ((aArgsLength >= 2) && (aArgsLength <= 4)))
-                       )
+                    if (state == 1)
                     {
-                        payload[1] = MFG_CMD_UNMODULATED_CW_TX;
-                        payload[2] = MFG_CMD_ACTION_SET;
+                        power   = (uint8_t)atoi(aArgs[2]);
+                        channel = (uint8_t)atoi(aArgs[3]);
+                    }
 
-                        if (state==1)
-                        {
-                            power   = (uint8_t)atoi(aArgs[2]);
-                            channel = (uint8_t)atoi(aArgs[3]);
-                        }
-
-                        if (state < 2)
-                        {
-                            payload[4] = state;
-                            payload[5] = power;
-                            payload[6] = channel;
-                            error = otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload, payloadLen,
-                                                &outputLen);
-                        }
+                    if (state < 2)
+                    {
+                        payload[4] = state;
+                        payload[5] = power;
+                        payload[6] = channel;
+                        error      = otPlatRadioMfgCommand(aContext, SPINEL_CMD_VENDOR_NXP_MFG, (uint8_t *)payload,
+                                                           payloadLen, &outputLen);
                     }
                 }
-                break;
+            }
+            break;
 
             case MFG_CMD_GET_SET_PAYLOAD_SIZE: // get
                 error = ProcessMfgGetInt8(aContext, MFG_CMD_GET_SET_PAYLOAD_SIZE, aArgsLength);
