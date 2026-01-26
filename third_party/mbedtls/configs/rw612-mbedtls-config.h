@@ -39,6 +39,11 @@
 /* Enable PSA */
 #define MBEDTLS_PSA_CRYPTO_C
 #define MBEDTLS_PSA_CRYPTO_CONFIG
+#define MBEDTLS_ERROR_C
+#define MBEDTLS_PSA_CRYPTO_STORAGE_C
+#ifndef PSA_CRYPTO_DRIVER_ELS_PKC
+#define PSA_CRYPTO_DRIVER_ELS_PKC
+#endif
 
 /* PSA core mandatory configuration options */
 #define MBEDTLS_CIPHER_C
