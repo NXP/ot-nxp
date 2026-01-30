@@ -72,6 +72,7 @@ static pm_notify_element_t ExtFlashLpNotifyGroup = {
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
 #include <openthread/tasklet.h>
 
+#if (defined(gAppLowpowerButtons_d) && (gAppLowpowerButtons_d > 0))
 #if (defined(gAppButtonCnt_c) && (gAppButtonCnt_c > 0))
 #include "fsl_component_button.h"
 bool g_bBtnAllowDeviceToSleep = FALSE;
@@ -110,6 +111,7 @@ button_status_t Btn_HandleKeys1(void *buttonHandle, button_callback_message_t *m
 }
 #endif /*gAppButtonCnt_c > 1*/
 #endif /*gAppButtonCnt_c > 0*/
+#endif /*gAppLowpowerButtons_d > 0*/
 #endif /*gAppLowpowerEnabled_d*/
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 
@@ -174,12 +176,14 @@ void otSysInit(int argc, char *argv[])
 
 #if !defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE == 0))
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
+#if defined(gAppLowpowerButtons_d) && (gAppLowpowerButtons_d > 0)
 #if (defined(gAppButtonCnt_c) && (gAppButtonCnt_c > 0))
         BUTTON_InstallCallback((button_handle_t)g_buttonHandle[0], Btn_HandleKeys0, NULL);
 #if (gAppButtonCnt_c > 1)
         BUTTON_InstallCallback((button_handle_t)g_buttonHandle[1], Btn_HandleKeys1, NULL);
 #endif /*gAppButtonCnt_c > 1*/
 #endif /*gAppButtonCnt_c > 0*/
+#endif /*gAppLowpowerButtons_d*/
 #endif /*gAppLowpowerEnabled_d*/
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
@@ -223,9 +227,11 @@ void otSysProcessDrivers(otInstance *aInstance)
 
 #if !defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE == 0))
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
+#if defined(gAppLowpowerButtons_d) && (gAppLowpowerButtons_d > 0)
 #if (defined(gAppButtonCnt_c) && (gAppButtonCnt_c > 0))
     if (g_bBtnAllowDeviceToSleep)
 #endif /*(defined(gAppButtonCnt_c) && (gAppButtonCnt_c > 0))*/
+#endif /*(gAppLowpowerButtons_d) && (gAppLowpowerButtons_d > 0)*/
     {
         /*
          * We need to protect PWR_EnterLowPower with interrupt disable/enable because PWR_EnterLowPower

@@ -52,6 +52,7 @@ readonly OT_OPTIONS_NO_RCP=(
     "-DOT_RCP=OFF"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
     "-DOT_APP_LOWPOWER=ON"
+    "-DOT_APP_LOWPOWER_BUTTONS=ON" # set buttons to toggle low power behavior
     "-DOT_NXP_NVS=OFF"
 )
 
@@ -75,6 +76,7 @@ readonly OT_OPTIONS_CLI_NVS=(
     "-DOT_RCP=OFF"
     "-DOT_MAC_CSL_RECEIVER_ENABLE=ON"
     "-DOT_APP_LOWPOWER=ON"
+    "-DOT_APP_LOWPOWER_BUTTONS=ON" # set buttons to toggle low power behavior
     "-DOT_NXP_NVS=ON"
 )
 

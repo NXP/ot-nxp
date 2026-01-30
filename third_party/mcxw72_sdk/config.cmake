@@ -44,6 +44,17 @@ else()
     )
 endif()
 
+# This option allows changing the buttons usage from low power toggle to other app defined behavior
+if (OT_APP_LOWPOWER_BUTTONS)
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
+        gAppLowpowerButtons_d=1
+    )
+else()
+    target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
+        gAppLowpowerButtons_d=0
+    )
+endif()
+
 target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     USE_NBU=${USE_NBU}
     SERIAL_USE_CONFIGURE_STRUCTURE=1
