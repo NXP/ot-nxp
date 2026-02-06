@@ -452,7 +452,11 @@
  * Specifies the default Vendor Name string.
  */
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#ifdef OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "RD:NXP"
+#else
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "NXP"
+#endif
 #endif
 
 /**
@@ -482,8 +486,4 @@
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL "www.nxp.com"
 #endif
 
-/* Increase default timeout (30s) because commissioner doesn't have crypto acceleration */
-#ifndef OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT
-#define OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT 180
-#endif
 #endif // OPENTHREAD_CORE_MCXW72_NBU_CONFIG_H_
