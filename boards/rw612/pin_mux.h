@@ -43,6 +43,8 @@ void BOARD_InitENETPins(void);
 
 void BOARD_InitSPISPins(void);
 
+void BOARD_InitPinButton0(void);
+
 #if defined(__cplusplus)
 }
 #endif
