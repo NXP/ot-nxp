@@ -868,15 +868,44 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
     macToPlmeMessage_t msg;
 
-    assert(aKeyType == OT_KEY_TYPE_LITERAL_KEY);
+    assert(OT_KEY_TYPE_LITERAL_KEY == aKeyType || OT_KEY_TYPE_KEY_REF == aKeyType);
     assert(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
     msg.msgType                  = gPlmeSetMacKey_c;
     msg.msgData.MacKeyData.keyId = aKeyId;
 
-    memcpy(msg.msgData.MacKeyData.prevKey, aPrevKey, 16);
-    memcpy(msg.msgData.MacKeyData.currKey, aCurrKey, 16);
-    memcpy(msg.msgData.MacKeyData.nextKey, aNextKey, 16);
+    if (OT_KEY_TYPE_LITERAL_KEY == aKeyType)
+    {
+         memcpy(msg.msgData.MacKeyData.prevKey, aPrevKey, 16);
+         memcpy(msg.msgData.MacKeyData.currKey, aCurrKey, 16);
+         memcpy(msg.msgData.MacKeyData.nextKey, aNextKey, 16);
+    }
+
+#if (OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA)
+    else if (OT_KEY_TYPE_KEY_REF == aKeyType)
+    {
+        size_t keyLength;
+        otError status = OT_ERROR_NONE;
+
+        status = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef,
+                                       msg.msgData.MacKeyData.prevKey,
+                                       16, &keyLength);
+        if (OT_ERROR_NONE != status || 16 != keyLength)
+            return;
+
+        status = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef,
+                                       msg.msgData.MacKeyData.currKey,
+                                       16, &keyLength);
+        if (OT_ERROR_NONE != status || 16 != keyLength)
+            return;
+
+        status = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef,
+                                       msg.msgData.MacKeyData.nextKey,
+                                       16, &keyLength);
+        if (OT_ERROR_NONE != status || 16 != keyLength)
+            return;
+    }
+#endif
 
     (void)MAC_PLME_SapHandler(&msg, ot_phy_ctx);
 }
