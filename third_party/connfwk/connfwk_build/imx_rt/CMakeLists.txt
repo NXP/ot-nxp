@@ -1,7 +1,6 @@
 list(APPEND SOURCES
     ${CONNFWK_SDK_PATH}/platform/imx_rt/fwk_platform_hdlc.c
     ${CONNFWK_SDK_PATH}/platform/imx_rt/fwk_platform_ot.c
-    ${CONNFWK_SDK_PATH}/platform/imx_rt/configs/fwk_lfs_config.c
 )
 
 list(APPEND LINK_LIBRARIES)
@@ -63,7 +62,6 @@ else()
         PUBLIC
         ${CONNFWK_SDK_PATH}/platform/include
         ${CONNFWK_SDK_PATH}/platform/imx_rt/
-        ${CONNFWK_SDK_PATH}/platform/imx_rt/configs
     )
 
     target_compile_definitions(connfwk-platform-${CONNFWK_PLATFORM_FAMILY} PRIVATE ${COMPILE_PRIVATE_DEFINITIONS})

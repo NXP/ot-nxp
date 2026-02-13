@@ -52,7 +52,7 @@ endif()
 list(APPEND OT_PLAT_SOURCES
     ../../common/alarm_freertos.c
     ../../common/diag.c
-    ../../common/flash_littlefs.c
+    ../../common/flash_nvs.c
     ../../common/logging.c
     ../../common/entropy.c
     misc.c
@@ -167,7 +167,6 @@ target_link_libraries(${OT_PLATFORM_LIB}
     openthread-spinel-rcp
     openthread-platform
     connfwk-FunctionLib
-    connfwk-FileSystem
     connfwk-platform-${OT_NXP_PLATFORM}
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     PUBLIC

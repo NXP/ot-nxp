@@ -45,7 +45,6 @@ message(STATUS "CONNFWK_PLATFORM_LIB: ${CONNFWK_PLATFORM_LIB}")
 target_include_directories(connfwk-config INTERFACE
     ${CONNFWK_SDK_PATH}/Common
     ${CONNFWK_SDK_PATH}/services/FunctionLib
-    ${CONNFWK_SDK_PATH}/services/FileSystem
 )
 
 # Configure the platform lib
@@ -73,33 +72,6 @@ if(CONNFWK_FLIB)
     # Get common configs from the connfwk-config interface
     target_link_libraries(connfwk-FunctionLib PRIVATE connfwk-config ${CONNFWK_BOARD_LIB}
         ${CONNFWK_MCUX_SDK_LIB})
-endif()
-
-if(CONNFWK_FILESYSTEM)
-    set(FW_SOURCES
-        ${CONNFWK_SDK_PATH}/services/FileSystem/fwk_filesystem.c
-
-        # temporary hack until the module is deprecated by FSA
-        # do not include fwk_platform_flash.c from platform lib as the content of the file
-        # has been moved to fwk_lfs_mflash.c
-        # However, to keep current compatibility until FSA is enabled, do as it is part of this module
-        ${CONNFWK_SDK_PATH}/platform/${CONNFWK_PLATFORM}/fwk_platform_flash.c
-    )
-    add_library(connfwk-FileSystem ${FW_SOURCES})
-
-    target_include_directories(connfwk-FileSystem
-        PUBLIC
-        ${CONNFWK_SDK_PATH}/services/FileSystem/
-    )
-
-    # Get common configs from the connfwk-config interface
-    target_link_libraries(connfwk-FileSystem
-        PRIVATE
-        connfwk-config
-        ${CONNFWK_PLATFORM_LIB}
-        ${CONNFWK_BOARD_LIB}
-        ${CONNFWK_MCUX_SDK_LIB}
-    )
 endif()
 
 if(CONNFWK_OTW)

@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2021-2022, The OpenThread Authors.
- *  Copyright 2024 NXP
+ *  Copyright 2024, 2026 NXP
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -138,6 +138,15 @@ SECTIONS
     *(.eh_frame)
     KEEP (*(.init))
     KEEP (*(.fini))
+    . = ALIGN(4);
+  } > m_text
+
+  ._settings_handler_static :
+  {
+    . = ALIGN(4);
+    _settings_handler_static_list_start = .;
+    KEEP(*(SORT(._settings_handler_static.static.*)))
+    _settings_handler_static_list_end = .;
     . = ALIGN(4);
   } > m_text
 

@@ -32,7 +32,6 @@ list(APPEND BOARD_SOURCES
     app_services_init.c
     pin_mux.c
     hardware_init.c
-    peripherals.c
     ${NXP_SDK_ROOT}/examples/_boards/${EVK_RT1170_BOARD}/board.c
     ${NXP_SDK_ROOT}/examples/_boards/${EVK_RT1170_BOARD}/common/clock/clock_config.c
 )

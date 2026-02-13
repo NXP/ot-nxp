@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2021-2023, The OpenThread Authors.
-# Copyright 2024 NXP
+# Copyright 2024, 2026 NXP
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -121,10 +121,6 @@ list(APPEND SDK_SOURCES
     ${NXP_SDK_ROOT}/components/silicon_id/fsl_silicon_id.c
     ${NXP_SDK_ROOT}/components/silicon_id/socs/rt10xx/fsl_silicon_id_soc.c
 
-    # File system
-    ${MIDDLEWARE_PATH}/littlefs/lfs.c
-    ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
-
     # sdmmc
     ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
     ${MIDDLEWARE_PATH}/sdmmc/common/fsl_sdmmc_common.c
@@ -186,8 +182,6 @@ list(APPEND SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/silicon_id
     ${NXP_SDK_ROOT}/components/silicon_id/socs
 
-    # File system
-    ${MIDDLEWARE_PATH}/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
     ${NXP_SDK_ROOT}/components/flash/mflash/mimxrt1062
 
@@ -240,10 +234,13 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
     -DFSL_OSA_ALLOCATED_HEAP=0
 
-    # LittleFS configs
-    LFS_CONFIG=fwk_lfs_config.h
-    LFS_THREADSAFE=1
     -DFSL_FEATURE_PHYKSZ8081_USE_RMII50M_MODE
+
+    # External flash
+    -DgPlatNvsSectorSize_c=8192
+    -DgAppNvsExternalFlash_c=1
+    -DgAppNvsInternalFlash_c=0
+
 )
 
 if(NOT OT_NCP_RTOS_HOST)
@@ -369,7 +366,6 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         ${MIDDLEWARE_PATH}/mbedtls/include
         # The ksdk_mbedtls_config.h should be used when compiling ncp host.
         ${MIDDLEWARE_PATH}/mbedtls/port/ksdk
-        ${MIDDLEWARE_PATH}/wireless/framework/platform/imx_rt/configs
     )
 
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
@@ -457,7 +453,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     freertos_kernel
     ${NXP_BOARD_LIB}
 
-    # Dependency to little_fs config files
+    # Dependency to connfw
     connfwk-config
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}

@@ -117,8 +117,6 @@ list(APPEND SDK_INCLUDES
     ${NXP_SDK_ROOT}/components/gpio
     ${NXP_SDK_ROOT}/components/time_stamp
 
-    # File system
-    ${MIDDLEWARE_PATH}/littlefs
     ${NXP_SDK_ROOT}/components/flash/mflash
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
 )
@@ -174,9 +172,6 @@ list(APPEND SDK_SOURCES
     ${NXP_SDK_ROOT}/components/internal_flash/${EVK_MIMXRT1170}/fsl_adapter_flexspi_nor_flash.c
     ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
 
-    # File system
-    ${MIDDLEWARE_PATH}/littlefs/lfs.c
-    ${MIDDLEWARE_PATH}/littlefs/lfs_util.c
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}/mflash_drv.c
 )
 
@@ -207,12 +202,13 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DSERIAL_MANAGER_TASK_STACK_SIZE=4048
     -DFSL_OSA_ALLOCATED_HEAP=0
 
-    # LittleFS configs
-    LFS_CONFIG=fwk_lfs_config.h
-    LFS_THREADSAFE=1
-
     # Flash size should be increased for RT1170
     -DFLASH_ADAPTER_SIZE=0x4000
+
+    # External flash
+    -DgPlatNvsSectorSize_c=8192
+    -DgAppNvsExternalFlash_c=1
+    -DgAppNvsInternalFlash_c=0
 
     # Security flags
     -DCRYPTO_USE_DRIVER_CAAM
@@ -343,7 +339,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     freertos_kernel
     ${NXP_BOARD_LIB}
 
-    # Dependency to little_fs config files
+    # Dependency to connfw
     connfwk-config
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}

@@ -109,7 +109,7 @@ else()
         ../../common/alarm_freertos.c
         ../../common/diag.c
         ../../common/entropy.c
-        ../../common/flash_littlefs.c
+        ../../common/flash_nvs.c
         ../../common/logging.c
         ../../common/spinel/misc.c
         ../../common/spinel/radio.cpp
@@ -145,7 +145,6 @@ else()
         openthread-spinel-rcp
         openthread-platform
         connfwk-FunctionLib
-        connfwk-FileSystem
         connfwk-platform-${OT_NXP_PLATFORM}
         connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
         PUBLIC

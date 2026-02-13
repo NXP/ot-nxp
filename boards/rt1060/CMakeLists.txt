@@ -29,7 +29,6 @@
 list(APPEND BOARD_SOURCES
     app_services_init.c
     hardware_init.c
-    peripherals.c
     ${EVK_RT1060_BOARD}/pin_mux.c
     ${NXP_SDK_ROOT}/examples/_boards/${EVK_RT1060_BOARD}/board.c
     ${NXP_SDK_ROOT}/examples/_boards/${EVK_RT1060_BOARD}/common/clock/clock_config.c

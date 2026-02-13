@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023, NXP.
+# Copyright (c) 2022-2023, 2026 NXP.
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINKER_FLAGS} "
 set(FREERTOS_PORT GCC_ARM_CM4F CACHE STRING "")
 set(FREERTOS_HEAP 4)
 
-# Enable FunctionLib and FileSystem modules
+# Enable FunctionLib module
 set(CONNFWK_FLIB ON)
-set(CONNFWK_FILESYSTEM ON)
 
 # OpenThread config
 set(BUILD_TESTING OFF CACHE BOOL "")
