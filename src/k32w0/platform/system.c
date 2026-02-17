@@ -36,6 +36,7 @@
 #include "pin_mux.h"
 #include "platform-k32w.h"
 #include "utils/uart.h"
+#include <openthread/platform/settings.h>
 
 #include "MemManager.h"
 
@@ -110,7 +111,7 @@ void otSysInit(int argc, char *argv[])
         MEM_Init();
     }
 #endif
-
+    otPlatSettingsInit(NULL, NULL, 0);
     K32WAlarmInit();
     K32WRadioInit();
 

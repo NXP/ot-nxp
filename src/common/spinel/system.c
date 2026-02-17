@@ -40,6 +40,7 @@
 #include "ot_platform_common.h"
 #include <stdlib.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/settings.h>
 #include "common/logging.hpp"
 
 #if (defined(LOG_ENABLE) && (LOG_ENABLE > 0))
@@ -111,6 +112,7 @@ void otSysInit(int argc, char *argv[])
     CRYPTO_InitHardware();
 #endif
 
+    otPlatSettingsInit(NULL, NULL, 0);
     otPlatRadioInit();
     otPlatAlarmInit();
     otPlatRandomInit();

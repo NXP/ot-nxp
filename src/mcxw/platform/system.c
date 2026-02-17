@@ -54,6 +54,7 @@
 #include "platform-mcxw.h"
 #include <stdint.h>
 #include "utils/uart.h"
+#include <openthread/platform/settings.h>
 
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
 #include "PWR_Interface.h"
@@ -187,7 +188,7 @@ void otSysInit(int argc, char *argv[])
 #endif
         otPlatRandomInit();
     }
-
+    otPlatSettingsInit(NULL, NULL, 0);
     otPlatRadioInit();
     otPlatAlarmInit();
 }

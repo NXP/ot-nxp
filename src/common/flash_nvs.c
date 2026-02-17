@@ -64,6 +64,8 @@ struct key_data
     uint8_t *data;
 };
 
+static bool isInitialized;
+
 /*
  * Zephyr settings subtree callback function used to search and read a certain
  * key
@@ -179,8 +181,17 @@ int subtree_cb_wipe(const char *key, size_t len, settings_read_cb read_cb, void 
 
 void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aSensitiveKeys);
+    OT_UNUSED_VARIABLE(aSensitiveKeysLength);
+
     const struct flash_area *fa;
     int                      err;
+
+    if (isInitialized)
+    {
+        return;
+    }
 
     /* Get flash memory driver params */
     err = flash_area_open(SETTINGS_PARTITION, &fa);
@@ -204,10 +215,15 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
     {
         otLogCritPlat("ERROR: Failed initialize settings management subsystem! (err=%d)", err);
     }
+    else
+    {
+        isInitialized = true;
+    }
 }
 
 void otPlatSettingsDeinit(otInstance *aInstance)
 {
+	isInitialized = false;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
