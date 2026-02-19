@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2022, NXP.
+#  Copyright (c) 2022, 2026 NXP.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,9 @@ endif()
 if(NOT OT_NXP_MBEDTLS_PATH)
     if(MIDDLEWARE_PATH)
         # Build mbedtls from SDK middleware by default
-        set(OT_NXP_MBEDTLS_PATH ${MIDDLEWARE_PATH}/mbedtls)
+        set(OT_NXP_MBEDTLS_PATH ${MIDDLEWARE_PATH}/mbedtls3x)
     else()
-        set(OT_NXP_MBEDTLS_PATH ${NXP_SDK_ROOT}/middleware/mbedtls)
+        set(OT_NXP_MBEDTLS_PATH ${NXP_SDK_ROOT}/middleware/mbedtls3x)
     endif()
 endif()
 
@@ -55,17 +55,6 @@ set(MBEDTLS_TARGET_PREFIX nxp-${OT_NXP_PLATFORM}-)
 set(mbedtls_target    "${MBEDTLS_TARGET_PREFIX}mbedtls")
 set(mbedx509_target   "${MBEDTLS_TARGET_PREFIX}mbedx509")
 set(mbedcrypto_target "${MBEDTLS_TARGET_PREFIX}mbedcrypto")
-list (APPEND thirdparty_inc_public
-    #Config file path
-    ${OT_NXP_MBEDTLS_CONFIG_FILE_PATH}
-    #openthread mbedtls-config.h path file required
-    ${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls
-)
-
-if(OT_NXP_MBEDTLS_PORT)
-    # Port will add sources and include directories to thirdparty_src and thirdparty_inc_public
-    include(port/${OT_NXP_MBEDTLS_PORT}.cmake)
-endif()
 
 #Make sure to disable some CMAKE_C_FLAGS that would be added by mbedtls
 # Instead use only CMAKE_C_FLAGS set by the application
@@ -75,9 +64,21 @@ add_subdirectory(${OT_NXP_MBEDTLS_PATH} ${PROJECT_BINARY_DIR}/mbedtls)
 string(REPLACE "G-N-U" "GNU" CMAKE_C_COMPILER_ID "${CMAKE_C_COMPILER_ID}")
 set(CMAKE_COMPILER_IS_GNUCC ON)
 
+target_include_directories(${mbedtls_target}
+	PUBLIC
+	${OT_NXP_MBEDTLS_CONFIG_FILE_PATH}
+	${PROJECT_SOURCE_DIR}/openthread/include
+	${PROJECT_SOURCE_DIR}/openthread/src/core
+	${PROJECT_SOURCE_DIR}/openthread/third_party/mbedtls
+	${PROJECT_SOURCE_DIR}/src/${OT_NXP_PLATFORM_FAMILY}/${OT_NXP_PLATFORM}
+	${PROJECT_SOURCE_DIR}/src/${OT_NXP_PLATFORM}
+	${PROJECT_SOURCE_DIR}/third_party/mbedtls/configs
+	)
+
 target_compile_definitions(${mbedtls_target}
     PUBLIC
         MBEDTLS_CONFIG_FILE=${OT_NXP_MBEDTLS_CONFIG_FILE}
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${OT_CORE_CONFIG_FILE}
 )
 
 target_compile_options(${mbedcrypto_target}
@@ -87,6 +88,7 @@ target_compile_options(${mbedcrypto_target}
         -Wno-unused-const-variable
         -Wno-memset-elt-size
         -Wno-int-conversion
+        -fomit-frame-pointer
 )
 
 target_link_libraries(${mbedtls_target}
@@ -114,5 +116,3 @@ target_link_libraries(ot-config
     INTERFACE
         ${mbedtls_target}
 )
-
-

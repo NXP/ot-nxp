@@ -36,9 +36,6 @@
 #define MBEDTLS_THREADING_C
 #define MBEDTLS_THREADING_ALT
 
-/* SDK mbetdls config include */
-#include "ksdk_mbedtls_config.h"
-
 /* Undef defines that would be re-defined in the ksdk mbedtls config file */
 #undef MBEDTLS_MPI_MAX_SIZE
 #undef MBEDTLS_SSL_MAX_CONTENT_LEN
@@ -49,6 +46,7 @@
 
 /* Always undef this flag on SDK 2.13 as the new version of freeRTOS heap defines the function pvPortCalloc */
 #undef MBEDTLS_FREESCALE_FREERTOS_CALLOC_ALT
+#undef ZEPHYR_SDK
 
 /* Openthread mbetdls config include */
 #include "mbedtls-config.h"
@@ -57,5 +55,24 @@
 #undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 /* Disable SHA512 which is not used and does not have hardware support */
 #undef MBEDTLS_SHA512_C
+
+/* PSA core mandatory configuration options */
+#define MBEDTLS_PSA_CRYPTO_C
+#define MBEDTLS_PSA_CRYPTO_STORAGE_C
+#define MBEDTLS_GCM_C
+#define MBEDTLS_CIPHER_C
+#define MBEDTLS_AES_C
+#define MBEDTLS_HKDF_C
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
+
+/* Required by SECURE_STORAGE_ITS_TRANSFORM_AEAD_SCHEME_AES_GCM */
+#define PSA_WANT_KEY_TYPE_AES 1
+#define PSA_WANT_ALG_GCM 1
+
+/* Required by SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_PROVIDER_ENTRY_UID_HASH (not secure) */
+#define PSA_WANT_ALG_SHA_256 1
+#undef MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH
 
 #endif // RT_MBEDTLS_CONFIG_H
