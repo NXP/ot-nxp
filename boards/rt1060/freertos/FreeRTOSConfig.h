@@ -210,4 +210,7 @@ standard names. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
+/* Required to have vTaskList function available */
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
 #endif /* FREERTOS_CONFIG_H */

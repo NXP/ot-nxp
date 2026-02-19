@@ -165,6 +165,7 @@ target_link_libraries(ot-config
 target_compile_definitions(${OT_PLATFORM_LIB}
     PUBLIC
     ${OT_PLATFORM_DEFINES}
+    -DOT_PLAT_SYS_CRYPTO_PSA_INIT
 )
 
 target_compile_options(${OT_PLATFORM_LIB}
@@ -172,8 +173,6 @@ target_compile_options(${OT_PLATFORM_LIB}
     ${OT_CFLAGS}
     ${OT_PLAT_FLAGS}
     ${OT_PLAT_SPINEL_FLAGS}
-    -DOT_PLAT_SYS_CRYPTO_INIT
-    -DOT_PLAT_MBEDTLS_PORT_INCLUDE=\"ksdk_mbedtls.h\"
     -DOT_PLAT_SYS_LOG_MANAGEMENT
     -DOT_PLAT_SAVE_NVM_DATA_ON_IDLE=1
     -DOPENTHREAD_FTD=1

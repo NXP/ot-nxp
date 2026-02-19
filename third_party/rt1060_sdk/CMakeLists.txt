@@ -64,6 +64,8 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(NCP_SPI_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/spi/spi_master)
     set(NCP_UART_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/uart)
     set(NCP_USB_FILES_PATH ${NCP_COMMON_FILES_PATH}/ncp_adapter/ncp_intf/usb/usb_host_cdc)
+    set(PSA_FILES_PATH ${NXP_SDK_ROOT}/components/psa_crypto_driver)
+    set(SECURE_STORAGE_FILES_PATH ${NXP_SDK_ROOT}/middleware/secure_storage)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -127,8 +129,56 @@ list(APPEND SDK_SOURCES
     ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
     ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
 
-    # sdk hook
     ${CMAKE_CURRENT_SOURCE_DIR}/sdk_hook/mbedtls/ksdk_mbedtls_hook.c
+
+    # mbedtls3x
+    # sources for CONFIG_MCUX_COMPONENT_middleware.mbedtls3x.crypto
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_aead.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_cipher.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_client.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_driver_wrappers_no_static.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_ecp.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_ffdh.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_hash.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_mac.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_pake.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_rsa.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_se.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_slot_management.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_storage.c
+
+    # sources for CONFIG_MCUX_COMPONENT_middleware.mbedtls3x.x509
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_create.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_crl.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_crt.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_csr.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write_crt.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write_csr.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/pkcs7.c
+
+    # secure storage
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_IMPLEMENTATION
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/implementation.c
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/transform/aead.c
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/transform/aead_get.c
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS
+    ${MIDDLEWARE_PATH}/secure_storage/src/its/store/nvs_its.c
+
+    #PSA DCP, OSAL
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.dcp
+    ${PSA_FILES_PATH}/dcp/src/mcux_psa_dcp_cipher.c
+    ${PSA_FILES_PATH}/dcp/src/mcux_psa_dcp_common_init.c
+    ${PSA_FILES_PATH}/dcp/src/mcux_psa_dcp_entropy.c
+    ${PSA_FILES_PATH}/dcp/src/mcux_psa_dcp_hash.c
+    ${PSA_FILES_PATH}/dcp/src/mcux_psa_dcp_init.c
+
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.osal.frtos
+    ${PSA_FILES_PATH}/osal/frtos/osal_mutex.c
+    ${PSA_FILES_PATH}/osal/frtos/threading_alt.c
 )
 
 list(APPEND SDK_INCLUDES
@@ -190,6 +240,31 @@ list(APPEND SDK_INCLUDES
     ${MIDDLEWARE_PATH}/sdmmc/common/
     ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
     ${MIDDLEWARE_PATH}/sdmmc/osa
+
+    #mbedtls3x
+    ${MIDDLEWARE_PATH}/mbedtls3x/port
+    ${MIDDLEWARE_PATH}/mbedtls3x/library
+    ${MIDDLEWARE_PATH}/mbedtls3x/include
+    ${MIDDLEWARE_PATH}/mbedtls3x/include/mbedtls
+    ${MIDDLEWARE_PATH}/mbedtls3x/include/mbedtls/psa
+
+    # secure storage
+    ${SECURE_STORAGE_FILES_PATH}
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage/its
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage/its/transform
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/psa
+    ${SECURE_STORAGE_FILES_PATH}/include
+
+    #PSA DCP, OSAL
+    ${PSA_FILES_PATH}/dcp
+    ${PSA_FILES_PATH}/dcp/include
+    ${PSA_FILES_PATH}/dcp/common/include
+    ${PSA_FILES_PATH}/osal
+    ${PSA_FILES_PATH}/osal/frtos
+
 )
 
 if("${EVK_RT1060_BOARD}" STREQUAL "evkcmimxrt1060")
@@ -241,6 +316,40 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     -DgAppNvsExternalFlash_c=1
     -DgAppNvsInternalFlash_c=0
 
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.mbedtls_thread_alt
+    -DPSA_CRYPTO_DRIVER_THREAD_EN
+
+    #secure storage
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE
+    -DSECURE_STORAGE
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_IMPLEMENTATION
+    -DSECURE_STORAGE_ITS_IMPLEMENTATION
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS
+    -DSECURE_STORAGE_ITS_STORE_IMPLEMENTATION_NVS
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+    -DSECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+
+    -DCONFIG_SECURE_STORAGE_ITS_MAX_DATA_SIZE=256
+
+    # MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_MODULE
+    # SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS selected
+    -DCONFIG_SECURE_STORAGE_ITS_STORE_SETTINGS_PREFIX="its/"
+    -DCONFIG_SECURE_STORAGE_ITS_STORE_SETTINGS_NAME_MAX_LEN=14
+
+    # MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_MODULE
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_NONCE_PROVIDER_DEFAULT=1
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_PROVIDER_ENTRY_UID_HASH=1
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_SIZE=32
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_NONCE_SIZE=12
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_SCHEME_AES_GCM
+
+    # PSA DCP
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.dcp
+    -DPSA_CRYPTO_DRIVER_DCP
+    -DMBEDTLS_MCUX_ENTROPY
+    -DMBEDTLS_MCUX_USE_TRNG_AS_ENTROPY_SEED
+    # required in threading_alt.h
+    -DCONFIG_USING_MBEDTLS_3X
 )
 
 if(NOT OT_NCP_RTOS_HOST)
@@ -261,8 +370,12 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL 
         ${DRIVER_USDHC_FILES_PATH}
         ${DRIVER_SDHC_FILES_PATH}
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/inc/nw61x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/nw61x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/inc/iw610x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/iw610x
+        # Loader files
+        ${NXP_SDK_ROOT}/components/conn_fwloader/include
         ${MIDDLEWARE_PATH}/sdmmc/common
         ${MIDDLEWARE_PATH}/sdmmc/sdio
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
@@ -281,8 +394,8 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL 
         ${NXP_SDK_ROOT}/components/wifi_bt_module/incl
     )
     list(APPEND SDK_SOURCES
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x/nw61x_cpu12_se.c
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610/iw610_cpu12_se.c
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/nw61x/nw61x_cpu12_se.c
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/iw610x/iw610_cpu12_se.c
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
@@ -307,7 +420,6 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     list(APPEND SDK_COMPILE_DEFINITIONS
         -DCONFIG_NCP
         -DCONFIG_NCP_OT
-        -DMBEDTLS_CONFIG_FILE="ksdk_mbedtls_config.h"
     )
     list(APPEND SDK_SOURCES
         ${DRIVER_LPSPI_FILES_PATH}/fsl_lpspi_edma.c
@@ -364,8 +476,6 @@ elseif("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
         # mbedtls cmake needs to be reloaded after this cmake file, otherwise compiling
         # errors will be occurred.
         ${MIDDLEWARE_PATH}/mbedtls/include
-        # The ksdk_mbedtls_config.h should be used when compiling ncp host.
-        ${MIDDLEWARE_PATH}/mbedtls/port/ksdk
     )
 
     if("${OT_NCP_RW612_INTERFACE}" STREQUAL "UART")
@@ -457,6 +567,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     connfwk-config
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}
+    ${OT_EXTERNAL_MBEDTLS}
 )
 endif()
 
@@ -485,4 +596,3 @@ else()
     set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
 endif()
 
-set(OT_NXP_MBEDTLS_PORT ksdk PARENT_SCOPE)
