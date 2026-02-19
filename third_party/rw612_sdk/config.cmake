@@ -65,9 +65,10 @@ target_compile_definitions(${NXP_DRIVER_LIB} PUBLIC
     -DWIFI_BOARD_RW610
 )
 
+#// Temporarily adding -Wno-error to suppress PSA driver warnings that are promoted to errors
 mcux_add_configuration(
     CC "${OT_CFLAGS}"
-    CC "-Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-empty-body -Wno-int-conversion -Wno-int-in-bool-context -Wno-memset-elt-size -Wno-parentheses"
+    CC "-Wno-error -Wno-implicit-function-declaration -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-empty-body -Wno-int-conversion -Wno-int-in-bool-context -Wno-memset-elt-size -Wno-parentheses"
 )
 
 mcux_add_source(

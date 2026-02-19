@@ -245,4 +245,6 @@ standard names. */
 #define CONFIG_WIFI_MAX_PRIO configMAX_PRIORITIES
 #endif
 
+#define configENABLE_PAC 0
+
 #endif /* FREERTOS_CONFIG_COMMON_H */

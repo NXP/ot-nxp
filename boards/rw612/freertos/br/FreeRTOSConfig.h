@@ -20,4 +20,7 @@
 #define configTOTAL_HEAP_SIZE ((size_t)(159 * 1024))
 #include "../FreeRTOSConfigCommon.h"
 
+/* Required to have vTaskList function available */
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
 #endif /* FREERTOS_CONFIG_H */
