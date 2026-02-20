@@ -117,22 +117,6 @@ create_directory_and_build()
         build_ot_cli_iperf "$@"
         build_otbr_wifi "$@"
         build_otbr_eth "$@"
-        # NCP UART apps
-        build_ot_cli_ncp_uart "$@"
-        build_otbr_wifi_ncp_uart "$@"
-        build_otbr_eth_ncp_uart "$@"
-        # NCP SPI apps
-        build_ot_cli_ncp_spi "$@"
-        build_otbr_wifi_ncp_spi "$@"
-        build_otbr_eth_ncp_spi "$@"
-        # NCP USB apps
-        build_ot_cli_ncp_usb "$@"
-        build_otbr_wifi_ncp_usb "$@"
-        build_otbr_eth_ncp_usb "$@"
-        # NCP SDIO apps
-        build_ot_cli_ncp_sdio "$@"
-        build_otbr_wifi_ncp_sdio "$@"
-        build_otbr_eth_ncp_sdio "$@"
         # Reference Device
         build_ot_cli_ref_device "$@"
     elif [ "$1" == 'ot_br_wifi' ]; then
@@ -143,30 +127,6 @@ create_directory_and_build()
         build_ot_cli "$@"
     elif [ "$1" == 'ot_cli_iperf' ]; then
         build_ot_cli_iperf "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_uart' ]; then
-        build_otbr_wifi_ncp_uart "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_uart' ]; then
-        build_otbr_eth_ncp_uart "$@"
-    elif [ "$1" == 'ot_cli_ncp_uart' ]; then
-        build_ot_cli_ncp_uart "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_spi' ]; then
-        build_otbr_wifi_ncp_spi "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_spi' ]; then
-        build_otbr_eth_ncp_spi "$@"
-    elif [ "$1" == 'ot_cli_ncp_spi' ]; then
-        build_ot_cli_ncp_spi "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_usb' ]; then
-        build_otbr_wifi_ncp_usb "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_usb' ]; then
-        build_otbr_eth_ncp_usb "$@"
-    elif [ "$1" == 'ot_cli_ncp_usb' ]; then
-        build_ot_cli_ncp_usb "$@"
-    elif [ "$1" == 'ot_br_wifi_ncp_sdio' ]; then
-        build_otbr_wifi_ncp_sdio "$@"
-    elif [ "$1" == 'ot_br_eth_ncp_sdio' ]; then
-        build_otbr_eth_ncp_sdio "$@"
-    elif [ "$1" == 'ot_cli_ncp_sdio' ]; then
-        build_ot_cli_ncp_sdio "$@"
     elif [ "$1" == 'ot_cli_ref_device' ]; then
         build_ot_cli_ref_device "$@"
     else
@@ -174,10 +134,6 @@ create_directory_and_build()
             all
             ot_cli_iperf
             ot_br_wifi, ot_br_eth, ot_cli
-            ot_br_wifi_ncp_uart, ot_br_eth_ncp_uart, ot_cli_ncp_uart
-            ot_br_wifi_ncp_spi, ot_br_eth_ncp_spi, ot_cli_ncp_spi
-            ot_br_wifi_ncp_usb, ot_br_eth_ncp_usb, ot_cli_ncp_usb
-            ot_br_wifi_ncp_sdio, ot_br_eth_ncp_sdio, ot_cli_ncp_sdio
             ot_cli_ref_device"
         # 128 for Invalid arguments
         exit 128
