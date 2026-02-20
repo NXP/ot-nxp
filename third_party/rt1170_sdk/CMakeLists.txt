@@ -65,6 +65,8 @@ if(${SDK_TYPE} STREQUAL "GITHUB")
     set(STR_FILES_PATH ${NXP_SDK_ROOT}/components/str)
     set(FSL_FLEXSPI_NOR_BOOT_FILES_PATH ${NXP_SDK_ROOT}/devices/RT/RT1170/MIMXRT1176/xip)
     set(INCBIN_FILES_PATH ${NXP_SDK_ROOT}/utilities/misc_utilities)
+    set(PSA_FILES_PATH ${NXP_SDK_ROOT}/components/psa_crypto_driver)
+    set(SECURE_STORAGE_FILES_PATH ${NXP_SDK_ROOT}/middleware/secure_storage)
 else()
     message(FATAL_ERROR "Unknown SDK_TYPE")
 endif()
@@ -119,6 +121,30 @@ list(APPEND SDK_INCLUDES
 
     ${NXP_SDK_ROOT}/components/flash/mflash
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}
+
+    #mbedtls3x
+    ${MIDDLEWARE_PATH}/mbedtls3x/port
+    ${MIDDLEWARE_PATH}/mbedtls3x/library
+    ${MIDDLEWARE_PATH}/mbedtls3x/include
+    ${MIDDLEWARE_PATH}/mbedtls3x/include/mbedtls
+    ${MIDDLEWARE_PATH}/mbedtls3x/include/mbedtls/psa
+
+    # secure storage
+    ${SECURE_STORAGE_FILES_PATH}
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage/its
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal/zephyr/secure_storage/its/transform
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/internal
+    ${SECURE_STORAGE_FILES_PATH}/zephyr/subsys/secure_storage/include/psa
+    ${SECURE_STORAGE_FILES_PATH}/include
+
+    #PSA CAAM, OSAL
+    ${PSA_FILES_PATH}/caam
+    ${PSA_FILES_PATH}/caam/include
+    ${PSA_FILES_PATH}/caam/common/include
+    ${PSA_FILES_PATH}/osal
+    ${PSA_FILES_PATH}/osal/frtos
 )
 
 list(APPEND SDK_SOURCES
@@ -173,6 +199,63 @@ list(APPEND SDK_SOURCES
     ${NXP_SDK_ROOT}/components/gpio/fsl_adapter_igpio.c
 
     ${NXP_SDK_ROOT}/components/flash/mflash/${MIMXRT1170_EVK}/mflash_drv.c
+
+     # mbedtls3x
+    # sources for CONFIG_MCUX_COMPONENT_middleware.mbedtls3x.crypto
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_aead.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_cipher.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_client.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_driver_wrappers_no_static.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_ecp.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_ffdh.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_hash.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_mac.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_pake.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_rsa.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_se.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_slot_management.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/psa_crypto_storage.c
+
+    # sources for CONFIG_MCUX_COMPONENT_middleware.mbedtls3x.x509
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_create.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_crl.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_crt.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509_csr.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write_crt.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/x509write_csr.c
+    ${MIDDLEWARE_PATH}/mbedtls3x/library/pkcs7.c
+
+    # secure storage
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_IMPLEMENTATION
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/implementation.c
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/transform/aead.c
+    ${MIDDLEWARE_PATH}/secure_storage/zephyr/subsys/secure_storage/src/its/transform/aead_get.c
+    # CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS
+    ${MIDDLEWARE_PATH}/secure_storage/src/its/store/nvs_its.c
+
+    #PSA CAAM, OSAL
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.caam
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_aead.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_asymmetric_encryption.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_asymmetric_signature.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_cipher.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_init.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_key_generation.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_common_mac.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_entropy.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_hash.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_init.c
+    ${PSA_FILES_PATH}/caam/src/mcux_psa_caam_utils.c
+    ${PSA_FILES_PATH}/caam/common/src/mcux_psa_common_key_management.c
+    ${PSA_FILES_PATH}/caam/common/src/mcux_psa_mbedtls_origin.c
+
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.osal.frtos
+    ${PSA_FILES_PATH}/osal/frtos/osal_mutex.c
+    ${PSA_FILES_PATH}/osal/frtos/threading_alt.c
 )
 
 list(APPEND SDK_COMPILE_DEFINITIONS
@@ -213,6 +296,41 @@ list(APPEND SDK_COMPILE_DEFINITIONS
     # Security flags
     -DCRYPTO_USE_DRIVER_CAAM
     -DCACHE_MODE_WRITE_THROUGH=1
+
+     # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.mbedtls_thread_alt
+    -DPSA_CRYPTO_DRIVER_THREAD_EN
+
+    #secure storage
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE
+    -DSECURE_STORAGE
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_IMPLEMENTATION
+    -DSECURE_STORAGE_ITS_IMPLEMENTATION
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS
+    -DSECURE_STORAGE_ITS_STORE_IMPLEMENTATION_NVS
+    # equivalent for CONFIG_MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+    -DSECURE_STORAGE_ITS_TRANSFORM_IMPLEMENTATION_AEAD
+
+    -DCONFIG_SECURE_STORAGE_ITS_MAX_DATA_SIZE=256
+
+    # MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_STORE_MODULE
+    # SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_SETTINGS selected
+    -DCONFIG_SECURE_STORAGE_ITS_STORE_SETTINGS_PREFIX="its/"
+    -DCONFIG_SECURE_STORAGE_ITS_STORE_SETTINGS_NAME_MAX_LEN=14
+
+    # MCUX_COMPONENT_middleware.SECURE_STORAGE_ITS_TRANSFORM_MODULE
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_NONCE_PROVIDER_DEFAULT=1
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_PROVIDER_ENTRY_UID_HASH=1
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_SIZE=32
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_NONCE_SIZE=12
+    -DCONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_SCHEME_AES_GCM
+
+    # PSA CAAM
+    # CONFIG_MCUX_COMPONENT_component.psa_crypto_driver.caam
+    -DPSA_CRYPTO_DRIVER_CAAM
+    -DMBEDTLS_MCUX_ENTROPY
+    -DMBEDTLS_MCUX_USE_TRNG_AS_ENTROPY_SEED
+    # required in threading_alt.h
+    -DCONFIG_USING_MBEDTLS_3X
 )
 message(STATUS "==> 1 OT_NXP_TRANSCEIVER RT1170 ${OT_NXP_TRANSCEIVER}")
 
@@ -230,8 +348,12 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL 
         ${DRIVER_USDHC_FILES_PATH}
         ${DRIVER_SDHC_FILES_PATH}
         ${MIDDLEWARE_PATH}/wifi_nxp/wifidriver
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/inc/nw61x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/nw61x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/inc/iw610x
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/iw610x
+        # Loader files
+        ${NXP_SDK_ROOT}/components/conn_fwloader/include
         ${MIDDLEWARE_PATH}/sdmmc/common
         ${MIDDLEWARE_PATH}/sdmmc/sdio
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc
@@ -254,8 +376,8 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL 
         ${MIDDLEWARE_PATH}/sdmmc/sdio/fsl_sdio.c
         ${MIDDLEWARE_PATH}/sdmmc/host/usdhc/non_blocking/fsl_sdmmc_host.c
         ${MIDDLEWARE_PATH}/sdmmc/osa/fsl_sdmmc_osa.c
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/nw61x/nw61x_cpu12_se.c
-        ${MIDDLEWARE_PATH}/wifi_nxp/wifi_bt_firmware/iw610/iw610_cpu12_se.c
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/nw61x/nw61x_cpu12_se.c
+        ${NXP_SDK_ROOT}/components/conn_fwloader/fw_bin/iw610x/iw610_cpu12_se.c
         ${MIDDLEWARE_PATH}/wifi_nxp/firmware_dnld/firmware_dnld.c
         ${MIDDLEWARE_PATH}/wifi_nxp/fwdnld_intf_abs/fwdnld_intf_abs.c
         ${MIDDLEWARE_PATH}/wifi_nxp/sdio_nxp_abs/fwdnld_sdio.c
@@ -343,6 +465,7 @@ target_link_libraries(${NXP_DRIVER_LIB}
     connfwk-config
     connfwk-platform-${OT_NXP_PLATFORM_FAMILY}
     connfwk-platform-${OT_NXP_PLATFORM}
+    ${OT_EXTERNAL_MBEDTLS}
 )
 
 target_compile_options(${NXP_DRIVER_LIB}
@@ -359,4 +482,3 @@ target_compile_options(${NXP_DRIVER_LIB}
 )
 
 set(OT_NXP_MBEDTLS_CONFIG_FILE " \"ot-nxp-mbedtls-config.h\" " PARENT_SCOPE)
-set(OT_NXP_MBEDTLS_PORT ksdk PARENT_SCOPE)
