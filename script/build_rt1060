@@ -66,7 +66,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IW610_SPI=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iw610"
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
@@ -86,7 +86,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_ETHERNET=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iwx12"
     "-DOT_APP_BR_FREERTOS=ON"
@@ -100,7 +100,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-    "-DCMAKE_BUILD_TYPE=Debug"
+    "-DCMAKE_BUILD_TYPE=MinSizeRel"
     "-DSPINEL_INTERFACE_TYPE=SPI"
     "-DOT_NXP_TRANSCEIVER=iwx12"
     "-DOT_APP_BR_FREERTOS=ON"
@@ -244,18 +244,6 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_UART[@]}")
-        build rw612_ncp_host_uart "${options[@]}"
-        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
-        build rw612_ncp_host_usb "${options[@]}"
-        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
-        build rw612_ncp_host_sdio "${options[@]}"
-        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
-        build rw612_ncp_host_spi "${options[@]}"
-        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
         build iw610_spi "${options[@]}"
         options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
@@ -299,20 +287,8 @@ create_directory_and_build()
     elif [ "$1" == 'iwx12_spi_br_wifi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
-    elif [ "$1" == 'rw612_ncp_host_uart' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_UART[@]}")
-        build rw612_ncp_host_uart "${options[@]}"
-    elif [ "$1" == 'rw612_ncp_host_usb' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_USB[@]}")
-        build rw612_ncp_host_usb "${options[@]}"
-    elif [ "$1" == 'rw612_ncp_host_sdio' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SDIO[@]}")
-        build rw612_ncp_host_sdio "${options[@]}"
-    elif [ "$1" == 'rw612_ncp_host_spi' ]; then
-        options+=("${OT_OPTIONS_TRANSCEIVER_RW612_SPI[@]}")
-        build rw612_ncp_host_spi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet, iw610_spi, iw610_spi_br_wifi, iw610_spi_br_ethernet, iw610_spi_iperf, iwx12_spi, iwx12_spi_iperf, iwx12_spi_br_ethernet, iwx12_spi_br_wifi, rw612_ncp_host_uart, rw612_ncp_host_usb, rw612_ncp_host_sdio, rw612_ncp_host_spi"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet, iw610_spi, iw610_spi_br_wifi, iw610_spi_br_ethernet, iw610_spi_iperf, iwx12_spi, iwx12_spi_iperf, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
         # 128 for Invalid arguments
         exit 128
     fi
