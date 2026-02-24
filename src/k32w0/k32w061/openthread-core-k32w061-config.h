@@ -50,8 +50,14 @@
  *
  * The emsk platform provides an otPlatLog() function.
  */
+#ifndef OT_STACK_ENABLE_LOG
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT 0
+#endif
+#endif
+
+#ifndef OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_NONE 0
 #endif
 
 /**
