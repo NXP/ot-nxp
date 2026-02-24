@@ -66,7 +66,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     TM_ENABLE_TIME_STAMP=1
     FSL_OSA_TASK_ENABLE=1
     gAspCapability_d=1
-    gAppButtonCnt_c=2
+    #gAppButtonCnt_c=2
     gBleBondIdentityHeaderSize_c=56
     gPlatformShutdownEccRamInLowPower=0
     gMemManagerLightExtendHeapAreaUsage=1
