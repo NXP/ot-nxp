@@ -37,7 +37,32 @@
 // For BLE WirelessUART project
 #define MBEDTLS_ECDH_C
 
+#define MBEDTLS_PSA_CRYPTO_C
+#define MBEDTLS_PSA_CRYPTO_CONFIG
+#ifndef PSA_CRYPTO_DRIVER_ELE_S2XX
+#define PSA_CRYPTO_DRIVER_ELE_S2XX
+#endif
+
+#define MBEDTLS_CIPHER_C
+#define MBEDTLS_AES_C
+#define MBEDTLS_SHA256_C
+#define MBEDTLS_PSA_BUILTIN_ALG_SHA_256 1
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#define MBEDTLS_MCUX_ENTROPY 1
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
+#define MBEDTLS_PSA_CRYPTO_STORAGE_C
+
+//Stub define as header files are not included in some psa_driver files
+#ifndef PRINTF
+#define PRINTF(...)  (0)
+#endif
+
 /* Openthread mbetdls config include */
 #include "mbedtls-config.h"
+
+#undef MBEDTLS_BLOCK_CIPHER_NO_DECRYPT
+#undef MBEDTLS_ECP_MAX_BITS
 
 #endif

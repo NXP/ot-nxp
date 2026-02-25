@@ -67,6 +67,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     gFro192mDisableTrim_d=1
 )
 
+#// Temporarily adding -Wno-error to suppress PSA driver warnings that are promoted to errors
 target_compile_options(${OT_MCUX_SDK_TARGET} PUBLIC
-    -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
+    -Wno-error -Wno-implicit-function-declaration -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
 )
