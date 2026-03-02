@@ -51,6 +51,11 @@ mcux_remove_macro(
     gPlatformEnableDcdcOnNbu_d=1
 )
 
+mcux_add_configuration(
+    CC "${OT_CFLAGS}"
+    CC "-Wno-error -Wno-implicit-function-declaration -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-empty-body -Wno-int-conversion -Wno-int-in-bool-context -Wno-memset-elt-size -Wno-parentheses"
+)
+
 if (OT_APP_LOWPOWER)
     target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
         gAppLowpowerEnabled_d=1

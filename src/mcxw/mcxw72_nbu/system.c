@@ -105,6 +105,21 @@ OT_TOOL_WEAK void APP_SysInitHook(void)
     /* Intentionally left empty */
 }
 
+OT_TOOL_WEAK void PLATFORM_NbuRaiseFault(void)
+{
+
+}
+
+OT_TOOL_WEAK int PLATFORM_Nbu2HostWarningIndication()
+{
+    return 0;
+}
+
+OT_TOOL_WEAK void GetBufferFromVendorDebugEvent()
+{
+
+}
+
 void plat_settings_load(void *data)
 {
     volatile struct plat_settings_t *s = data;

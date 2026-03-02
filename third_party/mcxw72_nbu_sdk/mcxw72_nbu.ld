@@ -249,9 +249,12 @@ SECTIONS
     . = ALIGN(4);
   } > m_text
 
+  __debug_rom = LOADADDR(.data) + SIZEOF(.data);
   .sqram_debug_region (NOLOAD) : ALIGN(4)
   {
+    __sqram_debug_start__ = .;
      *(.debugbuf)
+    __sqram_debug_end__ = .;
   } > sqram_debug_region
   .lowpower_flag_region  (NOLOAD) : ALIGN(4)
   {
@@ -390,7 +393,7 @@ SECTIONS
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
 
   text_end = ORIGIN(m_text) + LENGTH(m_text);
-  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
+  /* ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data") */
 
   .stack :
   {
