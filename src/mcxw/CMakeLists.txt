@@ -64,7 +64,7 @@ if (NOT OT_NXP_PLATFORM MATCHES "nbu")
 
     if (NOT NO_THREAD_1_3_FLAGS)
         list(APPEND OT_NXP_PLATFORM_SOURCES
-            ../common/crypto/ecdsa_sss.cpp
+            ../common/crypto/ecdsa_psa.cpp
         )
     endif()
 else()

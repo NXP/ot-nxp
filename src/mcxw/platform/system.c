@@ -114,6 +114,11 @@ button_status_t Btn_HandleKeys1(void *buttonHandle, button_callback_message_t *m
 #endif /*gAppLowpowerEnabled_d*/
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 
+
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+extern void otPlatPsaInit();
+#endif
+
 OT_TOOL_WEAK void APP_SysInitHook(void)
 {
     /* Intentionally left empty */
@@ -191,6 +196,9 @@ void otSysInit(int argc, char *argv[])
     otPlatSettingsInit(NULL, NULL, 0);
     otPlatRadioInit();
     otPlatAlarmInit();
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+    otPlatPsaInit();
+#endif
 }
 
 bool otSysPseudoResetWasRequested(void)
