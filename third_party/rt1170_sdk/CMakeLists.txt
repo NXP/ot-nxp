@@ -482,3 +482,4 @@ target_compile_options(${NXP_DRIVER_LIB}
 )
 
 set(OT_NXP_MBEDTLS_CONFIG_FILE " \"ot-nxp-mbedtls-config.h\" " PARENT_SCOPE)
+set(OT_NXP_MBEDTLS_PSA_CONFIG_FILE "\"rt1170-mbedtls-psa-config.h\"" PARENT_SCOPE)
