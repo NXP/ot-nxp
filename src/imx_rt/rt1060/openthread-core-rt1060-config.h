@@ -535,4 +535,13 @@
 #endif
 #endif
 
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
+ *
+ * Specifies the number of recovery retries in case of RCP failure.
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT
+#define OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT 10
+#endif
+
 #endif // OT_RT_OPENTHREAD_CORE_RT_CONFIG_H_
