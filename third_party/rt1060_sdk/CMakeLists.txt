@@ -594,5 +594,6 @@ if("${OT_NXP_TRANSCEIVER}" STREQUAL "rw612")
     set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ksdk_mbedtls_config.h\"" PARENT_SCOPE)
 else()
     set(OT_NXP_MBEDTLS_CONFIG_FILE "\"ot-nxp-mbedtls-config.h\"" PARENT_SCOPE)
+    set(OT_NXP_MBEDTLS_PSA_CONFIG_FILE "\"rt1060-mbedtls-psa-config.h\"" PARENT_SCOPE)
 endif()
 
