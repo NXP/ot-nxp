@@ -32,6 +32,10 @@ if(NOT OT_NXP_MBEDTLS_CONFIG_FILE)
     set(OT_NXP_MBEDTLS_CONFIG_FILE "\"${OT_NXP_PLATFORM}-mbedtls-config.h\"")
 endif()
 
+if(NOT OT_NXP_MBEDTLS_PSA_CONFIG_FILE)
+    set(OT_NXP_MBEDTLS_PSA_CONFIG_FILE "\"${OT_NXP_PLATFORM}-mbedtls-psa-config.h\"")
+endif()
+
 if(NOT OT_NXP_MBEDTLS_CONFIG_FILE_PATH)
     set(OT_NXP_MBEDTLS_CONFIG_FILE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/configs)
 endif()
@@ -79,6 +83,7 @@ target_compile_definitions(${mbedtls_target}
     PUBLIC
         MBEDTLS_CONFIG_FILE=${OT_NXP_MBEDTLS_CONFIG_FILE}
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE=${OT_CORE_CONFIG_FILE}
+        MBEDTLS_PSA_CRYPTO_CONFIG_FILE=${OT_NXP_MBEDTLS_PSA_CONFIG_FILE}
 )
 
 target_compile_options(${mbedcrypto_target}
