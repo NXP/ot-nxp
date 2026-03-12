@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025, The OpenThread Authors.
+ *  Copyright (c) 2025-2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,9 @@
 
 // For BLE WirelessUART project
 // #define MBEDTLS_ECDH_C
+
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
 
 /* Openthread mbetdls config include */
 #include "mbedtls-config.h"
