@@ -103,8 +103,9 @@ mcux_add_include(
 
 if (OT_EXTERNAL_MBEDTLS)
     mcux_add_macro(
-        MBEDTLS_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-config.h\\\"              # includes "mbedtls-config.h" which includes "openthread-core-config.h" which includes
+        MBEDTLS_CONFIG_FILE=\\\"ot-nxp-mbedtls-config.h\\\"
         OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"${OT_CORE_CONFIG_FILE_UNQUOTED}\\\"  # OPENTHREAD_PROJECT_CORE_CONFIG_FILE if defined. "mbedtls-config.h" checks for OPENTHREAD_CONFIG_*
+        MBEDTLS_PSA_CRYPTO_CONFIG_FILE=\\\"${OT_NXP_PLATFORM}-mbedtls-psa-config.h\\\"
     )
 endif()
 
