@@ -65,9 +65,14 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\"
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
     gFro192mDisableTrim_d=1
+    OT_NXP_PLATFORM_MCXW72=1
 )
 
 #// Temporarily adding -Wno-error to suppress PSA driver warnings that are promoted to errors
 target_compile_options(${OT_MCUX_SDK_TARGET} PUBLIC
     -Wno-error -Wno-implicit-function-declaration -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-function -Wno-unused-parameter -Wno-empty-body -Wno-missing-field-initializers -Wno-clobbered -fno-strict-aliasing
+)
+
+mcux_add_armgcc_configuration(
+    LD "-Xlinker --defsym=__stack_size__=0x2000"
 )
