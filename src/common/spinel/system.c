@@ -112,6 +112,10 @@ void otSysInit(int argc, char *argv[])
 #endif
     PLATFORM_InitOt();
 
+    otPlatSettingsInit(NULL, NULL, 0);
+    otPlatRadioInit();
+    otPlatAlarmInit();
+
 #ifdef OT_PLAT_SYS_CRYPTO_INIT
     CRYPTO_InitHardware();
 #elif defined(OT_PLAT_SYS_CRYPTO_PSA_INIT)
@@ -122,9 +126,6 @@ void otSysInit(int argc, char *argv[])
     assert(status == PSA_SUCCESS);
 #endif
 
-    otPlatSettingsInit(NULL, NULL, 0);
-    otPlatRadioInit();
-    otPlatAlarmInit();
     otPlatRandomInit();
 
     atexit(otPlatExitFunction);
