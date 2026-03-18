@@ -513,13 +513,4 @@
 #endif
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET
- *
- * NVM offset while using key refs. Platforms can override this definition based on implementation
- */
-#ifndef OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET
-#define OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET 0x30000
-#endif
-
 #endif // OPENTHREAD_CORE_MCXW72_CONFIG_H_
