@@ -192,7 +192,7 @@ endif()
 
 if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
     mcux_add_macro(
-        -DCONFIG_WPA_SUPP_MBEDTLS # Enable wpa_supplicant mbedtls extend config
+        -DCONFIG_WPA_SUPP_MBEDTLS=1 # Enable wpa_supplicant mbedtls extend config
     )
 endif()
 
@@ -290,3 +290,9 @@ mcux_remove_armgcc_linker_script(
     BASE_PATH ${SdkRootDirPath}
     LINKER devices/Wireless/RW/RW612/gcc/RW612_ram.ld
 )
+
+if (OT_NXP_BUILD_APP_AS_LIB)
+    mcux_add_macro(
+        MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE=\\\"coex_mbedtls_psa_crypto_config.h\\\"
+    )
+endif()
