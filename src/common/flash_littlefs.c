@@ -162,6 +162,10 @@ void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, u
 
         FS_Init();
 
+        void *lfs_ref = FS_InitGetHandle();
+        secure_storage_notify_lfs_mutex(mFlashLittleFSMutexId);
+        secure_storage_notify_lfs_handler(lfs_ref);
+
         (void)OSA_MutexLock((osa_mutex_handle_t)mFlashLittleFSMutexId, osaWaitForever_c);
 
         FLib_MemSet((void *)&otSettingsBuffer, 0, sizeof(otSettingsBuffer));
