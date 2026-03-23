@@ -65,7 +65,6 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\"
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
     gFro192mDisableTrim_d=1
-    OT_NXP_PLATFORM_MCXW72=1
 )
 
 #// Temporarily adding -Wno-error to suppress PSA driver warnings that are promoted to errors
