@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024-2025, The OpenThread Authors.
+# Copyright (c) 2024-2026, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ if(OT_NXP_LWIP_WIFI OR OT_NXP_LWIP_ETH OR OT_NXP_BUILD_APP_AS_LIB)
         CUSTOM_PRJ_CONF_PATH ${PRJ_CONF_PATH}
     )
 else()
-    if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
+    if (OT_NXP_PLATFORM MATCHES "^mcxw70$")
         project(${NXP_DRIVER_LIB} LANGUAGES C CXX ASM
             PROJECT_TYPE LIBRARY_OBJECT
             PROJECT_BOARD_PORT_PATH examples_int/_boards/${board}/wireless_examples

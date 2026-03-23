@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025, The OpenThread Authors.
+ *  Copyright (c) 2026 The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_MCXW30_CONFIG_CHECK_H_
-#define OPENTHREAD_CORE_MCXW30_CONFIG_CHECK_H_
+/**
+ * @file
+ *   This file implements an stub for the entropy source. It should be replaced when
+ *   HW support is provided for MCXW70.
+ *
+ */
 
-#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-#error "Platform mcxw30 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
-#endif
+#include "EmbeddedTypes.h"
+#include <openthread/platform/entropy.h>
 
-#endif /* OPENTHREAD_CORE_MCXW30_CONFIG_CHECK_H_ */
+#include "RNG_Interface.h"
+
+void otPlatRandomInit(void)
+{
+    RNG_Init();
+}
+
+otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
+{
+    int ret;
+
+    ret = RNG_GetPseudoRandomData(aOutput, aOutputLength, NULL);
+    /*
+     * RNG_GetPseudoRandomData() returns on success the number of
+     * pseudorandom bytes.
+     */
+    if (ret >= 0)
+    {
+        ret = OT_ERROR_NONE;
+    }
+    return ret;
+}

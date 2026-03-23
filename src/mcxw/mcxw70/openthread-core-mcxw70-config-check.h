@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025-2026, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MCXW30_MBEDTLS_CONFIG_H
-#define MCXW30_MBEDTLS_CONFIG_H
+#ifndef OPENTHREAD_CORE_MCXW70_CONFIG_CHECK_H_
+#define OPENTHREAD_CORE_MCXW70_CONFIG_CHECK_H_
 
-#include "get_mbedtls_version.h"
-
-#define TRNG0 TRNG_0
-
-// #define MBEDTLS_ENTROPY_HARDWARE_ALT
-#undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-
-// For BLE WirelessUART project
-// #define MBEDTLS_ECDH_C
-
-#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
-#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
-
-/* Openthread mbetdls config include */
-#include "mbedtls-config.h"
-
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+#error "Platform mcxw70 doesn't support configuration option: OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT"
 #endif
+
+#endif /* OPENTHREAD_CORE_MCXW70_CONFIG_CHECK_H_ */

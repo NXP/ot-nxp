@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2024-2025, The OpenThread Authors.
+#  Copyright (c) 2024-2026, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ target_include_directories(${OT_MCUX_SDK_TARGET} PUBLIC
     ${SdkRootDirPath}/middleware/wireless/bluetooth/examples/ble_shell
 )
 
-if (OT_NXP_PLATFORM MATCHES "^mcxw30$")
+if (OT_NXP_PLATFORM MATCHES "^mcxw70$")
     target_include_directories(${OT_MCUX_SDK_TARGET} PUBLIC
         ${SdkRootDirPath}/middleware/wireless/bluetooth_private/boards/${board}
     )

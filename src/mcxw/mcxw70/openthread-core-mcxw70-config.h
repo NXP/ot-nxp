@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025, The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file includes mcxw30 compile-time configuration constants
+ *   This file includes mcxw70 compile-time configuration constants
  *   for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_MCXW30_CONFIG_H_
-#define OPENTHREAD_CORE_MCXW30_CONFIG_H_
+#ifndef OPENTHREAD_CORE_MCXW70_CONFIG_H_
+#define OPENTHREAD_CORE_MCXW70_CONFIG_H_
 
 /**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
@@ -41,12 +41,12 @@
  * The platform-specific string to insert into the OpenThread version string.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "MCXW30"
+#define OPENTHREAD_CONFIG_PLATFORM_INFO "MCXW70"
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
- * The mcxw30 platform provides an otPlatLog() function.
+ * The mcxw70 platform provides an otPlatLog() function.
  */
 #ifndef OPENTHREAD_CONFIG_LOG_OUTPUT /* allow command line override */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT 0
@@ -324,7 +324,7 @@
  * The minimum time (in microseconds) before the MHR start that the radio should be in receive state and ready to
  * properly receive in order to properly receive any IEEE 802.15.4 frame. Defaults to the duration of SHR + PHR.
  *
- * Set to zero since on mcxw30 will wake up much earlier (CSL_RECEIVE_TIME_AHEAD)
+ * Set to zero since on mcxw70 will wake up much earlier (CSL_RECEIVE_TIME_AHEAD)
  *
  */
 #ifndef OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD
@@ -486,4 +486,4 @@
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL "www.nxp.com"
 #endif
 
-#endif // OPENTHREAD_CORE_MCXW30_CONFIG_H_
+#endif // OPENTHREAD_CORE_MCXW70_CONFIG_H_

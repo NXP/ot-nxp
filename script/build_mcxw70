@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2024-2025, The OpenThread Authors.
+#  Copyright (c) 2026, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 set -exo pipefail
 
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
-BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_mcxw30}"
+BUILD_DIR="${OT_CMAKE_BUILD_DIR:-build_mcxw70}"
 
 readonly OT_SRCDIR="$(pwd)"
 readonly OT_OPTIONS=(
@@ -43,7 +43,7 @@ readonly OT_OPTIONS=(
     "-DOT_PLATFORM=external"
     "-DOT_SLAAC=ON"
     "-DOT_NXP_PLATFORM_FAMILY=mcxw"
-    "-DOT_NXP_PLATFORM=mcxw30"
+    "-DOT_NXP_PLATFORM=mcxw70"
     "-DNO_THREAD_1_3_FLAGS=ON"
     "-DOT_APP_LOWPOWER=OFF"
 )
@@ -80,7 +80,7 @@ build()
     fi
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}${rcp_folder_name}" --config debug -b kw43evk . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}${rcp_folder_name}" --config debug -b frdmmcxw70 . --no_sanity_check -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=1 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_without_rcp_image()

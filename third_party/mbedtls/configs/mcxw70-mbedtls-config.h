@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2025 The OpenThread Authors.
+ *  Copyright (c) 2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements an stub for the entropy source. It should be replaced when
- *   HW support is provided for MCXW30.
- *
- */
+#ifndef MCXW70_MBEDTLS_CONFIG_H
+#define MCXW70_MBEDTLS_CONFIG_H
 
-#include "EmbeddedTypes.h"
-#include <openthread/platform/entropy.h>
+#include "get_mbedtls_version.h"
 
-#include "RNG_Interface.h"
+#define TRNG0 TRNG_0
 
-void otPlatRandomInit(void)
-{
-    RNG_Init();
-}
+// #define MBEDTLS_ENTROPY_HARDWARE_ALT
+#undef MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 
-otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
-{
-    int ret;
+// For BLE WirelessUART project
+// #define MBEDTLS_ECDH_C
 
-    ret = RNG_GetPseudoRandomData(aOutput, aOutputLength, NULL);
-    /*
-     * RNG_GetPseudoRandomData() returns on success the number of
-     * pseudorandom bytes.
-     */
-    if (ret >= 0)
-    {
-        ret = OT_ERROR_NONE;
-    }
-    return ret;
-}
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID 0
+
+/* Openthread mbetdls config include */
+#include "mbedtls-config.h"
+
+#endif

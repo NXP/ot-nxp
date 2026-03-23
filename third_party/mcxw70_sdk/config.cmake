@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, The OpenThread Authors.
+# Copyright (c) 2026, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     gMemManagerLightExtendHeapAreaUsage=1
     NBU_15_4_ONLY=1
     DEFAULT_CCA_MODE=4
+    gBoardUseFro32k_d=1
 )
 
 target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
