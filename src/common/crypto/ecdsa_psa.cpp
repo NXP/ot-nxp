@@ -43,8 +43,8 @@
 #include "common/debug.hpp"
 
 #include "psa/crypto.h"
-
 #include <mbedtls/asn1.h>
+#include "mcux_psa_s2xx_key_locations.h"
 
 using namespace ot;
 using namespace Crypto;
@@ -294,7 +294,8 @@ otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef)
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_SIGN_HASH);
     psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
-    psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_PERSISTENT);
+    psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(
+                    PSA_KEY_LIFETIME_PERSISTENT, PSA_KEY_LOCATION_S200_KEY_STORAGE_NON_EL2GO));
     psa_set_key_id(&attributes, keyId);
     psa_set_key_bits(&attributes, 256);
 
