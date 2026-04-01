@@ -56,19 +56,6 @@
 #include "utils/uart.h"
 #include <openthread/platform/settings.h>
 
-#if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
-#include "PWR_Interface.h"
-#include "fsl_pm_core.h"
-#include "fwk_platform_extflash.h"
-#include "fwk_platform_lowpower.h"
-
-static status_t            ExtFlash_LowpowerCb(pm_event_type_t eventType, uint8_t powerState, void *data);
-static pm_notify_element_t ExtFlashLpNotifyGroup = {
-    .notifyCallback = ExtFlash_LowpowerCb,
-    .data           = NULL,
-};
-#endif /*defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)*/
-
 #if !defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE == 0))
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
 #include <openthread/tasklet.h>
@@ -170,14 +157,6 @@ void otSysInit(int argc, char *argv[])
         /* Hook used to call OT repo application functions*/
         APP_SysInitHook();
 
-#if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
-        PLATFORM_InitExternalFlash();
-        /* Register the low power Notify callback as high priority (kPM_NotifyGroup2) */
-        status = PM_RegisterNotify(kPM_NotifyGroup2, &ExtFlashLpNotifyGroup);
-        assert(status == kStatus_Success);
-        (void)status;
-#endif /*defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)*/
-
 #if !defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE == 0))
 #if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
 #if (defined(gAppButtonCnt_c) && (gAppButtonCnt_c > 0))
@@ -261,27 +240,3 @@ void otSysProcessDrivers(otInstance *aInstance)
 #endif /*defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)*/
 #endif /*!defined(configUSE_TICKLESS_IDLE) || (defined(configUSE_TICKLESS_IDLE) && (configUSE_TICKLESS_IDLE==0))*/
 }
-
-#if defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)
-static status_t ExtFlash_LowpowerCb(pm_event_type_t eventType, uint8_t powerState, void *data)
-{
-    status_t ret = kStatus_Success;
-    if (powerState < PLATFORM_DEEP_SLEEP_STATE)
-    {
-        /* Nothing to do when entering WFI or Sleep low power state
-            NVIC fully functionnal to trigger upcoming interrupts */
-    }
-    else
-    {
-        if (eventType == kPM_EventEnteringSleep)
-        {
-            PLATFORM_UninitExternalFlash();
-        }
-        else
-        {
-            PLATFORM_ReinitExternalFlash();
-        }
-    }
-    return ret;
-}
-#endif /*defined(gAppLowpowerEnabled_d) && (gAppLowpowerEnabled_d > 0)*/
