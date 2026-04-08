@@ -15,7 +15,7 @@ Here are listed configurations that allow to support Openthread on RT1060:
 
 - RT1060 + K32W0
 - RT1060-EVKC + IWX12
-- **Experimental** RT1060-EVKC + IW610
+- RT1060-EVKC + IW610
 
 ## Prerequisites
 
