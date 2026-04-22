@@ -107,4 +107,8 @@ Due to non accelerated MBEDTLS_PSA_BUILTIN_ALG_HMAC
 #define MBEDTLS_PSA_BUILTIN_ALG_HMAC 1
 
 */
+
+/* Optimization for elliptic curves operations*/
+#define MBEDTLS_ECP_NIST_OPTIM
+
 #endif /* RW612_MBEDTLS_PSA_USER_CONFIG_H */

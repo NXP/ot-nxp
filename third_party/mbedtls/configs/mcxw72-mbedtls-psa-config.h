@@ -51,4 +51,7 @@
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 
+/* Optimization for elliptic curves operations*/
+#define MBEDTLS_ECP_NIST_OPTIM
+
 #endif /* MCXW72_MBEDTLS_PSA_CONFIG_H */
