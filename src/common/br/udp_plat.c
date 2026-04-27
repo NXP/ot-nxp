@@ -70,7 +70,7 @@ struct udpSendContext
 {
     struct udp_pcb *pcb;
     otMessage      *message;
-    otMessageInfo  *messageInfo;
+    otMessageInfo   messageInfo;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -241,7 +241,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
     VerifyOrExit(udpSendContexPtr->pcb != NULL, error = OT_ERROR_INVALID_ARGS);
 
     udpSendContexPtr->message = aMessage;
-    memcpy(udpSendContexPtr->messageInfo, aMessageInfo, sizeof(otMessageInfo));
+    memcpy(&udpSendContexPtr->messageInfo, aMessageInfo, sizeof(otMessageInfo));
 
     POST_LWIP_CALLBACK_FROM_OT_CONTEXT(postCbError = tcpip_callback(UdpPlatLwipTaskCb, (void *)udpSendContexPtr));
     if (postCbError != ERR_OK)
@@ -429,7 +429,7 @@ static void UdpPlatLwipTaskCb(void *context)
 
     if (udpSendContexPtr->pcb->netif_idx == NETIF_NO_INDEX)
     {
-        if (udpSendContexPtr->messageInfo->mIsHostInterface)
+        if (udpSendContexPtr->messageInfo.mIsHostInterface)
         {
             netif_idx = netif_get_index(sBackboneNetifPtr);
         }
@@ -443,17 +443,17 @@ static void UdpPlatLwipTaskCb(void *context)
         netif_idx = udpSendContexPtr->pcb->netif_idx;
     }
 
-    ip_addr_t peerAddr = otPlatLwipConvertToLwipAddress(&udpSendContexPtr->messageInfo->mPeerAddr);
-    uint16_t  peerPort = udpSendContexPtr->messageInfo->mPeerPort;
+    ip_addr_t peerAddr = otPlatLwipConvertToLwipAddress(&udpSendContexPtr->messageInfo.mPeerAddr);
+    uint16_t  peerPort = udpSendContexPtr->messageInfo.mPeerPort;
 
-    udpSendContexPtr->pcb->local_ip   = otPlatLwipConvertToLwipAddress(&udpSendContexPtr->messageInfo->mSockAddr);
-    udpSendContexPtr->pcb->local_port = udpSendContexPtr->messageInfo->mSockPort;
+    udpSendContexPtr->pcb->local_ip   = otPlatLwipConvertToLwipAddress(&udpSendContexPtr->messageInfo.mSockAddr);
+    udpSendContexPtr->pcb->local_port = udpSendContexPtr->messageInfo.mSockPort;
 
     udpSendContexPtr->pcb->ttl =
-        udpSendContexPtr->messageInfo->mHopLimit ? udpSendContexPtr->messageInfo->mHopLimit : UDP_TTL;
+        udpSendContexPtr->messageInfo.mHopLimit ? udpSendContexPtr->messageInfo.mHopLimit : UDP_TTL;
 
     udpSendContexPtr->pcb->flags &= ~(UDP_FLAGS_MULTICAST_LOOP);
-    if (udpSendContexPtr->messageInfo->mMulticastLoop)
+    if (udpSendContexPtr->messageInfo.mMulticastLoop)
     {
         udpSendContexPtr->pcb->flags |= (UDP_FLAGS_MULTICAST_LOOP);
     }
