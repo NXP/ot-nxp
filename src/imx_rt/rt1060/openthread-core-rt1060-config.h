@@ -84,7 +84,10 @@
  *
  * The number of message buffers in buffer pool
  */
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
+
+/* Initially the value was 256, but it was increased to 512 for Border Router application to accomodate possbile large
+ * network traffic*/
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 512
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
