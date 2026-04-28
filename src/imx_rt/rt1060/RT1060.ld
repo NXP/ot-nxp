@@ -29,46 +29,63 @@
 
 /**
  * @file
- *   TODO: Add linker instructions for RT1060
+ *   Linker instructions for RT1060
  */
  
 /* Entry Point */
 ENTRY(Reset_Handler)
 
 FLASH_START                  = 0x60000000;
-FLASH_SIZE                   = 0x800000; /* 8 MBytes */
+FLASH_SIZE                   = DEFINED(gFlashSize_d) ? gFlashSize_d : 0x800000; /* 16 MB for evkc, otherwise 8 MB */
 FLASH_END                    = FLASH_START + FLASH_SIZE - 1;
 FLASH_SECTOR_SIZE            = 0x1000;  /* 4k flash sector size */
 
 /*** FileSystem Configuration ***/
-
-/* Give some space to an other file system such as for BT BLE LittleFS for instance */
-NV_STORAGE_END_ADDRESS       = FLASH_END - 0x10000;
-NV_STORAGE_MAX_SECTORS       = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 16;
+/* OT/Matter/BLE filesystem configuration*/
+NV_STORAGE_END_ADDRESS       = FLASH_END;
+NV_STORAGE_MAX_SECTORS       = DEFINED(gNVMSectorCountLink_d) ? gNVMSectorCountLink_d : 32;
 NV_STORAGE_SECTOR_SIZE       = FLASH_SECTOR_SIZE;
 NV_STORAGE_SIZE              = FLASH_SECTOR_SIZE * NV_STORAGE_MAX_SECTORS;
 NV_STORAGE_START_ADDRESS     = NV_STORAGE_END_ADDRESS - NV_STORAGE_SIZE + 1;
 NV_STORAGE_START_ADDRESS_OFFSET = NV_STORAGE_START_ADDRESS - FLASH_START;
 
-m_text_end                   = NV_STORAGE_START_ADDRESS -1;
-m_text_start                 = 0x60002400;
-m_text_size                  = NV_STORAGE_START_ADDRESS - m_text_start;
+m_flash_start                       = FLASH_START;
+m_flash_sector_size                 = FLASH_SECTOR_SIZE;
 
-HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0x0800;
+m_boot_flash_conf_start             = m_flash_start;
+m_boot_flash_conf_size              = m_flash_sector_size;
+m_boot_flash_conf_end               = m_boot_flash_conf_start + m_flash_sector_size - 1;
+
+m_ivt_start                         = m_boot_flash_conf_end + 1;
+m_ivt_size                          = m_flash_sector_size;
+m_ivt_end                           = m_ivt_start + m_ivt_size - 1;
+
+m_interrupts_start                  = m_ivt_end + 1;
+m_interrupts_size                   = 0x00000400;
+m_interrupts_end                    = m_interrupts_start + m_interrupts_size - 1;
+
+m_text_start                        = m_interrupts_end + 1;
+m_text_end                          = NV_STORAGE_START_ADDRESS - 1;
+m_text_size                         = m_text_end - m_text_start + 1;
+
+HEAP_SIZE  = DEFINED(__heap_size__)  ? __heap_size__  : 0;
 STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0800;
 VECTOR_RAM_SIZE = DEFINED(__ram_vector_table__) ? 0x00000400 : 0;
 
 /* Specify the memory areas */
 MEMORY
 {
-  m_flash_config        (RX)  : ORIGIN = 0x60000000, LENGTH = 0x00001000
-  m_ivt                 (RX)  : ORIGIN = 0x60001000, LENGTH = 0x00001000
-  m_interrupts          (RX)  : ORIGIN = 0x60002000, LENGTH = 0x00000400
+  m_flash_config        (RX)  : ORIGIN = m_boot_flash_conf_start, LENGTH = m_boot_flash_conf_size
+  m_ivt                 (RX)  : ORIGIN = m_ivt_start, LENGTH = m_ivt_size
+  m_interrupts          (RX)  : ORIGIN = m_interrupts_start, LENGTH = m_interrupts_size
   m_text                (RX)  : ORIGIN = m_text_start, LENGTH = m_text_size
   NVM_region            (RW)  : ORIGIN = NV_STORAGE_START_ADDRESS, LENGTH = NV_STORAGE_SIZE
-  m_qacode              (RX)  : ORIGIN = 0x00000400, LENGTH = 0x0001FC00 /* ITCM 127 KB */
+  /* m_qacode zone is used to store code for functions to be executed from RAM. Adding an offset
+   * to prevent overwrite in case of using NULL pointers to reference data
+  */
+  m_qacode              (RX)  : ORIGIN = 0x00000400, LENGTH = 0x00020000 /* ITCM 128 KB */
   m_ncache              (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00020000 /* DTCM 128 KB */
-  m_data                (RW)  : ORIGIN = 0x20200000, LENGTH = 0x00090000 /* OCRAM1 512 KB + OCRAM-FlexRAM 64 KB */
+  m_data                (RW)  : ORIGIN = 0x20208000, LENGTH = 0x000B8000 /* OCRAM2 480 KB + OCRAM-FlexRAM 256 KB */
 }
 
 /* Define output sections */
@@ -138,6 +155,7 @@ SECTIONS
     *(.eh_frame)
     KEEP (*(.init))
     KEEP (*(.fini))
+    KEEP(*freertos*/sdk.tasks.c.o(.rodata*)) /* FreeRTOS Debug Config */
     . = ALIGN(4);
   } > m_text
 
@@ -242,13 +260,24 @@ SECTIONS
     . = ALIGN(4);
     __DATA_RAM = .;
     __data_start__ = .;      /* create a global symbol at data start */
-    *(CodeQuickAccess)       /* CodeQuickAccess sections */
     *(DataQuickAccess)       /* DataQuickAccess sections */
     *(m_usb_dma_init_data)
     *(.data)                 /* .data sections */
     *(.data*)                /* .data* sections */
     *(.wlan_data .wlan_data.*)
     KEEP(*(.jcr*))
+    . = ALIGN(4);
+    PROVIDE(__start_NVM_TABLE = .);
+    KEEP(*(.NVM_TABLE));
+    PROVIDE(__stop_NVM_TABLE = .);
+    . = ALIGN(4);
+    _k_mem_slab_list_start = .;
+    KEEP(*(SORT(._k_mem_slab*)))
+    _k_mem_slab_list_end = .;
+    . = ALIGN(4);
+    _net_buf_pool_list_start = .;
+    KEEP(*(SORT(._net_buf_pool*)))
+    _net_buf_pool_list_end = .;
     . = ALIGN(4);
     __data_end__ = .;        /* define a global symbol at data end */
   } > m_data
@@ -267,7 +296,7 @@ SECTIONS
     *queue.c.o*(.text*)
     *tcp_out.c.o*(.text*)
     *mlan_11n_rxreorder.c.o*(.text*)
-    *lib_a-memcpy-stub.o(.text*)
+    *lib_a-memcpy-stub.o*(.text*)
     *tcp_in.c.o*(.text*)
     *inet_chksum.c.o*(.text*)
     *timers.c.o*(.text*)
@@ -327,17 +356,16 @@ SECTIONS
     __end__ = .;
     PROVIDE(end = .);
     __HeapBase = .;
-    . += HEAP_SIZE;
+    KEEP(*(.heap*))
     __HeapLimit = .;
     __heap_limit = .; /* Add for _sbrk */
-    *(.heap)
   } > m_data
 
   .stack :
   {
     . = ALIGN(8);
     __StackLimit = .;
-      . += STACK_SIZE;
+    . += STACK_SIZE;
     __StackTop = .;
   } > m_data
 
@@ -348,8 +376,9 @@ SECTIONS
   {
     FILL(0xFFFFFFFF);
     . = ORIGIN(NVM_region) + LENGTH(NVM_region) - 1;
-    BYTE(0xFF)
+    BYTE(0xFF);
   } > NVM_region
+
   .ARM.attributes 0 : { *(.ARM.attributes) }
 
   ASSERT(__StackLimit >= __HeapLimit, "region m_data overflowed with stack and heap")
