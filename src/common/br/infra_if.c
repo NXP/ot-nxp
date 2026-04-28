@@ -225,10 +225,12 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
-    otError           retError = OT_ERROR_NONE;
-    const ip6_addr_t *srcIpPtr = NULL;
+    otError               retError        = OT_ERROR_NONE;
+    const ip6_addr_t     *srcIpPtr        = NULL;
+    struct ndSendContext *ndSendContexPtr = NULL;
+    uint8_t              *icmp6NdBuffer   = NULL;
 
-    struct ndSendContext *ndSendContexPtr = (struct ndSendContext *)otPlatCAlloc(1, sizeof(struct ndSendContext));
+    ndSendContexPtr = (struct ndSendContext *)otPlatCAlloc(1, sizeof(struct ndSendContext));
     VerifyOrExit(NULL != ndSendContexPtr, retError = OT_ERROR_FAILED);
 
     memcpy(ip_2_ip6(&ndSendContexPtr->dstIp)->addr, aDestAddress->mFields.m8,
@@ -241,7 +243,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     ndSendContexPtr->srcIp.type            = IPADDR_TYPE_V6;
     ndSendContexPtr->srcIp.u_addr.ip6.zone = IP6_NO_ZONE;
 
-    uint8_t *icmp6NdBuffer = (uint8_t *)otPlatCAlloc(1, aBufferLength);
+    icmp6NdBuffer = (uint8_t *)otPlatCAlloc(1, aBufferLength);
     VerifyOrExit(icmp6NdBuffer != NULL, retError = OT_ERROR_NO_BUFS);
 
     ndSendContexPtr->buffer    = icmp6NdBuffer;
@@ -253,13 +255,23 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     POST_LWIP_CALLBACK_FROM_OT_CONTEXT({
         if (ERR_OK != tcpip_callback(LwipTaskCb, (void *)ndSendContexPtr))
         {
-            otPlatFree(icmp6NdBuffer);
-            otPlatFree(ndSendContexPtr);
             retError = OT_ERROR_FAILED;
         }
     });
 
 exit:
+    if (retError != OT_ERROR_NONE)
+    {
+        if (ndSendContexPtr != NULL)
+        {
+            otPlatFree(ndSendContexPtr);
+        }
+        if (icmp6NdBuffer != NULL)
+        {
+            otPlatFree(icmp6NdBuffer);
+        }
+    }
+
     return retError;
 }
 
@@ -405,8 +417,11 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
         /* set preferred */
         if (addr_idx < 0)
         {
-            /* not found - add it */
-            netif_add_ip6_address(netif, addr, &addr_idx);
+            /* not found - add it and check for status */
+            if (netif_add_ip6_address(netif, addr, &addr_idx) != ERR_OK)
+            {
+                return;
+            }
         }
         else if (ip6_addr_isdeprecated(netif_ip6_addr_state(netif, addr_idx)))
         {
@@ -422,8 +437,11 @@ static void SetOrUpdateAddrFromRa(struct netif *netif, ip6_addr_t *addr, uint32_
         /* set deprecated (not preferred) */
         if (addr_idx < 0)
         {
-            /* Addr not found - add */
-            netif_add_ip6_address(netif, addr, &addr_idx);
+            /* Addr not found - add it and check for status */
+            if (netif_add_ip6_address(netif, addr, &addr_idx) != ERR_OK)
+            {
+                return;
+            }
         }
         else if (ip6_addr_ispreferred(netif_ip6_addr_state(netif, addr_idx)))
         {
