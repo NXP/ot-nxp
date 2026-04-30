@@ -137,7 +137,12 @@ target_link_libraries(${NXP_BOARD_LIB}
     ${NXP_DRIVER_LIB}
 )
 
-
+if("${EVK_RT1060_BOARD}" STREQUAL "evkcmimxrt1060")
+    target_link_options(${NXP_BOARD_LIB}
+        PUBLIC
+        -Wl,--defsym=gFlashSize_d=0x1000000
+    )
+endif()
 
 target_compile_options(${NXP_BOARD_LIB}
     PRIVATE
