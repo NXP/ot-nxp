@@ -150,33 +150,32 @@ void InfraIfInit(otInstance *aInstance, struct netif *netif)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 void InfraIfNat64Init()
 {
-    // There is no need to lock tcpip thread as this function is executed from lwip context, on external interface event
-    // callback.
+    CALL_LWIP_API_FROM_OT_CONTEXT({
+        const ip_addr_t *ip4Addr = netif_ip_addr4(sNetifPtr);
 
-    const ip_addr_t *ip4Addr = netif_ip_addr4(sNetifPtr);
+        // Check only first PCB for NULL, they will be all NULL or all allocated as we assert on any NULL.
+        if (sIcmpRawPcb == NULL)
+        {
+            sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
+            assert(sIcmpRawPcb != NULL);
+            sUdpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_UDP);
+            assert(sUdpRawPcb != NULL);
+            sTcpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_TCP);
+            assert(sTcpRawPcb != NULL);
 
-    // Check only first PCB for NULL, they will be all NULL or all allocated as we assert on any NULL.
-    if (sIcmpRawPcb == NULL)
-    {
-        sIcmpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_ICMP);
-        assert(sIcmpRawPcb != NULL);
-        sUdpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_UDP);
-        assert(sUdpRawPcb != NULL);
-        sTcpRawPcb = raw_new_ip_type(IPADDR_TYPE_V4, IPPROTO_TCP);
-        assert(sTcpRawPcb != NULL);
+            raw_bind_netif(sIcmpRawPcb, sNetifPtr);
+            raw_bind_netif(sUdpRawPcb, sNetifPtr);
+            raw_bind_netif(sTcpRawPcb, sNetifPtr);
 
-        raw_bind_netif(sIcmpRawPcb, sNetifPtr);
-        raw_bind_netif(sUdpRawPcb, sNetifPtr);
-        raw_bind_netif(sTcpRawPcb, sNetifPtr);
+            raw_recv(sIcmpRawPcb, ReceiveIPV4Message, NULL);
+            raw_recv(sUdpRawPcb, ReceiveIPV4Message, NULL);
+            raw_recv(sTcpRawPcb, ReceiveIPV4Message, NULL);
+        }
 
-        raw_recv(sIcmpRawPcb, ReceiveIPV4Message, NULL);
-        raw_recv(sUdpRawPcb, ReceiveIPV4Message, NULL);
-        raw_recv(sTcpRawPcb, ReceiveIPV4Message, NULL);
-    }
-
-    raw_bind(sIcmpRawPcb, ip4Addr);
-    raw_bind(sUdpRawPcb, ip4Addr);
-    raw_bind(sTcpRawPcb, ip4Addr);
+        raw_bind(sIcmpRawPcb, ip4Addr);
+        raw_bind(sUdpRawPcb, ip4Addr);
+        raw_bind(sTcpRawPcb, ip4Addr);
+    });
 }
 #endif /* OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE */
 

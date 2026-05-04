@@ -256,10 +256,6 @@ void BrNetifExtCb(struct netif *netif, netif_nsc_reason_t reason, const netif_ex
                 // default gateway.
                 netif_set_default(sExtNetif);
 
-                // Bind the device's IPv4 address to the RAW sockets used for receiving IPv4 traffic to filter
-                // out any other packets that might be received by the NAT64 translator, like multicast traffic.
-                InfraIfNat64Init();
-
                 aCidr.mAddress.mFields.m32 = ip4Addr->addr;
                 aCidr.mLength              = 32U;
 
@@ -373,6 +369,9 @@ void otPlatBrProcessOtEvtQueue()
                             // Ignore error for the call, can only fail if the cidr len is 0 but we are always setting
                             // it to 32.
                             (void)otNat64SetIp4Cidr(sInstance, &evtReceiveContextPtr->addr_set_or_changed_event.cidr);
+                            // Bind the device's IPv4 address to the RAW sockets used for receiving IPv4 traffic to filter
+                            // out any other packets that might be received by the NAT64 translator, like multicast traffic.
+                            InfraIfNat64Init();
                         }
                         otNat64SetEnabled(sInstance,
                                           evtReceiveContextPtr->addr_set_or_changed_event.nat64TranslatorState);
