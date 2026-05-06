@@ -549,19 +549,28 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
     otError error = OT_ERROR_NONE;
 
-    otLogDebgPlat("SendFrame len = %d mSpiTxIsReady = %d", aLength, mSpiTxIsReady);
+    otLogDebgPlat("SpiInterface::SendFrame len = %d mSpiTxIsReady = %d", aLength, mSpiTxIsReady);
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
 
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
 
+    // Prepare SPI TX buffer
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memcpy(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], aFrame, aLength);
 
     mSpiTxIsReady     = true;
     mSpiTxPayloadSize = aLength;
 
-    IgnoreError(PushPullSpi());
+    error = PushPullSpi();
+
+    // retry PushPullSpi if it failed
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("SpiInterface::SendFrame, retry PushPullSpi after error=%d", error);
+
+        IgnoreError(PushPullSpi());
+    }
 
 exit:
     return error;
