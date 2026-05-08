@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024-2025, The OpenThread Authors.
+# Copyright (c) 2024-2026, The OpenThread Authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,7 @@ target_compile_definitions(${OT_MCUX_SDK_TARGET} PUBLIC
     SSS_CONFIG_FILE=\"fsl_sss_config_elemu.h\"
     SSCP_CONFIG_FILE=\"fsl_sscp_config_elemu.h\"
     gFro192mDisableTrim_d=1
+    gPlatformIcsUseWorkqueueRxProcessing_d=0
 )
 
 #// Temporarily adding -Wno-error to suppress PSA driver warnings that are promoted to errors
