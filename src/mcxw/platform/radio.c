@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2025, The OpenThread Authors.
+ *  Copyright (c) 2022-2026, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -161,6 +161,7 @@ static bool_t  sTxDone             = FALSE;
 static bool_t  sEdScanDone         = FALSE;
 static bool_t  is_tx_poll          = FALSE;
 static bool_t  is_rx_after_poll    = FALSE;
+static bool_t  rx_after_poll_done  = FALSE;
 static bool_t  is_radio_event      = FALSE;
 static otError sTxStatus;
 
@@ -431,6 +432,12 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     /* already in rx on the same channel */
     otEXPECT((sState != OT_RADIO_STATE_RECEIVE) || (sChannel != aChannel));
 
+    /* ignore rx request if packet reception (data_indication)
+       after poll was processed.
+       It can happen if data_conf (with FP=1) and data_ind are handled
+       during the same otPlatRadioProcess() iteration. */
+    otEXPECT(!rx_after_poll_done);
+
     sState = OT_RADIO_STATE_RECEIVE;
 
     rf_set_channel(aChannel);
@@ -447,6 +454,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     }
 
 exit:
+    rx_after_poll_done = FALSE;
+
     return status;
 }
 
@@ -1169,14 +1178,18 @@ phyStatus_t PD_OT_MAC_SapHandler(void *pMsg, instanceId_t instance)
     switch (pDataMsg->msgType)
     {
     case gPdDataInd_c:
-        if (is_rx_after_poll &&
-            !(pDataMsg->msgData.dataInd.pPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST))
+        if (is_rx_after_poll)
         {
-            /* ignore broadcast packets */
-            MSG_Free(pMsg);
+            if (!(pDataMsg->msgData.dataInd.pPsdu[IEEE802154_FRM_CTL_LO_OFFSET] & IEEE802154_ACK_REQUEST))
+            {
+                /* ignore broadcast packets */
+                MSG_Free(pMsg);
 
-            stop_csl_receiver();
-            return gPhySuccess_c;
+                stop_csl_receiver();
+                return gPhySuccess_c;
+            }
+
+            rx_after_poll_done = TRUE;
         }
 
         is_rx_after_poll = FALSE;
@@ -1468,6 +1481,8 @@ void otPlatRadioProcess(otInstance *aInstance)
 
         sTxDone = FALSE;
     }
+
+    rx_after_poll_done = FALSE;
 
     radio_rx_process(aInstance);
 
