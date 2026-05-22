@@ -148,6 +148,12 @@ public:
     void IncreasePendingSpiRxDataCounter(void);
 
     /**
+     * This method decreases the value of pendingSpiRxDataValue
+     *
+     */
+    void DecreasePendingSpiRxDataCounter(void);
+
+    /**
      * This method displays SPI diagnostic statistics on OT CLI.
      *
      */

@@ -196,6 +196,16 @@ void SpiInterface::IncreasePendingSpiRxDataCounter(void)
     otSysEventSignalPending();
 }
 
+void SpiInterface::DecreasePendingSpiRxDataCounter(void)
+{
+    uint32_t         intMask;
+
+    // Interrupts masked since pendingSpiRxDataCounter could be incremented on SPI interrupt
+    intMask = DisableGlobalIRQ();
+    pendingSpiRxDataCounter--;
+    EnableGlobalIRQ(intMask);
+}
+
 otError SpiInterface::PushPullSpi(void)
 {
     otError          error               = OT_ERROR_FAILED;
@@ -209,7 +219,6 @@ otError SpiInterface::PushPullSpi(void)
     uint16_t         skipAlignAllowanceLength;
     bool             decreaseSpiRxDataCounter = false;
     bool             needRetry                = false;
-    uint32_t         intMask;
 
     VerifyOrExit((mReceiveFrameCallback != nullptr) && (mRxFrameBuffer != nullptr), error = OT_ERROR_INVALID_STATE);
 
@@ -349,6 +358,12 @@ otError SpiInterface::PushPullSpi(void)
             }
 
             mSpiTxRefusedCount++;
+
+            // error set to OT_ERROR_FAILED because pendingSpiRxDataCounter could
+            // be upper to 1 due to asynchrone SPI interrupt race condition.
+            // → delay invoked before engaging next exchange.
+			error = OT_ERROR_FAILED;
+
             ExitNow();
         }
 
@@ -365,6 +380,11 @@ otError SpiInterface::PushPullSpi(void)
                           spiRxFrame[3], spiRxFrame[4]);
             otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
             otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
+
+            // error set to OT_ERROR_FAILED because pendingSpiRxDataCounter could
+            // be upper to 1 due to asynchrone SPI interrupt race condition.
+            // → delay invoked before engaging next exchange.
+			error = OT_ERROR_FAILED;
 
             ExitNow();
         }
@@ -412,10 +432,7 @@ otError SpiInterface::PushPullSpi(void)
         // A RX frame has been correclty received, now decrease the RX data counter
         if (decreaseSpiRxDataCounter)
         {
-            // Interrupts masked since pendingSpiRxDataCounter could be incremented on SPI interrupt
-            intMask = DisableGlobalIRQ();
-            pendingSpiRxDataCounter--;
-            EnableGlobalIRQ(intMask);
+            DecreasePendingSpiRxDataCounter();
         }
     }
 
@@ -469,8 +486,8 @@ exit:
      */
     if (error != OT_ERROR_NONE || pendingSpiRxDataCounter > 0)
     {
-        // Add delay ( about 50us) before engaging next exchange, to be sure that transceiver is ready
-        SDK_DelayAtLeastUs(50U, CLOCK_GetFreq(kCLOCK_CpuClk));
+        // Add delay ( about 100us) before engaging next exchange, to be sure that transceiver is ready
+        SDK_DelayAtLeastUs(100U, CLOCK_GetFreq(kCLOCK_CpuClk));
 
         otLogDebgPlat("error = %d, pendingSpiRxDataCounter=%d", error, pendingSpiRxDataCounter);
         otTaskletsSignalPending(NULL);
@@ -568,8 +585,10 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     if (error != OT_ERROR_NONE)
     {
         otLogWarnPlat("SpiInterface::SendFrame, retry PushPullSpi after error=%d", error);
-
         IgnoreError(PushPullSpi());
+
+        // set no error here to prevent a retry in SubMac::BeginTransmit()
+        error = OT_ERROR_NONE;
     }
 
 exit:
