@@ -106,6 +106,7 @@ $ r
 $ g
 $ q
 ```
+Note: For newer jlink versions, KW47B42ZB7_CORE0 should be replaced with KW47B42ZB7_M33_0.
 
 - Unplug and plug back MCXW72 to the USB port
 
@@ -118,6 +119,7 @@ $ r
 $ g
 $ q
 ```
+Note: For newer jlink versions, KW47B42ZB7_CORE1 should be replaced with KW47B42ZB7_M33_1.
 
 ## Running the example
 

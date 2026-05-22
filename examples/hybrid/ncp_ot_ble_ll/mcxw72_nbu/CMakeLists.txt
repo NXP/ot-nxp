@@ -44,7 +44,7 @@ target_link_libraries(ncp-ot-ble-ll-${OT_NXP_PLATFORM} PUBLIC
     openthread-cli-ftd
     openthread-ftd
     ot-config
-    ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libbtu2_5x.a
+    ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libbtu.a
     ${SdkRootDirPath}/middleware/wireless/ble_controller/lib/kw47_nbu_matter_hosted_libcommon.a
     -Wl,--end-group
 
