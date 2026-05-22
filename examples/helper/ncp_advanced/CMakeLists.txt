@@ -90,4 +90,5 @@ mcux_add_include(
 
 mcux_add_armgcc_configuration(
     LD "-Wl,--wrap=BOARD_InitSerialManager,--wrap=APP_InitServices,--wrap=Shell_Init,--wrap=OSA_ProcessTasks,--wrap=OSA_TaskShouldYield,--wrap=SerialManager_WriteBlocking,--wrap=SerialManager_WriteNonBlocking,--wrap=SerialManager_InstallTxCallback,--wrap=RegisterRemovableObserver,--wrap=GATTClientRegisterProcedureCallbackRequest,--defsym=gUseNVMLink_d=1"
+    CC "-Wno-error"
 )
