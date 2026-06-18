@@ -360,6 +360,10 @@ endif()
 
 if("${OT_NXP_TRANSCEIVER}" STREQUAL "iwx12" OR "${OT_NXP_TRANSCEIVER}" STREQUAL "iw610")
     if(OT_NXP_LWIP_WIFI)
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            # Add this flag to ensure same struct _mlan_adapter memory layout between wifi and nxp-driver-lib targets.
+            -DCONFIG_NXP_WIFI_SOFTAP_SUPPORT=1
+        )
     # Do nothing transceiver file will be added in the wifi lib
     else()
         # If Wi-Fi is disabled provide the path to the app_config/wifi_config file to have all required flags for transceivers
