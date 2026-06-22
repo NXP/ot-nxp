@@ -1,6 +1,6 @@
 # OpenThread on NXP MCXW72_NBU Example
 
-This directory contains example platform drivers for the [NXP MCXW72][nxp_mcxw72] based on FRDM-MCXW72 hardware platform.
+This directory contains example platform drivers for FRDM-MCXW72 development boards based on [NXP MCXW72][nxp_mcxw72] Wireless MCUs.
 
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
@@ -67,9 +67,9 @@ Then run the build scripts:
 ```bash
 $ cd <path-to-ot-nxp>
 $ ./script/build_mcxw72_nbu ot_without_rcp_image
-$ west build -d build_ncp_basic -b mcxw72evk examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
+$ west build -d build_ncp_basic -b frdmmcxw72 examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
 $ ./script/build_mcxw72_nbu ncp_ot_ble_ll
-$ west build -d build_ncp_advanced -b mcxw72evk examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
+$ west build -d build_ncp_advanced -b frdmmcxw72 examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
 ```
 
 - Windows
@@ -77,9 +77,9 @@ $ west build -d build_ncp_advanced -b mcxw72evk examples/helper/ncp_advanced -Dc
 ```cmd
 > cd <path-to-ot-nxp>
 > sh script/build_mcxw72_nbu ot_without_rcp_image
-> west build -d build_ncp_basic -b mcxw72evk examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
+> west build -d build_ncp_basic -b frdmmcxw72 examples/helper/ncp_basic -Dcore_id=cm33_core0 --toolchain=armgcc
 > sh script/build_mcxw72_nbu ncp_ot_ble_ll
-> west build -d build_ncp_advanced -b mcxw72evk examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
+> west build -d build_ncp_advanced -b frdmmcxw72 examples/helper/ncp_advanced -Dcore_id=cm33_core0 --toolchain=armgcc
 ```
 
 After a successful build, the `elf` files are found in `build_mcxw72_nbu/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI applications.

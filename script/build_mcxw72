@@ -115,7 +115,7 @@ build()
     cmakeArgs+=("$conf_file_option")
 
     # shellcheck disable=SC2068
-    west build -d "${BUILD_DIR}${rcp_folder_name}" --config release -b mcxw72evk . --no_sanity_check -Dcore_id=cm33_core0 -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
+    west build -d "${BUILD_DIR}${rcp_folder_name}" --config release -b frdmmcxw72 . --no_sanity_check -Dcore_id=cm33_core0 -DSDK_GH=$SDK_GH -DUSE_NBU=1 -DFPGA_BUILD=0 -DOT_COMPILE_WARNING_AS_ERROR=ON ${cmakeArgs[@]}
 }
 
 build_ot_without_rcp_image()

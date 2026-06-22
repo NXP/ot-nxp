@@ -1,7 +1,6 @@
 # OpenThread on NXP MCXW71 Example
 
-This directory contains example platform drivers for the [NXP MCXW71][nxp_mcxw71] based on FRDM-MCXW71 hardware platform.
-
+This directory contains example platform drivers for FRDM-MCXW71 development boards based on [NXP MCXW71][nxp_mcxw71] Wireless MCUs.
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
 [nxp_mcxw71]: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w71x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W71X
