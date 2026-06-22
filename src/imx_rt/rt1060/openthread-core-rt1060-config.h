@@ -85,9 +85,17 @@
  * The number of message buffers in buffer pool
  */
 
+#ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+
+#ifdef OT_NXP_BUILD_APP_AS_LIB
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
+#else
 /* Initially the value was 256, but it was increased to 512 for Border Router application to accomodate possbile large
  * network traffic*/
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 512
+#endif
+
+#endif /* OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS */
 
 /**
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE

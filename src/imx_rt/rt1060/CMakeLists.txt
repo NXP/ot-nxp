@@ -100,6 +100,16 @@ elseif("${SPINEL_INTERFACE_TYPE}" STREQUAL "SPI")
     )
 endif()
 
+if(OT_NXP_BUILD_APP_AS_LIB)
+    set(OT_FLASH_SRC
+        ../../common/flash_littlefs.c
+    )
+else()
+    set(OT_FLASH_SRC
+        ../../common/flash_nvs.c
+    )
+endif()
+
 if(OT_NCP_RTOS_HOST)
     add_library(${OT_PLATFORM_LIB}
         ${OT_NCP_RTOS_HOST_SRC}
@@ -109,7 +119,7 @@ else()
         ../../common/alarm_freertos.c
         ../../common/diag.c
         ../../common/entropy.c
-        ../../common/flash_nvs.c
+        ${OT_FLASH_SRC}
         ../../common/logging.c
         ../../common/spinel/misc.c
         ../../common/spinel/radio.cpp
@@ -182,6 +192,28 @@ target_compile_options(${OT_PLATFORM_LIB}
     -Wno-unused-parameter
     -Wno-empty-body
 )
+
+if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
+    if(OT_APP_CLI_FREERTOS_IPERF MATCHES "ON")
+        target_compile_definitions(${OT_PLATFORM_LIB}
+            PUBLIC
+            -DDISABLE_TCPIP_INIT #Do not initialize LWIP stack, if building ot lib for tri radio
+        )
+    endif()
+
+    target_compile_definitions(${OT_PLATFORM_LIB}
+        PUBLIC
+        -DOT_NXP_BUILD_APP_AS_LIB
+        -DOT_NXP_NO_APP_INIT
+    )
+endif()
+
+if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
+    target_compile_definitions(${OT_PLATFORM_LIB}
+        PUBLIC
+        -DCONFIG_WPA_SUPP_MBEDTLS=1
+    )
+endif()
 
 target_include_directories(${OT_PLATFORM_LIB}
     PUBLIC

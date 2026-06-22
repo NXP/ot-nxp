@@ -53,7 +53,11 @@ extern uint32_t SystemCoreClock;
 #define configUSE_DAEMON_TASK_STARTUP_HOOK 0
 #define configCPU_CLOCK_HZ (SystemCoreClock)
 #define configTICK_RATE_HZ ((TickType_t)1000)
+#if defined(config_COEX_RTOS_MAX_PRIO)
+#define configMAX_PRIORITIES config_COEX_RTOS_MAX_PRIO
+#else
 #define configMAX_PRIORITIES (10)
+#endif
 #define configMINIMAL_STACK_SIZE ((uint16_t)1024)
 #define configTOTAL_HEAP_SIZE ((size_t)(120 * 1024))
 #define configAPPLICATION_ALLOCATED_HEAP 1
