@@ -40,6 +40,10 @@
 #include "fsl_os_abstraction.h"
 #include "fwk_filesystem.h"
 
+#ifdef OT_NXP_BUILD_APP_AS_LIB
+#include "secure_storage_lfs.h"
+#endif
+
 #ifndef OT_PLAT_SAVE_NVM_DATA_ON_IDLE
 #define OT_PLAT_SAVE_NVM_DATA_ON_IDLE 1
 #endif

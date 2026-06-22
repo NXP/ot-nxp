@@ -110,7 +110,9 @@ void otSysInit(int argc, char *argv[])
 #ifdef OT_PLAT_SYS_WIFI_INIT
     PLATFORM_InitControllers((uint8_t)conn802_15_4_c | (uint8_t)connWlan_c);
 #endif
+#ifndef OT_NXP_NO_APP_INIT
     PLATFORM_InitOt();
+#endif
 
     otPlatSettingsInit(NULL, NULL, 0);
     otPlatRadioInit();
