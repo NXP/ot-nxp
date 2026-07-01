@@ -152,7 +152,7 @@ static void UDPClientDual(void);
 
 static void UDPClientTradeOff(void);
 
-#ifdef DISABLE_TCPIP_INIT
+#if defined(DISABLE_TCPIP_INIT) && !defined(OT_NXP_PLATFORM_NO_LOW_POWER)
 /* Disable Power Manager tickless IDLE when we are running iperf */
 extern void APP_SetTicklessIdle(bool enable);
 
@@ -575,7 +575,9 @@ static void iperf_test_start(void *arg)
     {
         otCliOutputFormat("Please use iperf -a to close iperf after iperf server mode done\r\n");
     }
+#ifndef OT_NXP_PLATFORM_NO_LOW_POWER
     iperf_disable_tickless_hook(true);
+#endif
 #endif
 
     if ((ctx->server_mode == false) ||
@@ -722,7 +724,7 @@ static void lwiperf_report(void                    *arg,
 
     iperf_free_ctx_iperf_session(arg, report_type);
 
-#ifdef DISABLE_TCPIP_INIT
+#if defined(DISABLE_TCPIP_INIT) && !defined(OT_NXP_PLATFORM_NO_LOW_POWER)
     /* Re-enable Tickless Idle */
     if (iperf_need_enable_tickless_idle(arg, report_type))
     {
@@ -840,7 +842,7 @@ static void UDPClientTradeOff(void)
     tcpip_callback(iperf_test_start, (void *)&ctx);
 }
 
-#ifdef DISABLE_TCPIP_INIT
+#if defined(DISABLE_TCPIP_INIT) && !defined(OT_NXP_PLATFORM_NO_LOW_POWER)
 static void iperf_disable_tickless_hook(bool disable)
 {
     static bool disable_tickless = false;
