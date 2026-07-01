@@ -25,6 +25,7 @@ to install the GNU toolchain and other dependencies.
 
 ```bash
 $ cd <path-to-ot-nxp>
+$ git submodule update --init
 $ ./script/bootstrap
 ```
 
