@@ -35,7 +35,7 @@
 #undef MBEDTLS_SSL_MAX_CONTENT_LEN
 #undef PSA_WANT_ALG_JPAKE
 /* wpa_supplicant mbedtls extend config */
-#include "wpa_supp_els_pkc_mbedtls_config.h"
+#include MBEDTLS_WPA_SUPPLICANT_CONFIG_FILE
 #endif /* CONFIG_WPA_SUPP_MBEDTLS */
 
 #ifndef PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC

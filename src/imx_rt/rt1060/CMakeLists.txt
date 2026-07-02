@@ -198,6 +198,7 @@ if(OT_NXP_BUILD_APP_AS_LIB MATCHES "ON")
         target_compile_definitions(${OT_PLATFORM_LIB}
             PUBLIC
             -DDISABLE_TCPIP_INIT #Do not initialize LWIP stack, if building ot lib for tri radio
+            -DOT_NXP_PLATFORM_NO_LOW_POWER
         )
     endif()
 

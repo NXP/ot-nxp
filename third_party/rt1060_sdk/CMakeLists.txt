@@ -348,8 +348,15 @@ if(OT_NXP_BUILD_APP_AS_LIB)
         -Dconfig_COEX_RTOS_MAX_PRIO=${COEX_RTOS_MAX_PRIO}
         -DSECURE_STORAGE_ITS_STORE_IMPLEMENTATION_LITTLEFS
         -DCONFIG_SECURE_STORAGE_ITS_STORE_LITTLEFS_PREFIX="its/"
+        # Temporary configuration file. Remove when migrating to the next SDK version, i.e, 26.06.
         -DMBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE=\"coex-rt1060-mbedtls-psa-crypto-config.h\"
     )
+
+    if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
+        list(APPEND SDK_COMPILE_DEFINITIONS
+            -DMBEDTLS_WPA_SUPPLICANT_CONFIG_FILE=\"wpa_supp_mbedtls_config.h\"
+        )
+    endif()
 
     list(APPEND SDK_SOURCES
         ${MIDDLEWARE_PATH}/secure_storage/src/its/store/littlefs_its.c
