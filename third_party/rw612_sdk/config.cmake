@@ -200,6 +200,7 @@ endif()
 if(OT_NXP_ENABLE_WPA_SUPP_MBEDTLS)
     mcux_add_macro(
         -DCONFIG_WPA_SUPP_MBEDTLS=1 # Enable wpa_supplicant mbedtls extend config
+        -DMBEDTLS_WPA_SUPPLICANT_CONFIG_FILE=\\\"wpa_supp_els_pkc_mbedtls_config.h\\\"
     )
 endif()
 
