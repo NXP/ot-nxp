@@ -14,7 +14,7 @@ cmake_minimum_required(VERSION 3.15)
 # option FREERTOS_HEAP. When dynamic allocation is used, the user must specify a
 # heap implementation. If the option is not set, the cmake will use no heap
 # implementation (e.g. when only static allocation is used).
-set(NXP_SDK_FREERTOS_PATH ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel)
+set(NXP_SDK_FREERTOS_PATH ${NXP_SDK_ROOT}/rtos/freertos/freertos-kernel-upstream)
 
 # `freertos_config` target defines the path to FreeRTOSConfig.h and optionally other freertos based config files
 if(NOT TARGET freertos_config)
