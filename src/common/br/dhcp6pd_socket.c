@@ -194,6 +194,11 @@ static void SocketInit(uint32_t aInfraIfIndex)
     err_t   lwipError = ERR_OK;
     VerifyOrExit(aInfraIfIndex == sInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
 
+    if (sDhcpPdPcb != NULL)
+    {
+        SocketDeInit(aInfraIfIndex);
+    }
+
     CALL_LWIP_API_FROM_OT_CONTEXT(sDhcpPdPcb = udp_new_ip_type(IPADDR_TYPE_V6));
     if (sDhcpPdPcb != NULL)
     {
@@ -220,6 +225,7 @@ static void SocketDeInit(uint32_t aInfraIfIndex)
 
     CALL_LWIP_API_FROM_OT_CONTEXT(udp_remove(sDhcpPdPcb));
 
+    sDhcpPdPcb = NULL;
     sDhcpPdIsEnabled = false;
 exit:
     return;

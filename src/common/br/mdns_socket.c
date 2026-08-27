@@ -240,6 +240,7 @@ exit:
     if (error != OT_ERROR_NONE && sMdnsPcb != NULL)
     {
         CALL_LWIP_API_FROM_OT_CONTEXT(udp_remove(sMdnsPcb));
+        sMdnsPcb = NULL;
     }
     return error;
 }
@@ -259,6 +260,7 @@ static otError SocketDeInit(uint32_t aInfraIfIndex)
         udp_remove(sMdnsPcb);
     });
 
+    sMdnsPcb = NULL;
     sMdnsIsEnabled = false;
 exit:
     return error;
