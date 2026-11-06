@@ -67,6 +67,10 @@
 #include "ncp_encrypt_cli.h"
 #endif
 
+#ifdef OT_APP_CLI_TISTRP_ADDON
+#include "tistrp_cli.h"
+#endif
+
 extern otError ProcessNcpLinkEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 /* -------------------------------------------------------------------------- */
 /*                               Private memory                               */
@@ -102,6 +106,9 @@ static const otCliCommand addonsCommands[] = {
 #ifdef OT_APP_CLI_NCP_ENCRYPT_ADDON
     {"ncp-sys-encrypt", ProcessNcpLinkEncrypt},
 #endif
+#ifdef OT_APP_CLI_TISTRP_ADDON
+    {"tistrp", ProcessTistrp}, //=> TIS/TRP OTA DUT (Zigbee RF perf spec 19-01701)
+#endif
 };
 
 /* -------------------------------------------------------------------------- */
@@ -122,6 +129,10 @@ void otAppCliAddonsInit(otInstance *aInstance)
 
 #ifdef OT_APP_CLI_LOWPOWER_ADDON
     otAppLowPowerCliInit(aInstance);
+#endif
+
+#ifdef OT_APP_CLI_TISTRP_ADDON
+    otAppCliTistrpInit(aInstance);
 #endif
 
     otSetStateChangedCallback(aInstance, otAppCliStateChangeCallback, NULL);

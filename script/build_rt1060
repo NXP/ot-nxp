@@ -72,6 +72,11 @@ readonly OT_OPTIONS_TRANSCEIVER_IW610_SPI=(
     "-DEVK_RT1060_BOARD=evkcmimxrt1060"
 )
 
+readonly OT_OPTIONS_TISTRP=(
+    "-DOT_APP_CLI_FREERTOS_TISTRP=ON"
+    "-DOT_LINK_RAW=ON"
+)
+
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
     "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/arm-none-eabi.cmake"
     "-DOT_NXP_PLATFORM=rt1060"
@@ -274,6 +279,10 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_CLI_IPERF[@]}")
         options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
         build iw610_spi "${options[@]}"
+    elif [ "$1" == 'iw610_spi_tistrp' ]; then
+        options+=("${OT_OPTIONS_TISTRP[@]}")
+        options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
+        build iw610_spi_tistrp "${options[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
         build iwx12_spi "${options[@]}"

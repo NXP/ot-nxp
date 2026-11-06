@@ -34,6 +34,11 @@ if(NOT OT_NCP_RTOS_HOST)
     add_subdirectory(utils)
 endif()
 
+# TIS/TRP OTA DUT example, hooked into the ot-cli addons (needs ot-cli-addons from utils)
+if(OT_APP_CLI_FREERTOS_TISTRP)
+    add_subdirectory(tistrp)
+endif()
+
 if(OT_APP_CLI_FREERTOS)
     add_subdirectory(cli)
 endif()
