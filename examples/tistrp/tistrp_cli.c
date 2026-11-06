@@ -68,6 +68,9 @@
 #ifndef TISTRP_SW_VERSION
 #define TISTRP_SW_VERSION 0x01
 #endif
+#ifndef TISTRP_DEFAULT_TX_POWER
+#define TISTRP_DEFAULT_TX_POWER 10 /* dBm, same default as the MCXW72 TISTRP firmware */
+#endif
 
 #ifndef TISTRP_REPORT_BIG_ENDIAN
 #define TISTRP_REPORT_BIG_ENDIAN 0 /* 0: little-endian, as the NXP MCXW72 TISTRP CMD/DUT reference */
@@ -95,7 +98,6 @@ typedef struct
 /* -------------------------------------------------------------------------- */
 static otInstance   *sInstance;
 static bool          sActive;
-static bool          sRxTestRunning;
 static bool          sStreaming;
 static bool          sTxBusy;
 static uint8_t       sChannel = TISTRP_DEFAULT_CHANNEL;
@@ -166,8 +168,8 @@ otError ProcessTistrp(void *aContext, uint8_t aArgsLength, char *aArgs[])
         int8_t power = 0;
 
         (void)otPlatRadioGetTransmitPower(sInstance, &power);
-        otCliOutputFormat("active: %d  channel: %d  power: %d dBm  stream: %d  rxtest: %d\r\n", sActive, sChannel,
-                          power, sStreaming, sRxTestRunning);
+        otCliOutputFormat("active: %d  channel: %d  power: %d dBm  stream: %d\r\n", sActive, sChannel, power,
+                          sStreaming);
         otCliOutputFormat("total: %lu  protocol: %lu  lqi: %lu  rssiMag: %lu\r\n", (unsigned long)sStats.totalPackets,
                           (unsigned long)sStats.protocolPackets, (unsigned long)sStats.totalLqi,
                           (unsigned long)sStats.totalRssiMagnitude);
@@ -200,6 +202,7 @@ static otError tistrpStart(uint8_t aChannel)
     if (error == OT_ERROR_NONE)
     {
         (void)otLinkRawSetPromiscuous(sInstance, true);
+        (void)otPlatRadioSetTransmitPower(sInstance, TISTRP_DEFAULT_TX_POWER);
         sActive = true;
         memset(&sStats, 0, sizeof(sStats));
         error = tistrpSetChannel(aChannel);
@@ -215,8 +218,7 @@ static otError tistrpStop(void)
         (void)xTimerStop(sStreamTimer, 0);
         (void)tistrpContinuousTx(false);
     }
-    sActive        = false;
-    sRxTestRunning = false;
+    sActive = false;
     (void)otLinkRawSetPromiscuous(sInstance, false);
     (void)otLinkRawSleep(sInstance);
 
@@ -249,24 +251,17 @@ static void tistrpReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otErr
         return;
     }
 
-    psduLen    = (aFrame->mLength > TISTRP_FCS_LEN) ? (uint8_t)(aFrame->mLength - TISTRP_FCS_LEN) : 0U;
-    isProtocol = (psduLen >= TISTRP_HDR_LEN) && (aFrame->mPsdu[0] == TISTRP_DELIM) &&
-                 (aFrame->mPsdu[1] == TISTRP_DELIM) && (aFrame->mPsdu[2] == 0x00);
+    psduLen = (aFrame->mLength > TISTRP_FCS_LEN) ? (uint8_t)(aFrame->mLength - TISTRP_FCS_LEN) : 0U;
+    isProtocol =
+        (psduLen >= TISTRP_HDR_LEN) && (aFrame->mPsdu[0] == TISTRP_DELIM) && (aFrame->mPsdu[1] == TISTRP_DELIM);
 
-    if (sRxTestRunning)
+    /* as the MCXW72 reference: every frame is counted, RSSI accumulated as its raw 8-bit value */
+    sStats.totalPackets++;
+    sStats.totalLqi += aFrame->mInfo.mRxInfo.mLqi;
+    sStats.totalRssiMagnitude += (uint8_t)aFrame->mInfo.mRxInfo.mRssi;
+    if (isProtocol)
     {
-        int8_t rssi = aFrame->mInfo.mRxInfo.mRssi;
-
-        sStats.totalPackets++;
-        sStats.totalLqi += aFrame->mInfo.mRxInfo.mLqi;
-        if ((rssi < 0) && (rssi != OT_RADIO_RSSI_INVALID))
-        {
-            sStats.totalRssiMagnitude += (uint32_t)(-rssi);
-        }
-        if (isProtocol)
-        {
-            sStats.protocolPackets++;
-        }
+        sStats.protocolPackets++;
     }
 
     if (isProtocol)
@@ -290,17 +285,18 @@ static void tistrpHandleCommand(const uint8_t *aPsdu, uint8_t aPsduLen)
     case TISTRP_CMD_SET_CHANNEL:
         if (bodyLen >= 4)
         {
-            uint32_t value = ((uint32_t)body[0] << 24) | ((uint32_t)body[1] << 16) | ((uint32_t)body[2] << 8) | body[3];
-            uint32_t mask  = value & 0x07FFFFFFUL; /* b0..b26 channel mask, b27..b31 channel page */
-            uint8_t  page  = (uint8_t)(value >> 27);
+            uint32_t mask = ((uint32_t)body[0] << 24) | ((uint32_t)body[1] << 16) | ((uint32_t)body[2] << 8) | body[3];
+            uint8_t  ch   = 0;
 
-            for (uint8_t ch = TISTRP_MIN_CHANNEL; (page == 0U) && (ch <= TISTRP_MAX_CHANNEL); ch++)
+            /* as the MCXW72 reference: channel = highest bit set in the 32-bit mask */
+            while (mask > 1UL)
             {
-                if (mask == (1UL << ch))
-                {
-                    (void)tistrpSetChannel(ch); /* no answer: CMD follows and PINGs on the new channel */
-                    break;
-                }
+                mask >>= 1;
+                ch++;
+            }
+            if ((ch >= TISTRP_MIN_CHANNEL) && (ch <= TISTRP_MAX_CHANNEL))
+            {
+                (void)tistrpSetChannel(ch); /* no answer: CMD follows and PINGs on the new channel */
             }
         }
         break;
@@ -308,7 +304,7 @@ static void tistrpHandleCommand(const uint8_t *aPsdu, uint8_t aPsduLen)
     case TISTRP_CMD_SET_POWER:
         if (bodyLen >= 1)
         {
-            (void)otPlatRadioSetTransmitPower(sInstance, (int8_t)body[bodyLen - 1]); /* <power> is the last byte */
+            (void)otPlatRadioSetTransmitPower(sInstance, (int8_t)body[0]);
         }
         break;
 
@@ -338,17 +334,14 @@ static void tistrpHandleCommand(const uint8_t *aPsdu, uint8_t aPsduLen)
 
     case TISTRP_CMD_START_RX_TEST:
         memset(&sStats, 0, sizeof(sStats));
-        sRxTestRunning = true;
         break;
 
     case TISTRP_CMD_END_RX_TEST:
-        sRxTestRunning = false;
         putU32(&rsp[0], sStats.totalPackets);
         putU32(&rsp[4], sStats.protocolPackets);
         putU32(&rsp[8], sStats.totalLqi);
         putU32(&rsp[12], sStats.totalRssiMagnitude);
         (void)tistrpSend(TISTRP_CMD_REPORT, rsp, 16);
-        memset(&sStats, 0, sizeof(sStats)); /* as the MCXW72 reference: counters restart after each report */
         break;
 
     case TISTRP_CMD_REBOOT:
