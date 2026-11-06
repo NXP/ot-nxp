@@ -12,7 +12,11 @@
 #include <openthread/instance.h>
 
 /*!
- * @brief Initialize the TIS/TRP DUT addon (auto-starts the DUT when OT_APP_TISTRP_AUTOSTART is set).
+ * @brief Initialize the TIS/TRP DUT addon.
+ *
+ * By default (OT_APP_TISTRP_AUTOSTART=ON) the DUT mode is entered at boot on channel 12, so the device can be
+ * driven over the air without any serial command (chamber use). Build with -DOT_APP_TISTRP_AUTOSTART=OFF to
+ * start it manually with "tistrp start".
  */
 void otAppCliTistrpInit(otInstance *aInstance);
 
