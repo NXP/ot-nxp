@@ -150,9 +150,26 @@ otError ProcessTistrp(void *aContext, uint8_t aArgsLength, char *aArgs[])
     }
     else if (strcmp(aArgs[0], "start") == 0)
     {
-        uint8_t channel = (aArgsLength > 1) ? (uint8_t)atoi(aArgs[1]) : TISTRP_DEFAULT_CHANNEL;
+        unsigned long channel = TISTRP_DEFAULT_CHANNEL;
+        char         *end     = NULL;
 
-        error = tistrpStart(channel);
+        if (aArgsLength > 1)
+        {
+            channel = strtoul(aArgs[1], &end, 0);
+        }
+
+        if ((aArgsLength > 1) && ((end == aArgs[1]) || (*end != '\0')))
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+        else if ((channel < TISTRP_MIN_CHANNEL) || (channel > TISTRP_MAX_CHANNEL))
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+        else
+        {
+            error = tistrpStart((uint8_t)channel);
+        }
     }
     else if (strcmp(aArgs[0], "stop") == 0)
     {
@@ -191,6 +208,10 @@ static otError tistrpStart(uint8_t aChannel)
         return OT_ERROR_INVALID_ARGS;
     }
 
+    /* a previous session may have been stopped during a STREAM or a pending TX */
+    sStreaming = false;
+    sTxBusy    = false;
+
     /* Raw link can only be enabled when the Thread interface is down (ifconfig down) */
     error = otLinkRawSetReceiveDone(sInstance, tistrpReceiveDone);
     if (error == OT_ERROR_NONE)
@@ -218,7 +239,9 @@ static otError tistrpStop(void)
         (void)xTimerStop(sStreamTimer, 0);
         (void)tistrpContinuousTx(false);
     }
-    sActive = false;
+    sStreaming = false; /* the stream timer callback will not run anymore */
+    sTxBusy    = false; /* TX done may never be reported once the raw link is disabled */
+    sActive    = false;
     (void)otLinkRawSetPromiscuous(sInstance, false);
     (void)otLinkRawSleep(sInstance);
 

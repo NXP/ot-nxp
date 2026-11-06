@@ -14,9 +14,9 @@
 /*!
  * @brief Initialize the TIS/TRP DUT addon.
  *
- * By default (OT_APP_TISTRP_AUTOSTART=ON) the DUT mode is entered at boot on channel 12, so the device can be
- * driven over the air without any serial command (chamber use). Build with -DOT_APP_TISTRP_AUTOSTART=OFF to
- * start it manually with "tistrp start".
+ * With OT_APP_TISTRP_AUTOSTART=ON (set by the iw610_spi_tistrp flavor of script/build_rt1060) the DUT mode is
+ * entered at boot on channel 12, so the device can be driven over the air without any serial command (chamber
+ * use). Otherwise (addon default OFF) it is started manually with "tistrp start".
  */
 void otAppCliTistrpInit(otInstance *aInstance);
 

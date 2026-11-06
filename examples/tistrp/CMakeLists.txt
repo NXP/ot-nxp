@@ -17,7 +17,7 @@ target_compile_definitions(ot-cli-addons PRIVATE
     -DOT_APP_CLI_TISTRP_ADDON
 )
 
-option(OT_APP_TISTRP_AUTOSTART "Enter TIS/TRP DUT mode at boot (chamber use, no PC needed)" ON)
+option(OT_APP_TISTRP_AUTOSTART "Enter TIS/TRP DUT mode at boot (chamber use, no PC needed)" OFF)
 
 if(OT_APP_TISTRP_AUTOSTART)
     target_compile_definitions(ot-cli-addons PRIVATE -DOT_APP_TISTRP_AUTOSTART=1)

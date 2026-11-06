@@ -75,6 +75,7 @@ readonly OT_OPTIONS_TRANSCEIVER_IW610_SPI=(
 readonly OT_OPTIONS_TISTRP=(
     "-DOT_APP_CLI_FREERTOS_TISTRP=ON"
     "-DOT_LINK_RAW=ON"
+    "-DOT_APP_TISTRP_AUTOSTART=ON"
 )
 
 readonly OT_OPTIONS_TRANSCEIVER_IWX12_SPI=(
@@ -297,7 +298,7 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI_BR_WIFI[@]}")
         build iwx12_spi_br_wifi "${options[@]}"
     else
-        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet, iw610_spi, iw610_spi_br_wifi, iw610_spi_br_ethernet, iw610_spi_iperf, iwx12_spi, iwx12_spi_iperf, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
+        echo >&2 "Unsupported action: $1. Supported: all, k32w0_uart_flow_control, k32w0_uart_flow_control_br_ethernet, iw610_spi, iw610_spi_br_wifi, iw610_spi_br_ethernet, iw610_spi_iperf, iw610_spi_tistrp, iwx12_spi, iwx12_spi_iperf, iwx12_spi_br_ethernet, iwx12_spi_br_wifi"
         # 128 for Invalid arguments
         exit 128
     fi
