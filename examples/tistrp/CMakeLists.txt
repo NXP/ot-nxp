@@ -6,7 +6,7 @@
 #
 
 target_sources(ot-cli-addons PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/tistrp_cli.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tistrp.c
 )
 
 target_include_directories(ot-cli-addons PUBLIC

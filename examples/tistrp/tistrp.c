@@ -29,7 +29,7 @@
 
 #include "app_ot.h"
 #include "ot_platform_common.h"
-#include "tistrp_cli.h"
+#include "tistrp.h"
 #include "lib/spinel/spinel.h"
 
 #if !OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -123,7 +123,7 @@ static void    putU32(uint8_t *aBuf, uint32_t aValue);
 /* -------------------------------------------------------------------------- */
 /*                              Public functions                              */
 /* -------------------------------------------------------------------------- */
-void otAppCliTistrpInit(otInstance *aInstance)
+void otAppTistrpInit(otInstance *aInstance)
 {
     sInstance = aInstance;
 

@@ -5,8 +5,8 @@
  *  SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef TISTRP_CLI_H_
-#define TISTRP_CLI_H_
+#ifndef TISTRP_H_
+#define TISTRP_H_
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
@@ -18,7 +18,7 @@
  * entered at boot on channel 12, so the device can be driven over the air without any serial command (chamber
  * use). Otherwise (addon default OFF) it is started manually with "tistrp start".
  */
-void otAppCliTistrpInit(otInstance *aInstance);
+void otAppTistrpInit(otInstance *aInstance);
 
 /*!
  * @brief Handler called from ot-cli when the "tistrp" command is used.
@@ -30,4 +30,4 @@ void otAppCliTistrpInit(otInstance *aInstance);
  */
 otError ProcessTistrp(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 
-#endif /* TISTRP_CLI_H_ */
+#endif /* TISTRP_H_ */

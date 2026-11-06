@@ -68,7 +68,7 @@
 #endif
 
 #ifdef OT_APP_CLI_TISTRP_ADDON
-#include "tistrp_cli.h"
+#include "tistrp.h"
 #endif
 
 extern otError ProcessNcpLinkEncrypt(void *aContext, uint8_t aArgsLength, char *aArgs[]);
@@ -132,7 +132,7 @@ void otAppCliAddonsInit(otInstance *aInstance)
 #endif
 
 #ifdef OT_APP_CLI_TISTRP_ADDON
-    otAppCliTistrpInit(aInstance);
+    otAppTistrpInit(aInstance);
 #endif
 
     otSetStateChangedCallback(aInstance, otAppCliStateChangeCallback, NULL);
