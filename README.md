@@ -58,8 +58,8 @@ and
 # License
 
 OpenThread is released under the
-[BSD 3-Clause license](https://github.com/openthread/ot-nrf528xx/blob/main/LICENSE).
-See the [`LICENSE`](https://github.com/openthread/ot-nrf528xx/blob/main/LICENSE)
+[BSD 3-Clause license](LICENSE).
+See the [`LICENSE`](LICENSE)
 file for more information.
 
 Please only use the OpenThread name and marks when accurately referencing this
