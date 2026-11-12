@@ -285,8 +285,10 @@ create_directory_and_build()
         options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
         build iw610_spi "${options[@]}"
     elif [ "$1" == 'iw610_spi_tistrp' ]; then
+        options=("-DNXP_SDK_ROOT=$NXP_RT1060_SDK_ROOT")
         options+=("${OT_OPTIONS_TISTRP[@]}")
         options+=("${OT_OPTIONS_TRANSCEIVER_IW610_SPI[@]}")
+        options+=("${@:2}")
         build iw610_spi_tistrp "${options[@]}"
     elif [ "$1" == 'iwx12_spi' ]; then
         options+=("${OT_OPTIONS_TRANSCEIVER_IWX12_SPI[@]}")
