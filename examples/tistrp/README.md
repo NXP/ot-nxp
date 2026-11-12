@@ -2,7 +2,8 @@
 
 This example implements the **DUT role** of the Zigbee RF Performance Test Plan (19-01701, Annex B, OTA CMD/DUT
 protocol) on an RT1060-EVKC + IW610 (SPI) running the OpenThread CLI. The DUT is driven over the air by a TIS/TRP
-command module (CMD), for example an FRDM-MCXW72 running the NXP MCXW72 TIS/TRP CMD firmware.
+command module (CMD), called the Test Station in this document. The CMD commands and behaviour described below were
+validated with the reference Test Station firmware; another Annex B command module may differ.
 
 Nothing changes in OpenThread core or in the IW610 RCP firmware: the DUT is built on the host with the public OpenThread
 raw-link API and the existing NXP MFG vendor spinel command.
@@ -19,12 +20,12 @@ raw-link API and the existing NXP MFG vendor spinel command.
 
 Optional compile-time defines in `tistrp.c`, all `#ifndef`-overridable:
 
-| Define                                    | Default | Meaning                                                               |
-| ----------------------------------------- | ------- | --------------------------------------------------------------------- |
-| `TISTRP_DEFAULT_CHANNEL`                  | 12      | Channel used at boot and by `tistrp start` with no argument           |
-| `TISTRP_DEFAULT_TX_POWER`                 | 10 dBm  | TX power applied at each `tistrp start`                               |
-| `TISTRP_HW_VERSION` / `TISTRP_SW_VERSION` | 0x01    | Values returned to GET_HW_VER / GET_SW_VER                            |
-| `TISTRP_REPORT_BIG_ENDIAN`                | 0       | REPORT counter byte order. 0 = little endian, as the MCXW72 reference |
+| Define                                    | Default | Meaning                                                                                                                          |
+| ----------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `TISTRP_DEFAULT_CHANNEL`                  | 12      | Channel used at boot and by `tistrp start` with no argument                                                                      |
+| `TISTRP_DEFAULT_TX_POWER`                 | 10 dBm  | TX power applied at each `tistrp start`                                                                                          |
+| `TISTRP_HW_VERSION` / `TISTRP_SW_VERSION` | 0x01    | Values returned to GET_HW_VER / GET_SW_VER                                                                                       |
+| `TISTRP_REPORT_BIG_ENDIAN`                | 0       | REPORT counter byte order. 0 = little endian, as expected by the reference Test Station firmware (the spec text says big endian) |
 
 ### 1.2 Build commands
 
@@ -96,14 +97,14 @@ Done
 With autostart, the board is in DUT mode right after power-up (`active: 1`, channel 12). Before using Thread, run
 `tistrp stop`.
 
-## 3. Sample usage sequence with the MCXW72 command module
+## 3. Sample usage sequence with the Test Station
 
 ### 3.1 Setup
 
-| Board                               | Firmware                                                                                                                                                                                                      | Serial                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **CMD** – FRDM-MCXW72               | Any 19-01701 Annex B command module, e.g. the NXP MCXW72 TIS/TRP CMD firmware (`frdmmcxw72_tistrp_test_cmd_cm33_core0.bin`, available from NXP on request), flashed at `0x0` (J-Link device `MCXW727C_M33_0`) | VCOM, 115200. Commands are executed on **CR** (`\r`) |
-| **DUT** – RT1060-EVKC + IW610 (SPI) | `iw610_spi_tistrp` build                                                                                                                                                                                      | VCOM, 115200, OT CLI (`Done` / `Error x`)            |
+| Board                               | Firmware                            |
+| ----------------------------------- | ----------------------------------- |
+| **CMD** – Test Station              | Any 19-01701 Annex B command module |
+| **DUT** – RT1060-EVKC + IW610 (SPI) | `iw610_spi_tistrp` build            |
 
 DUT power-up: with autostart, the DUT is already listening on channel 12 at 10 dBm. Without autostart, run
 `ifconfig down` (if needed), then `tistrp start 12`.
@@ -113,7 +114,7 @@ DUT power-up: with autostart, the DUT is already listening on channel 12 at 10 d
 ```mermaid
 sequenceDiagram
   participant U as Operator
-  participant C as MCXW72 CMD
+  participant C as Test Station (CMD)
   participant D as RT1060+IW610 DUT
   U->>D: tistrp start 12 (or autostart)
   U->>C: custom lsetchannel 12
@@ -171,11 +172,11 @@ there are no foreign frames.
 ### 3.4 Notes and known limitations
 
 - **Thread interface:** `tistrp start` needs the Thread interface down (`Error 13: InvalidState` otherwise).
-- **No CCA / retry on the CMD:** frames from the MCXW72 CMD are sent without CCA or retry. On a busy channel a single
-  SET/GET can be lost; repeat it or use a clean channel.
-- **`custom reboot` from the MCXW72 CMD:** the MCXW72 CMD resets itself right after queueing REBOOT, so the frame is
-  never sent over the air. Use `tistrp reboot` on the DUT CLI to check the path. After a reboot, allow about 8 s before
-  using the DUT, because the IW610 RCP restarts too.
+- **No CCA / retry on the CMD:** frames from the reference Test Station firmware are sent without CCA or retry. On a
+  busy channel a single SET/GET can be lost; repeat it or use a clean channel.
+- **`custom reboot` from the reference Test Station firmware:** this firmware resets itself right after queueing REBOOT,
+  so the frame is never sent over the air. Use `tistrp reboot` on the DUT CLI to check the path. After a reboot, allow
+  about 8 s before using the DUT, because the IW610 RCP restarts too.
 - **During STREAM:** the DUT neither counts nor answers. Wait for the duration to end before sending the next command.
 - **RT1060 re-flash:** while the app is running, J-Link cannot reliably reprogram QSPI. Use the serial-downloader boot
   (SW4 `0001`), flash, then switch back to SW4 `0010` and replug USB. Check the reset vector at `0x60002004` or run the
@@ -199,15 +200,14 @@ there are no foreign frames.
 PSDU = [0xDE][0xDE][0x00][cmdId][payload ...] + FCS(2)
 ```
 
-No MAC header. The DUT accepts any frame whose first two bytes are `DE DE`; byte 2 is not checked, which matches the
-MCXW72 reference.
+No MAC header. The DUT accepts any frame whose first two bytes are `DE DE`; byte 2 is not checked.
 
 ### 4.3 OTA commands implemented
 
 | ID     | Command (CMD → DUT)                                 | Payload                      | DUT action                                                                                                             | Response (DUT → CMD)                                                                                              |
 | ------ | --------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `0x00` | PING                                                | –                            | –                                                                                                                      | `0x01` ACK                                                                                                        |
-| `0x02` | SET_CHANNEL                                         | 4 B big-endian channel mask  | Channel = highest bit set (page ignored, as the reference). Applied only if in 11..26                                  | none (CMD then PINGs on the new channel)                                                                          |
+| `0x02` | SET_CHANNEL                                         | 4 B big-endian channel mask  | Channel = highest bit set (page ignored). Applied only if in 11..26                                                    | none (CMD then PINGs on the new channel)                                                                          |
 | `0x05` | SET_POWER                                           | 1 B, `int8` dBm              | `otPlatRadioSetTransmitPower()`                                                                                        | none                                                                                                              |
 | `0x06` | GET_POWER                                           | –                            | Reads the TX power                                                                                                     | `0x07` GET_POWER_RSP, 1 B `int8` dBm                                                                              |
 | `0x09` | STREAM                                              | 2 B big-endian duration (ms) | Modulated continuous TX (PRBS9) for the duration. 0 = ignored. RX counting and responses are suspended while streaming | none                                                                                                              |
@@ -218,7 +218,7 @@ MCXW72 reference.
 | `0x13` | GET_SW_VER                                          | –                            | –                                                                                                                      | `0x14` GET_SW_VER_RSP, 1 B (default 0x01)                                                                         |
 | other  | `0x01`, `0x07`, `0x0C`, `0x12`, `0x14`, unknown IDs | –                            | Ignored (CMD-bound or unknown); still counted                                                                          | –                                                                                                                 |
 
-Behaviour that matches the MCXW72 reference:
+Behaviour validated against the reference Test Station firmware:
 
 - Every received frame is counted, even outside a START/END window.
 - The END_RX_TEST frame itself is counted, so `totalPackets` = N sent + 1 (+ any foreign frames on the channel). The
@@ -226,5 +226,5 @@ Behaviour that matches the MCXW72 reference:
 - RSSI is accumulated as a raw `uint8`, and the TX power is reset to 10 dBm at every start.
 - REPORT is little endian. The spec text says big endian; build with `-DTISTRP_REPORT_BIG_ENDIAN=1` if needed.
 
-Not supported: the CMD-only commands of the MCXW72 reference (`0xFF` DATA / `lsend` source, `find`, …). The RT1060
-implements the DUT role only.
+Not supported: the CMD-only commands of the reference Test Station firmware (`lsend` source and its `0xFF` DATA frame,
+which is not an Annex B command, `find`, …). The RT1060 implements the DUT role only.
