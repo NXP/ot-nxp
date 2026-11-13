@@ -1,0 +1,175 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2026-11-12T13:36:25Z",
+    "creators": [
+      "Organization: NXP",
+      "Tool: Black Duck Hub - 2026.4.2"
+    ],
+    "licenseListVersion": "3.28"
+  },
+  "name": "ot-nxp-release-v1.4.0.5",
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://blackducksoftware.github.io/spdx/OT-NXP-73535d79-8839-452c-947c-3520693f2159",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90",
+      "downloadLocation": "git+https://github.com/NXP/ot-nxp.git@release/v1.4.0.5",
+      "externalRefs": [
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "27d4588b-dea5-4347-bd65-be73761d2b90",
+          "referenceType": "BlackDuck-Version"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "name": "ot-nxp",
+      "originator": "Organization: NXP",
+      "supplier": "NOASSERTION",
+      "versionInfo": "release/v1.4.0.5",
+      "homepage": "https://github.com/NXP/ot-nxp",
+      "copyrightText": "Copyright NXP; Copyright The OpenThread Authors"
+    },
+    {
+      "SPDXID": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---25d77b68-7d4d-4238-9bab-64093960163e",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:github/openthread/openthread@thread-reference-20250612",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "741c1040-1ff6-45db-8c90-da6031eaff34",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:google:openthread:2025-06-12:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "25d77b68-7d4d-4238-9bab-64093960163e",
+          "referenceType": "BlackDuck-ComponentVersion"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "5694de79-6a78-497f-a8df-f5a8c999eba2",
+          "referenceType": "BlackDuck-Component"
+        }
+      ],
+      "filesAnalyzed": false,
+      "homepage": "https://github.com/openthread/openthread",
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "name": "openthread",
+      "originator": "Organization: openthread",
+      "supplier": "Organization: openthread",
+      "versionInfo": "thread-reference-20250612"
+    },
+    {
+      "SPDXID": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---312c0eac-0708-41a5-b103-874ae67d26b5",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:amazon:amazon_web_services_freertos:1.3.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:github/aws/amazon-freertos@v1.3.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:aws:amazon-freertos:1.3.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:amazon:freertos:1.3.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "74631d1f-f96e-4047-95d9-467a8a3d72a0",
+          "referenceType": "BlackDuck-Component"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "4915c913-4eea-4678-a6c8-aa9bfe231f5f",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "312c0eac-0708-41a5-b103-874ae67d26b5",
+          "referenceType": "BlackDuck-ComponentVersion"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:o:amazon:freertos:1.3.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "homepage": "https://github.com/aws/amazon-freertos",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "Amazon FreeRTOS",
+      "originator": "Organization: aws",
+      "supplier": "Organization: aws",
+      "versionInfo": "v1.3.1"
+    },
+    {
+      "SPDXID": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---35ff02dd-dc2d-449f-81eb-fff505056259",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "35ff02dd-dc2d-449f-81eb-fff505056259",
+          "referenceType": "BlackDuck-ComponentVersion"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "6d423b73-fc3e-41cb-af47-50b879eb51fb",
+          "referenceType": "BlackDuck-Component"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "(BSD-3-Clause AND BSD-2-Clause)",
+      "licenseDeclared": "(BSD-3-Clause AND BSD-2-Clause)",
+      "name": "01org/tinycrypt",
+      "originator": "Organization: 01org/tinycrypt",
+      "supplier": "Organization: 01org/tinycrypt",
+      "versionInfo": "v0.2.8"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---25d77b68-7d4d-4238-9bab-64093960163e"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---312c0eac-0708-41a5-b103-874ae67d26b5"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-27d4588b-dea5-4347-bd65-be73761d2b90---35ff02dd-dc2d-449f-81eb-fff505056259"
+    }
+  ]
+}

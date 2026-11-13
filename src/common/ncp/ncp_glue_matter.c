@@ -4,7 +4,7 @@
  *
  *  Copyright 2025 NXP
  *
- *  Licensed under the LA_OPT_NXP_Software_License.txt (the "Agreement")
+ *  SPDX-License-Identifier: BSD-3-Clause
  */
 #include "ncp_glue_matter.h"
 #include "ncp_cmd_ot.h"
